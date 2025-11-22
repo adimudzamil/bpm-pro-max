@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Passenger Meal & Tier Report - by *2100551*</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💺</text></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💺/text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💺</text></svg>">
     <style>
         * {
             margin: 0;
@@ -492,12 +492,12 @@
         .seat-chart {
             border-collapse: collapse;
             min-width: 100%;
-            border: 2px solid #1E3A8A;
+            border: 2px solid #1E3A8A !important;
             transition: all 0.3s ease;
         }
         
         .seat-chart th, .seat-chart td {
-            border: 1px solid #CBD5E1;
+            border: 1px solid #E2E8F0 !important;
             padding: 0;
             text-align: center;
             vertical-align: top;
@@ -506,22 +506,29 @@
             transition: all 0.3s ease;
         }
         
+        /* UPDATED: Seat chart headers - consistent WebView and Print */
         .seat-chart th {
-            background: #1E3A8A;
-            color: white;
+            background: #1E3A8A !important;
+            color: white !important;
             font-weight: bold;
+            text-align: center;
+            border: 1px solid #1E3A8A !important;
+            padding: 0;
         }
         
         .seat-chart .row-header {
-            background: #F1F5F9;
+            background: #1E3A8A !important;
+            color: white !important;
             font-weight: bold;
-            color: #1E3A8A;
+            text-align: center;
+            border: 1px solid #1E3A8A !important;
+            padding: 0;
         }
         
         .seat-chart .aisle {
-            background: #F8FAFC;
-            border-left: 2px solid #CBD5E1;
-            border-right: 2px solid #CBD5E1;
+            background: #1E3A8A !important;
+            border-left: 2px solid #E2E8F0 !important;
+            border-right: 2px solid #E2E8F0 !important;
         }
         
         /* Optimized column widths */
@@ -557,48 +564,61 @@
             text-transform: uppercase;
         }
         
+        /* UPDATED: Seat chart passenger names - BLACK & BOLD */
         .seat-line1 {
             line-height: 1.1;
             margin: 0;
             padding: 0;
             font-weight: bold;
+            color: #000000 !important;
         }
         
+        /* UPDATED: Seat chart ALL meals - BLACK & BOLDER in WebView */
         .seat-line2 {
             line-height: 1.1;
             margin: 0;
             padding: 0;
             font-weight: bolder;
-            color: #ED1C23;
+            color: #000000 !important;
         }
         
         /* Layer 1: Base alternating rows for seat chart */
-        .seat-chart tr.row-even { background-color: #e8e8e8 !important; }
-        .seat-chart tr.row-odd { background-color: #ffffff !important; }
+        .seat-chart tr.row-even { background-color: #FFFFFF !important; }
+        .seat-chart tr.row-odd { background-color: #FFFFFF !important; }
         
         /* Layer 2: Occupancy states (override row colors) */
-        .seat-occupied { background: #E0F2FE !important; border: 1px solid #0EA5E9; }
-        .seat-empty { background: #F8FAFC !important; color: #94A3B8; }
+        .seat-occupied { 
+            background: #e0e0e0 !important; 
+            border: 1px solid #000000 !important;
+        }
+        .seat-empty { 
+            background: #FFFFFF !important; 
+            color: #6B7280;
+            border: 1px solid #E2E8F0 !important;
+        }
         
         /* Business class regular passenger styling */
         .seat-business-regular { 
-            background: #F0F4FF !important; 
-            border: 1px solid #CBD5E1;
+            background: #FFFFFF !important; 
+            border: 1px solid #E2E8F0 !important;
         }
         
         /* Layer 3: Tier overrides (highest priority - override everything) */
         .seat-tier-emer { 
-            background: #FEF7CD !important; 
-            border: 1px solid #002B5C !important;
+            background: #d4d4d4 !important; 
+            border: 1px solid #000000 !important;
         }
         .seat-tier-plat { 
-            background: #FEF7CD !important; 
-            border: 1px solid #002B5C !important;
+            background: #d4d4d4 !important; 
+            border: 1px solid #000000 !important;
         }
-        .seat-tier-gold { background: #EOF2FE !important; }
+        .seat-tier-gold { 
+            background: #FFFFFF !important; 
+            border: 1px solid #E2E8F0 !important;
+        }
         
         /* Layer 3: Meal indicators */
-        .seat-meal { color: #DC2626 !important; font-weight: bold; }
+        .seat-meal { color: #000000 !important; font-weight: bold; }
         
         .seat-name {
             font-weight: 500;
@@ -619,12 +639,12 @@
         }
         
         .seat-meal-info {
-            color: #DC2626;
+            color: #000000;
             font-weight: bolder;
         }
         
         .zone-boundary {
-            border-bottom: 1px double #1E3A8A;
+            border-bottom: 2px double #1E3A8A !important;
         }
         
         .seat-chart-controls {
@@ -796,7 +816,48 @@
                 margin: 0 !important;
                 padding: 0 !important;
                 width: 100% !important;
-                border: 1px solid #000 !important;
+                border: 2px solid #1E3A8A !important;
+            }
+            
+            /* UPDATED: Seat chart headers - consistent in print */
+            .seat-chart th {
+                background: #1E3A8A !important;
+                color: white !important;
+                font-weight: bold;
+                text-align: center;
+                border: 1px solid #1E3A8A !important;
+                padding: 0;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+                height: 20px;
+            }
+            
+            .seat-chart .row-header {
+                background: #1E3A8A !important;
+                color: white !important;
+                font-weight: bold;
+                text-align: center;
+                border: 1px solid #1E3A8A !important;
+                padding: 0;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+                height: 20px;
+            }
+            
+            /* UPDATED: Seat chart passenger names - BLACK & BOLD in print */
+            .seat-line1 {
+                color: #000000 !important;
+                font-weight: bold !important;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+
+            /* UPDATED: Seat chart ALL meals - BLACK & BOLDER in print */
+            .seat-line2 {
+                color: #000000 !important;
+                font-weight: bolder !important;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
             }
             
             /* Let seat charts use dynamic font sizes from slider */
@@ -836,47 +897,60 @@
             .seat-chart th, .seat-chart td {
                 padding: 0;
                 height: 20px;
+                border: 1px solid #E2E8F0 !important;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
             }
             
             .seat-occupied {
-                background: #E0F2FE !important;
-                border: 1px solid #666;
+                background: #e0e0e0 !important;
+                border: 1px solid #000000 !important;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
             }
             
             /* Ensure alternating rows are visible in print */
             .seat-chart tr.row-even { 
-                background-color: #e8e8e8 !important; 
+                background-color: #FFFFFF !important; 
                 -webkit-print-color-adjust: exact;
                 color-adjust: exact;
             }
             
             .seat-chart tr.row-odd { 
-                background-color: #ffffff !important; 
+                background-color: #FFFFFF !important; 
                 -webkit-print-color-adjust: exact;
                 color-adjust: exact;
             }
             
             .seat-tier-emer { 
-                background: #FEF7CD !important; 
-                border: 1px solid #002B5C !important;
+                background: #d4d4d4 !important; 
+                border: 1px solid #000000 !important;
                 -webkit-print-color-adjust: exact;
                 color-adjust: exact;
             }
             .seat-tier-plat { 
-                background: #FEF7CD !important; 
-                border: 1px solid #002B5C !important;
+                background: #d4d4d4 !important; 
+                border: 1px solid #000000 !important;
                 -webkit-print-color-adjust: exact;
                 color-adjust: exact;
             }
             .seat-tier-gold { 
-                background: #f5f5f5 !important;
+                background: #FFFFFF !important;
+                border: 1px solid #E2E8F0 !important;
                 -webkit-print-color-adjust: exact;
                 color-adjust: exact;
             }
             
             .seat-business-regular {
-                background: #f8f8f8 !important;
-                border: 1px solid #ccc;
+                background: #FFFFFF !important;
+                border: 1px solid #E2E8F0 !important;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+            
+            .seat-empty {
+                background: #FFFFFF !important;
+                border: 1px solid #E2E8F0 !important;
                 -webkit-print-color-adjust: exact;
                 color-adjust: exact;
             }
@@ -2578,7 +2652,7 @@
         function getTierClass(tier) {
             if (tier === 'EMER') return 'seat-tier-emer';
             if (tier === 'PLAT') return 'seat-tier-plat';
-            if (tier === 'GOLD') return 'seat-tier-gold';
+            
             return '';
         }
         
