@@ -1312,7 +1312,7 @@
             <ul>
                 <li><strong>Seat Chart Font Size Slider</strong> - Adjust font size from 8px to 16px</li>
                 <li><strong>Optimized 2-Line Display</strong> - Better use of space with larger fonts</li>
-                <li><strong>Tier Icon Display</strong> - ⭐ for PLAT, 💎 for EMER only</li>
+                <li><strong>Tier Icon Display</strong> - ❤️ for PLAT, 🔴 for EMER only</li>
                 <li><strong>All Caps Format</strong> - Maximum readability in seat cells</li>
                 <li><strong>Business Class Zone Fix</strong> - Show All Business option now only affects B/J zones</li>
             </ul>
@@ -2788,7 +2788,7 @@
                                 if (passenger) {
                                     // UPDATED: 2-line format with tier icons only for PLAT/EMER
                                     const mealDisplay = formatMealDisplay(passenger.meal);
-                                    const tierIcon = passenger.tier === 'PLAT' ? '⭐ ' : (passenger.tier === 'EMER' ? '💎 ' : '');
+                                    const tierIcon = passenger.tier === 'PLAT' ? '❤️ ' : (passenger.tier === 'EMER' ? '🔴 ' : '');
                                     const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                     
                                     html += `<div class="seat-cell">
@@ -2829,7 +2829,7 @@
                             if (passenger) {
                                 // UPDATED: 2-line format with tier icons only for PLAT/EMER
                                 const mealDisplay = formatMealDisplay(passenger.meal);
-                                const tierIcon = passenger.tier === 'PLAT' ? '⭐ ' : (passenger.tier === 'EMER' ? '💎 ' : '');
+                                const tierIcon = passenger.tier === 'PLAT' ? '❤️ ' : (passenger.tier === 'EMER' ? '🔴 ' : '');
                                 const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                 
                                 html += `<div class="seat-cell">
@@ -2870,7 +2870,7 @@
                             if (passenger) {
                                 // UPDATED: 2-line format with tier icons only for PLAT/EMER
                                 const mealDisplay = formatMealDisplay(passenger.meal);
-                                const tierIcon = passenger.tier === 'PLAT' ? '⭐ ' : (passenger.tier === 'EMER' ? '💎 ' : '');
+                                const tierIcon = passenger.tier === 'PLAT' ? '❤️ ' : (passenger.tier === 'EMER' ? '🔴 ' : '');
                                 const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                 
                                 html += `<div class="seat-cell">
