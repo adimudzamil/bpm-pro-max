@@ -544,10 +544,23 @@
             max-width: 10px !important;
         }
         
-        .seat-chart td:not(.row-header):not(.aisle) {
+        /* WIDER COLUMNS FOR 737 BUSINESS CLASS (A, C, D, F) */
+        .seat-chart.narrowbody-business td:not(.row-header):not(.aisle) {
+            width: 65px !important;
+            min-width: 65px !important;
+            max-width: 65px !important;
+        }
+        
+        .seat-chart.narrowbody-economy td:not(.row-header):not(.aisle) {
             width: 50px !important;
             min-width: 50px !important;
             max-width: 50px !important;
+        }
+        
+        .seat-chart.widebody td:not(.row-header):not(.aisle) {
+            width: 55px !important;
+            min-width: 55px !important;
+            max-width: 55px !important;
         }
         
         /* Optimized seat cell styling */
@@ -562,6 +575,14 @@
             line-height: 1.1;
             font-weight: bold;
             text-transform: uppercase;
+        }
+        
+        /* DYNAMIC HEIGHT FOR BUSINESS CLASS */
+        .seat-cell.business-class {
+            justify-content: flex-start;
+            padding-top: 2px;
+            height: auto;
+            min-height: 45px;
         }
         
         /* UPDATED: Seat chart passenger names - BLACK & BOLD */
@@ -580,6 +601,17 @@
             padding: 0;
             font-weight: bolder;
             color: #000000 !important;
+        }
+        
+        /* NEW: Third line for business class meals - ALWAYS VISIBLE */
+        .seat-line3 {
+            line-height: 1.1;
+            margin: 0;
+            padding: 0;
+            font-weight: bolder;
+            color: #000000 !important;
+            margin-top: 1px;
+            min-height: 12px; /* Ensure blank line has height */
         }
         
         /* Layer 1: Base alternating rows for seat chart */
@@ -651,7 +683,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
-            align-items: cstart a new chat and give me the full working codeenter;
+            align-items: center;
             margin-bottom: 10px;
             padding: 10px;
             background: #F8FAFC;
@@ -733,22 +765,31 @@
         /* Dynamic seat chart font sizes - THE PRIMARY TRUTH */
         .seat-chart[data-font-size="8"] .seat-line1 { font-size: 8px !important; }
         .seat-chart[data-font-size="8"] .seat-line2 { font-size: 10px !important; }
+        .seat-chart[data-font-size="8"] .seat-line3 { font-size: 10px !important; }
         .seat-chart[data-font-size="9"] .seat-line1 { font-size: 9px !important; }
         .seat-chart[data-font-size="9"] .seat-line2 { font-size: 11px !important; }
+        .seat-chart[data-font-size="9"] .seat-line3 { font-size: 11px !important; }
         .seat-chart[data-font-size="10"] .seat-line1 { font-size: 10px !important; }
         .seat-chart[data-font-size="10"] .seat-line2 { font-size: 12px !important; }
+        .seat-chart[data-font-size="10"] .seat-line3 { font-size: 12px !important; }
         .seat-chart[data-font-size="11"] .seat-line1 { font-size: 11px !important; }
         .seat-chart[data-font-size="11"] .seat-line2 { font-size: 13px !important; }
+        .seat-chart[data-font-size="11"] .seat-line3 { font-size: 13px !important; }
         .seat-chart[data-font-size="12"] .seat-line1 { font-size: 12px !important; }
         .seat-chart[data-font-size="12"] .seat-line2 { font-size: 14px !important; }
+        .seat-chart[data-font-size="12"] .seat-line3 { font-size: 14px !important; }
         .seat-chart[data-font-size="13"] .seat-line1 { font-size: 13px !important; }
         .seat-chart[data-font-size="13"] .seat-line2 { font-size: 15px !important; }
+        .seat-chart[data-font-size="13"] .seat-line3 { font-size: 15px !important; }
         .seat-chart[data-font-size="14"] .seat-line1 { font-size: 14px !important; }
         .seat-chart[data-font-size="14"] .seat-line2 { font-size: 16px !important; }
+        .seat-chart[data-font-size="14"] .seat-line3 { font-size: 16px !important; }
         .seat-chart[data-font-size="15"] .seat-line1 { font-size: 15px !important; }
         .seat-chart[data-font-size="15"] .seat-line2 { font-size: 15px !important; }
+        .seat-chart[data-font-size="15"] .seat-line3 { font-size: 15px !important; }
         .seat-chart[data-font-size="16"] .seat-line1 { font-size: 16px !important; }
         .seat-chart[data-font-size="16"] .seat-line2 { font-size: 16px !important; }
+        .seat-chart[data-font-size="16"] .seat-line3 { font-size: 16px !important; }
         
         @media (max-width: 768px) {
             .seat-chart .row-header {
@@ -763,7 +804,13 @@
                 max-width: 8px !important;
             }
             
-            .seat-chart td:not(.row-header):not(.aisle) {
+            .seat-chart.narrowbody-business td:not(.row-header):not(.aisle) {
+                width: 55px !important;
+                min-width: 55px !important;
+                max-width: 55px !important;
+            }
+            
+            .seat-chart.narrowbody-economy td:not(.row-header):not(.aisle) {
                 width: 45px !important;
                 min-width: 45px !important;
                 max-width: 45px !important;
@@ -771,10 +818,22 @@
         }
         
         @media (min-width: 1200px) {
-            .seat-chart td:not(.row-header):not(.aisle) {
+            .seat-chart.narrowbody-business td:not(.row-header):not(.aisle) {
+                width: 70px !important;
+                min-width: 70px !important;
+                max-width: 70px !important;
+            }
+            
+            .seat-chart.narrowbody-economy td:not(.row-header):not(.aisle) {
                 width: 55px !important;
                 min-width: 55px !important;
                 max-width: 55px !important;
+            }
+            
+            .seat-chart.widebody td:not(.row-header):not(.aisle) {
+                width: 60px !important;
+                min-width: 60px !important;
+                max-width: 60px !important;
             }
         }
         
@@ -803,6 +862,20 @@
             body, .container, .output-section {
                 margin: 0 !important;
                 padding: 0 !important;
+            }
+            
+            /* NEW: Hide success messages and unassigned tables in print */
+            .success, .no-print {
+                display: none !important;
+            }
+            
+            /* Hide unassigned seats section */
+            .zone-section:last-child .zone-header:last-child {
+                display: none !important;
+            }
+            
+            .zone-section:last-child table:last-child {
+                display: none !important;
             }
             
             /* Seat chart specific optimizations */
@@ -853,7 +926,7 @@
             }
 
             /* UPDATED: Seat chart ALL meals - BLACK & BOLDER in print */
-            .seat-line2 {
+            .seat-line2, .seat-line3 {
                 color: #000000 !important;
                 font-weight: bolder !important;
                 -webkit-print-color-adjust: exact;
@@ -862,7 +935,8 @@
             
             /* Let seat charts use dynamic font sizes from slider */
             .seat-chart[data-font-size] .seat-line1,
-            .seat-chart[data-font-size] .seat-line2 {
+            .seat-chart[data-font-size] .seat-line2,
+            .seat-chart[data-font-size] .seat-line3 {
                 /* Font sizes are controlled by data-font-size attribute - no overrides */
             }
             
@@ -900,6 +974,12 @@
                 border: 1px solid #E2E8F0 !important;
                 -webkit-print-color-adjust: exact;
                 color-adjust: exact;
+            }
+            
+            /* Business class rows should be taller in print */
+            .seat-cell.business-class {
+                min-height: 35px;
+                padding-top: 1px;
             }
             
             .seat-occupied {
@@ -1063,119 +1143,6 @@
             margin-top: 15px;
             line-height: 1.4;
         }
-        
-        .platform-instructions {
-            background: #EFF6FF;
-            border: 2px solid #2563EB;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 15px 0;
-        }
-        
-        .platform-instructions h4 {
-            color: #1E3A8A;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-        
-        .platform-steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .platform-step {
-            background: white;
-            padding: 12px;
-            border-radius: 6px;
-            border-left: 4px solid #2563EB;
-        }
-        
-        .platform-step h5 {
-            color: #1E3A8A;
-            margin-bottom: 8px;
-            font-size: 13px;
-        }
-        
-        .platform-step p {
-            font-size: 12px;
-            color: #334155;
-            line-height: 1.4;
-        }
-        
-        .platform-step .badge {
-            display: inline-block;
-            background: #2563EB;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        
-        .workflow-diagram {
-            text-align: center;
-            margin: 20px 0;
-            padding: 15px;
-            background: #F0F4FF;
-            border-radius: 6px;
-            border: 1px solid #CBD5E1;
-        }
-        
-        .workflow-step {
-            display: inline-block;
-            margin: 0 10px;
-            text-align: center;
-            vertical-align: top;
-            width: 100px;
-        }
-        
-        .workflow-step .step-number {
-            background: #2563EB;
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 8px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        
-        .workflow-step .step-text {
-            font-size: 11px;
-            color: #334155;
-            line-height: 1.3;
-        }
-        
-        .workflow-arrow {
-            display: inline-block;
-            margin: 0 5px;
-            font-size: 16px;
-            color: #2563EB;
-            vertical-align: middle;
-            margin-top: 15px;
-        }
-        
-        @media (max-width: 768px) {
-            .platform-steps {
-                grid-template-columns: 1fr;
-            }
-            
-            .workflow-step {
-                margin: 10px 5px;
-                width: 80px;
-            }
-            
-            .workflow-arrow {
-                transform: rotate(90deg);
-                margin: 5px 0;
-            }
-        }
     </style>
 </head>
 <body>
@@ -1211,124 +1178,179 @@
             </div>
         </div>
         
-        <div id="tutorialContent" class="help-content">
-            <h3>How to Use This Passenger Meal & Tier Report Tool</h3>
-            
-            <div class="workflow-diagram">
-                <div class="workflow-step">
-                    <div class="step-number">1</div>
-                    <div class="step-text">Copy Manifest Data</div>
-                </div>
-                <div class="workflow-arrow">→</div>
-                <div class="workflow-step">
-                    <div class="step-number">2</div>
-                    <div class="step-text">Paste & Generate</div>
-                </div>
-                <div class="workflow-arrow">→</div>
-                <div class="workflow-step">
-                    <div class="step-number">3</div>
-                    <div class="step-text">Print Report</div>
-                </div>
-                <div class="workflow-arrow">→</div>
-                <div class="workflow-step">
-                    <div class="step-number">4</div>
-                    <div class="step-text">Done! ✈️</div>
-                </div>
+       <div id="tutorialContent" class="help-content">
+    <h3>How to Use This Passenger Meal & Tier Report Tool</h3>
+    
+    <p><strong>Quick Path (Recommended for 90% of users):</strong></p>
+    <ol>
+        <li><strong>Step 1:</strong> Copy the passenger manifest from BPM using platform-specific instructions below</li>
+        <li><strong>Step 2:</strong> Paste the manifest data into the text area</li>
+        <li><strong>Step 3:</strong> Click <strong>"Generate Report"</strong> or press Ctrl+Enter (Cmd+Enter on Mac)</li>
+        <li><strong>Step 4:</strong> Click "Print Report" when ready</li>
+    </ol>
+    
+    <p><strong>Advanced Path (For Customization):</strong></p>
+    <ul>
+        <li>Open "Advanced Settings" for more customization options</li>
+        <li>All changes update the preview automatically - no need to click "Apply"</li>
+        <li>Click <strong>"Print report with current settings"</strong>, <strong>CHECK</strong> the print surface area, <strong>CHECK</strong> the pages number you want to print unless you want to include all the names in the manifest in the unassigned table.</li>
+        <li>Use "Reset to Defaults" to return to auto-detection</li>
+    
+    </ul>
+    
+    <div class="platform-instructions">
+        <h4>📋 Platform-Specific Copy Instructions</h4>
+        <p><em>Due to different operating system limitations, here's how to copy the manifest data properly:</em></p>
+        
+        <div class="platform-steps">
+            <div class="platform-step">
+                <span class="badge">ANDROID</span>
+                <h5>Must use XClipper (available on Play Store)</h5>
+                <p>Due to Android copy limit restrictions:</p>
+                <ol style="margin-left: 15px; font-size: 11px;">
+                    <li>Long press on "FLT NBR"</li>
+                    <li>Select all text</li>
+                    <li>Use "XCopy" from XClipper</li>
+                    <li>Or drag to select all passenger data down to "Showing X entries"</li>
+                </ol>
             </div>
             
-            <p><strong>Quick Path (Recommended for 90% of users):</strong></p>
-            <ol>
-                <li><strong>Step 1:</strong> Copy the passenger manifest from BPM using platform-specific instructions below</li>
-                <li><strong>Step 2:</strong> Paste the manifest data into the text area</li>
-                <li><strong>Step 3:</strong> Click "Generate Report" or press Ctrl+Enter (Cmd+Enter on Mac)</li>
-                <li><strong>Step 4:</strong> Click "Print Report" when ready</li>
-            </ol>
-            
-            <p><strong>Advanced Path (For Customization):</strong></p>
-            <ul>
-                <li>Open "Advanced Settings" for more customization options</li>
-                <li>All changes update the preview automatically - no need to click "Apply"</li>
-                <li>Use "Reset to Defaults" to return to auto-detection</li>
-            </ul>
-            
-            <div class="platform-instructions">
-                <h4>📋 Platform-Specific Copy Instructions</h4>
-                <p><em>Due to different operating system limitations, here's how to copy the manifest data properly:</em></p>
-                
-                <div class="platform-steps">
-                    <div class="platform-step">
-                        <span class="badge">ANDROID</span>
-                        <h5>Must use XClipper (available on Play Store)</h5>
-                        <p>Due to Android copy limit restrictions:</p>
-                        <ol style="margin-left: 15px; font-size: 11px;">
-                            <li>Long press on "FLT NBR"</li>
-                            <li>Select all text</li>
-                            <li>Use "XCopy" from XClipper</li>
-                            <li>Or drag to select all passenger data down to "Showing X entries"</li>
-                        </ol>
-                    </div>
-                    
-                    <div class="platform-step">
-                        <span class="badge">iOS</span>
-                        <h5>Standard Selection Method</h5>
-                        <p>For iPhone/iPad users:</p>
-                        <ol style="margin-left: 15px; font-size: 11px;">
-                            <li>Tap and hold on "FLT NBR"</li>
-                            <li>Drag selection handles to select from "FLT NBR" until "End of PAX List" or "Showing X entries"</li>
-                            <li>Copy the selected text</li>
-                        </ol>
-                    </div>
-                    
-                    <div class="platform-step">
-                        <span class="badge">WINDOWS/MAC</span>
-                        <h5>Keyboard & Mouse Method</h5>
-                        <p>For desktop computers:</p>
-                        <ol style="margin-left: 15px; font-size: 11px;">
-                            <li>Click before "FLT NBR"</li>
-                            <li>Hold Shift key</li>
-                            <li>Scroll down and click after "Showing X entries"</li>
-                            <li>Press Ctrl+C (Cmd+C on Mac) to copy</li>
-                        </ol>
-                    </div>
-                </div>
+            <div class="platform-step">
+                <span class="badge">iOS</span>
+                <h5>Standard Selection Method</h5>
+                <p>For iPhone/iPad users:</p>
+                <ol style="margin-left: 15px; font-size: 11px;">
+                    <li>Tap and hold on "FLT NBR"</li>
+                    <li>Drag selection handles to select from "FLT NBR" until "End of PAX List" or "Showing X entries"</li>
+                    <li>Copy the selected text</li>
+                </ol>
             </div>
             
-            <p><strong>Pro Tips:</strong></p>
-            <ul>
-                <li>Use <strong>Ctrl+Enter</strong> (Cmd+Enter on Mac) to quickly generate reports after pasting data</li>
-                <li>The tool auto-detects aircraft type and selects the optimal layout</li>
-                <li>Seat Chart view shows visual seating with color-coded tiers and meals</li>
-                <li>Adjust font sizes and table width for perfect printing</li>
-                <li>Try the <strong>Aft Perspective View</strong> for perfect cabin views from the back!</li>
-            </ul>
+            <div class="platform-step">
+                <span class="badge">WINDOWS/MAC</span>
+                <h5>Keyboard & Mouse Method</h5>
+                <p>For desktop computers:</p>
+                <ol style="margin-left: 15px; font-size: 11px;">
+                    <li>Click before "FLT NBR"</li>
+                    <li>Hold Shift key</li>
+                    <li>Scroll down and click after "Showing X entries"</li>
+                    <li>Press Ctrl+C (Cmd+C on Mac) to copy</li>
+                </ol>
+            </div>
         </div>
+    </div>
+    
+    <p><strong>Pro Tips:</strong></p>
+    <ul>
+        <li>Use <strong>Ctrl+Enter</strong> (Cmd+Enter on Mac) to quickly generate reports after pasting data</li>
+        <li>The tool auto-detects aircraft type and selects the optimal layout</li>
+        <li>Seat Chart view shows visual seating with color-coded tiers and meals</li>
+        <li>Adjust font sizes and table width for perfect printing</li>
+        <li>Try the <strong>Aft Perspective View</strong> for perfect cabin views from the back!</li>
+        <li>Business class passengers now show on multiple lines with better name display</li>
+        <li><strong>737 Business Class</strong> now has blank lines for meals to write in standard meals</li>
+    </ul>
+</div>
         
         <div id="versionContent" class="help-content">
-            <h3>Version History - Complete Release Notes</h3>
-            
-            <h4>🚀 Version 3.4 - Aft Perspective View</h4>
-            <p><strong>Release Date:</strong> Current Version</p>
-            <p><strong>New Features:</strong></p>
-            <ul>
-                <li><strong>Aft Perspective View</strong> - Flip seat chart 180° (rows and columns reversed)</li>
-                <li><strong>Perfect Cabin Perspective</strong> - Print and turn paper for exact view from aircraft rear</li>
-                <li><strong>Simple Toggle</strong> - Easy on/off switch for flipped view</li>
-                <li><strong>Preserved Readability</strong> - Text stays normal, only layout changes</li>
-            </ul>
-            
-            <h4>🎯 Version 3.3 - Seat Chart Font Optimization</h4>
-            <p><strong>Release Date:</strong> Previous Version</p>
-            <p><strong>New Features:</strong></p>
-            <ul>
-                <li><strong>Seat Chart Font Size Slider</strong> - Adjust font size from 8px to 16px</li>
-                <li><strong>Optimized 2-Line Display</strong> - Better use of space with larger fonts</li>
-                <li><strong>Tier Icon Display</strong> - ❤️ for PLAT, 🔴 for EMER only</li>
-                <li><strong>All Caps Format</strong> - Maximum readability in seat cells</li>
-                <li><strong>Business Class Zone Fix</strong> - Show All Business option now only affects B/J zones</li>
-            </ul>
-            
-            <!-- ... rest of version history remains the same ... -->
-        </div>
+     <h3>Version History - Complete Release Notes</h3>
+     
+     <h4>🚀 Version 3.6 - 737 Business Class Blank Meal Lines</h4>
+     <p><strong>Release Date:</strong> Current Version</p>
+     <p><strong>New Features:</strong></p>
+     <ul>
+         <li><strong>737 Business Class Blank Meal Lines</strong> - Always show meal line even when no special meal</li>
+         <li><strong>Write-In Space</strong> - Blank space for writing standard meals manually</li>
+         <li><strong>Consistent Layout</strong> - All business class seats maintain same 3-line structure</li>
+         <li><strong>Better Print Format</strong> - Blank lines maintain proper spacing for handwriting</li>
+     </ul>
+     
+     <h4>🚀 Version 3.5 - Business Class Seat Chart Improvements</h4>
+     <p><strong>Release Date:</strong> Previous Version</p>
+     <p><strong>New Features:</strong></p>
+     <ul>
+         <li><strong>Business Class Multi-line Display</strong> - Names on two lines, meals on third line</li>
+         <li><strong>Dynamic Cell Height</strong> - Business class cells automatically adjust height</li>
+         <li><strong>Name Truncation</strong> - Names truncated to 15 characters for better fit</li>
+         <li><strong>737 Business Class Wider Columns</strong> - A, C, D, F seats now wider (65px vs 50px)</li>
+         <li><strong>Font Size Consistency</strong> - Seat chart font slider works for both business and economy</li>
+         <li><strong>737 Business Class Layout</strong> - No B and E seats in 737 business class</li>
+         <li><strong>Aft Perspective View Restored</strong> - Flip seat chart option is back!</li>
+     </ul>
+     
+     <h4>🎯 Version 3.4 - Aft Perspective View</h4>
+     <p><strong>Release Date:</strong> Previous Version</p>
+     <p><strong>New Features:</strong></p>
+     <ul>
+         <li><strong>Aft Perspective View</strong> - Flip seat chart 180° (rows and columns reversed)</li>
+         <li><strong>Perfect Cabin Perspective</strong> - Print and turn paper for exact view from aircraft rear</li>
+         <li><strong>Simple Toggle</strong> - Easy on/off switch for flipped view</li>
+         <li><strong>Preserved Readability</strong> - Text stays normal, only layout changes</li>
+     </ul>
+     
+     <h4>🎯 Version 3.3 - Seat Chart Font Optimization</h4>
+     <p><strong>Release Date:</strong> Previous Version</p>
+     <p><strong>New Features:</strong></p>
+     <ul>
+         <li><strong>Seat Chart Font Size Slider</strong> - Adjust font size from 8px to 16px</li>
+         <li><strong>Optimized 2-Line Display</strong> - Better use of space with larger fonts</li>
+         <li><strong>Tier Icon Display</strong> - ❤️ for PLAT, 🔴 for EMER only</li>
+         <li><strong>All Caps Format</strong> - Maximum readability in seat cells</li>
+         <li><strong>Business Class Zone Fix</strong> - Show All Business option now only affects B/J zones</li>
+     </ul>
+     
+     <h4>📊 Version 3.2 - Advanced Column Controls</h4>
+     <p><strong>Release Date:</strong> Previous Version</p>
+     <p><strong>New Features:</strong></p>
+     <ul>
+         <li><strong>Individual Column Width Controls</strong> - Adjust each column width independently</li>
+         <li><strong>Auto-detect Badge</strong> - Visual indicator for auto-detection mode</li>
+         <li><strong>Responsive Column Layout</strong> - Better mobile experience</li>
+         <li><strong>Print Optimization</strong> - Better column proportions for printed reports</li>
+     </ul>
+     
+     <h4>🖨️ Version 3.1 - Print Optimization</h4>
+     <p><strong>Release Date:</strong> Previous Version</p>
+     <p><strong>New Features:</strong></p>
+     <ul>
+         <li><strong>Ultra-Minimal Margins</strong> - Maximum printable area utilization</li>
+         <li><strong>Compact Print Mode</strong> - Save 20-30% paper for large lists</li>
+         <li><strong>Landscape Mode</strong> - Better for wide tables and larger fonts</li>
+         <li><strong>Page Break Control</strong> - Smart page breaks between zones</li>
+         <li><strong>Orphan Row Prevention</strong> - Keep related rows together</li>
+     </ul>
+     
+     <h4>✨ Version 3.0 - Major Overhaul</h4>
+     <p><strong>Release Date:</strong> Previous Version</p>
+     <p><strong>New Features:</strong></p>
+     <ul>
+         <li><strong>Complete UI Redesign</strong> - Modern, professional interface</li>
+         <li><strong>Real-time Preview</strong> - All changes update instantly</li>
+         <li><strong>Advanced Aircraft Detection</strong> - Smart auto-detection from manifest</li>
+         <li><strong>Custom Zone Configuration</strong> - Full control over cabin zones</li>
+         <li><strong>Enhanced Seat Charts</strong> - Visual seating with color-coded tiers</li>
+         <li><strong>Download Offline Version</strong> - Work without internet connection</li>
+     </ul>
+     
+     <h4>🛠️ Version 2.0 - Core Features</h4>
+     <p><strong>Release Date:</strong> Previous Version</p>
+     <p><strong>New Features:</strong></p>
+     <ul>
+         <li><strong>Basic Manifest Parsing</strong> - Extract passenger data from BPM</li>
+         <li><strong>Meal & Tier Filtering</strong> - Show only special meals and EMER/PLAT tiers</li>
+         <li><strong>Basic Seat Chart</strong> - Initial visual seating layout</li>
+         <li><strong>Simple Printing</strong> - Basic print functionality</li>
+     </ul>
+     
+     <h4>🎉 Version 1.0 - Initial Release</h4>
+     <p><strong>Release Date:</strong> Foundation</p>
+     <p><strong>Basic Functionality:</strong></p>
+     <ul>
+         <li><strong>Text-based Reporting</strong> - Simple passenger lists</li>
+         <li><strong>Manual Configuration</strong> - Basic aircraft type selection</li>
+         <li><strong>Foundation</strong> - Core parsing engine and UI structure</li>
+     </ul>
+ </div>
         
         <div class="input-section">
             <div class="paste-hint">💡 Paste manifest → Generate (Ctrl+Enter) → Print - Fast & Simple!</div>
@@ -1400,35 +1422,6 @@
                         <label>Table Width: <span id="tableWidthValue">100%</span></label>
                         <input type="range" id="tableWidthSlider" min="50" max="150" value="100" step="10">
                     </div>
-                    
-                    <div class="column-width-controls">
-                        <div class="settings-header" style="margin-bottom: 10px;">Column Widths <span class="auto-badge">AUTO</span></div>
-                        <div class="column-control">
-                            <label>Seat:</label>
-                            <input type="range" id="colSeatSlider" min="5" max="15" value="10" step="1">
-                            <span id="colSeatValue">10%</span>
-                        </div>
-                        <div class="column-control">
-                            <label>Title:</label>
-                            <input type="range" id="colTitleSlider" min="5" max="15" value="10" step="1">
-                            <span id="colTitleValue">10%</span>
-                        </div>
-                        <div class="column-control">
-                            <label>Name:</label>
-                            <input type="range" id="colNameSlider" min="40" max="60" value="52" step="1">
-                            <span id="colNameValue">52%</span>
-                        </div>
-                        <div class="column-control">
-                            <label>Tier:</label>
-                            <input type="range" id="colTierSlider" min="5" max="15" value="10" step="1">
-                            <span id="colTierValue">10%</span>
-                        </div>
-                        <div class="column-control">
-                            <label>Meal:</label>
-                            <input type="range" id="colMealSlider" min="15" max="25" value="20" step="1">
-                            <span id="colMealValue">20%</span>
-                        </div>
-                    </div>
                 </div>
                 
                 <div class="settings-header">Seat Chart Controls</div>
@@ -1437,11 +1430,11 @@
                         <label>Seat Chart Font Size: <span id="seatChartFontValue">14px</span></label>
                         <input type="range" id="seatChartFontSlider" min="8" max="16" value="14" step="1">
                         <div style="font-size: 10px; color: #64748B; margin-top: 5px;">
-                            Line 1: Name/Tier | Line 2: Meal (2px larger for emphasis)
+                            Line 1: Name/Tier | Line 2: Meal (2px larger for emphasis) | Line 3: Always shown in business class for writing meals
                         </div>
                     </div>
                     
-                    <!-- NEW: Aft Perspective View Option -->
+                    <!-- RESTORED: Aft Perspective View Option -->
                     <div class="print-option">
                         <label class="toggle-switch">
                             <input type="checkbox" id="flipSeatChart">
@@ -1543,7 +1536,7 @@
             <p style="margin-top: 10px; font-style: italic; text-align: center;">Thank you all for your help during testing and for helping make this tool better for everyone! ✈️</p>
             
             <div class="version-info">
-                Version 3.4 | Aft Perspective View | Seat Chart Flipping | Perfect Cabin Views
+                Version 3.6 | 737 Business Class Blank Meal Lines | Always Show Meal Line for Writing
                 <br>Any bugs or feedback please contact Zayn Ikhlas when he is 21. I only do this when i'm babysitting Zayn or n/s lol XP
             </div>
         </div>
@@ -1570,22 +1563,25 @@
             '350': [{ name: 'B', start: 1, end: 10 }, { name: 'C', start: 20, end: 35 }, { name: 'D', start: 36, end: 46 }, { name: 'E', start: 47, end: 55 }]
         };
         
-        // Seat maps for each aircraft configuration
+        // Seat maps for each aircraft configuration - UPDATED for 737 business class
         const SEAT_MAPS = {
             '737NG': {
                 columns: ['A', 'B', 'C', '|', 'D', 'E', 'F'],
+                businessColumns: ['A', 'C', '|', 'D', 'F'], // No B and E in business class
                 aisles: [3],
                 businessSeats: ['A', 'C', 'D', 'F'],
                 economySeats: ['A', 'B', 'C', 'D', 'E', 'F']
             },
             '737MAX': {
                 columns: ['A', 'B', 'C', '|', 'D', 'E', 'F'],
+                businessColumns: ['A', 'C', '|', 'D', 'F'], // No B and E in business class
                 aisles: [3],
                 businessSeats: ['A', 'C', 'D', 'F'],
                 economySeats: ['A', 'B', 'C', 'D', 'E', 'F']
             },
             '737NR': {
                 columns: ['A', 'B', 'C', '|', 'D', 'E', 'F'],
+                businessColumns: ['A', 'C', '|', 'D', 'F'], // No B and E in business class
                 aisles: [3],
                 businessSeats: ['A', 'C', 'D', 'F'],
                 economySeats: ['A', 'B', 'C', 'D', 'E', 'F']
@@ -1636,18 +1632,11 @@
             fontSize: 9,
             tableWidth: 100,
             seatChartFontSize: 14,
-            columnWidths: {
-                seat: 10,
-                title: 10,
-                name: 52,
-                tier: 10,
-                meal: 20
-            },
             compactPrint: false,
             landscapeMode: false,
             pageBreakZones: true,
             avoidOrphans: true,
-            flipSeatChart: false, // NEW: Added flip seat chart setting
+            flipSeatChart: false, // RESTORED: Added flip seat chart setting
             showAllBusiness: false,
             activeZones: {},
             detectedAircraftType: 'narrowbody'
@@ -1656,7 +1645,7 @@
         let customZones = [];
         let debounceTimer;
         
-        // NEW: Seat Chart Flipping Functionality
+        // NEW: Seat Chart Flipping Functionality - RESTORED
         class SeatChartFlipper {
             static flipSeatChart(seatChartTable) {
                 // Get all rows from the table
@@ -1737,6 +1726,17 @@
             return flipped;
         }
         
+        // NEW: Improved name truncation for business class
+        function truncateNameForBusinessClass(name) {
+            if (!name || !name.includes('/')) return name || '';
+            
+            const parts = name.split('/');
+            return parts.map(part => {
+                const trimmed = part.trim();
+                return trimmed.length > 15 ? trimmed.substring(0, 15) + '..' : trimmed;
+            }).join('/');
+        }
+        
         // Configuration validation helper
         function _0x2a4e(_0x7b3f) {
             if (!_0x7b3f) return false;
@@ -1802,7 +1802,7 @@
         function showSuccess(message) {
             const output = document.getElementById('reportContent');
             const existing = output.innerHTML;
-            output.innerHTML = `<div class="success">${message}</div>` + existing;
+            output.innerHTML = `<div class="success no-print">${message}</div>` + existing;
         }
         
         function hasValidManifest() {
@@ -1821,15 +1821,8 @@
             currentSettings.landscapeMode = document.getElementById('landscapeMode').checked;
             currentSettings.pageBreakZones = document.getElementById('pageBreakBetweenZones').checked;
             currentSettings.avoidOrphans = document.getElementById('avoidOrphanRows').checked;
-            currentSettings.flipSeatChart = document.getElementById('flipSeatChart').checked; // NEW
+            currentSettings.flipSeatChart = document.getElementById('flipSeatChart').checked; // RESTORED
             currentSettings.showAllBusiness = document.getElementById('showAllBusiness').checked;
-            
-            // Column widths
-            currentSettings.columnWidths.seat = parseInt(document.getElementById('colSeatSlider').value);
-            currentSettings.columnWidths.title = parseInt(document.getElementById('colTitleSlider').value);
-            currentSettings.columnWidths.name = parseInt(document.getElementById('colNameSlider').value);
-            currentSettings.columnWidths.tier = parseInt(document.getElementById('colTierSlider').value);
-            currentSettings.columnWidths.meal = parseInt(document.getElementById('colMealSlider').value);
             
             updateUIFromSettings();
         }
@@ -1838,13 +1831,6 @@
             document.getElementById('fontSizeDisplay').textContent = currentSettings.fontSize + 'px';
             document.getElementById('tableWidthValue').textContent = currentSettings.tableWidth + '%';
             document.getElementById('seatChartFontValue').textContent = currentSettings.seatChartFontSize + 'px';
-            
-            // Column width displays
-            document.getElementById('colSeatValue').textContent = currentSettings.columnWidths.seat + '%';
-            document.getElementById('colTitleValue').textContent = currentSettings.columnWidths.title + '%';
-            document.getElementById('colNameValue').textContent = currentSettings.columnWidths.name + '%';
-            document.getElementById('colTierValue').textContent = currentSettings.columnWidths.tier + '%';
-            document.getElementById('colMealValue').textContent = currentSettings.columnWidths.meal + '%';
             
             // Apply visual settings
             const outputSection = document.querySelector('.output-section');
@@ -1866,18 +1852,11 @@
                 fontSize: 9,
                 tableWidth: 100,
                 seatChartFontSize: 14,
-                columnWidths: {
-                    seat: 10,
-                    title: 10,
-                    name: 52,
-                    tier: 10,
-                    meal: 20
-                },
                 compactPrint: false,
                 landscapeMode: false,
                 pageBreakZones: true,
                 avoidOrphans: true,
-                flipSeatChart: false, // NEW
+                flipSeatChart: false, // RESTORED
                 showAllBusiness: false,
                 activeZones: {},
                 detectedAircraftType: 'narrowbody'
@@ -1893,15 +1872,8 @@
             document.getElementById('landscapeMode').checked = false;
             document.getElementById('pageBreakBetweenZones').checked = true;
             document.getElementById('avoidOrphanRows').checked = true;
-            document.getElementById('flipSeatChart').checked = false; // NEW
+            document.getElementById('flipSeatChart').checked = false; // RESTORED
             document.getElementById('showAllBusiness').checked = false;
-            
-            // Column widths
-            document.getElementById('colSeatSlider').value = 10;
-            document.getElementById('colTitleSlider').value = 10;
-            document.getElementById('colNameSlider').value = 52;
-            document.getElementById('colTierSlider').value = 10;
-            document.getElementById('colMealSlider').value = 20;
             
             updateUIFromSettings();
             
@@ -2371,7 +2343,7 @@
                     
                     if (unassigned.length > 0) {
                         const pageBreakClass = currentSettings.pageBreakZones && zoneIndex > 0 ? 'page-break' : '';
-                        tableContent += `<div class="zone-section ${pageBreakClass}">`;
+                        tableContent += `<div class="zone-section no-print ${pageBreakClass}">`;
                         tableContent += `<div class="zone-header">UNASSIGNED SEATS</div>`;
                         tableContent += generateUnassignedTable(unassigned, currentSettings.detectedAircraftType);
                         tableContent += `</div>`;
@@ -2422,7 +2394,7 @@
                             tableContent += `</div>`;
                             
                             if (unassigned.length > 0) {
-                                tableContent += `<div class="zone-section">`;
+                                tableContent += `<div class="zone-section no-print">`;
                                 tableContent += `<div class="zone-header">UNASSIGNED SEATS</div>`;
                                 tableContent += generateUnassignedTable(unassigned, currentSettings.detectedAircraftType);
                                 tableContent += `</div>`;
@@ -2454,7 +2426,7 @@
                             tableContent += `</div>`;
                             
                             if (unassigned.length > 0) {
-                                tableContent += `<div class="zone-section">`;
+                                tableContent += `<div class="zone-section no-print">`;
                                 tableContent += `<div class="zone-header">UNASSIGNED SEATS</div>`;
                                 tableContent += generateUnassignedTable(unassigned, currentSettings.detectedAircraftType);
                                 tableContent += `</div>`;
@@ -2478,8 +2450,8 @@
                     successMessage += `${filtered.length} passengers with special requirements found.`;
                 }
                 
-                // NEW: Apply seat chart flipping if enabled
-                document.getElementById('reportContent').innerHTML = `<div class="success">${successMessage}</div>` + html;
+                // NEW: Apply seat chart flipping if enabled - RESTORED
+                document.getElementById('reportContent').innerHTML = `<div class="success no-print">${successMessage}</div>` + html;
                 
                 if (currentSettings.flipSeatChart) {
                     const flipped = flipAllSeatCharts();
@@ -2576,17 +2548,6 @@
             const tableClass = aircraftType === 'widebody' ? 'widebody-table' : 'narrowbody-table';
             let html = `<table class="${tableClass}">`;
             
-            // Apply custom column widths
-            const styles = `
-                <style>
-                    .${tableClass} th:nth-child(1), .${tableClass} td:nth-child(1) { width: ${currentSettings.columnWidths.seat}% !important; text-align: center; }
-                    .${tableClass} th:nth-child(2), .${tableClass} td:nth-child(2) { width: ${currentSettings.columnWidths.title}% !important; }
-                    .${tableClass} th:nth-child(3), .${tableClass} td:nth-child(3) { width: ${currentSettings.columnWidths.name}% !important; }
-                    .${tableClass} th:nth-child(4), .${tableClass} td:nth-child(4) { width: ${currentSettings.columnWidths.tier}% !important; text-align: center; }
-                    .${tableClass} th:nth-child(5), .${tableClass} td:nth-child(5) { width: ${currentSettings.columnWidths.meal}% !important; }
-                </style>
-            `;
-            
             const headers = showSeat ? 
                 `<th>SEAT</th><th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>` : 
                 `<th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>`;
@@ -2624,7 +2585,7 @@
                 html += `<td>${p.title}</td><td>${p.name}</td><td><strong>${p.tier}</strong></td><td>${mealDisplay}</td></tr>`;
             });
             
-            html += `</tbody></table>${styles}`;
+            html += `</tbody></table>`;
             return html;
         }
         
@@ -2692,19 +2653,43 @@
             return mealDisplay;
         }
         
-        // UPDATED: Generate seat chart with optimized 2-line format and tier icons only for PLAT/EMER
+        // UPDATED: Generate seat chart with optimized multi-line format for business class and 737 business class layout
+        // NOW WITH ALWAYS-SHOW MEAL LINE IN BUSINESS CLASS
         function generateSeatChart(passengers, zone, aircraftConfig) {
             const seatMap = SEAT_MAPS[aircraftConfig];
             if (!seatMap) {
                 return `<div class="error">Seat chart not available for selected aircraft configuration.</div>`;
             }
             
-            const { columns, aisles } = seatMap;
+            // Determine if this is a business class zone and narrowbody aircraft
+            const isBusinessZone = isBusinessClassZone(zone.name);
+            const isNarrowbody = ['737NG', '737MAX', '737NR'].includes(aircraftConfig);
+            
+            // Choose the appropriate columns based on aircraft type and zone
+            let columns, aisles;
+            if (isNarrowbody && isBusinessZone && seatMap.businessColumns) {
+                // Use business class columns for 737 business class (no B and E seats)
+                columns = seatMap.businessColumns;
+                aisles = [2]; // Aisle after C in business class layout
+            } else {
+                // Use standard columns for all other cases
+                columns = seatMap.columns;
+                aisles = seatMap.aisles;
+            }
+            
             const startRow = zone.start;
             const endRow = zone.end;
             
+            // Choose the appropriate CSS class for column widths
+            let tableClass = 'seat-chart';
+            if (isNarrowbody) {
+                tableClass += isBusinessZone ? ' narrowbody-business' : ' narrowbody-economy';
+            } else {
+                tableClass += ' widebody';
+            }
+            
             let html = `<div class="seat-chart-container">
-                <table class="seat-chart" data-font-size="${currentSettings.seatChartFontSize}">
+                <table class="${tableClass}" data-font-size="${currentSettings.seatChartFontSize}">
                 <thead><tr><th class="row-header">Row</th>`;
             
             // Create header row with seat letters
@@ -2797,15 +2782,31 @@
                                 
                                 html += `<td class="${cellClass} ${tierClass}" colspan="${colspan}">`;
                                 if (passenger) {
-                                    // UPDATED: 2-line format with tier icons only for PLAT/EMER
+                                    // UPDATED: Different format for business class vs economy
                                     const mealDisplay = formatMealDisplay(passenger.meal);
                                     const tierIcon = passenger.tier === 'PLAT' ? '❤️ ' : (passenger.tier === 'EMER' ? '🔴 ' : '');
-                                    const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                     
-                                    html += `<div class="seat-cell">
-                                        <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
-                                        ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
-                                    </div>`;
+                                    if (isBusinessZone) {
+                                        // BUSINESS CLASS: Multi-line format with ALWAYS-SHOW meal line
+                                        const businessName = truncateNameForBusinessClass(passenger.name);
+                                        const nameParts = businessName.split('/');
+                                        const firstName = nameParts[0] || '';
+                                        const lastName = nameParts[1] || '';
+                                        
+                                        html += `<div class="seat-cell business-class">
+                                            <div class="seat-line1">${tierIcon + passenger.title + '/' + firstName.toUpperCase()}</div>
+                                            ${lastName ? `<div class="seat-line2">${lastName.toUpperCase()}</div>` : ''}
+                                            <div class="seat-line3">${mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;'}</div>
+                                        </div>`;
+                                    } else {
+                                        // ECONOMY: Standard 2-line format - only show meal if exists
+                                        const namePart = passenger.title + '/' + passenger.name.split('/')[0];
+                                        
+                                        html += `<div class="seat-cell">
+                                            <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
+                                            ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
+                                        </div>`;
+                                    }
                                 } else {
                                     html += `<div class="seat-cell">${seatNumber}</div>`;
                                 }
@@ -2838,15 +2839,31 @@
                             
                             html += `<td class="${cellClass} ${tierClass}">`;
                             if (passenger) {
-                                // UPDATED: 2-line format with tier icons only for PLAT/EMER
+                                // UPDATED: Different format for business class vs economy
                                 const mealDisplay = formatMealDisplay(passenger.meal);
                                 const tierIcon = passenger.tier === 'PLAT' ? '❤️ ' : (passenger.tier === 'EMER' ? '🔴 ' : '');
-                                const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                 
-                                html += `<div class="seat-cell">
-                                    <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
-                                    ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
-                                </div>`;
+                                if (isBusinessZone) {
+                                    // BUSINESS CLASS: Multi-line format with ALWAYS-SHOW meal line
+                                    const businessName = truncateNameForBusinessClass(passenger.name);
+                                    const nameParts = businessName.split('/');
+                                    const firstName = nameParts[0] || '';
+                                    const lastName = nameParts[1] || '';
+                                    
+                                    html += `<div class="seat-cell business-class">
+                                        <div class="seat-line1">${tierIcon + passenger.title + '/' + firstName.toUpperCase()}</div>
+                                        ${lastName ? `<div class="seat-line2">${lastName.toUpperCase()}</div>` : ''}
+                                        <div class="seat-line3">${mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;'}</div>
+                                    </div>`;
+                                } else {
+                                    // ECONOMY: Standard 2-line format - only show meal if exists
+                                    const namePart = passenger.title + '/' + passenger.name.split('/')[0];
+                                    
+                                    html += `<div class="seat-cell">
+                                        <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
+                                        ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
+                                    </div>`;
+                                }
                             } else {
                                 html += `<div class="seat-cell">${seatNumber}</div>`;
                             }
@@ -2879,15 +2896,31 @@
                             
                             html += `<td class="${cellClass} ${tierClass}">`;
                             if (passenger) {
-                                // UPDATED: 2-line format with tier icons only for PLAT/EMER
+                                // UPDATED: Different format for business class vs economy
                                 const mealDisplay = formatMealDisplay(passenger.meal);
                                 const tierIcon = passenger.tier === 'PLAT' ? '❤️ ' : (passenger.tier === 'EMER' ? '🔴 ' : '');
-                                const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                 
-                                html += `<div class="seat-cell">
-                                    <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
-                                    ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
-                                </div>`;
+                                if (isBusinessZone) {
+                                    // BUSINESS CLASS: Multi-line format with ALWAYS-SHOW meal line
+                                    const businessName = truncateNameForBusinessClass(passenger.name);
+                                    const nameParts = businessName.split('/');
+                                    const firstName = nameParts[0] || '';
+                                    const lastName = nameParts[1] || '';
+                                    
+                                    html += `<div class="seat-cell business-class">
+                                        <div class="seat-line1">${tierIcon + passenger.title + '/' + firstName.toUpperCase()}</div>
+                                        ${lastName ? `<div class="seat-line2">${lastName.toUpperCase()}</div>` : ''}
+                                        <div class="seat-line3">${mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;'}</div>
+                                    </div>`;
+                                } else {
+                                    // ECONOMY: Standard 2-line format - only show meal if exists
+                                    const namePart = passenger.title + '/' + passenger.name.split('/')[0];
+                                    
+                                    html += `<div class="seat-cell">
+                                        <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
+                                        ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
+                                    </div>`;
+                                }
                             } else {
                                 html += `<div class="seat-cell">${seatNumber}</div>`;
                             }
@@ -2931,8 +2964,7 @@
             const controls = [
                 'aircraftType', 'layoutStyle', 'fontSizeSlider', 'tableWidthSlider',
                 'seatChartFontSlider', 'compactPrintMode', 'landscapeMode', 
-                'pageBreakBetweenZones', 'avoidOrphanRows', 'flipSeatChart', 'showAllBusiness', // UPDATED: Added flipSeatChart
-                'colSeatSlider', 'colTitleSlider', 'colNameSlider', 'colTierSlider', 'colMealSlider'
+                'pageBreakBetweenZones', 'avoidOrphanRows', 'flipSeatChart', 'showAllBusiness' // RESTORED: Added flipSeatChart
             ];
             
             controls.forEach(controlId => {
