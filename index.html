@@ -869,12 +869,13 @@
                 display: none !important;
             }
             
-            /* Hide unassigned seats section */
-            .zone-section:last-child .zone-header:last-child {
-                display: none !important;
+            /* NEW: Show unassigned seats section when enabled */
+            .zone-section.unassigned-print {
+                display: block !important;
             }
             
-            .zone-section:last-child table:last-child {
+            /* Hide unassigned seats section by default */
+            .zone-section.unassigned-no-print {
                 display: none !important;
             }
             
@@ -1249,14 +1250,24 @@
         <li>Try the <strong>Aft Perspective View</strong> for perfect cabin views from the back!</li>
         <li>Business class passengers now show on multiple lines with better name display</li>
         <li><strong>737 Business Class</strong> now has blank lines for meals to write in standard meals</li>
+        <li><strong>NEW:</strong> Toggle to show unassigned passengers in print view</li>
     </ul>
 </div>
         
         <div id="versionContent" class="help-content">
      <h3>Version History - Complete Release Notes</h3>
      
-     <h4>🚀 Version 3.6 - 737 Business Class Blank Meal Lines</h4>
+     <h4>🚀 Version 3.7 - Show Unassigned Table in Print</h4>
      <p><strong>Release Date:</strong> Current Version</p>
+     <p><strong>New Features:</strong></p>
+     <ul>
+         <li><strong>Show Unassigned Table in Print</strong> - New toggle option to include unassigned passengers in print view</li>
+         <li><strong>Print Control</strong> - Choose whether to include unassigned passengers in printed reports</li>
+         <li><strong>Flexible Workflows</strong> - Print with or without unassigned table based on your needs</li>
+     </ul>
+     
+     <h4>🚀 Version 3.6 - 737 Business Class Blank Meal Lines</h4>
+     <p><strong>Release Date:</strong> Previous Version</p>
      <p><strong>New Features:</strong></p>
      <ul>
          <li><strong>737 Business Class Blank Meal Lines</strong> - Always show meal line even when no special meal</li>
@@ -1501,6 +1512,17 @@
                             <span class="option-description">Keep at least 2 rows together when page breaks occur</span>
                         </label>
                     </div>
+                    <!-- NEW: Show Unassigned Table in Print Option -->
+                    <div class="print-option">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="showUnassignedInPrint">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <label class="toggle-label" for="showUnassignedInPrint">
+                            <strong>Show Unassigned Table in Print View</strong>
+                            <span class="option-description">Include unassigned passengers table in printed reports</span>
+                        </label>
+                    </div>
                     <div style="margin-top: 12px; padding: 10px; background: #EFF6FF; border-radius: 4px; border-left: 3px solid #2563EB; font-size: 11px; color: #1E3A8A;">
                         <strong>📄 Estimated Pages:</strong> <span id="pageEstimate">Generate report to see estimate</span>
                     </div>
@@ -1536,7 +1558,7 @@
             <p style="margin-top: 10px; font-style: italic; text-align: center;">Thank you all for your help during testing and for helping make this tool better for everyone! ✈️</p>
             
             <div class="version-info">
-                Version 3.6 | 737 Business Class Blank Meal Lines | Always Show Meal Line for Writing
+                Version 3.7 | Show Unassigned Table in Print | Always Show Meal Line for Writing
                 <br>Any bugs or feedback please contact Zayn Ikhlas when he is 21. I only do this when i'm babysitting Zayn or n/s lol XP
             </div>
         </div>
@@ -1638,6 +1660,7 @@
             avoidOrphans: true,
             flipSeatChart: false, // RESTORED: Added flip seat chart setting
             showAllBusiness: false,
+            showUnassignedInPrint: false, // NEW: Show unassigned table in print setting
             activeZones: {},
             detectedAircraftType: 'narrowbody'
         };
@@ -1823,6 +1846,7 @@
             currentSettings.avoidOrphans = document.getElementById('avoidOrphanRows').checked;
             currentSettings.flipSeatChart = document.getElementById('flipSeatChart').checked; // RESTORED
             currentSettings.showAllBusiness = document.getElementById('showAllBusiness').checked;
+            currentSettings.showUnassignedInPrint = document.getElementById('showUnassignedInPrint').checked; // NEW
             
             updateUIFromSettings();
         }
@@ -1858,6 +1882,7 @@
                 avoidOrphans: true,
                 flipSeatChart: false, // RESTORED
                 showAllBusiness: false,
+                showUnassignedInPrint: false, // NEW
                 activeZones: {},
                 detectedAircraftType: 'narrowbody'
             };
@@ -1874,6 +1899,7 @@
             document.getElementById('avoidOrphanRows').checked = true;
             document.getElementById('flipSeatChart').checked = false; // RESTORED
             document.getElementById('showAllBusiness').checked = false;
+            document.getElementById('showUnassignedInPrint').checked = false; // NEW
             
             updateUIFromSettings();
             
@@ -2219,6 +2245,7 @@
                             </label>
                             ${currentSettings.flipSeatChart ? '<div class="magic-option"><span>🔄 Aft Perspective Active - Print and turn paper 180°</span></div>' : ''}
                             ${currentSettings.showAllBusiness ? '<div class="magic-option"><span>👔 Business Class Display Active - Showing all business class passengers</span></div>' : ''}
+                            ${currentSettings.showUnassignedInPrint ? '<div class="magic-option"><span>📋 Unassigned Table WILL BE INCLUDED in Print</span></div>' : ''}
                         </div>
                     `;
                 }
@@ -2342,8 +2369,10 @@
                     }
                     
                     if (unassigned.length > 0) {
+                        // NEW: Use the showUnassignedInPrint setting to determine which class to use
+                        const unassignedClass = currentSettings.showUnassignedInPrint ? 'unassigned-print' : 'unassigned-no-print';
                         const pageBreakClass = currentSettings.pageBreakZones && zoneIndex > 0 ? 'page-break' : '';
-                        tableContent += `<div class="zone-section no-print ${pageBreakClass}">`;
+                        tableContent += `<div class="zone-section ${unassignedClass} ${pageBreakClass}">`;
                         tableContent += `<div class="zone-header">UNASSIGNED SEATS</div>`;
                         tableContent += generateUnassignedTable(unassigned, currentSettings.detectedAircraftType);
                         tableContent += `</div>`;
@@ -2394,7 +2423,9 @@
                             tableContent += `</div>`;
                             
                             if (unassigned.length > 0) {
-                                tableContent += `<div class="zone-section no-print">`;
+                                // NEW: Use the showUnassignedInPrint setting to determine which class to use
+                                const unassignedClass = currentSettings.showUnassignedInPrint ? 'unassigned-print' : 'unassigned-no-print';
+                                tableContent += `<div class="zone-section ${unassignedClass}">`;
                                 tableContent += `<div class="zone-header">UNASSIGNED SEATS</div>`;
                                 tableContent += generateUnassignedTable(unassigned, currentSettings.detectedAircraftType);
                                 tableContent += `</div>`;
@@ -2426,7 +2457,9 @@
                             tableContent += `</div>`;
                             
                             if (unassigned.length > 0) {
-                                tableContent += `<div class="zone-section no-print">`;
+                                // NEW: Use the showUnassignedInPrint setting to determine which class to use
+                                const unassignedClass = currentSettings.showUnassignedInPrint ? 'unassigned-print' : 'unassigned-no-print';
+                                tableContent += `<div class="zone-section ${unassignedClass}">`;
                                 tableContent += `<div class="zone-header">UNASSIGNED SEATS</div>`;
                                 tableContent += generateUnassignedTable(unassigned, currentSettings.detectedAircraftType);
                                 tableContent += `</div>`;
@@ -2964,7 +2997,8 @@
             const controls = [
                 'aircraftType', 'layoutStyle', 'fontSizeSlider', 'tableWidthSlider',
                 'seatChartFontSlider', 'compactPrintMode', 'landscapeMode', 
-                'pageBreakBetweenZones', 'avoidOrphanRows', 'flipSeatChart', 'showAllBusiness' // RESTORED: Added flipSeatChart
+                'pageBreakBetweenZones', 'avoidOrphanRows', 'flipSeatChart', 'showAllBusiness', // RESTORED: Added flipSeatChart
+                'showUnassignedInPrint' // NEW: Added showUnassignedInPrint
             ];
             
             controls.forEach(controlId => {
