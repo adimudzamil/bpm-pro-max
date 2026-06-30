@@ -42,48 +42,6 @@
             --radius: 10px;
             --header-h: 60px;
         }
-
-        /* ── OPS (default) ── */
-        [data-theme="ops"] {
-            --bg: #F4F7FB;
-            --surface: #FFFFFF;
-            --surface2: #EEF3FA;
-            --border: #D6E0EF;
-            --border2: #C0CFDF;
-            --text: #0D1F3C;
-            --text2: #4A6280;
-            --text3: #8FA3BC;
-            --navy: #003580;
-            --navy2: #001F4E;
-            --navy3: #00418A;
-            --gold: #C9A84C;
-            --gold2: #E8C96A;
-            --gold3: #FBF5E6;
-            --shadow: 0 2px 12px rgba(0, 31, 78, 0.08);
-            --shadow2: 0 4px 24px rgba(0, 31, 78, 0.14);
-        }
-
-        /* ── MODERN ── */
-        [data-theme="modern"] {
-            --bg: #F0F4FF;
-            --surface: #FFFFFF;
-            --surface2: #EBF2FF;
-            --border: #C7D7F7;
-            --border2: #A0BBF0;
-            --text: #1E293B;
-            --text2: #475569;
-            --text3: #94A3B8;
-            --navy: #1D4ED8;
-            --navy2: #1E3A8A;
-            --navy3: #2563EB;
-            --gold: #F59E0B;
-            --gold2: #FCD34D;
-            --gold3: #FFFBEB;
-            --shadow: 0 2px 12px rgba(30, 58, 138, 0.08);
-            --shadow2: 0 4px 24px rgba(30, 58, 138, 0.14);
-        }
-
-        /* ── DARK ── */
         [data-theme="dark"] {
             --bg: #0D1525;
             --surface: #162035;
@@ -93,17 +51,10 @@
             --text: #E8EEF7;
             --text2: #8FA3BC;
             --text3: #4A6280;
-            --navy: #4D8EF0;
-            --navy2: #1A2744;
-            --navy3: #6A9EF0;
-            --gold: #C9A84C;
-            --gold2: #E8C96A;
             --gold3: #1C2A42;
             --shadow: 0 2px 12px rgba(0, 0, 0, .3);
             --shadow2: 0 4px 24px rgba(0, 0, 0, .4);
         }
-
-        /* ── BLACK ── */
         [data-theme="black"] {
             --bg: #000;
             --surface: #0A0A0A;
@@ -113,114 +64,23 @@
             --text: #F0F0F0;
             --text2: #888;
             --text3: #444;
-            --navy: #5B8DEE;
-            --navy2: #000;
-            --navy3: #7A9FEE;
-            --gold: #C9A84C;
-            --gold2: #E8C96A;
             --gold3: #0A0A0A;
             --shadow: 0 2px 12px rgba(0, 0, 0, .6);
             --shadow2: 0 4px 24px rgba(0, 0, 0, .8);
         }
-
-        /* ── COCKPIT ── */
-        [data-theme="cockpit"] {
-            --bg: #0A0E1A;
-            --surface: #12182B;
-            --surface2: #1C2540;
-            --border: #2A3560;
-            --border2: #3A4A70;
-            --text: #F0EDE6;
-            --text2: #7A8BA0;
-            --text3: #3A4A60;
-            --navy: #E8A020;
-            --navy2: #B87010;
-            --navy3: #F0C040;
-            --gold: #E8A020;
-            --gold2: #F0C040;
-            --gold3: #1C2540;
-            --shadow: 0 2px 12px rgba(0, 0, 0, .5);
-            --shadow2: 0 4px 24px rgba(0, 0, 0, .6);
-        }
-
-        /* ── NEON ── */
-        [data-theme="neon"] {
-            --bg: #0F292F;
-            --surface: #501F3A;
-            --surface2: #2A1A30;
-            --border: #14A098;
-            --border2: #CB2D6F;
-            --text: #CCCCCC;
-            --text2: #14A098;
-            --text3: #CB2D6F;
-            --navy: #CB2D6F;
-            --navy2: #501F3A;
-            --navy3: #E84A8A;
-            --gold: #CB2D6F;
-            --gold2: #E84A8A;
-            --gold3: #2A1A30;
-            --shadow: 0 2px 12px rgba(0, 0, 0, .6);
-            --shadow2: 0 4px 24px rgba(0, 0, 0, .7);
-        }
-
-        /* ── EARTHY (Louis Vuitton) ── */
-        [data-theme="earthy"] {
-            --bg: #F5F0E8;
-            --surface: #E8DCC8;
-            --surface2: #D4C5A9;
-            --border: #A68B6D;
-            --border2: #8B6B3A;
-            --text: #2C1A1A;
-            --text2: #7A5A3A;
-            --text3: #B89A7A;
-            --navy: #C5A55A;
-            --navy2: #4A2C2A;
-            --navy3: #D4B86A;
-            --gold: #C5A55A;
-            --gold2: #D4B86A;
-            --gold3: #E8DCC8;
-            --shadow: 0 2px 12px rgba(74, 44, 42, 0.12);
-            --shadow2: 0 4px 24px rgba(74, 44, 42, 0.20);
-        }
-
-        /* ── CYBER ── */
-        [data-theme="cyber"] {
-            --bg: #0B0C10;
-            --surface: #1F2833;
-            --surface2: #2A3440;
-            --border: #45A29E;
-            --border2: #66FCF1;
-            --text: #C5C6C7;
-            --text2: #45A29E;
-            --text3: #45A29E;
-            --navy: #66FCF1;
-            --navy2: #45A29E;
-            --navy3: #88F0E0;
-            --gold: #66FCF1;
-            --gold2: #88F0E0;
-            --gold3: #2A3440;
-            --shadow: 0 2px 12px rgba(0, 0, 0, .6);
-            --shadow2: 0 4px 24px rgba(0, 0, 0, .7);
-        }
-
-        /* ── FOREST (Military/Camo) ── */
-        [data-theme="forest"] {
-            --bg: #1A1A1A;
-            --surface: #2E3A2E;
-            --surface2: #3A4A3A;
-            --border: #4A5A4A;
-            --border2: #6A7A6A;
-            --text: #E0E0E0;
-            --text2: #A0B0A0;
-            --text3: #6A7A6A;
-            --navy: #7FFF00;
-            --navy2: #4C8B00;
-            --navy3: #A8FF40;
-            --gold: #7FFF00;
-            --gold2: #A8FF40;
-            --gold3: #3A4A3A;
-            --shadow: 0 2px 12px rgba(0, 0, 0, .6);
-            --shadow2: 0 4px 24px rgba(0, 0, 0, .7);
+        [data-theme="modern"] {
+            --navy: #1D4ED8;
+            --navy2: #1E3A8A;
+            --navy3: #2563EB;
+            --gold: #F59E0B;
+            --gold2: #FCD34D;
+            --gold3: #FFFBEB;
+            --ifs: #1D4ED8;
+            --ifs-bg: #EFF6FF;
+            --ops: #059669;
+            --ops-bg: #ECFDF5;
+            --fsoc: #DC2626;
+            --fsoc-bg: #FEF2F2;
         }
 
         /* ══════════════════════════════════════════
@@ -599,11 +459,7 @@
             margin-top: 2px;
         }
         [data-theme="dark"] .cc-count,
-        [data-theme="black"] .cc-count,
-        [data-theme="cockpit"] .cc-count,
-        [data-theme="neon"] .cc-count,
-        [data-theme="cyber"] .cc-count,
-        [data-theme="forest"] .cc-count {
+        [data-theme="black"] .cc-count {
             color: var(--gold);
         }
         .cc-arrow {
@@ -659,11 +515,7 @@
             margin-bottom: 4px;
         }
         [data-theme="dark"] .dz-title,
-        [data-theme="black"] .dz-title,
-        [data-theme="cockpit"] .dz-title,
-        [data-theme="neon"] .dz-title,
-        [data-theme="cyber"] .dz-title,
-        [data-theme="forest"] .dz-title {
+        [data-theme="black"] .dz-title {
             color: var(--gold);
         }
         .dz-hint {
@@ -803,11 +655,7 @@
             border: 1px solid #BBF7D0;
         }
         [data-theme="dark"] .pl-row.ok,
-        [data-theme="black"] .pl-row.ok,
-        [data-theme="cockpit"] .pl-row.ok,
-        [data-theme="neon"] .pl-row.ok,
-        [data-theme="cyber"] .pl-row.ok,
-        [data-theme="forest"] .pl-row.ok {
+        [data-theme="black"] .pl-row.ok {
             background: #0D2818;
             border-color: #166534;
         }
@@ -816,11 +664,7 @@
             border: 1px solid #FECACA;
         }
         [data-theme="dark"] .pl-row.fail,
-        [data-theme="black"] .pl-row.fail,
-        [data-theme="cockpit"] .pl-row.fail,
-        [data-theme="neon"] .pl-row.fail,
-        [data-theme="cyber"] .pl-row.fail,
-        [data-theme="forest"] .pl-row.fail {
+        [data-theme="black"] .pl-row.fail {
             background: #2A0D0D;
             border-color: #7F1D1D;
         }
@@ -838,11 +682,7 @@
             color: var(--navy);
         }
         [data-theme="dark"] .pl-ref,
-        [data-theme="black"] .pl-ref,
-        [data-theme="cockpit"] .pl-ref,
-        [data-theme="neon"] .pl-ref,
-        [data-theme="cyber"] .pl-ref,
-        [data-theme="forest"] .pl-ref {
+        [data-theme="black"] .pl-ref {
             color: var(--gold2);
         }
 
@@ -858,11 +698,7 @@
             flex-wrap: wrap;
         }
         [data-theme="dark"] .db-bar,
-        [data-theme="black"] .db-bar,
-        [data-theme="cockpit"] .db-bar,
-        [data-theme="neon"] .db-bar,
-        [data-theme="cyber"] .db-bar,
-        [data-theme="forest"] .db-bar {
+        [data-theme="black"] .db-bar {
             border-color: var(--border);
         }
         .db-bar-label {
@@ -874,11 +710,7 @@
             flex-shrink: 0;
         }
         [data-theme="dark"] .db-bar-label,
-        [data-theme="black"] .db-bar-label,
-        [data-theme="cockpit"] .db-bar-label,
-        [data-theme="neon"] .db-bar-label,
-        [data-theme="cyber"] .db-bar-label,
-        [data-theme="forest"] .db-bar-label {
+        [data-theme="black"] .db-bar-label {
             color: var(--gold);
         }
         .db-btn {
@@ -1178,11 +1010,7 @@
             background: var(--gold3);
         }
         [data-theme="dark"] .memo-table tbody tr.editing,
-        [data-theme="black"] .memo-table tbody tr.editing,
-        [data-theme="cockpit"] .memo-table tbody tr.editing,
-        [data-theme="neon"] .memo-table tbody tr.editing,
-        [data-theme="cyber"] .memo-table tbody tr.editing,
-        [data-theme="forest"] .memo-table tbody tr.editing {
+        [data-theme="black"] .memo-table tbody tr.editing {
             background: var(--surface2);
         }
         .memo-table tbody tr.drag-over-row {
@@ -1203,11 +1031,7 @@
             font-size: 11px;
         }
         [data-theme="dark"] .td-ref,
-        [data-theme="black"] .td-ref,
-        [data-theme="cockpit"] .td-ref,
-        [data-theme="neon"] .td-ref,
-        [data-theme="cyber"] .td-ref,
-        [data-theme="forest"] .td-ref {
+        [data-theme="black"] .td-ref {
             color: var(--gold2);
         }
         .td-subject {
@@ -1365,10 +1189,10 @@
             margin-top: 1px;
         }
 
-        /* Theme picker — 3 columns */
+        /* Theme picker */
         .theme-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 8px;
         }
         .theme-btn {
@@ -2059,33 +1883,6 @@
                             <div class="tb-swatch" style="background:linear-gradient(90deg,#000,#444)"></div>
                             <div class="tb-name">Black</div>
                             <div class="tb-sub">OLED Black</div>
-                        </button>
-
-                        <!-- NEW THEMES -->
-                        <button class="theme-btn" data-theme-val="cockpit" onclick="setTheme('cockpit')">
-                            <div class="tb-swatch" style="background:linear-gradient(90deg,#0A0E1A,#E8A020)"></div>
-                            <div class="tb-name">✦ Cockpit</div>
-                            <div class="tb-sub">Instrument · Amber</div>
-                        </button>
-                        <button class="theme-btn" data-theme-val="neon" onclick="setTheme('neon')">
-                            <div class="tb-swatch" style="background:linear-gradient(90deg,#501F3A,#CB2D6F)"></div>
-                            <div class="tb-name">Neon</div>
-                            <div class="tb-sub">Purple · Pink</div>
-                        </button>
-                        <button class="theme-btn" data-theme-val="earthy" onclick="setTheme('earthy')">
-                            <div class="tb-swatch" style="background:linear-gradient(90deg,#F5F0E8,#C5A55A)"></div>
-                            <div class="tb-name">Earthy</div>
-                            <div class="tb-sub">Luxury · Brown/Gold</div>
-                        </button>
-                        <button class="theme-btn" data-theme-val="cyber" onclick="setTheme('cyber')">
-                            <div class="tb-swatch" style="background:linear-gradient(90deg,#0B0C10,#66FCF1)"></div>
-                            <div class="tb-name">Cyber</div>
-                            <div class="tb-sub">Dark · Cyan</div>
-                        </button>
-                        <button class="theme-btn" data-theme-val="forest" onclick="setTheme('forest')">
-                            <div class="tb-swatch" style="background:linear-gradient(90deg,#1A1A1A,#7FFF00)"></div>
-                            <div class="tb-name">Forest</div>
-                            <div class="tb-sub">Camo · Acid Green</div>
                         </button>
                     </div>
                 </div>
@@ -3591,17 +3388,7 @@
         }
 
         function updateMetaTheme() {
-            const colors = {
-                ops: '#001F4E',
-                modern: '#1E3A8A',
-                dark: '#0D1525',
-                black: '#000000',
-                cockpit: '#0A0E1A',
-                neon: '#0F292F',
-                earthy: '#4A2C2A',
-                cyber: '#0B0C10',
-                forest: '#1A1A1A'
-            };
+            const colors = { ops: '#001F4E', dark: '#0D1525', black: '#000000', modern: '#1E3A8A' };
             document.querySelector('meta[name="theme-color"]').content = colors[document.body.dataset.theme] || '#001F4E';
         }
 
