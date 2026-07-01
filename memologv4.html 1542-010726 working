@@ -2851,21 +2851,6 @@
             return m ? { year: parseInt(m[2]), num: parseInt(m[1]) } : { year: 0, num: 0 };
         }
 
-        // ── NEW: dateSortValue for chronological date sorting ──────────
-        function dateSortValue(memo) {
-            const s = memo.dateIssued;
-            if (!s || s === '—' || s === 'N/A' || s === 'TBD' || s === 'UFN') return null;
-            const parsed = parseDate(s);
-            if (!parsed) return null;
-            const parts = parsed.split(' ');
-            if (parts.length !== 3) return null;
-            const day = parseInt(parts[0]);
-            const month = MO_IDX.indexOf(parts[1].toUpperCase());
-            const year = parseInt(parts[2]);
-            if (isNaN(day) || month === -1 || isNaN(year)) return null;
-            return new Date(year, month, day).getTime();
-        }
-
         // ── PART 1: waitForTesseract + ocrFile ──────────────────────────
 
         function waitForTesseract(maxMs = 15000) {
@@ -3246,30 +3231,23 @@
           </tr>`;
         }
 
-        // ── MODIFIED: sortedMemos() now sorts by dateIssued ──────────
         function sortedMemos() {
             const list = memos.filter(m => m.cat === curCat);
-            const desc = (sortMode === 'newest'); // true = newest first
-
-            list.sort((a, b) => {
-                const ta = dateSortValue(a);
-                const tb = dateSortValue(b);
-
-                // Both have valid dates → compare them
-                if (ta !== null && tb !== null) {
-                    return desc ? tb - ta : ta - tb;
-                }
-                // One has no date → push nulls to the bottom (or top? we push to bottom)
-                if (ta === null && tb === null) {
-                    // fallback to REF year/number
+            if (sortMode === 'newest') {
+                list.sort((a, b) => {
                     const ka = refSortKey(a.ref),
                         kb = refSortKey(b.ref);
-                    if (ka.year !== kb.year) return desc ? kb.year - ka.year : ka.year - kb.year;
-                    return desc ? kb.num - ka.num : ka.num - kb.num;
-                }
-                return ta === null ? 1 : -1;
-            });
-
+                    if (kb.year !== ka.year) return kb.year - ka.year;
+                    return kb.num - ka.num;
+                });
+            } else {
+                list.sort((a, b) => {
+                    const ka = refSortKey(a.ref),
+                        kb = refSortKey(b.ref);
+                    if (ka.year !== kb.year) return ka.year - kb.year;
+                    return ka.num - kb.num;
+                });
+            }
             return list;
         }
 
@@ -3580,28 +3558,13 @@
             toast('Column hidden — restore in Settings', 'ok');
         }
 
-        // ── MODIFIED: sortByCol() handles dateIssued chronologically ──
         function sortByCol(key) {
             closeColMenu();
-            const list = sortedMemos(); // start with current order
-
-            if (key === 'dateIssued') {
-                list.sort((a, b) => {
-                    const ta = dateSortValue(a);
-                    const tb = dateSortValue(b);
-                    if (ta === null && tb === null) return 0;
-                    if (ta === null) return 1;
-                    if (tb === null) return -1;
-                    return ta - tb; // ascending
-                });
-            } else {
-                list.sort((a, b) => (a[key] || '').localeCompare(b[key] || ''));
-            }
-
-            // persist the new order
+            const list = sortedMemos();
+            list.sort((a, b) => (a[key] || '').localeCompare(b[key] || ''));
             list.forEach((m, i) => { m.sortOrder = i;
-                persistOne(m); });
-            list.forEach(m => { const idx = memos.findIndex(x => x.id === m.id); if (idx > -1) memos[idx] = m; });
+                persistOne(m);
+                memos[memos.findIndex(x => x.id === m.id)] = m; });
             renderTable();
         }
 
