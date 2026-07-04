@@ -28,7 +28,7 @@
         .watch {
             position: relative;
             width: 280px;
-            height: 360px;
+            height: 380px; /* slightly taller to fit 4 rows of keys */
             background: #1c1c1e;
             border-radius: 44px;
             padding: 10px;
@@ -286,7 +286,6 @@
         /* ── dialpad ── */
         .dialpad {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
             gap: 4px;
             padding: 4px 0 2px;
             flex-shrink: 0;
@@ -294,6 +293,15 @@
             max-width: 100%;
             margin: 0 auto;
             width: 100%;
+        }
+
+        /* default: 3 columns (number pad) */
+        .dialpad-3col {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        /* 4 columns for letter pad */
+        .dialpad-4col {
+            grid-template-columns: repeat(4, 1fr);
         }
 
         .dialpad .key {
@@ -355,18 +363,17 @@
         .dialpad .key.action.danger:active {
             background: rgba(255, 59, 48, 0.20);
         }
-        .dialpad .key.action .label .sub-label {
-            color: rgba(255, 255, 255, 0.15);
-        }
-        .dialpad .key.zero {
-            grid-column: 2 / 3;
-        }
-
         .dialpad .key .icon-svg {
             width: 20px;
             height: 20px;
             fill: currentColor;
             opacity: 0.6;
+        }
+
+        /* special for 4col letter grid: action keys can span */
+        .dialpad-4col .key.action {
+            aspect-ratio: auto;
+            min-height: 42px;
         }
 
         /* ── transition helpers ── */
@@ -454,7 +461,7 @@
         @media (max-width: 340px) {
             .watch {
                 width: 220px;
-                height: 300px;
+                height: 320px;
                 border-radius: 36px;
                 padding: 8px;
             }
@@ -501,12 +508,15 @@
                 gap: 3px;
                 padding: 2px 0;
             }
+            .dialpad-4col .key.action {
+                min-height: 34px;
+            }
         }
 
         @media (max-width: 260px) {
             .watch {
                 width: 180px;
-                height: 260px;
+                height: 270px;
                 border-radius: 28px;
                 padding: 6px;
             }
@@ -555,6 +565,9 @@
             .dialpad {
                 gap: 2px;
                 padding: 1px 0;
+            }
+            .dialpad-4col .key.action {
+                min-height: 28px;
             }
             .watch:hover {
                 transform: none;
@@ -609,7 +622,7 @@
             </div>
 
             <!-- dialpad -->
-            <div class="dialpad" id="dialpad"></div>
+            <div class="dialpad dialpad-3col" id="dialpad"></div>
 
         </div>
     </div>
@@ -635,7 +648,8 @@
             // ─── mock passenger data ──────────────────────────────
             const passengers = {};
 
-            // generate rows 01–30, seats A–F
+            // seat letters (A–K, skipping I)
+            const seatLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'];
             const firstNames = ['Ahmad', 'Sarah', 'Tan', 'Priya', 'John', 'Lee', 'Raj', 'Wong', 'Lim', 'Ng',
                 'Goh', 'Teh', 'Kumar', 'Mei', 'Chin', 'Siew', 'Hock', 'Sock', 'Keng', 'Lay',
                 'Wei', 'Ming', 'Sharma', 'Bin', 'Binti', 'Abdullah', 'Ali', 'Hassan', 'Omar', 'Zain'
@@ -644,19 +658,20 @@
                 'Ali', 'Hassan', 'Omar', 'Zain', 'Rahman', 'Ismail', 'Ahmad', 'Sulaiman', 'Ibrahim', 'Yusof'
             ];
             const statuses = ['Boarding OK', 'Checked In', 'At Gate', 'Boarding', 'On Board'];
-            const meals = ['VGML', 'AVML', 'No SPML', 'CPML', 'GFML', 'FIML', 'DBML', 'CHML'];
+            const meals = ['VGML', 'CPML', 'No SPML', 'SFML', 'AVML', 'GFML', 'DBML', 'CHML'];
 
-            // generate realistic data
+            // generate rows 01–30, seats A–K (10 letters)
             for (let row = 1; row <= 30; row++) {
                 const rowStr = String(row).padStart(2, '0');
-                for (let seatLetter of ['A', 'B', 'C', 'D', 'E', 'F']) {
+                for (let letterIdx = 0; letterIdx < seatLetters.length; letterIdx++) {
+                    const seatLetter = seatLetters[letterIdx];
                     const seatKey = rowStr + seatLetter;
-                    const idx = (row - 1) * 6 + (seatLetter.charCodeAt(0) - 65);
+                    const idx = (row - 1) * 10 + letterIdx;
                     const firstName = firstNames[idx % firstNames.length];
                     const lastName = lastNames[(idx * 7 + 3) % lastNames.length];
                     const status = statuses[(idx * 13 + 5) % statuses.length];
                     const meal = meals[(idx * 11 + 7) % meals.length];
-                    // some seats are empty (about 12%)
+                    // about 12% empty seats
                     const isEmpty = (idx % 8 === 3 || idx % 13 === 7);
                     if (!isEmpty) {
                         passengers[seatKey] = {
@@ -674,19 +689,11 @@
 
             // ─── helpers ────────────────────────────────────────────
 
-            function formatSeatDisplay(digits, letter) {
-                const d1 = digits[0] !== undefined ? digits[0] : '_';
-                const d2 = digits[1] !== undefined ? digits[1] : '_';
-                const l = letter || '_';
-                return `<span>${d1}</span><span>${d2}</span><span class="${letter ? 'highlight' : ''}">${l}</span>`;
-            }
-
             function renderSeatDisplay() {
                 const d1 = state.digits[0] !== undefined ? state.digits[0] : '_';
                 const d2 = state.digits[1] !== undefined ? state.digits[1] : '_';
                 const l = state.selectedLetter || '_';
-                const html = `<span>${d1}</span><span>${d2}</span><span class="${state.selectedLetter ? 'highlight' : ''}">${l}</span>`;
-                seatDisplay.innerHTML = html + `<span class="cursor"></span>`;
+                seatDisplay.innerHTML = `<span>${d1}</span><span>${d2}</span><span class="${state.selectedLetter ? 'highlight' : ''}">${l}</span><span class="cursor"></span>`;
             }
 
             function renderPassengerInfo(seatKey) {
@@ -728,9 +735,10 @@
             function renderDialpad() {
                 const phase = state.phase;
                 let keys = [];
+                let gridClass = 'dialpad-3col';
 
                 if (phase === 'row') {
-                    // number pad 1-9, 0, backspace
+                    // number pad 1-9, 0, backspace, confirm
                     keys = [
                         { label: '1', value: '1', type: 'num' },
                         { label: '2', value: '2', type: 'num' },
@@ -745,30 +753,36 @@
                         { label: '0', value: '0', type: 'num', class: 'zero' },
                         { label: '✓', value: 'confirm', type: 'action' },
                     ];
+                    gridClass = 'dialpad-3col';
                 } else if (phase === 'letter') {
-                    // letters A-F
+                    // letters A–K (10 letters) in 4 columns
+                    const letterKeys = seatLetters.map(l => ({
+                        label: l,
+                        value: l,
+                        type: 'letter'
+                    }));
+                    // we'll arrange them in 4 columns: first 8 in two rows of 4, then last 2 + backspace + clear
+                    // But we'll just put them in order, CSS grid will wrap.
+                    // We'll add backspace and clear as separate keys at the end.
                     keys = [
-                        { label: 'A', value: 'A', type: 'letter' },
-                        { label: 'B', value: 'B', type: 'letter' },
-                        { label: 'C', value: 'C', type: 'letter' },
-                        { label: 'D', value: 'D', type: 'letter' },
-                        { label: 'E', value: 'E', type: 'letter' },
-                        { label: 'F', value: 'F', type: 'letter' },
+                        ...letterKeys,
                         { label: '⌫', value: 'backspace', type: 'action' },
                         { label: '✕', value: 'clear', type: 'action danger' },
-                        { label: '', value: 'spacer', type: 'spacer' },
                     ];
+                    // For 10 letters + 2 actions = 12 items. We'll use 4 columns, so 3 rows of 4.
+                    gridClass = 'dialpad-4col';
                 } else {
-                    // result phase: show "New Search" button
+                    // result phase: show "New Search" button spanning full width
                     keys = [
                         { label: '', value: 'spacer', type: 'spacer' },
                         { label: 'New Search', value: 'reset', type: 'action', class: 'zero', style: 'grid-column:1/4; aspect-ratio:auto; padding:8px 0; font-size:14px; background:rgba(255,107,53,0.12); color:#ff6b35; border-radius:12px;' },
                         { label: '', value: 'spacer', type: 'spacer' },
                     ];
+                    gridClass = 'dialpad-3col';
                 }
 
+                dialpadEl.className = `dialpad ${gridClass} dialpad-enter`;
                 dialpadEl.innerHTML = '';
-                dialpadEl.className = 'dialpad dialpad-enter';
 
                 keys.forEach((k, i) => {
                     const btn = document.createElement('button');
@@ -803,14 +817,12 @@
                     });
 
                     // touch feedback
-                    btn.addEventListener('touchstart', () => {
-                        // haptic-like feedback via style
-                    }, { passive: true });
+                    btn.addEventListener('touchstart', () => {}, { passive: true });
 
                     dialpadEl.appendChild(btn);
                 });
 
-                // re-apply any existing animation after a tiny delay
+                // re-trigger enter animation
                 requestAnimationFrame(() => {
                     dialpadEl.classList.remove('dialpad-enter');
                     void dialpadEl.offsetWidth;
@@ -834,12 +846,10 @@
                             state.digits.pop();
                             renderSeatDisplay();
                             renderEmptyState();
-                            // if digits empty, stay in row phase
                         }
                         return;
                     }
                     if (value === 'confirm') {
-                        // if 2 digits, move to letter phase
                         if (state.digits.length === 2) {
                             state.phase = 'letter';
                             state.selectedLetter = null;
@@ -853,15 +863,12 @@
                         resetAll();
                         return;
                     }
-                    // numeric input
                     if (/^[0-9]$/.test(value)) {
                         if (state.digits.length < 2) {
                             state.digits.push(value);
                             renderSeatDisplay();
                             renderEmptyState();
-                            // if we now have 2 digits, auto-advance
                             if (state.digits.length === 2) {
-                                // small delay then switch to letter
                                 setTimeout(() => {
                                     state.phase = 'letter';
                                     state.selectedLetter = null;
@@ -890,8 +897,8 @@
                         resetAll();
                         return;
                     }
-                    // letter input A-F
-                    if (/^[A-F]$/.test(value)) {
+                    // letter input – accept any of the seatLetters
+                    if (seatLetters.includes(value)) {
                         state.selectedLetter = value;
                         const seatKey = state.digits.join('') + value;
                         state.seat = seatKey;
@@ -921,7 +928,6 @@
                 renderSeatDisplay();
                 renderEmptyState();
                 renderDialpad();
-                // animate display
                 displayArea.style.transition = 'transform 0.15s ease';
                 displayArea.style.transform = 'scale(0.96)';
                 setTimeout(() => {
@@ -957,7 +963,7 @@
                     if (key >= '0' && key <= '9') {
                         handleKeyPress(key);
                         e.preventDefault();
-                    } else if (key >= 'a' && key <= 'f') {
+                    } else if (seatLetters.includes(key.toUpperCase())) {
                         handleKeyPress(key.toUpperCase());
                         e.preventDefault();
                     } else if (key === 'Backspace') {
