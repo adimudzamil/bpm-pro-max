@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="style.css">
 <style>
   html,body{margin:0;padding:0;background:#525659;font-family:-apple-system,Segoe UI,Roboto,sans-serif;}
-  .toolbar{position:static;z-index:200;background:#1e293b;color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.4);}
+  .toolbar{position:sticky;top:0;z-index:200;background:#1e293b;color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.4);}
   .toolbar h1{font-size:14px;margin:0;flex:1;font-weight:600;}
   .toolbar button{background:#2563EB;color:#fff;border:none;padding:8px 14px;border-radius:5px;font-size:12px;cursor:pointer;font-weight:600;}
   .toolbar button.secondary{background:#475569;}
@@ -347,7 +347,7 @@ function buildFlow(report){
   const filtered = passengers.filter(p=>p.meal || p.tier==='EMER' || p.tier==='PLAT' || p.hasBirthday);
   const detected = detectAircraftType(passengers, flightInfo);
   const effAcft = getEffectiveAircraftConfig(s.aircraftType, detected, flightInfo, passengers);
-  const effLayout = getEffectiveLayout(s.layoutStyle, detected);
+  const effLayout = getEffectiveLayout(null, detected); // report blocks always auto layout (single/port-starboard chosen by opener)
   report.detected = detected; report.effAcft = effAcft; report.effLayout = effLayout; report.filteredCount = filtered.length;
 
   const host = getMeasureHost();
@@ -380,17 +380,6 @@ function buildFlow(report){
     report._lastTableMeta = report._lastTableMeta || {};
     report._lastTableMeta[tableKey] = {tableClass, headers};
   }
-  function measureRowHeightsOnly(tableClass, rowsArr, widthPercent){
-    if(rowsArr.length===0) return [];
-    const wrap = document.createElement('div');
-    wrap.innerHTML = `<table class="${tableClass}"><tbody>${rowsArr.join('')}</tbody></table>`;
-    const table = wrap.firstElementChild;
-    if(widthPercent) table.style.width = widthPercent+'%';
-    root.appendChild(table);
-    const heights = Array.from(table.querySelectorAll('tbody tr')).map(tr=>tr.getBoundingClientRect().height);
-    root.removeChild(table);
-    return heights;
-  }
 
   // Flight info + global summary (atomic, always first)
   const flightInfoHTML = `<div class="flight-info">Flight: ${flightInfo.flightNumber} | Route: ${flightInfo.sector} | Date: ${flightInfo.date} ${flightInfo.stdLocal} | ACFT: ${flightInfo.aircraft}</div>`;
@@ -416,49 +405,23 @@ function buildFlow(report){
       const portPax = zonePax.filter(p=>p.seat && portLetters.includes(p.seat.slice(-1)));
       const starPax  = zonePax.filter(p=>p.seat && !portLetters.includes(p.seat.slice(-1)));
 
-      const tp = buildTableParts(portPax, true, detected);
-      const ts = buildTableParts(starPax, true, detected);
-
-      // Atomic side-by-side title/stats header (matches .tables-container/.table-wrapper CSS)
-      const pairHeaderHTML = `<div class="tables-container">
-          <div class="table-wrapper"><div class="table-title">PORT SIDE</div>${generateSideStats(portPax,'Port', s.summaryFontSize)}</div>
-          <div class="table-wrapper"><div class="table-title">STARBOARD SIDE</div>${generateSideStats(starPax,'Starboard', s.summaryFontSize)}</div>
-        </div>`;
-      measureAndPush(pairHeaderHTML, 'atomic', zoneId, null, false, s.tableWidth);
-
-      const pairKey = zoneId + '-pair';
-      report._lastTableMeta = report._lastTableMeta || {};
-      report._lastTableMeta[pairKey] = {
-        portClass: tp.tableClass, portHeaders: tp.headers,
-        starClass: ts.tableClass, starHeaders: ts.headers
-      };
-
-      const portHeights = measureRowHeightsOnly(tp.tableClass, tp.rows, s.tableWidth);
-      const starHeights = measureRowHeightsOnly(ts.tableClass, ts.rows, s.tableWidth);
-      const maxLen = Math.max(tp.rows.length, ts.rows.length);
-      for(let i=0;i<maxLen;i++){
-        const portHtml = tp.rows[i] || null;
-        const starHtml = ts.rows[i] || null;
-        const h = Math.max(portHtml ? portHeights[i] : 0, starHtml ? starHeights[i] : 0);
-        units.push({html:null, height:h, type:'row', zoneId, tableKey:pairKey, forceBreak:false, portHtml, starHtml});
+      measureAndPush(`<div class="table-title">PORT SIDE</div>`, 'atomic', zoneId, null, false, s.tableWidth);
+      measureAndPush(generateSideStats(portPax,'Port', s.summaryFontSize), 'atomic', zoneId, null, false, s.tableWidth);
+      if(portPax.length){
+        const tp = buildTableParts(portPax, true, detected);
+        measureRowsIntoUnits(`<table class="${tp.tableClass}"><thead><tr>${tp.headers}</tr></thead><tbody>`, tp.rows, `</tbody></table>`, zoneId, zoneId+'-port', s.tableWidth, tp.tableClass, tp.headers);
+      }
+      measureAndPush(`<div class="table-title">STARBOARD SIDE</div>`, 'atomic', zoneId, null, false, s.tableWidth);
+      measureAndPush(generateSideStats(starPax,'Starboard', s.summaryFontSize), 'atomic', zoneId, null, false, s.tableWidth);
+      if(starPax.length){
+        const ts = buildTableParts(starPax, true, detected);
+        measureRowsIntoUnits(`<table class="${ts.tableClass}"><thead><tr>${ts.headers}</tr></thead><tbody>`, ts.rows, `</tbody></table>`, zoneId, zoneId+'-star', s.tableWidth, ts.tableClass, ts.headers);
       }
     } else {
       const t = buildTableParts(zonePax, true, detected);
       measureRowsIntoUnits(`<table class="${t.tableClass}"><thead><tr>${t.headers}</tr></thead><tbody>`, t.rows, `</tbody></table>`, zoneId, zoneId+'-single', s.tableWidth, t.tableClass, t.headers);
     }
   });
-
-  // Unassigned passengers (those without a seat, or outside any configured zone)
-  const unassigned = filtered.filter(p=>{
-    if(!p.seat) return true;
-    const rn = parseInt(p.seat.substring(0,2));
-    return !zones.some(z=>rn>=z.start && rn<=z.end);
-  });
-  if(s.showUnassignedInPrint && unassigned.length>0){
-    measureAndPush(`<div class="zone-header">UNASSIGNED SEATS</div>`, 'atomic', 'unassigned', null, s.pageBreakZones, s.tableWidth);
-    const ut = buildTableParts(unassigned, true, detected);
-    measureRowsIntoUnits(`<table class="${ut.tableClass}"><thead><tr>${ut.headers}</tr></thead><tbody>`, ut.rows, `</tbody></table>`, 'unassigned', 'unassigned-single', s.tableWidth, ut.tableClass, ut.headers);
-  }
 
   host.innerHTML = '';
   return units;
@@ -516,7 +479,7 @@ const reports = {}; // id -> report state
 
 function defaultSettings(){
   return { fontSize:9, summaryFontSize:9, tableWidth:100, pageBreakZones:true, avoidOrphans:true,
-           showUnassignedInPrint:false, aircraftType:'auto', layoutStyle:'auto', marginTop:4, marginRight:4, marginBottom:4, marginLeft:4, printScale:100 };
+           showUnassignedInPrint:false, aircraftType:'auto', marginTop:4, marginRight:4, marginBottom:4, marginLeft:4, printScale:100 };
 }
 
 function createReportState(id, isPrimary){
@@ -575,14 +538,6 @@ function renderOptionsBar(id){
         <option value="339" ${s.aircraftType==='339'?'selected':''}>A330-900</option>
         <option value="359" ${s.aircraftType==='359'?'selected':''}>A350-900</option>
         <option value="350" ${s.aircraftType==='350'?'selected':''}>A350-MAH</option>
-      </select>
-    </div>
-    <div class="opt">
-      <label>Layout Style</label>
-      <select onchange="updateSetting('${id}','layoutStyle',this.value,true)">
-        <option value="auto" ${s.layoutStyle==='auto'?'selected':''}>Auto (Smart Default)</option>
-        <option value="single" ${s.layoutStyle==='single'?'selected':''}>Traditional Single Column</option>
-        <option value="port-starboard" ${s.layoutStyle==='port-starboard'?'selected':''}>Port/Starboard Split</option>
       </select>
     </div>
     <div class="opt opt-toggle">
@@ -650,27 +605,8 @@ function renderReportContent(id){
     while(i < pageUnits.length){
       const u = pageUnits[i];
       if(u.type==='atomic'){ html += u.html; i++; continue; }
+      // consecutive rows of same tableKey -> wrap in a table with header
       const tableKey = u.tableKey;
-
-      if(tableKey.endsWith('-pair')){
-        // Paired port/starboard rows -> rebuild as true side-by-side tables
-        const portRows = [], starRows = [];
-        let j = i;
-        while(j<pageUnits.length && pageUnits[j].type==='row' && pageUnits[j].tableKey===tableKey){
-          if(pageUnits[j].portHtml) portRows.push(pageUnits[j].portHtml);
-          if(pageUnits[j].starHtml) starRows.push(pageUnits[j].starHtml);
-          j++;
-        }
-        const meta = (r._lastTableMeta && r._lastTableMeta[tableKey]) || {};
-        const noPax = '<div style="padding:6px;color:#94a3b8;font-style:italic;font-size:10px;">No passengers</div>';
-        const portHtml = portRows.length ? `<table class="${meta.portClass||'narrowbody-table'}" style="width:${s.tableWidth}%"><thead><tr>${meta.portHeaders||''}</tr></thead><tbody>${portRows.join('')}</tbody></table>` : noPax;
-        const starHtml = starRows.length ? `<table class="${meta.starClass||'narrowbody-table'}" style="width:${s.tableWidth}%"><thead><tr>${meta.starHeaders||''}</tr></thead><tbody>${starRows.join('')}</tbody></table>` : noPax;
-        html += `<div class="tables-container"><div class="table-wrapper">${portHtml}</div><div class="table-wrapper">${starHtml}</div></div>`;
-        i = j;
-        continue;
-      }
-
-      // consecutive rows of same tableKey -> wrap in a single table with header
       const rowsHtml = [];
       let j = i;
       while(j<pageUnits.length && pageUnits[j].type==='row' && pageUnits[j].tableKey===tableKey){
