@@ -847,6 +847,76 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
 }
 });
 
+// =================== REPORT PREVIEW POPUP SYNC (Stage 1) ===================
+let reportPreviewWindow = null;
+let reportPreviewReady = false;
+
+function getPreviewableSettingsSubset(){
+    return {
+        fontSize: currentSettings.fontSize,
+        summaryFontSize: currentSettings.summaryFontSize,
+        tableWidth: currentSettings.tableWidth,
+        pageBreakZones: currentSettings.pageBreakZones,
+        avoidOrphans: currentSettings.avoidOrphans,
+        showUnassignedInPrint: currentSettings.showUnassignedInPrint,
+        aircraftType: document.getElementById('aircraftType').value,
+        marginTop: parseFloat(document.getElementById('marginTop').value) || 4,
+        marginRight: parseFloat(document.getElementById('marginRight').value) || 4,
+        marginBottom: parseFloat(document.getElementById('marginBottom').value) || 4,
+        marginLeft: parseFloat(document.getElementById('marginLeft').value) || 4,
+        printScale: parseFloat(document.getElementById('printScaleSlider').value) || 100
+    };
+}
+
+function openOrSyncReportPreview(){
+    const manifestText = document.getElementById('manifestInput').value;
+    if(!reportPreviewWindow || reportPreviewWindow.closed){
+        reportPreviewReady = false;
+        reportPreviewWindow = window.open('report-preview.html', 'reportPreview', 'width=1000,height=900,scrollbars=yes');
+        const trySend = setInterval(() => {
+            if(reportPreviewReady){
+                clearInterval(trySend);
+                sendPrimaryDataToPreview(manifestText);
+            } else if(!reportPreviewWindow || reportPreviewWindow.closed){
+                clearInterval(trySend);
+            }
+        }, 200);
+    } else {
+        sendPrimaryDataToPreview(manifestText);
+        reportPreviewWindow.focus();
+    }
+}
+
+function sendPrimaryDataToPreview(manifestText){
+    if(!reportPreviewWindow || reportPreviewWindow.closed) return;
+    reportPreviewWindow.postMessage({
+        source: 'bpmPro',
+        type: 'primaryData',
+        manifestText: manifestText,
+        settings: getPreviewableSettingsSubset()
+    }, '*');
+}
+
+window.addEventListener('message', function(event){
+    if(!event.data || event.data.source !== 'reportPreview') return;
+    if(event.data.type === 'ready'){
+        reportPreviewReady = true;
+        sendPrimaryDataToPreview(document.getElementById('manifestInput').value);
+    } else if(event.data.type === 'settingsChanged'){
+        const s = event.data.settings;
+        if(!s) return;
+        document.getElementById('fontSizeSlider').value = s.fontSize;
+        document.getElementById('summaryFontSlider').value = s.summaryFontSize;
+        document.getElementById('tableWidthSlider').value = s.tableWidth;
+        document.getElementById('pageBreakBetweenZones').checked = s.pageBreakZones;
+        document.getElementById('avoidOrphanRows').checked = s.avoidOrphans;
+        document.getElementById('showUnassignedInPrint').checked = s.showUnassignedInPrint;
+        if(s.aircraftType) document.getElementById('aircraftType').value = s.aircraftType;
+        updateSettingsFromControls();
+        if(hasValidManifest()) generateReportWithCurrentSettings();
+    }
+});
+
 </script>
     <script>
         // Global state with smart defaults
@@ -1813,6 +1883,11 @@ function applyPrintSettings() {
         const scaleDecimal = scale / 100;
         reportContent.style.zoom = scaleDecimal;
     }
+    
+    // NEW: Keep the report preview popup's margins/scale in sync too
+    if (reportPreviewWindow && !reportPreviewWindow.closed && hasValidManifest()) {
+        sendPrimaryDataToPreview(document.getElementById('manifestInput').value);
+    }
 }
 
 function resetPrintDefaults() {
@@ -2297,6 +2372,15 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                 
                 const pages = Math.ceil(filtered.length / (currentSettings.fontSize <= 9 ? 50 : currentSettings.fontSize >= 12 ? 35 : 40));
                 document.getElementById('pageEstimate').textContent = `~${pages} page${pages !== 1 ? 's' : ''}`;
+                
+                // NEW: Open/sync the WYSIWYG report preview popup for single-column and port-starboard layouts
+                if (effectiveLayout === 'single' || effectiveLayout === 'port-starboard') {
+                    if (reportPreviewWindow && !reportPreviewWindow.closed) {
+                        sendPrimaryDataToPreview(input);
+                    } else {
+                        openOrSyncReportPreview();
+                    }
+                }
                 
             } catch (error) {
                 showError(`Error: ${error.message}<br><br>Please make sure you copied the complete passenger list from BPM.`);
