@@ -441,8 +441,8 @@
             </div>
         </div>
         
-        <!-- Patch 1: Tabs container above report output -->
-        <div class="report-tabs-container no-print" id="reportTabsContainer"></div>
+        <!-- Patch 1: Tabs container above report output (removed no-print) -->
+        <div class="report-tabs-container" id="reportTabsContainer"></div>
         <div class="output-section" id="reportContent"></div>
         
         <div class="acknowledgments">
@@ -477,16 +477,16 @@
         </div>
     </div>
 
-    <!-- Patch 2: Seat Lookup Modal -->
-    <div id="seatLookupOverlay" class="seat-lookup-overlay no-print" onclick="closeSeatLookupOnOverlay(event)">
+    <!-- Patch 2: Seat Lookup Modal (removed no-print) -->
+    <div id="seatLookupOverlay" class="seat-lookup-overlay" onclick="closeSeatLookupOnOverlay(event)">
         <div class="seat-lookup-modal" onclick="event.stopPropagation()">
             <button class="seat-lookup-close" onclick="closeSeatLookup()">✕</button>
             <div id="seatLookupBody"></div>
         </div>
     </div>
 
-    <!-- Patch 2: Delete Tab Confirmation Modal -->
-    <div id="deleteTabOverlay" class="seat-lookup-overlay no-print">
+    <!-- Patch 3: Delete Tab Confirmation Modal (removed no-print) -->
+    <div id="deleteTabOverlay" class="seat-lookup-overlay">
         <div class="delete-confirm-modal">
             <p id="deleteTabMessage">Delete this report tab?</p>
             <div class="delete-confirm-buttons">
@@ -2135,8 +2135,8 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                 const effectiveLayout = getEffectiveLayout(currentSettings.detectedAircraftType);
                 const effectiveAircraftConfig = getEffectiveAircraftConfig(currentSettings.detectedAircraftType, flightInfo, passengers);
                 
-                // Patch 5: Flight-info clickable for seat lookup
-                const flightInfoHTML = `<div class="flight-info" onclick="openSeatLookup()" title="Tap to look up a seat"><span>Flight: ${flightInfo.flightNumber} | Route: ${flightInfo.sector} | Date: ${flightInfo.date} ${flightInfo.stdLocal} | ACFT: ${flightInfo.aircraft}</span><span class="seat-lookup-hint">🔍 Tap to find a seat</span></div>`;
+                // Patch 5: Flight-info clickable for seat lookup (removed hint text)
+                const flightInfoHTML = `<div class="flight-info" onclick="openSeatLookup()" title="Tap to look up a seat">Flight: ${flightInfo.flightNumber} | Route: ${flightInfo.sector} | Date: ${flightInfo.date} ${flightInfo.stdLocal} | ACFT: ${flightInfo.aircraft}</div>`;
                 const globalSummaryHTML = generateGlobalSummary(filtered);
                 
                 let seatChartControls = '';
