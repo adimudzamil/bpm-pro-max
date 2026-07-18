@@ -1649,7 +1649,7 @@
     </div>
 
     <script>
-        // =================== CONFIGURATION (moved to top) ===================
+        // =================== CONFIGURATION ===================
         const CONFIG = {
             SEAT_PATTERN: /^\d{2}[A-K]$/i,
             PNR_PATTERN: /^[A-Z0-9]{6,7}$/i,
@@ -1896,6 +1896,121 @@
             renderSeatLookupUI();
         }
 
+        // =================== ORIGINAL LOOKUP KEYPRESS (for non-edit mode) ===================
+        function lookupKeyPress(value) {
+            // Original seat lookup logic (non-edit)
+            if (lookupState.phase === 'row') {
+                if (value === 'backspace') {
+                    lookupState.digits.pop();
+                    renderSeatLookupUI();
+                    return;
+                }
+                if (value === 'confirm') {
+                    if (lookupState.digits.length === 2) {
+                        lookupState.phase = 'letter';
+                        renderSeatLookupUI();
+                    }
+                    return;
+                }
+                if (/^[0-9]$/.test(value) && lookupState.digits.length < 2) {
+                    lookupState.digits.push(value);
+                    renderSeatLookupUI();
+                    if (lookupState.digits.length === 2) {
+                        setTimeout(() => {
+                            lookupState.phase = 'letter';
+                            renderSeatLookupUI();
+                        }, 150);
+                    }
+                }
+                return;
+            }
+            if (lookupState.phase === 'letter') {
+                if (value === 'backspace') {
+                    lookupState.phase = 'row';
+                    renderSeatLookupUI();
+                    return;
+                }
+                if (value === 'clear') {
+                    closeSeatLookup();
+                    return;
+                }
+                if (LOOKUP_SEAT_LETTERS.includes(value)) {
+                    lookupState.letter = value;
+                    const row = lookupState.digits.join('');
+                    const seatNum = row.padStart(2, '0') + value;
+                    const tab = getCurrentTab();
+                    const passenger = tab ? tab.passengers.find(p => p.seat === seatNum) : null;
+                    if (passenger) {
+                        showPassengerCard(passenger);
+                    } else {
+                        const body = document.getElementById('seatLookupBody');
+                        body.innerHTML = '<div class="lookup-card"><div class="lookup-seat-big">' + seatNum + '</div><div class="lookup-empty">💺 Empty / Unassigned<br><span>No passenger found for this seat</span></div></div><button class="btn-primary lookup-newsearch" onclick="newSeatLookup()">New Search</button>';
+                    }
+                }
+                return;
+            }
+        }
+
+        // =================== OVERRIDE LOOKUP KEYPRESS (for edit mode) ===================
+        const originalLookupKeyPress = lookupKeyPress;
+        lookupKeyPress = function(value) {
+            if (lookupState.isSeatEdit || lookupState.isOccupantMove) {
+                // Seat edit or occupant move mode
+                if (lookupState.phase === 'row') {
+                    if (value === 'backspace') {
+                        lookupState.digits.pop();
+                        renderSeatLookupUI();
+                        return;
+                    }
+                    if (value === 'confirm') {
+                        if (lookupState.digits.length === 2) {
+                            lookupState.phase = 'letter';
+                            renderSeatLookupUI();
+                        }
+                        return;
+                    }
+                    if (/^[0-9]$/.test(value) && lookupState.digits.length < 2) {
+                        lookupState.digits.push(value);
+                        renderSeatLookupUI();
+                        if (lookupState.digits.length === 2) {
+                            setTimeout(() => {
+                                lookupState.phase = 'letter';
+                                renderSeatLookupUI();
+                            }, 150);
+                        }
+                    }
+                    return;
+                }
+                if (lookupState.phase === 'letter') {
+                    if (value === 'backspace') {
+                        lookupState.phase = 'row';
+                        renderSeatLookupUI();
+                        return;
+                    }
+                    if (value === 'clear') {
+                        closeSeatLookup();
+                        editContext = null;
+                        return;
+                    }
+                    if (LOOKUP_SEAT_LETTERS.includes(value)) {
+                        lookupState.letter = value;
+                        const row = lookupState.digits.join('');
+                        const newSeat = row.padStart(2, '0') + value;
+                        const pax = editContext ? editContext.passenger : null;
+                        if (pax) {
+                            handleSeatEditConfirm(pax, newSeat);
+                        }
+                        closeSeatLookup();
+                        editContext = null;
+                    }
+                    return;
+                }
+            } else {
+                // Normal seat lookup mode – call original
+                originalLookupKeyPress(value);
+            }
+        };
+
         // =================== LONG-PRESS / SEAT EDITING ===================
         function setupSeatEditEvents() {
             const container = document.getElementById('reportContent');
@@ -1978,63 +2093,7 @@
             document.getElementById('seatLookupOverlay').style.display = 'flex';
         }
 
-        const originalLookupKeyPress = lookupKeyPress;
-        lookupKeyPress = function(value) {
-            if (lookupState.isSeatEdit || lookupState.isOccupantMove) {
-                if (lookupState.phase === 'row') {
-                    if (value === 'backspace') {
-                        lookupState.digits.pop();
-                        renderSeatLookupUI();
-                        return;
-                    }
-                    if (value === 'confirm') {
-                        if (lookupState.digits.length === 2) {
-                            lookupState.phase = 'letter';
-                            renderSeatLookupUI();
-                        }
-                        return;
-                    }
-                    if (/^[0-9]$/.test(value) && lookupState.digits.length < 2) {
-                        lookupState.digits.push(value);
-                        renderSeatLookupUI();
-                        if (lookupState.digits.length === 2) {
-                            setTimeout(() => {
-                                lookupState.phase = 'letter';
-                                renderSeatLookupUI();
-                            }, 150);
-                        }
-                    }
-                    return;
-                }
-                if (lookupState.phase === 'letter') {
-                    if (value === 'backspace') {
-                        lookupState.phase = 'row';
-                        renderSeatLookupUI();
-                        return;
-                    }
-                    if (value === 'clear') {
-                        closeSeatLookup();
-                        editContext = null;
-                        return;
-                    }
-                    if (LOOKUP_SEAT_LETTERS.includes(value)) {
-                        lookupState.letter = value;
-                        const row = lookupState.digits.join('');
-                        const newSeat = row.padStart(2, '0') + value;
-                        const pax = editContext ? editContext.passenger : null;
-                        if (pax) {
-                            handleSeatEditConfirm(pax, newSeat);
-                        }
-                        closeSeatLookup();
-                        editContext = null;
-                    }
-                    return;
-                }
-            } else {
-                originalLookupKeyPress(value);
-            }
-        };
-
+        // =================== RENDER SEAT LOOKUP UI (with custom label for edit) ===================
         const originalRenderSeatLookupUI = renderSeatLookupUI;
         renderSeatLookupUI = function() {
             const body = document.getElementById('seatLookupBody');
@@ -2172,7 +2231,6 @@
         function rerenderReport() {
             const tab = getCurrentTab();
             if (!tab) return;
-            // We'll reuse generateReportWithCurrentSettings but pass the existing passengers
             window._skipParse = true;
             generateReportWithCurrentSettings(tab.passengers, tab.flightInfo);
             window._skipParse = false;
@@ -2635,7 +2693,6 @@
 
         // =================== PARSE MANIFEST ===================
         function parseManifest(text) {
-            // Easter egg check
             if (text.toUpperCase().includes('AKUPUNYERCODE')) {
                 const input = document.getElementById('manifestInput');
                 input.value = input.value.replace(/AKUPUNYERCODE/gi, '') + '\n\n---\nADI 2100551\n---\n';
@@ -2869,7 +2926,6 @@
                     flightInfo = parsed.flightInfo;
                     passengers = parsed.passengers;
                 }
-                // Dual chart mode
                 const layoutStyle = document.getElementById('layoutStyle').value;
                 if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                     const businessPassengers = getBusinessClassPassengers(passengers, currentSettings.aircraftType);
