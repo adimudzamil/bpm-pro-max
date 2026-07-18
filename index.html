@@ -2508,17 +2508,17 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                 
                 let seatChartControls = '';
                 if (effectiveLayout === 'seat-chart') {
-                    seatChartControls = '
+                    seatChartControls = `
                         <div class="seat-chart-controls">
                             <label>Seat Chart Font Size: 
-                                <input type="range" id="seatChartFontSliderInline" min="8" max="16" value="' + currentSettings.seatChartFontSize + '" step="1" oninput="document.getElementById(\'seatChartFontSlider\').value = this.value; updateSettingsFromControls(); generateReportWithCurrentSettings();" style="width: 120px;">
-                                <span>' + currentSettings.seatChartFontSize + 'px</span>
+                                <input type="range" id="seatChartFontSliderInline" min="8" max="16" value="${currentSettings.seatChartFontSize}" step="1" oninput="document.getElementById('seatChartFontSlider').value = this.value; updateSettingsFromControls(); generateReportWithCurrentSettings();" style="width: 120px;">
+                                <span>${currentSettings.seatChartFontSize}px</span>
                             </label>
-                            ' + (currentSettings.flipSeatChart ? '<div class="magic-option"><span>🔄 Aft Perspective Active - Print and turn paper 180°</span></div>' : '') + '
-                            ' + (currentSettings.showAllBusiness ? '<div class="magic-option"><span>👔 Business Class Display Active - Showing all business class passengers</span></div>' : '') + '
-                            ' + (currentSettings.showUnassignedInPrint ? '<div class="magic-option"><span>📋 Unassigned Table WILL BE INCLUDED in Print</span></div>' : '') + '
+                            ${currentSettings.flipSeatChart ? '<div class="magic-option"><span>🔄 Aft Perspective Active - Print and turn paper 180°</span></div>' : ''}
+                            ${currentSettings.showAllBusiness ? '<div class="magic-option"><span>👔 Business Class Display Active - Showing all business class passengers</span></div>' : ''}
+                            ${currentSettings.showUnassignedInPrint ? '<div class="magic-option"><span>📋 Unassigned Table WILL BE INCLUDED in Print</span></div>' : ''}
                         </div>
-                    ';
+                    `;
                 }
                 
                 const zones = getCurrentZones();
@@ -3025,9 +3025,9 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                 tableClass += ' widebody';
             }
             
-            let html = '<div class="seat-chart-container">
-                <table class="' + tableClass + '" data-font-size="' + currentSettings.seatChartFontSize + '">
-                <thead><tr><th class="row-header">Row</th>';
+            let html = `<div class="seat-chart-container">
+                <table class="${tableClass}" data-font-size="${currentSettings.seatChartFontSize}">
+                <thead><tr><th class="row-header">Row</th>`;
             
             // Create header row with seat letters
             columns.forEach(col => {
@@ -3134,20 +3134,20 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                                         const firstName = nameParts[0] || '';
                                         const lastName = nameParts[1] || '';
                                         
-                                        html += '<div class="seat-cell business-class">
-                                            <div class="seat-line1">' + tierIcon + passenger.title + '/' + firstName.toUpperCase() + '</div>
-                                            ' + (lastName ? '<div class="seat-line2">' + lastName.toUpperCase() + '</div>' : '') + '
-                                            <div class="seat-line3">' + (mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;') + '</div>
+                                        html += `<div class="seat-cell business-class">
+                                            <div class="seat-line1">${tierIcon + passenger.title + '/' + firstName.toUpperCase()}</div>
+                                            ${lastName ? `<div class="seat-line2">${lastName.toUpperCase()}</div>` : ''}
+                                            <div class="seat-line3">${mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;'}</div>
                                             <div class="seat-line4">&nbsp;</div>
-                                        </div>';
+                                        </div>`;
                                     } else {
                                         // ECONOMY: Standard 2-line format - only show meal if exists
                                         const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                         
-                                        html += '<div class="seat-cell">
-                                            <div class="seat-line1">' + tierIcon + namePart.toUpperCase() + '</div>
-                                            ' + (mealDisplay ? '<div class="seat-line2">' + mealDisplay.toUpperCase() + '</div>' : '') + '
-                                        </div>';
+                                        html += `<div class="seat-cell">
+                                            <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
+                                            ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
+                                        </div>`;
                                     }
                                 } else {
                                     html += '<div class="seat-cell">' + seatNumber + '</div>';
@@ -3195,20 +3195,20 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                                     const firstName = nameParts[0] || '';
                                     const lastName = nameParts[1] || '';
                                     
-                                    html += '<div class="seat-cell business-class">
-                                        <div class="seat-line1">' + tierIcon + passenger.title + '/' + firstName.toUpperCase() + '</div>
-                                        ' + (lastName ? '<div class="seat-line2">' + lastName.toUpperCase() + '</div>' : '') + '
-                                        <div class="seat-line3">' + (mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;') + '</div>
+                                    html += `<div class="seat-cell business-class">
+                                        <div class="seat-line1">${tierIcon + passenger.title + '/' + firstName.toUpperCase()}</div>
+                                        ${lastName ? `<div class="seat-line2">${lastName.toUpperCase()}</div>` : ''}
+                                        <div class="seat-line3">${mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;'}</div>
                                         <div class="seat-line4">&nbsp;</div>
-                                    </div>';
+                                    </div>`;
                                 } else {
                                     // ECONOMY: Standard 2-line format - only show meal if exists
                                     const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                     
-                                    html += '<div class="seat-cell">
-                                        <div class="seat-line1">' + tierIcon + namePart.toUpperCase() + '</div>
-                                        ' + (mealDisplay ? '<div class="seat-line2">' + mealDisplay.toUpperCase() + '</div>' : '') + '
-                                    </div>';
+                                    html += `<div class="seat-cell">
+                                        <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
+                                        ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
+                                    </div>`;
                                 }
                             } else {
                                 html += '<div class="seat-cell">' + seatNumber + '</div>';
@@ -3256,20 +3256,20 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                                     const firstName = nameParts[0] || '';
                                     const lastName = nameParts[1] || '';
                                     
-                                    html += '<div class="seat-cell business-class">
-                                        <div class="seat-line1">' + tierIcon + passenger.title + '/' + firstName.toUpperCase() + '</div>
-                                        ' + (lastName ? '<div class="seat-line2">' + lastName.toUpperCase() + '</div>' : '') + '
-                                        <div class="seat-line3">' + (mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;') + '</div>
+                                    html += `<div class="seat-cell business-class">
+                                        <div class="seat-line1">${tierIcon + passenger.title + '/' + firstName.toUpperCase()}</div>
+                                        ${lastName ? `<div class="seat-line2">${lastName.toUpperCase()}</div>` : ''}
+                                        <div class="seat-line3">${mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;'}</div>
                                         <div class="seat-line4">&nbsp;</div>
-                                    </div>';
+                                    </div>`;
                                 } else {
                                     // ECONOMY: Standard 2-line format - only show meal if exists
                                     const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                     
-                                    html += '<div class="seat-cell">
-                                        <div class="seat-line1">' + tierIcon + namePart.toUpperCase() + '</div>
-                                        ' + (mealDisplay ? '<div class="seat-line2">' + mealDisplay.toUpperCase() + '</div>' : '') + '
-                                    </div>';
+                                    html += `<div class="seat-cell">
+                                        <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
+                                        ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
+                                    </div>`;
                                 }
                             } else {
                                 html += '<div class="seat-cell">' + seatNumber + '</div>';
