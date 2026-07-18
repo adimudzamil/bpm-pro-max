@@ -763,12 +763,9 @@ function renderPassengerCardHTML() {
                '<button class="btn-primary lookup-newsearch" onclick="newSeatLookup()">New Search</button>';
     }
 
-    // Use fullName if available, otherwise fallback to truncated name
-    const displayName = passenger.fullName || passenger.name || '—';
-
     const rows = [
         ['TITLE', passenger.title || '—'],
-        ['PAX NAME', displayName],
+        ['PAX NAME', passenger.name || '—'],
         ['PAX DOB', passenger.dob || '—'],
         ['SEAT', passenger.seat || '—'],
         ['PNR', passenger.pnr || '—'],
@@ -2021,7 +2018,7 @@ function initPrintControls() {
                 if (line.includes('-- END of PAX List') || (line.includes('Showing') && line.includes('entries'))) break;
                 if (line === '-- CUT HERE --') { i++; continue; }
                 
-                const passenger = { title: '', name: '', fullName: '', seat: '', pnr: '', class: '', fqtv: '', tier: '', meal: '', remark: '', dob: '', hasBirthday: false };
+                const passenger = { title: '', name: '', seat: '', pnr: '', class: '', fqtv: '', tier: '', meal: '', remark: '', dob: '', hasBirthday: false };
                 
                 if (CONFIG.TITLES.includes(line)) {
                     passenger.title = line;
@@ -2031,9 +2028,7 @@ function initPrintControls() {
                 
                 if (i < lines.length && lines[i].includes('/')) {
                     if (CONFIG.DOB_PATTERN.test(lines[i])) { i++; continue; } // slash line is a DOB, not a name
-                    const nameLine = lines[i];
-                    passenger.name = truncateName(nameLine);
-                    passenger.fullName = nameLine; // store original full name
+                    passenger.name = truncateName(lines[i]);
                     i++;
                 } else {
                     i++;
