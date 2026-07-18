@@ -1013,332 +1013,6 @@ tbody tr:nth-child(odd) { background-color: var(--color-white); }
 @page {
     margin: var(--print-margin-top, 4mm) var(--print-margin-right, 4mm) var(--print-margin-bottom, 4mm) var(--print-margin-left, 4mm);
 }
-
-/* ===== REPORT TABS AND SUMMARY BAR - ALIGN WITH INPUT SECTION ===== */
-.report-tabs-container {
-    display: none;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 8px var(--spacing-xl); /* add left/right padding to match .input-section */
-    margin-bottom: 4px;
-    border-bottom: 1px solid var(--color-gray-200);
-    overflow-x: auto;
-}
-
-.report-summary-bar {
-    display: none;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 6px var(--spacing-xl) 10px; /* add left/right padding to match .input-section */
-    margin-bottom: 4px;
-}
-
-/* The rest remains unchanged */
-
-/* ===== REPORT TABS ===== */
-.report-tab {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--color-bg-help);
-    color: var(--color-primary);
-    border: 1px solid #BFDBFE;
-    border-radius: 16px;
-    padding: 6px 8px 6px 12px;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.15s ease;
-}
-.report-tab.active {
-    background: var(--color-primary-light);
-    color: var(--color-white);
-    border-color: var(--color-primary-light);
-}
-.report-tab-label { pointer-events: none; }
-.report-tab-close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.08);
-    font-size: 10px;
-    line-height: 1;
-    color: inherit;
-    cursor: pointer;
-}
-.report-tab.active .report-tab-close { background: rgba(255,255,255,0.25); }
-.report-tab-close:active { background: rgba(0,0,0,0.2); }
-
-/* ===== Flight Info clickable hint ===== */
-.flight-info { cursor: pointer; position: relative; }
-.seat-lookup-hint {
-    display: inline-block;
-    margin-left: 10px;
-    font-size: 10px;
-    opacity: 0.7;
-    font-weight: 500;
-}
-
-/* ===== SEAT LOOKUP MODAL ===== */
-.seat-lookup-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.55);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-.seat-lookup-modal {
-    background: var(--color-white);
-    border-radius: 20px;
-    padding: 20px;
-    width: 100%;
-    max-width: 320px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
-    position: relative;
-}
-.seat-lookup-close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: none;
-    background: var(--color-gray-100);
-    color: var(--color-gray-600);
-    font-size: 14px;
-    cursor: pointer;
-}
-.lookup-display {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--color-gray-800);
-    letter-spacing: 2px;
-    margin: 10px 0 4px;
-    font-variant-numeric: tabular-nums;
-}
-.lookup-display .highlight { color: var(--color-primary-light); }
-.lookup-hint {
-    text-align: center;
-    font-size: 11px;
-    color: var(--color-gray-500);
-    margin-bottom: 14px;
-}
-.lookup-dialpad { display: grid; gap: 6px; }
-.dialpad-3col { grid-template-columns: repeat(3, 1fr); }
-.dialpad-4col { grid-template-columns: repeat(4, 1fr); }
-.lookup-key {
-    aspect-ratio: 1/1;
-    border: none;
-    border-radius: 12px;
-    background: var(--color-gray-100);
-    color: var(--color-gray-800);
-    font-size: 18px;
-    font-weight: 600;
-    cursor: pointer;
-    min-height: 44px;
-}
-.lookup-key:active { background: var(--color-gray-200); transform: scale(0.95); }
-.lookup-key.letter { background: var(--color-bg-help); color: var(--color-primary-light); }
-.lookup-key.action { background: var(--color-gray-50); color: var(--color-gray-500); font-size: 15px; }
-.lookup-key.action.danger:active { background: var(--color-bg-error); color: var(--color-danger); }
-
-.lookup-card { text-align: center; padding: 6px 0 14px; }
-.lookup-seat-big {
-    font-size: 34px;
-    font-weight: 700;
-    color: var(--color-primary-light);
-    letter-spacing: 2px;
-    margin-bottom: 14px;
-}
-.lookup-empty { color: var(--color-gray-400); font-size: 13px; padding: 10px 0 4px; }
-.lookup-empty span { display: block; font-size: 11px; margin-top: 4px; }
-.lookup-details { text-align: left; border-top: 1px solid var(--color-gray-200); }
-.lookup-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 7px 2px;
-    border-bottom: 1px solid var(--color-gray-100);
-    font-size: 12px;
-}
-.lookup-label { color: var(--color-gray-500); font-weight: 600; letter-spacing: 0.3px; }
-.lookup-value { color: var(--color-gray-800); font-weight: 600; text-align: right; }
-.lookup-newsearch { width: 100%; margin-top: 4px; }
-
-/* ===== DELETE TAB CONFIRMATION ===== */
-.delete-confirm-modal {
-    background: var(--color-white);
-    border-radius: 16px;
-    padding: 22px 20px;
-    width: 100%;
-    max-width: 300px;
-    text-align: center;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
-}
-.delete-confirm-modal p {
-    font-size: 13px;
-    color: var(--color-gray-800);
-    margin-bottom: 16px;
-    line-height: 1.5;
-}
-.delete-confirm-buttons { display: flex; gap: 8px; }
-.delete-confirm-buttons button {
-    flex: 1;
-    padding: 10px;
-    border-radius: 10px;
-    border: none;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-}
-
-/* ===== SUMMARY BAR (Special/INF/EXT/Remarks) ===== */
-.summary-chip {
-    background: var(--color-gray-50);
-    border: 1px solid var(--color-gray-300);
-    border-radius: 14px;
-    padding: 6px 12px;
-    font-size: 11px;
-    color: var(--color-gray-700);
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-.summary-chip:active { background: var(--color-gray-200); }
-.summary-chip strong { font-weight: 700; }
-
-/* ===== PASSENGER CARD FLASH MESSAGE ===== */
-.lookup-flash {
-    background: var(--color-bg-help);
-    border: 1px solid var(--color-primary-light);
-    border-radius: 8px;
-    padding: 8px 10px;
-    font-size: 11px;
-    color: var(--color-primary);
-    margin-bottom: 10px;
-    text-align: center;
-}
-
-/* ===== EDITABLE SEAT NUMBER IN CARD ===== */
-.lookup-seat-editable {
-    cursor: pointer;
-    text-decoration: underline dotted;
-    text-underline-offset: 4px;
-}
-.seat-edit-icon {
-    font-size: 16px;
-    opacity: 0.6;
-    margin-left: 4px;
-}
-
-/* ===== PASSENGER CARD EDIT SECTION ===== */
-.lookup-edit-section {
-    text-align: left;
-    border-top: 1px solid var(--color-gray-200);
-    margin-top: 10px;
-    padding-top: 10px;
-}
-.lookup-edit-row { margin-bottom: 10px; }
-.lookup-edit-label {
-    display: block;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--color-gray-600);
-    margin-bottom: 4px;
-    letter-spacing: 0.3px;
-}
-.lookup-select {
-    width: 100%;
-    padding: 8px;
-    border: 2px solid var(--color-gray-200);
-    border-radius: 8px;
-    font-size: 13px;
-    background: var(--color-white);
-}
-.lookup-others-input {
-    width: 100%;
-    margin-top: 6px;
-    padding: 8px;
-    border: 2px solid var(--color-gray-200);
-    border-radius: 8px;
-    font-size: 13px;
-    box-sizing: border-box;
-}
-.lookup-toggle-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-.lookup-toggle-label { font-size: 12px; font-weight: 600; color: var(--color-gray-700); }
-.lookup-remarks {
-    width: 100%;
-    padding: 8px;
-    border: 2px solid var(--color-gray-200);
-    border-radius: 8px;
-    font-size: 13px;
-    font-family: inherit;
-    resize: vertical;
-    box-sizing: border-box;
-}
-
-/* ===== CATEGORY LIST POPUP ===== */
-.category-list {
-    max-height: 320px;
-    overflow-y: auto;
-}
-.category-list-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 4px;
-    border-bottom: 1px solid var(--color-gray-100);
-    cursor: pointer;
-}
-.category-list-row:active { background: var(--color-gray-50); }
-.category-list-seat {
-    font-weight: 700;
-    color: var(--color-primary-light);
-    min-width: 34px;
-    font-size: 13px;
-}
-.category-list-name {
-    flex: 1;
-    font-size: 12px;
-    color: var(--color-gray-800);
-}
-.category-list-tag {
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--color-white);
-    background: var(--color-primary-light);
-    padding: 2px 8px;
-    border-radius: 10px;
-    white-space: nowrap;
-}
-
-/* ===== EDITABLE SEAT CELLS IN TABLES ===== */
-.editable-seat-cell {
-    cursor: pointer;
-    position: relative;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
-}
-.editable-seat-cell:active { background: var(--color-bg-help) !important; }
-
 /* ===== PRINT STYLES - MINIMAL MARGINS EDGE-TO-EDGE ===== */
 @media print {
     /* FORCE PRINTING OF BACKGROUND COLORS - CRITICAL FIX */
@@ -1347,6 +1021,8 @@ tbody tr:nth-child(odd) { background-color: var(--color-white); }
         print-color-adjust: exact !important;
         color-adjust: exact !important;
     }
+    
+
     
     body {
         -webkit-print-color-adjust: exact !important;
@@ -1389,15 +1065,6 @@ tbody tr:nth-child(odd) { background-color: var(--color-white); }
     .no-print,
     .acknowledgments,
     h1 {
-        display: none !important;
-    }
-    
-    /* Hide tabs and summary bar in print */
-    .report-tabs-container,
-    .report-summary-bar,
-    .seat-lookup-overlay,
-    #deleteTabOverlay,
-    #categoryListOverlay {
         display: none !important;
     }
     
@@ -1780,8 +1447,6 @@ body.landscape-mode::before {
         background: rgba(255, 255, 255, 0.95) !important;
         z-index: 10 !important;
     }
-}
-
 /* ===== VERSION UPDATE GLOW TEXT ===== */
 .version-glow {
     animation: text-glow 2s ease-in-out infinite !important;
@@ -1795,5 +1460,336 @@ body.landscape-mode::before {
     }
     50% {
         text-shadow: 0 0 20px rgba(220, 38, 38, 1), 0 0 30px rgba(220, 38, 38, 0.5);
+    }
+}
+}
+
+/* ===== REPORT TABS ===== */
+.report-tabs-container {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 0;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--color-gray-200);
+    overflow-x: auto;
+}
+.report-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-bg-help);
+    color: var(--color-primary);
+    border: 1px solid #BFDBFE;
+    border-radius: 16px;
+    padding: 6px 8px 6px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+.report-tab.active {
+    background: var(--color-primary-light);
+    color: var(--color-white);
+    border-color: var(--color-primary-light);
+}
+.report-tab-label { pointer-events: none; }
+.report-tab-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.08);
+    font-size: 10px;
+    line-height: 1;
+    color: inherit;
+    cursor: pointer;
+}
+.report-tab.active .report-tab-close { background: rgba(255,255,255,0.25); }
+.report-tab-close:active { background: rgba(0,0,0,0.2); }
+
+/* ===== Flight Info clickable hint ===== */
+.flight-info { cursor: pointer; position: relative; }
+.seat-lookup-hint {
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 10px;
+    opacity: 0.7;
+    font-weight: 500;
+}
+
+/* ===== SEAT LOOKUP MODAL ===== */
+.seat-lookup-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.seat-lookup-modal {
+    background: var(--color-white);
+    border-radius: 20px;
+    padding: 20px;
+    width: 100%;
+    max-width: 320px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    position: relative;
+}
+.seat-lookup-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-gray-100);
+    color: var(--color-gray-600);
+    font-size: 14px;
+    cursor: pointer;
+}
+.lookup-display {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--color-gray-800);
+    letter-spacing: 2px;
+    margin: 10px 0 4px;
+    font-variant-numeric: tabular-nums;
+}
+.lookup-display .highlight { color: var(--color-primary-light); }
+.lookup-hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--color-gray-500);
+    margin-bottom: 14px;
+}
+.lookup-dialpad { display: grid; gap: 6px; }
+.dialpad-3col { grid-template-columns: repeat(3, 1fr); }
+.dialpad-4col { grid-template-columns: repeat(4, 1fr); }
+.lookup-key {
+    aspect-ratio: 1/1;
+    border: none;
+    border-radius: 12px;
+    background: var(--color-gray-100);
+    color: var(--color-gray-800);
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 44px;
+}
+.lookup-key:active { background: var(--color-gray-200); transform: scale(0.95); }
+.lookup-key.letter { background: var(--color-bg-help); color: var(--color-primary-light); }
+.lookup-key.action { background: var(--color-gray-50); color: var(--color-gray-500); font-size: 15px; }
+.lookup-key.action.danger:active { background: var(--color-bg-error); color: var(--color-danger); }
+
+.lookup-card { text-align: center; padding: 6px 0 14px; }
+.lookup-seat-big {
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--color-primary-light);
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+}
+.lookup-empty { color: var(--color-gray-400); font-size: 13px; padding: 10px 0 4px; }
+.lookup-empty span { display: block; font-size: 11px; margin-top: 4px; }
+.lookup-details { text-align: left; border-top: 1px solid var(--color-gray-200); }
+.lookup-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 7px 2px;
+    border-bottom: 1px solid var(--color-gray-100);
+    font-size: 12px;
+}
+.lookup-label { color: var(--color-gray-500); font-weight: 600; letter-spacing: 0.3px; }
+.lookup-value { color: var(--color-gray-800); font-weight: 600; text-align: right; }
+.lookup-newsearch { width: 100%; margin-top: 4px; }
+
+/* ===== DELETE TAB CONFIRMATION ===== */
+.delete-confirm-modal {
+    background: var(--color-white);
+    border-radius: 16px;
+    padding: 22px 20px;
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+}
+.delete-confirm-modal p {
+    font-size: 13px;
+    color: var(--color-gray-800);
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+.delete-confirm-buttons { display: flex; gap: 8px; }
+.delete-confirm-buttons button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* ===== SUMMARY BAR (Special/INF/EXT/Remarks) ===== */
+.report-summary-bar {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 0 10px;
+    margin-bottom: 4px;
+}
+.summary-chip {
+    background: var(--color-gray-50);
+    border: 1px solid var(--color-gray-300);
+    border-radius: 14px;
+    padding: 6px 12px;
+    font-size: 11px;
+    color: var(--color-gray-700);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.summary-chip:active { background: var(--color-gray-200); }
+.summary-chip strong { font-weight: 700; }
+
+/* ===== PASSENGER CARD FLASH MESSAGE ===== */
+.lookup-flash {
+    background: var(--color-bg-help);
+    border: 1px solid var(--color-primary-light);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 11px;
+    color: var(--color-primary);
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+/* ===== EDITABLE SEAT NUMBER IN CARD ===== */
+.lookup-seat-editable {
+    cursor: pointer;
+    text-decoration: underline dotted;
+    text-underline-offset: 4px;
+}
+.seat-edit-icon {
+    font-size: 16px;
+    opacity: 0.6;
+    margin-left: 4px;
+}
+
+/* ===== PASSENGER CARD EDIT SECTION ===== */
+.lookup-edit-section {
+    text-align: left;
+    border-top: 1px solid var(--color-gray-200);
+    margin-top: 10px;
+    padding-top: 10px;
+}
+.lookup-edit-row { margin-bottom: 10px; }
+.lookup-edit-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-gray-600);
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+}
+.lookup-select {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid var(--color-gray-200);
+    border-radius: 8px;
+    font-size: 13px;
+    background: var(--color-white);
+}
+.lookup-others-input {
+    width: 100%;
+    margin-top: 6px;
+    padding: 8px;
+    border: 2px solid var(--color-gray-200);
+    border-radius: 8px;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+.lookup-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.lookup-toggle-label { font-size: 12px; font-weight: 600; color: var(--color-gray-700); }
+.lookup-remarks {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid var(--color-gray-200);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+/* ===== CATEGORY LIST POPUP ===== */
+.category-list {
+    max-height: 320px;
+    overflow-y: auto;
+}
+.category-list-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--color-gray-100);
+    cursor: pointer;
+}
+.category-list-row:active { background: var(--color-gray-50); }
+.category-list-seat {
+    font-weight: 700;
+    color: var(--color-primary-light);
+    min-width: 34px;
+    font-size: 13px;
+}
+.category-list-name {
+    flex: 1;
+    font-size: 12px;
+    color: var(--color-gray-800);
+}
+.category-list-tag {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-white);
+    background: var(--color-primary-light);
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+/* ===== EDITABLE SEAT CELLS IN TABLES ===== */
+.editable-seat-cell {
+    cursor: pointer;
+    position: relative;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.editable-seat-cell:active { background: var(--color-bg-help) !important; }
+
+@media print {
+    .report-tabs-container,
+    .report-summary-bar,
+    .seat-lookup-overlay,
+    #deleteTabOverlay,
+    #categoryListOverlay {
+        display: none !important;
     }
 }

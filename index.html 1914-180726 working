@@ -1068,29 +1068,18 @@ function renderSummaryBar() {
     const extCount = passengers.filter(function(p) { return p.extSeatbelt; }).length;
     const remarksCount = passengers.filter(function(p) { return p.remarksText && p.remarksText.trim(); }).length;
 
-    // Build chips only for categories with count > 0
-    let chips = [];
-    if (specialTotal > 0) {
-        chips.push('<div class="summary-chip" onclick="openCategoryList(\'special\')"><strong>SPECIAL: ' + specialBreakdown + '</strong></div>');
-    }
-    if (infCount > 0) {
-        chips.push('<div class="summary-chip" onclick="openCategoryList(\'inf\')"><strong>INF (' + infCount + ')</strong></div>');
-    }
-    if (extCount > 0) {
-        chips.push('<div class="summary-chip" onclick="openCategoryList(\'ext\')"><strong>EXT (' + extCount + ')</strong></div>');
-    }
-    if (remarksCount > 0) {
-        chips.push('<div class="summary-chip" onclick="openCategoryList(\'remarks\')"><strong>REMARKS (' + remarksCount + ')</strong></div>');
-    }
-
-    if (chips.length === 0) {
+    if (specialTotal === 0 && infCount === 0 && extCount === 0 && remarksCount === 0) {
         container.style.display = 'none';
         container.innerHTML = '';
         return;
     }
 
     container.style.display = 'flex';
-    container.innerHTML = chips.join('');
+    container.innerHTML =
+        '<div class="summary-chip" onclick="openCategoryList(\'special\')"><strong>SPECIAL' + (specialTotal > 0 ? ': ' + specialBreakdown : ' (0)') + '</strong></div>' +
+        '<div class="summary-chip" onclick="openCategoryList(\'inf\')"><strong>INF (' + infCount + ')</strong></div>' +
+        '<div class="summary-chip" onclick="openCategoryList(\'ext\')"><strong>EXT (' + extCount + ')</strong></div>' +
+        '<div class="summary-chip" onclick="openCategoryList(\'remarks\')"><strong>REMARKS (' + remarksCount + ')</strong></div>';
 }
 
 function openCategoryList(category) {
