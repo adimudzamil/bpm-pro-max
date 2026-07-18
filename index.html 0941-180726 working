@@ -441,8 +441,6 @@
             </div>
         </div>
         
-        <!-- Patch 1: Tabs container above report output -->
-        <div class="report-tabs-container no-print" id="reportTabsContainer"></div>
         <div class="output-section" id="reportContent"></div>
         
         <div class="acknowledgments">
@@ -476,26 +474,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Patch 2: Seat Lookup Modal -->
-    <div id="seatLookupOverlay" class="seat-lookup-overlay no-print" onclick="closeSeatLookupOnOverlay(event)">
-        <div class="seat-lookup-modal" onclick="event.stopPropagation()">
-            <button class="seat-lookup-close" onclick="closeSeatLookup()">✕</button>
-            <div id="seatLookupBody"></div>
-        </div>
-    </div>
-
-    <!-- Patch 2: Delete Tab Confirmation Modal -->
-    <div id="deleteTabOverlay" class="seat-lookup-overlay no-print">
-        <div class="delete-confirm-modal">
-            <p id="deleteTabMessage">Delete this report tab?</p>
-            <div class="delete-confirm-buttons">
-                <button style="background:#E2E8F0; color:#334155;" onclick="cancelDeleteTab()">Cancel</button>
-                <button style="background:#DC2626; color:#ffffff;" onclick="confirmDeleteTab()">Delete</button>
-            </div>
-        </div>
-    </div>
-
     <script>
     
 // =================== DUAL CHART GLOBAL VARIABLES ===================
@@ -503,298 +481,232 @@ let seatChartWindow = null;
 let chartReadyForSecondManifest = false;
 let isDualChartMode = false;
 
-// =================== REPORT TABS (persisted) ===================
-let reportTabs = [];
-let activeTabId = null;
-let pendingNewTab = false;
-let pendingDeleteTabId = null;
-const TABS_STORAGE_KEY = 'bpmReportTabs';
-const ACTIVE_TAB_KEY = 'bpmActiveTabId';
+// =================== NEW: AUTO DETECTION & AUTO LAYOUT ===================
 
-function saveTabsToStorage() {
-    try {
-        localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(reportTabs));
-        localStorage.setItem(ACTIVE_TAB_KEY, activeTabId || '');
-    } catch (e) {
-        console.error('Failed to save report tabs:', e);
-    }
-}
-
-function loadTabsFromStorage() {
-    try {
-        const raw = localStorage.getItem(TABS_STORAGE_KEY);
-        reportTabs = raw ? JSON.parse(raw) : [];
-        activeTabId = localStorage.getItem(ACTIVE_TAB_KEY) || null;
-        if (activeTabId && !reportTabs.find(t => t.id === activeTabId)) {
-            activeTabId = reportTabs.length ? reportTabs[reportTabs.length - 1].id : null;
-        }
-    } catch (e) {
-        console.error('Failed to load report tabs:', e);
-        reportTabs = [];
-        activeTabId = null;
-    }
-}
-
-function restoreActiveTabView() {
-    if (!activeTabId) return;
-    const tab = reportTabs.find(t => t.id === activeTabId);
-    if (tab) {
-        document.getElementById('reportContent').innerHTML = `<div id="reportBody">${tab.html}</div>`;
-    } else {
-        activeTabId = null;
-    }
-}
-
-function saveOrUpdateTab(flightInfo, passengers, rawManifest, html) {
-    const existingActive = activeTabId ? reportTabs.find(t => t.id === activeTabId) : null;
-    if (pendingNewTab || !existingActive) {
-        const id = 'tab_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-        reportTabs.push({
-            id: id,
-            flightNumber: flightInfo.flightNumber || 'FLIGHT',
-            date: flightInfo.date || '',
-            flightInfo: flightInfo,
-            passengers: passengers,
-            rawManifest: rawManifest,
-            html: html,
-            timestamp: Date.now()
-        });
-        activeTabId = id;
-    } else {
-        existingActive.flightNumber = flightInfo.flightNumber || existingActive.flightNumber;
-        existingActive.date = flightInfo.date || existingActive.date;
-        existingActive.flightInfo = flightInfo;
-        existingActive.passengers = passengers;
-        existingActive.rawManifest = rawManifest;
-        existingActive.html = html;
-        existingActive.timestamp = Date.now();
-    }
-    pendingNewTab = false;
-    saveTabsToStorage();
-    renderTabsBar();
-}
-
-function renderTabsBar() {
-    const container = document.getElementById('reportTabsContainer');
-    if (!container) return;
-    if (reportTabs.length === 0) {
-        container.style.display = 'none';
-        container.innerHTML = '';
+// NEW: Enhanced generateQuickReport to auto-set aircraft and layout
+function generateQuickReport() {
+    const input = document.getElementById('manifestInput').value;
+    if (!input.trim()) {
+        showError('Please paste passenger manifest data.');
         return;
     }
-    container.style.display = 'flex';
-    container.innerHTML = reportTabs.map(function(tab) {
-        const isActive = tab.id === activeTabId;
-        const label = (tab.flightNumber || 'FLT') + (tab.date ? ' · ' + tab.date : '');
-        return '<div class="report-tab' + (isActive ? ' active' : '') + '" onclick="switchToTab(\'' + tab.id + '\')">' +
-               '<span class="report-tab-label">' + label + '</span>' +
-               '<span class="report-tab-close" onclick="event.stopPropagation(); requestDeleteTab(\'' + tab.id + '\')">✕</span>' +
-               '</div>';
-    }).join('');
-}
-
-function switchToTab(tabId) {
-    const tab = reportTabs.find(t => t.id === tabId);
-    if (!tab) return;
-    activeTabId = tabId;
-    document.getElementById('reportContent').innerHTML = `<div id="reportBody">${tab.html}</div>`;
-    saveTabsToStorage();
-    renderTabsBar();
-}
-
-function requestDeleteTab(tabId) {
-    pendingDeleteTabId = tabId;
-    const tab = reportTabs.find(t => t.id === tabId);
-    const label = tab ? ((tab.flightNumber || 'this flight') + (tab.date ? ' · ' + tab.date : '')) : 'this tab';
-    const msgEl = document.getElementById('deleteTabMessage');
-    if (msgEl) msgEl.textContent = 'Delete report "' + label + '"? This cannot be undone.';
-    document.getElementById('deleteTabOverlay').style.display = 'flex';
-}
-
-function cancelDeleteTab() {
-    pendingDeleteTabId = null;
-    document.getElementById('deleteTabOverlay').style.display = 'none';
-}
-
-function confirmDeleteTab() {
-    if (!pendingDeleteTabId) return;
-    const idx = reportTabs.findIndex(t => t.id === pendingDeleteTabId);
-    if (idx !== -1) reportTabs.splice(idx, 1);
-
-    if (activeTabId === pendingDeleteTabId) {
-        if (reportTabs.length > 0) {
-            const nextTab = reportTabs[reportTabs.length - 1];
-            activeTabId = nextTab.id;
-            document.getElementById('reportContent').innerHTML = `<div id="reportBody">${nextTab.html}</div>`;
-        } else {
-            activeTabId = null;
-            document.getElementById('reportContent').innerHTML = '';
-        }
+    
+    try {
+        const { flightInfo, passengers } = parseManifest(input);
+        
+        // Detect aircraft type from manifest
+        const detectedType = detectAircraftType(passengers, flightInfo);
+        const effectiveAircraftConfig = getEffectiveAircraftConfig(detectedType, flightInfo, passengers);
+        const effectiveLayout = getEffectiveLayout(detectedType);
+        
+        // Auto-set the aircraft type dropdown
+        const aircraftDropdown = document.getElementById('aircraftType');
+        aircraftDropdown.value = effectiveAircraftConfig;
+        
+        // Auto-set the layout style dropdown
+        const layoutDropdown = document.getElementById('layoutStyle');
+        layoutDropdown.value = effectiveLayout;
+        
+        // Update settings and generate report
+        updateSettingsFromControls();
+        generateReportWithCurrentSettings();
+        
+        // Show detection message
+        let layoutName = effectiveLayout === 'port-starboard' ? 'Port/Starboard Split' : 'Single Column';
+        showSuccess(`✓ Auto-detected: ${effectiveAircraftConfig} | Layout: ${layoutName}`);
+        
+    } catch (error) {
+        showError(`Error: ${error.message}`);
     }
-
-    pendingDeleteTabId = null;
-    document.getElementById('deleteTabOverlay').style.display = 'none';
-    saveTabsToStorage();
-    renderTabsBar();
 }
 
-// =================== SEAT LOOKUP MODAL ===================
-let lookupState = { phase: 'row', digits: [], letter: null };
-const LOOKUP_SEAT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'];
-
-function openSeatLookup() {
-    const tab = reportTabs.find(t => t.id === activeTabId);
-    if (!tab) {
-        showError('Generate a report first before looking up a seat.');
-        return;
+// NEW: Update getEffectiveLayout to always use port-starboard for widebody when auto
+function getEffectiveLayout(detectedType) {
+    // If layout is set to auto in settings
+    if (currentSettings.layoutStyle === 'auto') {
+        // Always use port-starboard for widebody when auto is selected
+        return detectedType === 'widebody' ? 'port-starboard' : 'single';
     }
-    lookupState = { phase: 'row', digits: [], letter: null };
-    document.getElementById('seatLookupOverlay').style.display = 'flex';
-    renderSeatLookupUI();
+    return currentSettings.layoutStyle;
 }
 
-function closeSeatLookup() {
-    document.getElementById('seatLookupOverlay').style.display = 'none';
-}
-
-function closeSeatLookupOnOverlay(e) {
-    if (e.target && e.target.id === 'seatLookupOverlay') closeSeatLookup();
-}
-
-function newSeatLookup() {
-    lookupState = { phase: 'row', digits: [], letter: null };
-    renderSeatLookupUI();
-}
-
-function lookupKeyPress(value) {
-    if (lookupState.phase === 'row') {
-        if (value === 'backspace') {
-            lookupState.digits.pop();
-            renderSeatLookupUI();
-            return;
-        }
-        if (value === 'confirm') {
-            if (lookupState.digits.length === 2) {
-                lookupState.phase = 'letter';
-                renderSeatLookupUI();
+// NEW: Enhanced aircraft detection with better registration logic
+function detectAircraftType(passengers, flightInfo) {
+    // First try to detect from aircraft registration in flight info
+    if (flightInfo.aircraft) {
+        const acft = flightInfo.aircraft.toUpperCase();
+        
+        // Check for 9MM registrations (MH aircraft)
+        console.log("Checking aircraft registration:", acft);
+        
+        if (acft.startsWith('9MM')) {
+            const fourthChar = acft[3];
+            const fifthChar = acft[4];
+            
+            // 737: 9MM(X,L,V,F) + any letter
+            if (['X', 'L', 'V', 'F'].includes(fourthChar)) {
+                console.log("Detected: 737 aircraft (narrowbody)");
+                return 'narrowbody';
             }
-            return;
-        }
-        if (/^[0-9]$/.test(value) && lookupState.digits.length < 2) {
-            lookupState.digits.push(value);
-            renderSeatLookupUI();
-            if (lookupState.digits.length === 2) {
-                setTimeout(function() {
-                    lookupState.phase = 'letter';
-                    renderSeatLookupUI();
-                }, 150);
+            // A330-900neo: 9MM(N) + any letter
+            else if (fourthChar === 'N') {
+                console.log("Detected: A330-900neo (widebody)");
+                return 'widebody';
+            }
+            // A350-900: 9MM(A) + A-G
+            else if (fourthChar === 'A' && fifthChar && fifthChar >= 'A' && fifthChar <= 'G') {
+                console.log("Detected: A350-900 (widebody)");
+                return 'widebody';
+            }
+            // A350-MAH: 9MMAH
+            else if (acft === '9MMAH') {
+                console.log("Detected: A350-MAH (widebody)");
+                return 'widebody';
+            }
+            // A330-300: 9MM(T) + A-S
+            else if (fourthChar === 'T' && fifthChar && fifthChar >= 'A' && fifthChar <= 'S') {
+                console.log("Detected: A330-300 (widebody)");
+                return 'widebody';
+            }
+            // A330-200: 9MM(T) + U-Z
+            else if (fourthChar === 'T' && fifthChar && fifthChar >= 'U' && fifthChar <= 'Z') {
+                console.log("Detected: A330-200 (widebody)");
+                return 'widebody';
             }
         }
-        return;
+        
+        // Check for other registration patterns
+        if (acft.includes('737')) return 'narrowbody';
+        if (acft.includes('A330') || acft.includes('A350') || acft.includes('A340')) return 'widebody';
+        if (acft.includes('777') || acft.includes('787')) return 'widebody';
     }
-    if (lookupState.phase === 'letter') {
-        if (value === 'backspace') {
-            lookupState.phase = 'row';
-            renderSeatLookupUI();
-            return;
+    
+    // Fallback: detect from seat letters
+    for (const pax of passengers) {
+        if (pax.seat) {
+            const seatLetter = pax.seat.slice(-1).toUpperCase();
+            // Widebody aircraft have seats beyond F (G, H, J, K)
+            if (['G', 'H', 'J', 'K'].includes(seatLetter)) {
+                console.log("Detected: Widebody from seat letter", seatLetter);
+                return 'widebody';
+            }
         }
-        if (value === 'clear') {
-            lookupState = { phase: 'row', digits: [], letter: null };
-            renderSeatLookupUI();
-            return;
-        }
-        if (LOOKUP_SEAT_LETTERS.includes(value)) {
-            lookupState.letter = value;
-            lookupState.phase = 'result';
-            renderSeatLookupUI();
-        }
-        return;
     }
+    
+    console.log("Defaulting to: narrowbody (737)");
+    return 'narrowbody'; // default to 737 if no widebody indicators found
 }
 
-function renderSeatLookupUI() {
-    const body = document.getElementById('seatLookupBody');
-    if (!body) return;
-
-    if (lookupState.phase === 'result') {
-        body.innerHTML = renderPassengerCardHTML();
-        return;
+// NEW: Enhanced aircraft configuration detection with better fallbacks
+function getEffectiveAircraftConfig(detectedType, flightInfo, passengers) {
+    // First check if user has manually selected a specific type
+    const manualAircraftType = document.getElementById('aircraftType').value;
+    if (manualAircraftType !== 'auto') {
+        console.log("Using manual selection:", manualAircraftType);
+        return manualAircraftType;
     }
-
-    const d1 = lookupState.digits[0] !== undefined ? lookupState.digits[0] : '_';
-    const d2 = lookupState.digits[1] !== undefined ? lookupState.digits[1] : '_';
-    const l = lookupState.letter || '_';
-
-    let keysHTML = '';
-    let gridClass = '';
-    if (lookupState.phase === 'row') {
-        gridClass = 'dialpad-3col';
-        ['1','2','3','4','5','6','7','8','9'].forEach(function(n) {
-            keysHTML += '<button class="lookup-key" onclick="lookupKeyPress(\'' + n + '\')">' + n + '</button>';
-        });
-        keysHTML += '<button class="lookup-key action" onclick="lookupKeyPress(\'backspace\')">⌫</button>';
-        keysHTML += '<button class="lookup-key" onclick="lookupKeyPress(\'0\')">0</button>';
-        keysHTML += '<button class="lookup-key action" onclick="lookupKeyPress(\'confirm\')">✓</button>';
-    } else {
-        gridClass = 'dialpad-4col';
-        LOOKUP_SEAT_LETTERS.forEach(function(ltr) {
-            keysHTML += '<button class="lookup-key letter" onclick="lookupKeyPress(\'' + ltr + '\')">' + ltr + '</button>';
-        });
-        keysHTML += '<button class="lookup-key action" onclick="lookupKeyPress(\'backspace\')">⌫</button>';
-        keysHTML += '<button class="lookup-key action danger" onclick="lookupKeyPress(\'clear\')">✕</button>';
+    
+    // Auto-detection logic
+    if (flightInfo.aircraft) {
+        const acft = flightInfo.aircraft.toUpperCase();
+        
+        // 737 Aircraft Detection
+        if (acft.startsWith('9MM') && ['X', 'L', 'V', 'F'].includes(acft[3])) {
+            // Check if this is 737NR (Business Class extends to row 4)
+            const hasRow4Business = passengers.some(p => {
+                if (p.seat && p.class === 'J') {
+                    const rowNum = parseInt(p.seat.substring(0, 2));
+                    return rowNum === 4;
+                }
+                return false;
+            });
+            
+            // If row 4 has Business Class passengers, use 737NR configuration
+            if (hasRow4Business) {
+                console.log("Detected: 737NR (Business class in row 4)");
+                return '737NR'; // J:1-4, Y:5-30
+            } else {
+                // Try to distinguish between NG and MAX if possible
+                if (acft.includes('MAX') || (acft[3] === 'V' || acft[3] === 'F')) {
+                    console.log("Detected: 737MAX");
+                    return '737MAX';
+                }
+                console.log("Detected: 737NG");
+                return '737NG'; // default 737
+            }
+        }
+        
+        // Widebody Aircraft Detection
+        if (acft.startsWith('9MM')) {
+            const fourthChar = acft[3];
+            const fifthChar = acft[4];
+            
+            if (fourthChar === 'N') {
+                console.log("Detected: A330-900neo (339)");
+                return '339';
+            }
+            if (fourthChar === 'A' && fifthChar && fifthChar >= 'A' && fifthChar <= 'G') {
+                console.log("Detected: A350-900 (359)");
+                return '359';
+            }
+            if (acft === '9MMAH') {
+                console.log("Detected: A350-MAH (350)");
+                return '350';
+            }
+            if (fourthChar === 'T') {
+                if (fifthChar && fifthChar >= 'A' && fifthChar <= 'S') {
+                    console.log("Detected: A330-300 (333)");
+                    return '333';
+                }
+                if (fifthChar && fifthChar >= 'U' && fifthChar <= 'Z') {
+                    console.log("Detected: A330-200 (332)");
+                    return '332';
+                }
+            }
+        }
     }
-
-    body.innerHTML =
-        '<div class="lookup-display"><span>' + d1 + '</span><span>' + d2 + '</span><span class="' + (lookupState.letter ? 'highlight' : '') + '">' + l + '</span></div>' +
-        '<div class="lookup-hint">' + (lookupState.phase === 'row' ? 'Enter row number' : 'Select seat letter') + '</div>' +
-        '<div class="lookup-dialpad ' + gridClass + '">' + keysHTML + '</div>';
+    
+    // Fallback based on detected type
+    const fallback = detectedType === 'widebody' ? '333' : '737NG';
+    console.log("Using fallback:", fallback);
+    return fallback;
 }
 
-function renderPassengerCardHTML() {
-    const tab = reportTabs.find(t => t.id === activeTabId);
-    const seatNum = lookupState.digits.join('').padStart(2, '0') + lookupState.letter;
-    const passenger = tab ? tab.passengers.find(p => p.seat === seatNum) : null;
-
-    if (!passenger) {
-        return '<div class="lookup-card">' +
-               '<div class="lookup-seat-big">' + seatNum + '</div>' +
-               '<div class="lookup-empty">💺 Empty / Unassigned<br><span>No passenger found for this seat</span></div>' +
-               '</div>' +
-               '<button class="btn-primary lookup-newsearch" onclick="newSeatLookup()">New Search</button>';
+// NEW: Auto-detection indicator
+function showAutoDetectionIndicator() {
+    const input = document.getElementById('manifestInput').value;
+    if (!input.trim()) return;
+    
+    try {
+        const { flightInfo, passengers } = parseManifest(input);
+        const detectedType = detectAircraftType(passengers, flightInfo);
+        const effectiveAircraftConfig = getEffectiveAircraftConfig(detectedType, flightInfo, passengers);
+        const effectiveLayout = getEffectiveLayout(detectedType);
+        
+        // Update page estimate with detection info
+        const pageEstimate = document.getElementById('pageEstimate');
+        if (pageEstimate) {
+            const aircraftType = document.getElementById('aircraftType').value;
+            const layoutStyle = document.getElementById('layoutStyle').value;
+            
+            let detectionInfo = '';
+            if (aircraftType === 'auto') {
+                detectionInfo += `<div><strong>Aircraft:</strong> <span style="color: #059669;">${effectiveAircraftConfig}</span> (Auto-detected)</div>`;
+            }
+            if (layoutStyle === 'auto') {
+                const layoutName = effectiveLayout === 'port-starboard' ? 'Port/Starboard' : 'Single Column';
+                detectionInfo += `<div><strong>Layout:</strong> <span style="color: #059669;">${layoutName}</span> (Auto)</div>`;
+            }
+            
+            if (detectionInfo) {
+                pageEstimate.innerHTML = `<div style="margin-bottom: 5px;"><strong>📊 Auto-detection Preview:</strong></div>${detectionInfo}`;
+            }
+        }
+    } catch (error) {
+        // Ignore errors in indicator
+        console.log("Auto-detection preview error:", error);
     }
-
-    const rows = [
-        ['TITLE', passenger.title || '—'],
-        ['PAX NAME', passenger.name || '—'],
-        ['PAX DOB', passenger.dob || '—'],
-        ['SEAT', passenger.seat || '—'],
-        ['PNR', passenger.pnr || '—'],
-        ['CLS', passenger.class || '—'],
-        ['FQTV', passenger.fqtv || '—'],
-        ['FQTV TYPE', passenger.tier || '—'],
-        ['MEALS', passenger.meal || 'None']
-    ];
-
-    const rowsHTML = rows.map(function(r) {
-        return '<div class="lookup-row"><span class="lookup-label">' + r[0] + '</span><span class="lookup-value">' + r[1] + '</span></div>';
-    }).join('');
-
-    return '<div class="lookup-card with-data">' +
-           '<div class="lookup-seat-big">' + seatNum + '</div>' +
-           '<div class="lookup-details">' + rowsHTML + '</div>' +
-           '</div>' +
-           '<button class="btn-primary lookup-newsearch" onclick="newSeatLookup()">New Search</button>';
 }
-
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        const lookupOverlay = document.getElementById('seatLookupOverlay');
-        if (lookupOverlay && lookupOverlay.style.display !== 'none') closeSeatLookup();
-        const deleteOverlay = document.getElementById('deleteTabOverlay');
-        if (deleteOverlay && deleteOverlay.style.display !== 'none') cancelDeleteTab();
-    }
-});
-
 // =================== DUAL CHART FUNCTIONS ===================
 function toggleDualChartMode() {
 const toggle = document.getElementById('dualChartToggle');
@@ -2065,19 +1977,6 @@ function initPrintControls() {
                     else if (field.toUpperCase().includes('DOWNGRADED')) {
                         passenger.remark = 'DNG';
                     }
-                    // Patch 8: Parse FQTV number
-                    else if (!passenger.fqtv) {
-                        let fqtvValue = field.trim();
-                        const upperVal = fqtvValue.toUpperCase();
-                        for (let ti = 0; ti < CONFIG.TIERS.length; ti++) {
-                            const tierCode = CONFIG.TIERS[ti];
-                            if (upperVal.endsWith(tierCode) && upperVal.length > tierCode.length) {
-                                fqtvValue = fqtvValue.slice(0, fqtvValue.length - tierCode.length);
-                                break;
-                            }
-                        }
-                        passenger.fqtv = fqtvValue;
-                    }
                     i++;
                 }
                 
@@ -2135,8 +2034,7 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                 const effectiveLayout = getEffectiveLayout(currentSettings.detectedAircraftType);
                 const effectiveAircraftConfig = getEffectiveAircraftConfig(currentSettings.detectedAircraftType, flightInfo, passengers);
                 
-                // Patch 5: Flight-info clickable for seat lookup
-                const flightInfoHTML = `<div class="flight-info" onclick="openSeatLookup()" title="Tap to look up a seat"><span>Flight: ${flightInfo.flightNumber} | Route: ${flightInfo.sector} | Date: ${flightInfo.date} ${flightInfo.stdLocal} | ACFT: ${flightInfo.aircraft}</span><span class="seat-lookup-hint">🔍 Tap to find a seat</span></div>`;
+                const flightInfoHTML = `<div class="flight-info">Flight: ${flightInfo.flightNumber} | Route: ${flightInfo.sector} | Date: ${flightInfo.date} ${flightInfo.stdLocal} | ACFT: ${flightInfo.aircraft}</div>`;
                 const globalSummaryHTML = generateGlobalSummary(filtered);
                 
                 let seatChartControls = '';
@@ -2385,9 +2283,8 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                     successMessage += `${filtered.length} passengers with special requirements or birthdays found.`;
                 }
                 
-                // Patch 6: Save/update tab after report renders
                 // NEW: Apply seat chart flipping if enabled
-                document.getElementById('reportContent').innerHTML = `<div class="success no-print">${successMessage}</div><div id="reportBody">${html}</div>`;
+                document.getElementById('reportContent').innerHTML = `<div class="success no-print">${successMessage}</div>` + html;
                 
                 if (currentSettings.flipSeatChart) {
                     const flipped = flipAllSeatCharts();
@@ -2400,10 +2297,6 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                 
                 const pages = Math.ceil(filtered.length / (currentSettings.fontSize <= 9 ? 50 : currentSettings.fontSize >= 12 ? 35 : 40));
                 document.getElementById('pageEstimate').textContent = `~${pages} page${pages !== 1 ? 's' : ''}`;
-                
-                // Patch 6: Save this report into the tab system
-                const reportBodyEl = document.getElementById('reportBody');
-                saveOrUpdateTab(flightInfo, passengers, input, reportBodyEl ? reportBodyEl.innerHTML : html);
                 
             } catch (error) {
                 showError(`Error: ${error.message}<br><br>Please make sure you copied the complete passenger list from BPM.`);
@@ -2944,55 +2837,11 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
             button.textContent = settings.classList.contains('open') ? '▲ Advanced Settings' : '▼ Advanced Settings';
         }
         
-        // Patch 4: Mark explicit "Generate Report" clicks as new tabs
-        // Updated generateQuickReport function
-        function generateQuickReport() {
-            const input = document.getElementById('manifestInput').value;
-            if (!input.trim()) {
-                showError('Please paste passenger manifest data.');
-                return;
-            }
-            
-            try {
-                const { flightInfo, passengers } = parseManifest(input);
-                
-                // Detect aircraft type from manifest
-                const detectedType = detectAircraftType(passengers, flightInfo);
-                const effectiveAircraftConfig = getEffectiveAircraftConfig(detectedType, flightInfo, passengers);
-                const effectiveLayout = getEffectiveLayout(detectedType);
-                
-                // Auto-set the aircraft type dropdown
-                const aircraftDropdown = document.getElementById('aircraftType');
-                aircraftDropdown.value = effectiveAircraftConfig;
-                
-                // Auto-set the layout style dropdown
-                const layoutDropdown = document.getElementById('layoutStyle');
-                layoutDropdown.value = effectiveLayout;
-                
-                // Patch 4: Mark as new tab
-                pendingNewTab = true;
-                updateSettingsFromControls();
-                generateReportWithCurrentSettings();
-                
-                // Show detection message
-                let layoutName = effectiveLayout === 'port-starboard' ? 'Port/Starboard Split' : 'Single Column';
-                showSuccess(`✓ Auto-detected: ${effectiveAircraftConfig} | Layout: ${layoutName}`);
-                
-            } catch (error) {
-                showError(`Error: ${error.message}`);
-            }
-        }
-        
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             updateZoneCheckboxes();
             updateUIFromSettings();
             initPrintControls();
-            
-            // Patch 7: Restore persisted report tabs
-            loadTabsFromStorage();
-            restoreActiveTabView();
-            renderTabsBar();
             
             // Initialize dual chart mode
 const layoutValue = document.getElementById('layoutStyle').value;
