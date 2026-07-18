@@ -1643,10 +1643,153 @@ body.landscape-mode::before {
     cursor: pointer;
 }
 
+/* ===== SUMMARY BAR (Special/INF/EXT/Remarks) ===== */
+.report-summary-bar {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 0 10px;
+    margin-bottom: 4px;
+}
+.summary-chip {
+    background: var(--color-gray-50);
+    border: 1px solid var(--color-gray-300);
+    border-radius: 14px;
+    padding: 6px 12px;
+    font-size: 11px;
+    color: var(--color-gray-700);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.summary-chip:active { background: var(--color-gray-200); }
+.summary-chip strong { font-weight: 700; }
+
+/* ===== PASSENGER CARD FLASH MESSAGE ===== */
+.lookup-flash {
+    background: var(--color-bg-help);
+    border: 1px solid var(--color-primary-light);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 11px;
+    color: var(--color-primary);
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+/* ===== EDITABLE SEAT NUMBER IN CARD ===== */
+.lookup-seat-editable {
+    cursor: pointer;
+    text-decoration: underline dotted;
+    text-underline-offset: 4px;
+}
+.seat-edit-icon {
+    font-size: 16px;
+    opacity: 0.6;
+    margin-left: 4px;
+}
+
+/* ===== PASSENGER CARD EDIT SECTION ===== */
+.lookup-edit-section {
+    text-align: left;
+    border-top: 1px solid var(--color-gray-200);
+    margin-top: 10px;
+    padding-top: 10px;
+}
+.lookup-edit-row { margin-bottom: 10px; }
+.lookup-edit-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-gray-600);
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+}
+.lookup-select {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid var(--color-gray-200);
+    border-radius: 8px;
+    font-size: 13px;
+    background: var(--color-white);
+}
+.lookup-others-input {
+    width: 100%;
+    margin-top: 6px;
+    padding: 8px;
+    border: 2px solid var(--color-gray-200);
+    border-radius: 8px;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+.lookup-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.lookup-toggle-label { font-size: 12px; font-weight: 600; color: var(--color-gray-700); }
+.lookup-remarks {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid var(--color-gray-200);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+/* ===== CATEGORY LIST POPUP ===== */
+.category-list {
+    max-height: 320px;
+    overflow-y: auto;
+}
+.category-list-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--color-gray-100);
+    cursor: pointer;
+}
+.category-list-row:active { background: var(--color-gray-50); }
+.category-list-seat {
+    font-weight: 700;
+    color: var(--color-primary-light);
+    min-width: 34px;
+    font-size: 13px;
+}
+.category-list-name {
+    flex: 1;
+    font-size: 12px;
+    color: var(--color-gray-800);
+}
+.category-list-tag {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-white);
+    background: var(--color-primary-light);
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+/* ===== EDITABLE SEAT CELLS IN TABLES ===== */
+.editable-seat-cell {
+    cursor: pointer;
+    position: relative;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.editable-seat-cell:active { background: var(--color-bg-help) !important; }
+
 @media print {
     .report-tabs-container,
+    .report-summary-bar,
     .seat-lookup-overlay,
-    #deleteTabOverlay {
+    #deleteTabOverlay,
+    #categoryListOverlay {
         display: none !important;
     }
 }

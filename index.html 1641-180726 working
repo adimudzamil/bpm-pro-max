@@ -443,7 +443,6 @@
         
         <!-- Patch 1: Tabs container above report output (removed no-print) -->
         <div class="report-tabs-container" id="reportTabsContainer"></div>
-        <div class="report-summary-bar" id="reportSummaryBar"></div>
         <div class="output-section" id="reportContent"></div>
         
         <div class="acknowledgments">
@@ -497,14 +496,6 @@
         </div>
     </div>
 
-    <!-- Patch: Category List Modal (Special/INF/EXT/Remarks) -->
-    <div id="categoryListOverlay" class="seat-lookup-overlay" onclick="closeCategoryListOnOverlay(event)">
-        <div class="seat-lookup-modal" onclick="event.stopPropagation()">
-            <button class="seat-lookup-close" onclick="closeCategoryList()">✕</button>
-            <div id="categoryListBody"></div>
-        </div>
-    </div>
-
     <script>
     
 // =================== DUAL CHART GLOBAL VARIABLES ===================
@@ -520,23 +511,6 @@ let pendingDeleteTabId = null;
 const TABS_STORAGE_KEY = 'bpmReportTabs';
 const ACTIVE_TAB_KEY = 'bpmActiveTabId';
 
-// =================== PASSENGER EDITING (Special/INF/EXT/Remarks/Seat) ===================
-let passengerIdCounter = 0;
-function generatePassengerId() {
-    passengerIdCounter += 1;
-    return 'pax_' + Date.now() + '_' + passengerIdCounter;
-}
-
-const SPECIAL_CODES = ['DEPO', 'MAAS', 'MEDA', 'NTL', 'UM', 'VVIP', 'WCHC', 'WCHR', 'WCHS', 'YPTA'];
-
-function getSpecialLabel(p) {
-    if (!p.specialCode) return '';
-    if (p.specialCode === 'OTHERS') {
-        return p.specialOtherText ? p.specialOtherText.trim().toUpperCase() : '';
-    }
-    return p.specialCode;
-}
-
 function saveTabsToStorage() {
     try {
         localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(reportTabs));
@@ -550,19 +524,6 @@ function loadTabsFromStorage() {
     try {
         const raw = localStorage.getItem(TABS_STORAGE_KEY);
         reportTabs = raw ? JSON.parse(raw) : [];
-        // Migrate tabs saved before passenger-editing patch: ensure required fields exist
-        reportTabs.forEach(function(tab) {
-            if (Array.isArray(tab.passengers)) {
-                tab.passengers.forEach(function(p) {
-                    if (!p.id) p.id = generatePassengerId();
-                    if (p.specialCode === undefined) p.specialCode = '';
-                    if (p.specialOtherText === undefined) p.specialOtherText = '';
-                    if (p.isInfant === undefined) p.isInfant = false;
-                    if (p.extSeatbelt === undefined) p.extSeatbelt = false;
-                    if (p.remarksText === undefined) p.remarksText = '';
-                });
-            }
-        });
         activeTabId = localStorage.getItem(ACTIVE_TAB_KEY) || null;
         if (activeTabId && !reportTabs.find(t => t.id === activeTabId)) {
             activeTabId = reportTabs.length ? reportTabs[reportTabs.length - 1].id : null;
@@ -611,7 +572,6 @@ function saveOrUpdateTab(flightInfo, passengers, rawManifest, html) {
     pendingNewTab = false;
     saveTabsToStorage();
     renderTabsBar();
-    renderSummaryBar();
 }
 
 function renderTabsBar() {
@@ -640,7 +600,6 @@ function switchToTab(tabId) {
     document.getElementById('reportContent').innerHTML = `<div id="reportBody">${tab.html}</div>`;
     saveTabsToStorage();
     renderTabsBar();
-    renderSummaryBar();
 }
 
 function requestDeleteTab(tabId) {
@@ -677,11 +636,10 @@ function confirmDeleteTab() {
     document.getElementById('deleteTabOverlay').style.display = 'none';
     saveTabsToStorage();
     renderTabsBar();
-    renderSummaryBar();
 }
 
 // =================== SEAT LOOKUP MODAL ===================
-let lookupState = { phase: 'row', digits: [], letter: null, passengerId: null, editingPassengerId: null, seatEditDigits: [], seatEditLetter: null, cameFromCard: false, flashMessage: null };
+let lookupState = { phase: 'row', digits: [], letter: null };
 const LOOKUP_SEAT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'];
 
 function openSeatLookup() {
@@ -690,7 +648,7 @@ function openSeatLookup() {
         showError('Generate a report first before looking up a seat.');
         return;
     }
-    lookupState = { phase: 'row', digits: [], letter: null, passengerId: null, editingPassengerId: null, seatEditDigits: [], seatEditLetter: null, cameFromCard: false, flashMessage: null };
+    lookupState = { phase: 'row', digits: [], letter: null };
     document.getElementById('seatLookupOverlay').style.display = 'flex';
     renderSeatLookupUI();
 }
@@ -704,7 +662,7 @@ function closeSeatLookupOnOverlay(e) {
 }
 
 function newSeatLookup() {
-    lookupState = { phase: 'row', digits: [], letter: null, passengerId: null, editingPassengerId: null, seatEditDigits: [], seatEditLetter: null, cameFromCard: false, flashMessage: null };
+    lookupState = { phase: 'row', digits: [], letter: null };
     renderSeatLookupUI();
 }
 
@@ -741,7 +699,7 @@ function lookupKeyPress(value) {
             return;
         }
         if (value === 'clear') {
-            lookupState = { phase: 'row', digits: [], letter: null, passengerId: null, editingPassengerId: null, seatEditDigits: [], seatEditLetter: null, cameFromCard: false, flashMessage: null };
+            lookupState = { phase: 'row', digits: [], letter: null };
             renderSeatLookupUI();
             return;
         }
@@ -760,11 +718,6 @@ function renderSeatLookupUI() {
 
     if (lookupState.phase === 'result') {
         body.innerHTML = renderPassengerCardHTML();
-        return;
-    }
-
-    if (lookupState.phase === 'seatEditRow' || lookupState.phase === 'seatEditLetter') {
-        body.innerHTML = renderSeatEditKeypadHTML();
         return;
     }
 
@@ -799,23 +752,12 @@ function renderSeatLookupUI() {
 
 function renderPassengerCardHTML() {
     const tab = reportTabs.find(t => t.id === activeTabId);
-    let passenger = null;
-    let seatNum = '';
-
-    if (lookupState.passengerId) {
-        passenger = tab ? tab.passengers.find(p => p.id === lookupState.passengerId) : null;
-        seatNum = passenger ? passenger.seat : '';
-    } else {
-        seatNum = lookupState.digits.join('').padStart(2, '0') + (lookupState.letter || '');
-        passenger = tab ? tab.passengers.find(p => p.seat === seatNum) : null;
-    }
-
-    const flashHTML = lookupState.flashMessage ? '<div class="lookup-flash">' + lookupState.flashMessage + '</div>' : '';
-    lookupState.flashMessage = null;
+    const seatNum = lookupState.digits.join('').padStart(2, '0') + lookupState.letter;
+    const passenger = tab ? tab.passengers.find(p => p.seat === seatNum) : null;
 
     if (!passenger) {
-        return flashHTML + '<div class="lookup-card">' +
-               '<div class="lookup-seat-big">' + (seatNum || '—') + '</div>' +
+        return '<div class="lookup-card">' +
+               '<div class="lookup-seat-big">' + seatNum + '</div>' +
                '<div class="lookup-empty">💺 Empty / Unassigned<br><span>No passenger found for this seat</span></div>' +
                '</div>' +
                '<button class="btn-primary lookup-newsearch" onclick="newSeatLookup()">New Search</button>';
@@ -828,6 +770,7 @@ function renderPassengerCardHTML() {
         ['TITLE', passenger.title || '—'],
         ['PAX NAME', displayName],
         ['PAX DOB', passenger.dob || '—'],
+        ['SEAT', passenger.seat || '—'],
         ['PNR', passenger.pnr || '—'],
         ['CLS', passenger.class || '—'],
         ['FQTV', passenger.fqtv || '—'],
@@ -839,303 +782,11 @@ function renderPassengerCardHTML() {
         return '<div class="lookup-row"><span class="lookup-label">' + r[0] + '</span><span class="lookup-value">' + r[1] + '</span></div>';
     }).join('');
 
-    let specialOptionsHTML = '<option value="">— None —</option>';
-    SPECIAL_CODES.forEach(function(code) {
-        const sel = passenger.specialCode === code ? ' selected' : '';
-        specialOptionsHTML += '<option value="' + code + '"' + sel + '>' + code + '</option>';
-    });
-    const othersSel = passenger.specialCode === 'OTHERS' ? ' selected' : '';
-    specialOptionsHTML += '<option value="OTHERS"' + othersSel + '>Others</option>';
-    const othersVisible = passenger.specialCode === 'OTHERS' ? 'block' : 'none';
-
-    const editSectionHTML =
-        '<div class="lookup-edit-section">' +
-            '<div class="lookup-edit-row">' +
-                '<label class="lookup-edit-label">Special</label>' +
-                '<select class="lookup-select" onchange="updatePassengerField(\'' + passenger.id + '\', \'specialCode\', this.value); toggleOthersInput(this)">' + specialOptionsHTML + '</select>' +
-                '<input type="text" class="lookup-others-input" style="display:' + othersVisible + '" placeholder="Enter special handling code" value="' + (passenger.specialOtherText || '').replace(/"/g, '&quot;') + '" onchange="updatePassengerField(\'' + passenger.id + '\', \'specialOtherText\', this.value)">' +
-            '</div>' +
-            '<div class="lookup-toggle-row">' +
-                '<label class="toggle-switch"><input type="checkbox" ' + (passenger.isInfant ? 'checked' : '') + ' onchange="updatePassengerField(\'' + passenger.id + '\', \'isInfant\', this.checked)"><span class="toggle-slider"></span></label>' +
-                '<span class="lookup-toggle-label">INF (Infant)</span>' +
-            '</div>' +
-            '<div class="lookup-toggle-row">' +
-                '<label class="toggle-switch"><input type="checkbox" ' + (passenger.extSeatbelt ? 'checked' : '') + ' onchange="updatePassengerField(\'' + passenger.id + '\', \'extSeatbelt\', this.checked)"><span class="toggle-slider"></span></label>' +
-                '<span class="lookup-toggle-label">EXT (Extension Seatbelt)</span>' +
-            '</div>' +
-            '<div class="lookup-edit-row">' +
-                '<label class="lookup-edit-label">Remarks</label>' +
-                '<textarea class="lookup-remarks" rows="2" placeholder="Add remarks..." onchange="updatePassengerField(\'' + passenger.id + '\', \'remarksText\', this.value)">' + (passenger.remarksText || '') + '</textarea>' +
-            '</div>' +
-        '</div>';
-
-    return flashHTML + '<div class="lookup-card with-data">' +
-           '<div class="lookup-seat-big lookup-seat-editable" onclick="startSeatEdit(\'' + passenger.id + '\')">' + (passenger.seat || 'NO SEAT') + ' <span class="seat-edit-icon">✎</span></div>' +
+    return '<div class="lookup-card with-data">' +
+           '<div class="lookup-seat-big">' + seatNum + '</div>' +
            '<div class="lookup-details">' + rowsHTML + '</div>' +
-           editSectionHTML +
            '</div>' +
            '<button class="btn-primary lookup-newsearch" onclick="newSeatLookup()">New Search</button>';
-}
-
-function toggleOthersInput(selectEl) {
-    const wrapper = selectEl.closest('.lookup-card');
-    if (!wrapper) return;
-    const input = wrapper.querySelector('.lookup-others-input');
-    if (input) input.style.display = selectEl.value === 'OTHERS' ? 'block' : 'none';
-}
-
-function updatePassengerField(passengerId, field, value) {
-    const tab = reportTabs.find(t => t.id === activeTabId);
-    if (!tab) return;
-    const p = tab.passengers.find(pp => pp.id === passengerId);
-    if (!p) return;
-    p[field] = value;
-    saveTabsToStorage();
-    renderSummaryBar();
-}
-
-function openPassengerCardById(id) {
-    const tab = reportTabs.find(t => t.id === activeTabId);
-    if (!tab) return;
-    lookupState = { phase: 'result', digits: [], letter: null, passengerId: id, editingPassengerId: null, seatEditDigits: [], seatEditLetter: null, cameFromCard: false, flashMessage: null };
-    document.getElementById('seatLookupOverlay').style.display = 'flex';
-    renderSeatLookupUI();
-}
-
-function startSeatEdit(passengerId) {
-    lookupState.editingPassengerId = passengerId;
-    lookupState.seatEditDigits = [];
-    lookupState.seatEditLetter = null;
-    lookupState.cameFromCard = true;
-    lookupState.phase = 'seatEditRow';
-    renderSeatLookupUI();
-}
-
-let longPressTimer = null;
-function seatCellPressStart(passengerId) {
-    if (longPressTimer) clearTimeout(longPressTimer);
-    longPressTimer = setTimeout(function() {
-        longPressTimer = null;
-        openSeatEditForPassenger(passengerId);
-    }, 550);
-}
-function seatCellPressEnd() {
-    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
-}
-
-function openSeatEditForPassenger(passengerId) {
-    const tab = reportTabs.find(t => t.id === activeTabId);
-    if (!tab) return;
-    lookupState = { phase: 'seatEditRow', digits: [], letter: null, passengerId: null, editingPassengerId: passengerId, seatEditDigits: [], seatEditLetter: null, cameFromCard: false, flashMessage: null };
-    document.getElementById('seatLookupOverlay').style.display = 'flex';
-    renderSeatLookupUI();
-}
-
-function renderSeatEditKeypadHTML() {
-    const tab = reportTabs.find(t => t.id === activeTabId);
-    const pax = tab ? tab.passengers.find(p => p.id === lookupState.editingPassengerId) : null;
-    const paxLabel = pax ? ((pax.title ? pax.title + ' ' : '') + (pax.fullName || pax.name || 'passenger')) : 'passenger';
-
-    const d1 = lookupState.seatEditDigits[0] !== undefined ? lookupState.seatEditDigits[0] : '_';
-    const d2 = lookupState.seatEditDigits[1] !== undefined ? lookupState.seatEditDigits[1] : '_';
-    const l = lookupState.seatEditLetter || '_';
-
-    let keysHTML = '';
-    let gridClass = '';
-    if (lookupState.phase === 'seatEditRow') {
-        gridClass = 'dialpad-3col';
-        ['1','2','3','4','5','6','7','8','9'].forEach(function(n) {
-            keysHTML += '<button class="lookup-key" onclick="seatEditKeyPress(\'' + n + '\')">' + n + '</button>';
-        });
-        keysHTML += '<button class="lookup-key action" onclick="seatEditKeyPress(\'backspace\')">⌫</button>';
-        keysHTML += '<button class="lookup-key" onclick="seatEditKeyPress(\'0\')">0</button>';
-        keysHTML += '<button class="lookup-key action" onclick="seatEditKeyPress(\'confirm\')">✓</button>';
-    } else {
-        gridClass = 'dialpad-4col';
-        LOOKUP_SEAT_LETTERS.forEach(function(ltr) {
-            keysHTML += '<button class="lookup-key letter" onclick="seatEditKeyPress(\'' + ltr + '\')">' + ltr + '</button>';
-        });
-        keysHTML += '<button class="lookup-key action" onclick="seatEditKeyPress(\'backspace\')">⌫</button>';
-    }
-
-    return '<div class="lookup-hint" style="margin-bottom:6px;"><strong>New seat for ' + paxLabel + '</strong></div>' +
-        '<div class="lookup-display"><span>' + d1 + '</span><span>' + d2 + '</span><span class="' + (lookupState.seatEditLetter ? 'highlight' : '') + '">' + l + '</span></div>' +
-        '<div class="lookup-hint">' + (lookupState.phase === 'seatEditRow' ? 'Enter row number' : 'Select seat letter') + '</div>' +
-        '<div class="lookup-dialpad ' + gridClass + '">' + keysHTML + '</div>' +
-        '<button class="btn-secondary lookup-newsearch" style="margin-top:8px;" onclick="seatEditKeyPress(\'cancel\')">Cancel</button>';
-}
-
-function seatEditKeyPress(value) {
-    if (lookupState.phase === 'seatEditRow') {
-        if (value === 'backspace') { lookupState.seatEditDigits.pop(); renderSeatLookupUI(); return; }
-        if (value === 'cancel') {
-            lookupState.phase = lookupState.cameFromCard ? 'result' : 'row';
-            if (!lookupState.cameFromCard) { closeSeatLookup(); return; }
-            renderSeatLookupUI();
-            return;
-        }
-        if (value === 'confirm') {
-            if (lookupState.seatEditDigits.length === 2) { lookupState.phase = 'seatEditLetter'; renderSeatLookupUI(); }
-            return;
-        }
-        if (/^[0-9]$/.test(value) && lookupState.seatEditDigits.length < 2) {
-            lookupState.seatEditDigits.push(value);
-            renderSeatLookupUI();
-            if (lookupState.seatEditDigits.length === 2) {
-                setTimeout(function() {
-                    lookupState.phase = 'seatEditLetter';
-                    renderSeatLookupUI();
-                }, 150);
-            }
-        }
-        return;
-    }
-    if (lookupState.phase === 'seatEditLetter') {
-        if (value === 'backspace') { lookupState.phase = 'seatEditRow'; renderSeatLookupUI(); return; }
-        if (value === 'cancel') {
-            if (lookupState.cameFromCard) { lookupState.phase = 'result'; renderSeatLookupUI(); return; }
-            closeSeatLookup();
-            return;
-        }
-        if (LOOKUP_SEAT_LETTERS.includes(value)) {
-            const newSeat = lookupState.seatEditDigits.join('') + value;
-            commitSeatChange(lookupState.editingPassengerId, newSeat);
-        }
-        return;
-    }
-}
-
-function commitSeatChange(passengerId, newSeat) {
-    const tab = reportTabs.find(t => t.id === activeTabId);
-    if (!tab) return;
-    const movingPax = tab.passengers.find(function(p) { return p.id === passengerId; });
-    if (!movingPax) return;
-
-    const conflictPax = tab.passengers.find(function(p) { return p.id !== passengerId && p.seat === newSeat; });
-    const oldSeat = movingPax.seat;
-    movingPax.seat = newSeat;
-
-    saveTabsToStorage();
-    rerenderActiveTabFromEdits();
-
-    if (conflictPax) {
-        lookupState = { phase: 'result', digits: [], letter: null, passengerId: conflictPax.id, editingPassengerId: null, seatEditDigits: [], seatEditLetter: null, cameFromCard: false,
-            flashMessage: '⚠️ Seat ' + newSeat + ' was already assigned to this passenger. Please reassign them too.' };
-    } else {
-        lookupState = { phase: 'result', digits: [], letter: null, passengerId: movingPax.id, editingPassengerId: null, seatEditDigits: [], seatEditLetter: null, cameFromCard: false,
-            flashMessage: '✓ Moved to ' + newSeat + (oldSeat ? ' from ' + oldSeat : '') + '.' };
-    }
-    renderSeatLookupUI();
-}
-
-function rerenderActiveTabFromEdits() {
-    const tab = reportTabs.find(t => t.id === activeTabId);
-    if (!tab) return;
-    if (isDualChartMode || currentSettings.layoutStyle === 'seat-chart-business' || currentSettings.layoutStyle === 'dual-chart-737') {
-        saveTabsToStorage();
-        renderSummaryBar();
-        return;
-    }
-    generateReportWithCurrentSettings({
-        flightInfo: tab.flightInfo,
-        passengers: tab.passengers,
-        rawManifest: tab.rawManifest
-    });
-    renderSummaryBar();
-}
-
-function renderSummaryBar() {
-    const container = document.getElementById('reportSummaryBar');
-    if (!container) return;
-    const tab = reportTabs.find(t => t.id === activeTabId);
-    if (!tab) {
-        container.style.display = 'none';
-        container.innerHTML = '';
-        return;
-    }
-    const passengers = tab.passengers || [];
-
-    const specialCounts = {};
-    passengers.forEach(function(p) {
-        const label = getSpecialLabel(p);
-        if (label) specialCounts[label] = (specialCounts[label] || 0) + 1;
-    });
-    const specialEntries = Object.keys(specialCounts).sort();
-    const specialTotal = specialEntries.reduce(function(sum, k) { return sum + specialCounts[k]; }, 0);
-    const specialBreakdown = specialEntries.map(function(k) { return k + '(' + specialCounts[k] + ')'; }).join(', ');
-
-    const infCount = passengers.filter(function(p) { return p.isInfant; }).length;
-    const extCount = passengers.filter(function(p) { return p.extSeatbelt; }).length;
-    const remarksCount = passengers.filter(function(p) { return p.remarksText && p.remarksText.trim(); }).length;
-
-    if (specialTotal === 0 && infCount === 0 && extCount === 0 && remarksCount === 0) {
-        container.style.display = 'none';
-        container.innerHTML = '';
-        return;
-    }
-
-    container.style.display = 'flex';
-    container.innerHTML =
-        '<div class="summary-chip" onclick="openCategoryList(\'special\')"><strong>SPECIAL' + (specialTotal > 0 ? ': ' + specialBreakdown : ' (0)') + '</strong></div>' +
-        '<div class="summary-chip" onclick="openCategoryList(\'inf\')"><strong>INF (' + infCount + ')</strong></div>' +
-        '<div class="summary-chip" onclick="openCategoryList(\'ext\')"><strong>EXT (' + extCount + ')</strong></div>' +
-        '<div class="summary-chip" onclick="openCategoryList(\'remarks\')"><strong>REMARKS (' + remarksCount + ')</strong></div>';
-}
-
-function openCategoryList(category) {
-    const tab = reportTabs.find(t => t.id === activeTabId);
-    if (!tab) return;
-    const passengers = tab.passengers || [];
-    let items = [];
-    let title = '';
-
-    if (category === 'special') {
-        title = 'Special Assistance';
-        items = passengers.filter(function(p) { return getSpecialLabel(p); })
-            .map(function(p) { return { id: p.id, seat: p.seat || '—', name: p.fullName || p.name, tag: getSpecialLabel(p) }; });
-    } else if (category === 'inf') {
-        title = 'Infants';
-        items = passengers.filter(function(p) { return p.isInfant; })
-            .map(function(p) { return { id: p.id, seat: p.seat || '—', name: p.fullName || p.name, tag: 'INF' }; });
-    } else if (category === 'ext') {
-        title = 'Extension Seatbelt';
-        items = passengers.filter(function(p) { return p.extSeatbelt; })
-            .map(function(p) { return { id: p.id, seat: p.seat || '—', name: p.fullName || p.name, tag: 'EXT' }; });
-    } else if (category === 'remarks') {
-        title = 'Remarks';
-        items = passengers.filter(function(p) { return p.remarksText && p.remarksText.trim(); })
-            .map(function(p) { return { id: p.id, seat: p.seat || '—', name: p.fullName || p.name, tag: p.remarksText }; });
-    }
-
-    items.sort(function(a, b) {
-        if (a.seat === '—') return 1;
-        if (b.seat === '—') return -1;
-        return a.seat.localeCompare(b.seat);
-    });
-
-    const listHTML = items.length === 0
-        ? '<div class="lookup-empty">No passengers found.</div>'
-        : items.map(function(it) {
-            return '<div class="category-list-row" onclick="closeCategoryList(); openPassengerCardById(\'' + it.id + '\');">' +
-                   '<span class="category-list-seat">' + it.seat + '</span>' +
-                   '<span class="category-list-name">' + it.name + '</span>' +
-                   '<span class="category-list-tag">' + it.tag + '</span>' +
-                   '</div>';
-        }).join('');
-
-    document.getElementById('categoryListBody').innerHTML =
-        '<div class="lookup-hint" style="margin-bottom:10px;"><strong>' + title + ' (' + items.length + ')</strong></div>' +
-        '<div class="category-list">' + listHTML + '</div>';
-
-    document.getElementById('categoryListOverlay').style.display = 'flex';
-}
-
-function closeCategoryList() {
-    document.getElementById('categoryListOverlay').style.display = 'none';
-}
-
-function closeCategoryListOnOverlay(e) {
-    if (e.target && e.target.id === 'categoryListOverlay') closeCategoryList();
 }
 
 document.addEventListener('keydown', function(e) {
@@ -1144,8 +795,6 @@ document.addEventListener('keydown', function(e) {
         if (lookupOverlay && lookupOverlay.style.display !== 'none') closeSeatLookup();
         const deleteOverlay = document.getElementById('deleteTabOverlay');
         if (deleteOverlay && deleteOverlay.style.display !== 'none') cancelDeleteTab();
-        const categoryOverlay = document.getElementById('categoryListOverlay');
-        if (categoryOverlay && categoryOverlay.style.display !== 'none') closeCategoryList();
     }
 });
 
@@ -1199,7 +848,7 @@ timestamp: Date.now()
 if (!seatChartWindow || seatChartWindow.closed) {
 // First manifest - open new popup
 const timestamp = Date.now();
-const dataKey = 'chartData_' + timestamp;
+const dataKey = `chartData_${timestamp}`;
 localStorage.setItem(dataKey, JSON.stringify(chartData));
 
 // Determine which HTML file to open
@@ -1212,7 +861,7 @@ popupFile = 'sc-737.html'; // Use the same file for NR
 
 // Open popup
 seatChartWindow = window.open(
-popupFile + '?data=' + dataKey + '&chart=top',
+`${popupFile}?data=${dataKey}&chart=top`,
 'seatChart',
 'width=1200,height=900,scrollbars=yes'
 );
@@ -1226,7 +875,7 @@ showSuccess('First service chart opened! Clear and paste second manifest for sec
 } else if (chartReadyForSecondManifest) {
 // Second manifest - send to existing popup
 const timestamp = Date.now();
-const dataKey = 'chartData_bottom_' + timestamp;
+const dataKey = `chartData_bottom_${timestamp}`;
 localStorage.setItem(dataKey, JSON.stringify(chartData));
 
 // Send message to popup
@@ -1266,7 +915,7 @@ mealCounts[meal] = (mealCounts[meal] || 0) + 1;
 
 const mealBreakdown = Object.entries(mealCounts)
 .sort((a, b) => b[1] - a[1])
-.map(([meal, count]) => meal + ': ' + count)
+.map(([meal, count]) => `${meal}: ${count}`)
 .join(', ');
 
 const bbml = passengers.filter(p => p.meal && p.meal.includes('BBML')).length;
@@ -1836,7 +1485,7 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
             const businessPassengers = getBusinessClassPassengers(passengers, aircraftType);
             
             if (businessPassengers.length === 0) {
-                showError('No business class passengers found for ' + aircraftType + '.');
+                showError(`No business class passengers found for ${aircraftType}.`);
                 return;
             }
             
@@ -1872,7 +1521,7 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
             // Open template in new window
             const templateFile = BUSINESS_CLASS_TEMPLATES[aircraftType]?.template || 'sc-a333.html';
             const popupWindow = window.open(
-                templateFile + '?data=' + dataKey, 
+                `${templateFile}?data=${dataKey}`, 
                 '_blank',
                 'width=1200,height=800,resizable=yes,scrollbars=yes,location=no,toolbar=no'
             );
@@ -1882,7 +1531,7 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
                 return;
             }
             
-            showSuccess('Business class seat chart opened in new window with ' + businessPassengers.length + ' passengers.');
+            showSuccess(`Business class seat chart opened in new window with ${businessPassengers.length} passengers.`);
         }
         
         // NEW: Helper function to cleanup localStorage
@@ -1920,7 +1569,7 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
             
             return Object.entries(mealCounts)
                 .sort((a, b) => b[1] - a[1])
-                .map(([meal, count]) => meal + ': ' + count)
+                .map(([meal, count]) => `${meal}: ${count}`)
                 .join(', ');
         }
         
@@ -1983,13 +1632,13 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
         
         function showError(message) {
             const output = document.getElementById('reportContent');
-            output.innerHTML = '<div class="error">' + message + '</div>';
+            output.innerHTML = `<div class="error">${message}</div>`;
         }
         
         function showSuccess(message) {
             const output = document.getElementById('reportContent');
             const existing = output.innerHTML;
-            output.innerHTML = '<div class="success no-print">' + message + '</div>' + existing;
+            output.innerHTML = `<div class="success no-print">${message}</div>` + existing;
         }
         
         function hasValidManifest() {
@@ -2150,7 +1799,7 @@ if (outputSection) {
             
             if (duplicates.length > 0) {
                 document.getElementById('zoneError').textContent = 
-                    'Error: Duplicate zone names found: ' + duplicates.join(', ');
+                    `Error: Duplicate zone names found: ${duplicates.join(', ')}`;
                 document.getElementById('zoneError').classList.add('show');
                 return false;
             }
@@ -2226,7 +1875,7 @@ if (outputSection) {
             return zones;
         }
         function n(value) {
-    return value + '<span style="display: inline-block; letter-spacing: 1px; color: #aaa; text-decoration: none; border-bottom: none; position: relative; top: -1px;">___</span>';
+    return `${value}<span style="display: inline-block; letter-spacing: 1px; color: #aaa; text-decoration: none; border-bottom: none; position: relative; top: -1px;">___</span>`;
 }
         
         // ===== PRINT SCALE & MARGINS =====
@@ -2372,7 +2021,7 @@ function initPrintControls() {
                 if (line.includes('-- END of PAX List') || (line.includes('Showing') && line.includes('entries'))) break;
                 if (line === '-- CUT HERE --') { i++; continue; }
                 
-                const passenger = { id: generatePassengerId(), title: '', name: '', fullName: '', seat: '', pnr: '', class: '', fqtv: '', tier: '', meal: '', remark: '', dob: '', hasBirthday: false, specialCode: '', specialOtherText: '', isInfant: false, extSeatbelt: false, remarksText: '' };
+                const passenger = { title: '', name: '', fullName: '', seat: '', pnr: '', class: '', fqtv: '', tier: '', meal: '', remark: '', dob: '', hasBirthday: false };
                 
                 if (CONFIG.TITLES.includes(line)) {
                     passenger.title = line;
@@ -2443,23 +2092,12 @@ function initPrintControls() {
             return { flightInfo, passengers };
         }
         
-        function generateReportWithCurrentSettings(overrideData) {
-            let input, flightInfo, passengers;
-            if (overrideData) {
-                flightInfo = overrideData.flightInfo;
-                passengers = overrideData.passengers;
-                input = overrideData.rawManifest || '';
-            } else {
-                input = document.getElementById('manifestInput').value;
-                if (!input.trim()) return;
-            }
+        function generateReportWithCurrentSettings() {
+            const input = document.getElementById('manifestInput').value;
+            if (!input.trim()) return;
             
             try {
-                if (!overrideData) {
-                    const parsed = parseManifest(input);
-                    flightInfo = parsed.flightInfo;
-                    passengers = parsed.passengers;
-                }
+                const { flightInfo, passengers } = parseManifest(input);
                 // Check if dual chart mode is enabled and layout is dual-chart-737
 const layoutStyle = document.getElementById('layoutStyle').value;
 
@@ -2482,7 +2120,7 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                     
                     // Check if we have a business class template for this aircraft
                     if (!BUSINESS_CLASS_TEMPLATES[effectiveAircraftConfig]) {
-                        showError('Business class seat chart not available for ' + effectiveAircraftConfig + '. Please select a different layout.');
+                        showError(`Business class seat chart not available for ${effectiveAircraftConfig}. Please select a different layout.`);
                         return;
                     }
                     
@@ -2503,22 +2141,22 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                 const effectiveAircraftConfig = getEffectiveAircraftConfig(currentSettings.detectedAircraftType, flightInfo, passengers);
                 
                 // Patch 5: Flight-info clickable for seat lookup (removed hint text)
-                const flightInfoHTML = '<div class="flight-info" onclick="openSeatLookup()" title="Tap to look up a seat">Flight: ' + flightInfo.flightNumber + ' | Route: ' + flightInfo.sector + ' | Date: ' + flightInfo.date + ' ' + flightInfo.stdLocal + ' | ACFT: ' + flightInfo.aircraft + '</div>';
+                const flightInfoHTML = `<div class="flight-info" onclick="openSeatLookup()" title="Tap to look up a seat">Flight: ${flightInfo.flightNumber} | Route: ${flightInfo.sector} | Date: ${flightInfo.date} ${flightInfo.stdLocal} | ACFT: ${flightInfo.aircraft}</div>`;
                 const globalSummaryHTML = generateGlobalSummary(filtered);
                 
                 let seatChartControls = '';
                 if (effectiveLayout === 'seat-chart') {
-                    seatChartControls = '
+                    seatChartControls = `
                         <div class="seat-chart-controls">
                             <label>Seat Chart Font Size: 
-                                <input type="range" id="seatChartFontSliderInline" min="8" max="16" value="' + currentSettings.seatChartFontSize + '" step="1" oninput="document.getElementById(\'seatChartFontSlider\').value = this.value; updateSettingsFromControls(); generateReportWithCurrentSettings();" style="width: 120px;">
-                                <span>' + currentSettings.seatChartFontSize + 'px</span>
+                                <input type="range" id="seatChartFontSliderInline" min="8" max="16" value="${currentSettings.seatChartFontSize}" step="1" oninput="document.getElementById('seatChartFontSlider').value = this.value; updateSettingsFromControls(); generateReportWithCurrentSettings();" style="width: 120px;">
+                                <span>${currentSettings.seatChartFontSize}px</span>
                             </label>
-                            ' + (currentSettings.flipSeatChart ? '<div class="magic-option"><span>🔄 Aft Perspective Active - Print and turn paper 180°</span></div>' : '') + '
-                            ' + (currentSettings.showAllBusiness ? '<div class="magic-option"><span>👔 Business Class Display Active - Showing all business class passengers</span></div>' : '') + '
-                            ' + (currentSettings.showUnassignedInPrint ? '<div class="magic-option"><span>📋 Unassigned Table WILL BE INCLUDED in Print</span></div>' : '') + '
+                            ${currentSettings.flipSeatChart ? '<div class="magic-option"><span>🔄 Aft Perspective Active - Print and turn paper 180°</span></div>' : ''}
+                            ${currentSettings.showAllBusiness ? '<div class="magic-option"><span>👔 Business Class Display Active - Showing all business class passengers</span></div>' : ''}
+                            ${currentSettings.showUnassignedInPrint ? '<div class="magic-option"><span>📋 Unassigned Table WILL BE INCLUDED in Print</span></div>' : ''}
                         </div>
-                    ';
+                    `;
                 }
                 
                 const zones = getCurrentZones();
@@ -2573,8 +2211,8 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                         if (zonePax.length === 0) continue;
                         
                         const pageBreakClass = currentSettings.pageBreakZones && zoneIndex > 0 ? 'page-break' : '';
-                        tableContent += '<div class="zone-section ' + pageBreakClass + '">';
-                        tableContent += '<div class="zone-header">' + flightInfo.flightNumber + ' - ' + zone.name + ' - Rows ' + zone.start + '-' + zone.end + '</div>';
+                        tableContent += `<div class="zone-section ${pageBreakClass}">`;
+                        tableContent += `<div class="zone-header">${flightInfo.flightNumber} - ${zone.name} - Rows ${zone.start}-${zone.end}</div>`;
                         tableContent += generateZoneStats(zonePax);
                         
                         if (effectiveLayout === 'seat-chart') {
@@ -2594,18 +2232,18 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                                     return ['F', 'G', 'H', 'J', 'K'].includes(seatLetter);
                                 });
                                 
-                                tableContent += '<div class="tables-container">';
-                                tableContent += '<div class="table-wrapper">';
-                                tableContent += '<div class="table-title">PORT SIDE (ABCDE)</div>';
+                                tableContent += `<div class="tables-container">`;
+                                tableContent += `<div class="table-wrapper">`;
+                                tableContent += `<div class="table-title">PORT SIDE (ABCDE)</div>`;
                                 tableContent += generateSideStats(portPax, 'Port');
                                 tableContent += generateTable(portPax, true, currentSettings.detectedAircraftType);
-                                tableContent += '</div>';
-                                tableContent += '<div class="table-wrapper">';
-                                tableContent += '<div class="table-title">STARBOARD SIDE (FGHJK)</div>';
+                                tableContent += `</div>`;
+                                tableContent += `<div class="table-wrapper">`;
+                                tableContent += `<div class="table-title">STARBOARD SIDE (FGHJK)</div>`;
                                 tableContent += generateSideStats(starboardPax, 'Starboard');
                                 tableContent += generateTable(starboardPax, true, currentSettings.detectedAircraftType);
-                                tableContent += '</div>';
-                                tableContent += '</div>';
+                                tableContent += `</div>`;
+                                tableContent += `</div>`;
                             } else {
                                 const portPax = zonePax.filter(p => {
                                     if (!p.seat) return false;
@@ -2618,24 +2256,24 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                                     return ['D', 'E', 'F'].includes(seatLetter);
                                 });
                                 
-                                tableContent += '<div class="tables-container">';
-                                tableContent += '<div class="table-wrapper">';
-                                tableContent += '<div class="table-title">PORT SIDE (ABC)</div>';
+                                tableContent += `<div class="tables-container">`;
+                                tableContent += `<div class="table-wrapper">`;
+                                tableContent += `<div class="table-title">PORT SIDE (ABC)</div>`;
                                 tableContent += generateSideStats(portPax, 'Port');
                                 tableContent += generateTable(portPax, true, currentSettings.detectedAircraftType);
-                                tableContent += '</div>';
-                                tableContent += '<div class="table-wrapper">';
-                                tableContent += '<div class="table-title">STARBOARD SIDE (DEF)</div>';
+                                tableContent += `</div>`;
+                                tableContent += `<div class="table-wrapper">`;
+                                tableContent += `<div class="table-title">STARBOARD SIDE (DEF)</div>`;
                                 tableContent += generateSideStats(starboardPax, 'Starboard');
                                 tableContent += generateTable(starboardPax, true, currentSettings.detectedAircraftType);
-                                tableContent += '</div>';
-                                tableContent += '</div>';
+                                tableContent += `</div>`;
+                                tableContent += `</div>`;
                             }
                         } else {
                             tableContent += generateTable(zonePax, true, currentSettings.detectedAircraftType);
                         }
                         
-                        tableContent += '</div>';
+                        tableContent += `</div>`;
                         zoneIndex++;
                     }
                     
@@ -2643,10 +2281,10 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                         // NEW: Use the showUnassignedInPrint setting to determine which class to use
                         const unassignedClass = currentSettings.showUnassignedInPrint ? 'unassigned-print' : 'unassigned-no-print';
                         const pageBreakClass = currentSettings.pageBreakZones && zoneIndex > 0 ? 'page-break' : '';
-                        tableContent += '<div class="zone-section ' + unassignedClass + ' ' + pageBreakClass + '">';
-                        tableContent += '<div class="zone-header">UNASSIGNED SEATS</div>';
+                        tableContent += `<div class="zone-section ${unassignedClass} ${pageBreakClass}">`;
+                        tableContent += `<div class="zone-header">UNASSIGNED SEATS</div>`;
                         tableContent += generateUnassignedTable(unassigned, currentSettings.detectedAircraftType);
-                        tableContent += '</div>';
+                        tableContent += `</div>`;
                     }
                 } else {
                     filtered.sort((a, b) => {
@@ -2660,10 +2298,10 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                         const allZones = AIRCRAFT_CONFIGS[effectiveAircraftConfig] || [];
                         if (allZones.length > 0) {
                             allZones.forEach(zone => {
-                                tableContent += '<div class="zone-section">';
-                                tableContent += '<div class="zone-header">' + flightInfo.flightNumber + ' - ' + zone.name + ' - Rows ' + zone.start + '-' + zone.end + '</div>';
+                                tableContent += `<div class="zone-section">`;
+                                tableContent += `<div class="zone-header">${flightInfo.flightNumber} - ${zone.name} - Rows ${zone.start}-${zone.end}</div>`;
                                 tableContent += generateSeatChart(filtered, zone, effectiveAircraftConfig);
-                                tableContent += '</div>';
+                                tableContent += `</div>`;
                             });
                         }
                     } else if (effectiveLayout === 'port-starboard') {
@@ -2680,25 +2318,25 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                             });
                             const unassigned = filtered.filter(p => !p.seat);
                             
-                            tableContent += '<div class="tables-container">';
-                            tableContent += '<div class="table-wrapper">';
-                            tableContent += '<div class="table-title">PORT SIDE (ABCDE)</div>';
+                            tableContent += `<div class="tables-container">`;
+                            tableContent += `<div class="table-wrapper">`;
+                            tableContent += `<div class="table-title">PORT SIDE (ABCDE)</div>`;
                             tableContent += generateSideStats(portPax, 'Port');
                             tableContent += generateTable(portPax, true, currentSettings.detectedAircraftType);
-                            tableContent += '</div>';
-                            tableContent += '<div class="table-wrapper">';
-                            tableContent += '<div class="table-title">STARBOARD SIDE (FGHJK)</div>';
+                            tableContent += `</div>`;
+                            tableContent += `<div class="table-wrapper">`;
+                            tableContent += `<div class="table-title">STARBOARD SIDE (FGHJK)</div>`;
                             tableContent += generateSideStats(starboardPax, 'Starboard');
                             tableContent += generateTable(starboardPax, true, currentSettings.detectedAircraftType);
-                            tableContent += '</div>';
+                            tableContent += `</div>`;
                             
                             if (unassigned.length > 0) {
                                 // NEW: Use the showUnassignedInPrint setting to determine which class to use
                                 const unassignedClass = currentSettings.showUnassignedInPrint ? 'unassigned-print' : 'unassigned-no-print';
-                                tableContent += '<div class="zone-section ' + unassignedClass + '">';
-                                tableContent += '<div class="zone-header">UNASSIGNED SEATS</div>';
+                                tableContent += `<div class="zone-section ${unassignedClass}">`;
+                                tableContent += `<div class="zone-header">UNASSIGNED SEATS</div>`;
                                 tableContent += generateUnassignedTable(unassigned, currentSettings.detectedAircraftType);
-                                tableContent += '</div>';
+                                tableContent += `</div>`;
                             }
                         } else {
                             const portPax = filtered.filter(p => {
@@ -2713,25 +2351,25 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                             });
                             const unassigned = filtered.filter(p => !p.seat);
                             
-                            tableContent += '<div class="tables-container">';
-                            tableContent += '<div class="table-wrapper">';
-                            tableContent += '<div class="table-title">PORT SIDE (ABC)</div>';
+                            tableContent += `<div class="tables-container">`;
+                            tableContent += `<div class="table-wrapper">`;
+                            tableContent += `<div class="table-title">PORT SIDE (ABC)</div>`;
                             tableContent += generateSideStats(portPax, 'Port');
                             tableContent += generateTable(portPax, true, currentSettings.detectedAircraftType);
-                            tableContent += '</div>';
-                            tableContent += '<div class="table-wrapper">';
-                            tableContent += '<div class="table-title">STARBOARD SIDE (DEF)</div>';
+                            tableContent += `</div>`;
+                            tableContent += `<div class="table-wrapper">`;
+                            tableContent += `<div class="table-title">STARBOARD SIDE (DEF)</div>`;
                             tableContent += generateSideStats(starboardPax, 'Starboard');
                             tableContent += generateTable(starboardPax, true, currentSettings.detectedAircraftType);
-                            tableContent += '</div>';
+                            tableContent += `</div>`;
                             
                             if (unassigned.length > 0) {
                                 // NEW: Use the showUnassignedInPrint setting to determine which class to use
                                 const unassignedClass = currentSettings.showUnassignedInPrint ? 'unassigned-print' : 'unassigned-no-print';
-                                tableContent += '<div class="zone-section ' + unassignedClass + '">';
-                                tableContent += '<div class="zone-header">UNASSIGNED SEATS</div>';
+                                tableContent += `<div class="zone-section ${unassignedClass}">`;
+                                tableContent += `<div class="zone-header">UNASSIGNED SEATS</div>`;
                                 tableContent += generateUnassignedTable(unassigned, currentSettings.detectedAircraftType);
-                                tableContent += '</div>';
+                                tableContent += `</div>`;
                             }
                         }
                     } else {
@@ -2745,16 +2383,16 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                 if (currentSettings.showAllBusiness) {
                     const businessZones = zones.filter(zone => isBusinessClassZone(zone.name));
                     if (businessZones.length > 0) {
-                        successMessage += 'Showing ALL passengers in ' + businessZones.length + ' business class zone' + (businessZones.length > 1 ? 's' : '') + '. ';
+                        successMessage += `Showing ALL passengers in ${businessZones.length} business class zone${businessZones.length > 1 ? 's' : ''}. `;
                     }
-                    successMessage += filtered.length + ' passengers with special requirements or birthdays found.';
+                    successMessage += `${filtered.length} passengers with special requirements or birthdays found.`;
                 } else {
-                    successMessage += filtered.length + ' passengers with special requirements or birthdays found.';
+                    successMessage += `${filtered.length} passengers with special requirements or birthdays found.`;
                 }
                 
                 // Patch 6: Save/update tab after report renders
                 // NEW: Apply seat chart flipping if enabled
-                document.getElementById('reportContent').innerHTML = '<div class="success no-print">' + successMessage + '</div><div id="reportBody">' + html + '</div>';
+                document.getElementById('reportContent').innerHTML = `<div class="success no-print">${successMessage}</div><div id="reportBody">${html}</div>`;
                 
                 if (currentSettings.flipSeatChart) {
                     const flipped = flipAllSeatCharts();
@@ -2766,14 +2404,14 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                 updateUIFromSettings();
                 
                 const pages = Math.ceil(filtered.length / (currentSettings.fontSize <= 9 ? 50 : currentSettings.fontSize >= 12 ? 35 : 40));
-                document.getElementById('pageEstimate').textContent = '~' + pages + ' page' + (pages !== 1 ? 's' : '');
+                document.getElementById('pageEstimate').textContent = `~${pages} page${pages !== 1 ? 's' : ''}`;
                 
                 // Patch 6: Save this report into the tab system
                 const reportBodyEl = document.getElementById('reportBody');
                 saveOrUpdateTab(flightInfo, passengers, input, reportBodyEl ? reportBodyEl.innerHTML : html);
                 
             } catch (error) {
-                showError('Error: ' + error.message + '<br><br>Please make sure you copied the complete passenger list from BPM.');
+                showError(`Error: ${error.message}<br><br>Please make sure you copied the complete passenger list from BPM.`);
                 console.error(error);
             }
         }
@@ -2793,13 +2431,13 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                     });
                 }
             });
-            const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => meal + ': ' + n(count)).join(', ');
-let html = '<div class="stats"><strong>Summary:</strong> Special Meals: ' + n(specialMealCount) + ' | EMER/PLAT: ' + n(tierCount);
-if (birthdayCount > 0) html += ' | 🎂 ' + n(birthdayCount);
-if (bbmlCount > 0) html += ' | Infants (BBML): ' + n(bbmlCount);
-html += '<br><strong>Meal Breakdown:</strong> ' + (mealBreakdown || 'None');
-if (bbmlCount > 0) html += ' | BBML: ' + n(bbmlCount);
-html += '</div>';
+            const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${n(count)}`).join(', ');
+let html = `<div class="stats"><strong>Summary:</strong> Special Meals: ${n(specialMealCount)} | EMER/PLAT: ${n(tierCount)}`;
+if (birthdayCount > 0) html += ` | 🎂 ${n(birthdayCount)}`;
+if (bbmlCount > 0) html += ` | Infants (BBML): ${n(bbmlCount)}`;
+html += `<br><strong>Meal Breakdown:</strong> ${mealBreakdown || 'None'}`;
+if (bbmlCount > 0) html += ` | BBML: ${n(bbmlCount)}`;
+html += `</div>`;
             return html;
         }
         
@@ -2818,13 +2456,13 @@ html += '</div>';
                     });
                 }
             });
-            const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => meal + ': ' + n(count)).join(', ');
-let html = '<div class="stats"><strong>Zone Summary:</strong> Special Meals: ' + n(specialMealCount) + ' | EMER/PLAT: ' + n(tierCount);
-if (birthdayCount > 0) html += ' | 🎂 ' + n(birthdayCount);
-if (bbmlCount > 0) html += ' | Infants (BBML): ' + n(bbmlCount);
-html += '<br><strong>Zone Meal Breakdown:</strong> ' + (mealBreakdown || 'None');
-if (bbmlCount > 0) html += ' | BBML: ' + n(bbmlCount);
-html += '</div>';
+            const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${n(count)}`).join(', ');
+let html = `<div class="stats"><strong>Zone Summary:</strong> Special Meals: ${n(specialMealCount)} | EMER/PLAT: ${n(tierCount)}`;
+if (birthdayCount > 0) html += ` | 🎂 ${n(birthdayCount)}`;
+if (bbmlCount > 0) html += ` | Infants (BBML): ${n(bbmlCount)}`;
+html += `<br><strong>Zone Meal Breakdown:</strong> ${mealBreakdown || 'None'}`;
+if (bbmlCount > 0) html += ` | BBML: ${n(bbmlCount)}`;
+html += `</div>`;
             return html;
         }
         
@@ -2843,12 +2481,12 @@ html += '</div>';
                     });
                 }
             });
-            const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => meal + ': ' + n(count)).join(', ');
-let html = '<div class="side-stats"><strong>' + sideName + ':</strong> Meals: ' + n(specialMealCount) + ' | EMER/PLAT: ' + n(tierCount);
-if (birthdayCount > 0) html += ' | 🎂 ' + n(birthdayCount);
-if (bbmlCount > 0) html += ' | BBML: ' + n(bbmlCount);
-if (mealBreakdown) html += '<br>' + mealBreakdown;
-html += '</div>';
+            const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${n(count)}`).join(', ');
+let html = `<div class="side-stats"><strong>${sideName}:</strong> Meals: ${n(specialMealCount)} | EMER/PLAT: ${n(tierCount)}`;
+if (birthdayCount > 0) html += ` | 🎂 ${n(birthdayCount)}`;
+if (bbmlCount > 0) html += ` | BBML: ${n(bbmlCount)}`;
+if (mealBreakdown) html += `<br>${mealBreakdown}`;
+html += `</div>`;
             return html;
         }
         
@@ -2856,17 +2494,17 @@ html += '</div>';
         function generateTable(passengers, showSeat = false, aircraftType = 'narrowbody') {
             // NEW: If no passengers, return simple message instead of empty table
             if (passengers.length === 0) {
-                return '<div style="padding: 8px; color: #64748B; font-style: italic; font-size: 11px;">No passengers</div>';
+                return `<div style="padding: 8px; color: #64748B; font-style: italic; font-size: 11px;">No passengers</div>`;
             }
             
             const tableClass = aircraftType === 'widebody' ? 'widebody-table' : 'narrowbody-table';
-            let html = '<table class="' + tableClass + '">';
+            let html = `<table class="${tableClass}">`;
             
             const headers = showSeat ? 
-                '<th>SEAT</th><th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>' : 
-                '<th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>';
+                `<th>SEAT</th><th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>` : 
+                `<th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>`;
                 
-            html += '<thead><tr>' + headers + '</tr></thead><tbody>';
+            html += `<thead><tr>${headers}</tr></thead><tbody>`;
             
             passengers.forEach(p => {
                 const meals = p.meal ? p.meal.split(',').map(m => m.trim()) : [];
@@ -2874,11 +2512,11 @@ html += '</div>';
                 const infantMeal = meals.find(m => m === 'BBML') || '';
                 let mealDisplay = '';
                 if (parentMeal && infantMeal) {
-                    mealDisplay = '<strong>' + parentMeal + '</strong><span class="infant-meal">(+' + infantMeal + ')</span>';
+                    mealDisplay = `<strong>${parentMeal}</strong><span class="infant-meal">(+${infantMeal})</span>`;
                 } else if (parentMeal) {
-                    mealDisplay = '<strong>' + parentMeal + '</strong>';
+                    mealDisplay = `<strong>${parentMeal}</strong>`;
                 } else if (infantMeal) {
-                    mealDisplay = '<strong>' + infantMeal + '</strong>';
+                    mealDisplay = `<strong>${infantMeal}</strong>`;
                 }
                 if (p.hasBirthday) {
                     mealDisplay += (mealDisplay ? ' ' : '') + '🎂';
@@ -2891,19 +2529,18 @@ html += '</div>';
                     remarkIndicator = '<span class="downgrade-indicator">↓</span>';
                 }
                 
-                const seatCellAttrs = 'class="editable-seat-cell" ontouchstart="seatCellPressStart(\'' + p.id + '\')" ontouchend="seatCellPressEnd()" ontouchmove="seatCellPressEnd()" onmousedown="seatCellPressStart(\'' + p.id + '\')" onmouseup="seatCellPressEnd()" onmouseleave="seatCellPressEnd()" oncontextmenu="return false;"';
-                html += '<tr>';
+                html += `<tr>`;
                 if (showSeat) {
                     if (p.seat) {
-                        html += '<td ' + seatCellAttrs + '><strong>' + p.seat + '</strong>' + remarkIndicator + '</td>';
+                        html += `<td><strong>${p.seat}</strong>${remarkIndicator}</td>`;
                     } else {
-                        html += '<td ' + seatCellAttrs + ' style="border: 1px dashed #999; background: #fffacd;">&nbsp;</td>';
+                        html += `<td style="border: 1px dashed #999; background: #fffacd;">&nbsp;</td>`;
                     }
                 }
-                html += '<td>' + p.title + '</td><td>' + p.name + '</td><td><strong>' + p.tier + '</strong></td><td>' + mealDisplay + '</td></tr>';
+                html += `<td>${p.title}</td><td>${p.name}</td><td><strong>${p.tier}</strong></td><td>${mealDisplay}</td></tr>`;
             });
             
-            html += '</tbody></table>';
+            html += `</tbody></table>`;
             return html;
         }
         
@@ -2913,8 +2550,8 @@ html += '</div>';
             }
             
             const tableClass = aircraftType === 'widebody' ? 'widebody-table' : 'narrowbody-table';
-            let html = '<table class="' + tableClass + '">';
-            html += '<thead><tr><th>SEAT</th><th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th></tr></thead><tbody>';
+            let html = `<table class="${tableClass}">`;
+            html += `<thead><tr><th>SEAT</th><th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th></tr></thead><tbody>`;
             
             passengers.forEach(p => {
                 const meals = p.meal ? p.meal.split(',').map(m => m.trim()) : [];
@@ -2922,23 +2559,23 @@ html += '</div>';
                 const infantMeal = meals.find(m => m === 'BBML') || '';
                 let mealDisplay = '';
                 if (parentMeal && infantMeal) {
-                    mealDisplay = '<strong>' + parentMeal + '</strong><span class="infant-meal">(+' + infantMeal + ')</span>';
+                    mealDisplay = `<strong>${parentMeal}</strong><span class="infant-meal">(+${infantMeal})</span>`;
                 } else if (parentMeal) {
-                    mealDisplay = '<strong>' + parentMeal + '</strong>';
+                    mealDisplay = `<strong>${parentMeal}</strong>`;
                 } else if (infantMeal) {
-                    mealDisplay = '<strong>' + infantMeal + '</strong>';
+                    mealDisplay = `<strong>${infantMeal}</strong>`;
                 }
                 if (p.hasBirthday) {
                     mealDisplay += (mealDisplay ? ' ' : '') + '🎂';
                 }
                 
-                html += '<tr>';
-                html += '<td class="editable-seat-cell" ontouchstart="seatCellPressStart(\'' + p.id + '\')" ontouchend="seatCellPressEnd()" ontouchmove="seatCellPressEnd()" onmousedown="seatCellPressStart(\'' + p.id + '\')" onmouseup="seatCellPressEnd()" onmouseleave="seatCellPressEnd()" oncontextmenu="return false;" style="border: 1px dashed #999; background: #fffacd;">&nbsp;</td>';
-                html += '<td>' + p.title + '</td><td>' + p.name + '</td><td><strong>' + p.tier + '</strong></td><td>' + mealDisplay + '</td>';
-                html += '</tr>';
+                html += `<tr>`;
+                html += `<td style="border: 1px dashed #999; background: #fffacd;">&nbsp;</td>`;
+                html += `<td>${p.title}</td><td>${p.name}</td><td><strong>${p.tier}</strong></td><td>${mealDisplay}</td>`;
+                html += `</tr>`;
             });
             
-            html += '</tbody></table>';
+            html += `</tbody></table>`;
             return html;
         }
         
@@ -2964,7 +2601,7 @@ html += '</div>';
             
             let mealDisplay = '';
             if (parentMeal && infantMeal) {
-                mealDisplay = parentMeal + ':BBML';
+                mealDisplay = `${parentMeal}:BBML`;
             } else if (parentMeal) {
                 mealDisplay = parentMeal;
             } else if (infantMeal) {
@@ -2996,7 +2633,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
         function generateSeatChart(passengers, zone, aircraftConfig) {
             const seatMap = SEAT_MAPS[aircraftConfig];
             if (!seatMap) {
-                return '<div class="error">Seat chart not available for selected aircraft configuration.</div>';
+                return `<div class="error">Seat chart not available for selected aircraft configuration.</div>`;
             }
             
             // Determine if this is a business class zone
@@ -3025,20 +2662,20 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                 tableClass += ' widebody';
             }
             
-            let html = '<div class="seat-chart-container">
-                <table class="' + tableClass + '" data-font-size="' + currentSettings.seatChartFontSize + '">
-                <thead><tr><th class="row-header">Row</th>';
+            let html = `<div class="seat-chart-container">
+                <table class="${tableClass}" data-font-size="${currentSettings.seatChartFontSize}">
+                <thead><tr><th class="row-header">Row</th>`;
             
             // Create header row with seat letters
             columns.forEach(col => {
                 if (col === '|') {
-                    html += '<th class="aisle"></th>';
+                    html += `<th class="aisle"></th>`;
                 } else {
-                    html += '<th>' + col + '</th>';
+                    html += `<th>${col}</th>`;
                 }
             });
             
-            html += '</tr></thead><tbody>';
+            html += `</tr></thead><tbody>`;
             
             // Create rows for each seat row in the zone
             for (let row = startRow; row <= endRow; row++) {
@@ -3052,9 +2689,9 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                 
                 // Add alternating row classes for better readability
                 const rowClass = (row % 2 === 0) ? 'row-even' : 'row-odd';
-                const additionalClasses = isZoneBoundary ? 'zone-boundary ' + rowClass : rowClass;
+                const additionalClasses = isZoneBoundary ? `zone-boundary ${rowClass}` : rowClass;
                 
-                html += '<tr class="' + additionalClasses + '"><td class="row-header">' + rowNum + '</td>';
+                html += `<tr class="${additionalClasses}"><td class="row-header">${rowNum}</td>`;
                 
                 // Check if this is an A330-300 business class row that needs merging (only if using standard columns, not businessColumns)
                 const isA333BusinessRow = aircraftConfig === '333' && 
@@ -3072,7 +2709,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                         const col = columns[colIndex];
                         
                         if (col === '|') {
-                            html += '<td class="aisle"></td>';
+                            html += `<td class="aisle"></td>`;
                             colIndex++;
                             continue;
                         }
@@ -3094,12 +2731,12 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                                 // Create merged cell
                                 const colspan = seatsToMerge.length;
                                 const displaySeat = mergedSeat;
-                                const seatNumber = rowNum + displaySeat;
+                                const seatNumber = `${rowNum}${displaySeat}`;
                                 
                                 // Find passenger in any of the merged seats
                                 let passenger = null;
                                 for (const seat of seatsToMerge) {
-                                    const testSeat = rowNum + seat;
+                                    const testSeat = `${rowNum}${seat}`;
                                     passenger = passengers.find(p => p.seat === testSeat);
                                     if (passenger) break;
                                 }
@@ -3118,7 +2755,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                                     }
                                 }
                                 
-                                html += '<td class="' + cellClass + ' ' + tierClass + '" colspan="' + colspan + '">';
+                                html += `<td class="${cellClass} ${tierClass}" colspan="${colspan}">`;
                                 if (passenger) {
                                     // UPDATED: Different format for business class vs economy
                                     let mealDisplay = formatMealDisplay(passenger.meal);
@@ -3134,25 +2771,25 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                                         const firstName = nameParts[0] || '';
                                         const lastName = nameParts[1] || '';
                                         
-                                        html += '<div class="seat-cell business-class">
-                                            <div class="seat-line1">' + tierIcon + passenger.title + '/' + firstName.toUpperCase() + '</div>
-                                            ' + (lastName ? '<div class="seat-line2">' + lastName.toUpperCase() + '</div>' : '') + '
-                                            <div class="seat-line3">' + (mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;') + '</div>
+                                        html += `<div class="seat-cell business-class">
+                                            <div class="seat-line1">${tierIcon + passenger.title + '/' + firstName.toUpperCase()}</div>
+                                            ${lastName ? `<div class="seat-line2">${lastName.toUpperCase()}</div>` : ''}
+                                            <div class="seat-line3">${mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;'}</div>
                                             <div class="seat-line4">&nbsp;</div>
-                                        </div>';
+                                        </div>`;
                                     } else {
                                         // ECONOMY: Standard 2-line format - only show meal if exists
                                         const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                         
-                                        html += '<div class="seat-cell">
-                                            <div class="seat-line1">' + tierIcon + namePart.toUpperCase() + '</div>
-                                            ' + (mealDisplay ? '<div class="seat-line2">' + mealDisplay.toUpperCase() + '</div>' : '') + '
-                                        </div>';
+                                        html += `<div class="seat-cell">
+                                            <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
+                                            ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
+                                        </div>`;
                                     }
                                 } else {
-                                    html += '<div class="seat-cell">' + seatNumber + '</div>';
+                                    html += `<div class="seat-cell">${seatNumber}</div>`;
                                 }
-                                html += '</td>';
+                                html += `</td>`;
                                 
                                 colIndex += colspan;
                                 merged = true;
@@ -3162,7 +2799,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                         
                         if (!merged) {
                             // Normal cell
-                            const seatNumber = rowNum + col;
+                            const seatNumber = `${rowNum}${col}`;
                             const passenger = passengers.find(p => p.seat === seatNumber);
                             
                             // Determine cell class based on passenger type
@@ -3179,7 +2816,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                                 }
                             }
                             
-                            html += '<td class="' + cellClass + ' ' + tierClass + '">';
+                            html += `<td class="${cellClass} ${tierClass}">`;
                             if (passenger) {
                                 // UPDATED: Different format for business class vs economy
                                 let mealDisplay = formatMealDisplay(passenger.meal);
@@ -3195,25 +2832,25 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                                     const firstName = nameParts[0] || '';
                                     const lastName = nameParts[1] || '';
                                     
-                                    html += '<div class="seat-cell business-class">
-                                        <div class="seat-line1">' + tierIcon + passenger.title + '/' + firstName.toUpperCase() + '</div>
-                                        ' + (lastName ? '<div class="seat-line2">' + lastName.toUpperCase() + '</div>' : '') + '
-                                        <div class="seat-line3">' + (mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;') + '</div>
+                                    html += `<div class="seat-cell business-class">
+                                        <div class="seat-line1">${tierIcon + passenger.title + '/' + firstName.toUpperCase()}</div>
+                                        ${lastName ? `<div class="seat-line2">${lastName.toUpperCase()}</div>` : ''}
+                                        <div class="seat-line3">${mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;'}</div>
                                         <div class="seat-line4">&nbsp;</div>
-                                    </div>';
+                                    </div>`;
                                 } else {
                                     // ECONOMY: Standard 2-line format - only show meal if exists
                                     const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                     
-                                    html += '<div class="seat-cell">
-                                        <div class="seat-line1">' + tierIcon + namePart.toUpperCase() + '</div>
-                                        ' + (mealDisplay ? '<div class="seat-line2">' + mealDisplay.toUpperCase() + '</div>' : '') + '
-                                    </div>';
+                                    html += `<div class="seat-cell">
+                                        <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
+                                        ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
+                                    </div>`;
                                 }
                             } else {
-                                html += '<div class="seat-cell">' + seatNumber + '</div>';
+                                html += `<div class="seat-cell">${seatNumber}</div>`;
                             }
-                            html += '</td>';
+                            html += `</td>`;
                             colIndex++;
                         }
                     }
@@ -3221,9 +2858,9 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                     // Normal row generation (using selected columns, possibly businessColumns)
                     columns.forEach(col => {
                         if (col === '|') {
-                            html += '<td class="aisle"></td>';
+                            html += `<td class="aisle"></td>`;
                         } else {
-                            const seatNumber = rowNum + col;
+                            const seatNumber = `${rowNum}${col}`;
                             const passenger = passengers.find(p => p.seat === seatNumber);
                             
                             // Determine cell class based on passenger type
@@ -3240,7 +2877,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                                 }
                             }
                             
-                            html += '<td class="' + cellClass + ' ' + tierClass + '">';
+                            html += `<td class="${cellClass} ${tierClass}">`;
                             if (passenger) {
                                 // UPDATED: Different format for business class vs economy
                                 let mealDisplay = formatMealDisplay(passenger.meal);
@@ -3256,33 +2893,33 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                                     const firstName = nameParts[0] || '';
                                     const lastName = nameParts[1] || '';
                                     
-                                    html += '<div class="seat-cell business-class">
-                                        <div class="seat-line1">' + tierIcon + passenger.title + '/' + firstName.toUpperCase() + '</div>
-                                        ' + (lastName ? '<div class="seat-line2">' + lastName.toUpperCase() + '</div>' : '') + '
-                                        <div class="seat-line3">' + (mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;') + '</div>
+                                    html += `<div class="seat-cell business-class">
+                                        <div class="seat-line1">${tierIcon + passenger.title + '/' + firstName.toUpperCase()}</div>
+                                        ${lastName ? `<div class="seat-line2">${lastName.toUpperCase()}</div>` : ''}
+                                        <div class="seat-line3">${mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;'}</div>
                                         <div class="seat-line4">&nbsp;</div>
-                                    </div>';
+                                    </div>`;
                                 } else {
                                     // ECONOMY: Standard 2-line format - only show meal if exists
                                     const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                     
-                                    html += '<div class="seat-cell">
-                                        <div class="seat-line1">' + tierIcon + namePart.toUpperCase() + '</div>
-                                        ' + (mealDisplay ? '<div class="seat-line2">' + mealDisplay.toUpperCase() + '</div>' : '') + '
-                                    </div>';
+                                    html += `<div class="seat-cell">
+                                        <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
+                                        ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
+                                    </div>`;
                                 }
                             } else {
-                                html += '<div class="seat-cell">' + seatNumber + '</div>';
+                                html += `<div class="seat-cell">${seatNumber}</div>`;
                             }
-                            html += '</td>';
+                            html += `</td>`;
                         }
                     });
                 }
                 
-                html += '</tr>';
+                html += `</tr>`;
             }
             
-            html += '</tbody></table></div>';
+            html += `</tbody></table></div>`;
             return html;
         }
         
@@ -3344,10 +2981,10 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                 
                 // Show detection message
                 let layoutName = effectiveLayout === 'port-starboard' ? 'Port/Starboard Split' : 'Single Column';
-                showSuccess('✓ Auto-detected: ' + effectiveAircraftConfig + ' | Layout: ' + layoutName);
+                showSuccess(`✓ Auto-detected: ${effectiveAircraftConfig} | Layout: ${layoutName}`);
                 
             } catch (error) {
-                showError('Error: ' + error.message);
+                showError(`Error: ${error.message}`);
             }
         }
         
@@ -3361,7 +2998,6 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
             loadTabsFromStorage();
             restoreActiveTabView();
             renderTabsBar();
-            renderSummaryBar();
             
             // Initialize dual chart mode
 const layoutValue = document.getElementById('layoutStyle').value;
