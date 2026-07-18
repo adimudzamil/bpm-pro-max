@@ -291,76 +291,7 @@
             </div>
         </div>
         
-        <!-- NEW: Version 4.0.5 - 18 July 2026 -->
-        <div class="version">
-            <h3>📱 Version 4.0.5 - Report Tabs, Passenger Editor, Mobile Zoom & More</h3>
-            <div class="date">Released: 18 July 2026</div>
-            
-            <div class="feature">
-                <span class="feature-badge">FEATURE</span>
-                <strong>Multiple Report Tabs</strong>
-                <ul>
-                    <li>Generate multiple reports and keep them all open in separate tabs</li>
-                    <li>Each tab stores its own manifest, passenger data, and all edits</li>
-                    <li>Switch between tabs instantly – perfect for comparing two flights or services</li>
-                    <li>Tabs persist across browser sessions (saved in localStorage)</li>
-                    <li>Delete unwanted tabs with a confirmation dialog</li>
-                </ul>
-            </div>
-            
-            <div class="feature">
-                <span class="feature-badge">FEATURE</span>
-                <strong>Passenger Card Editor</strong>
-                <ul>
-                    <li>Tap any seat in the report (or the seat number in the passenger card) to open an editing panel</li>
-                    <li>Edit special assistance codes: DEPO, MAAS, MEDA, NTL, UM, VVIP, WCHC, WCHR, WCHS, YPTA, or “Others” with free‑text</li>
-                    <li>Toggle <strong>INF</strong> (Infant) and <strong>EXT</strong> (Extension Seatbelt) flags</li>
-                    <li>Add or modify free‑text <strong>Remarks</strong></li>
-                    <li>All changes are saved across tabs and persist in localStorage</li>
-                </ul>
-            </div>
-            
-            <div class="feature">
-                <span class="feature-badge">FEATURE</span>
-                <strong>Seat Reassignment via On‑Screen Keypad</strong>
-                <ul>
-                    <li>Long‑press any seat cell in the main report or tap the ✎ icon in the passenger card to change a passenger’s seat</li>
-                    <li>Keypad lets you enter a new seat number (row + letter)</li>
-                    <li>If the new seat is already taken, a conflict warning appears and both passengers are shown – you can then reassign the other passenger</li>
-                    <li>Changes are reflected immediately in the report and the seat lookup modal</li>
-                </ul>
-            </div>
-            
-            <div class="improvement">
-                <span class="improvement-badge">IMPROVEMENT</span>
-                <strong>Summary Bar Pills Now Only Show Non‑Zero Counts</strong>
-                <ul>
-                    <li>Previously all four pills (SPECIAL, INF, EXT, REMARKS) were shown even with zero counts, cluttering the interface</li>
-                    <li>Now only categories with at least one passenger appear, keeping the summary bar clean and useful</li>
-                </ul>
-            </div>
-            
-            <div class="improvement">
-                <span class="improvement-badge">IMPROVEMENT</span>
-                <strong>UI Alignment – Tabs & Summary Bar</strong>
-                <ul>
-                    <li>Report tabs and summary bar now have the same left/right padding (20 px) as the Generate Report button and input section</li>
-                    <li>Consistent visual alignment across all elements</li>
-                </ul>
-            </div>
-            
-            <div class="improvement">
-                <span class="improvement-badge">IMPROVEMENT</span>
-                <strong>Mobile Pinch‑to‑Zoom Enabled</strong>
-                <ul>
-                    <li>Removed <code>maximum-scale=1.0</code> and <code>user-scalable=no</code> from the viewport meta tag</li>
-                    <li>Users can now zoom in on any part of the page on Android Chrome, iOS Safari, and other mobile browsers</li>
-                    <li>Does not affect the Print Scale slider or print settings – they remain independent</li>
-                </ul>
-            </div>
-        </div>
-        
-        <!-- Version 4.0.4 - 2 June 2026 -->
+        <!-- NEW: Version 4.0.4 - 737 Row 4 Toggle -->
         <div class="version">
             <h3>🪑 Version 4.0.4 - 737 Business Class Row 4 Toggle</h3>
             <div class="date">Released: 2 June 2026</div>
