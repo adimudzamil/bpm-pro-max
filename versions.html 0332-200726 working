@@ -291,10 +291,10 @@
             </div>
         </div>
         
-        <!-- Version 4.0.5 - 20 July 2026 (updated) -->
+        <!-- NEW: Version 4.0.5 - 18 July 2026 -->
         <div class="version">
-            <h3>📱 Version 4.0.5 - Report Tabs, Passenger Editor, Mobile Zoom, LMU & Split Special Pills</h3>
-            <div class="date">Released: 20 July 2026</div>
+            <h3>📱 Version 4.0.5 - Report Tabs, Passenger Editor, Mobile Zoom & More</h3>
+            <div class="date">Released: 18 July 2026</div>
             
             <div class="feature">
                 <span class="feature-badge">FEATURE</span>
@@ -313,7 +313,7 @@
                 <strong>Passenger Card Editor</strong>
                 <ul>
                     <li>Tap any seat in the report (or the seat number in the passenger card) to open an editing panel</li>
-                    <li>Edit special assistance codes: DEPO, MAAS, MEDA, NTL, UM, VVIP, WCHC, WCHR, WCHS, YPTA, <strong>LMU</strong> (no meal), or “Others” with free‑text</li>
+                    <li>Edit special assistance codes: DEPO, MAAS, MEDA, NTL, UM, VVIP, WCHC, WCHR, WCHS, YPTA, or “Others” with free‑text</li>
                     <li>Toggle <strong>INF</strong> (Infant) and <strong>EXT</strong> (Extension Seatbelt) flags</li>
                     <li>Add or modify free‑text <strong>Remarks</strong></li>
                     <li>All changes are saved across tabs and persist in localStorage</li>
@@ -328,17 +328,6 @@
                     <li>Keypad lets you enter a new seat number (row + letter)</li>
                     <li>If the new seat is already taken, a conflict warning appears and both passengers are shown – you can then reassign the other passenger</li>
                     <li>Changes are reflected immediately in the report and the seat lookup modal</li>
-                </ul>
-            </div>
-            
-            <div class="improvement">
-                <span class="improvement-badge">IMPROVEMENT</span>
-                <strong>Split Special Assistance Pills in Summary Bar</strong>
-                <ul>
-                    <li>Previously all special codes were grouped under one “SPECIAL” pill with a breakdown (e.g., WCHR(1), YPTA(1))</li>
-                    <li>Now each code gets its own pill: <code>WCHR (1)</code>, <code>YPTA (1)</code>, <code>LMU (1)</code></li>
-                    <li>Clicking a specific pill opens a modal listing only passengers with that exact code</li>
-                    <li>Makes it easier to see at a glance which assistance types are present</li>
                 </ul>
             </div>
             
