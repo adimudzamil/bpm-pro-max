@@ -470,7 +470,7 @@
                     <button class="btn-secondary btn-small" onclick="selectAllTabs(false)">Deselect All</button>
                 </div>
                 <div style="display:flex; gap:8px;">
-                    <button class="btn-success" onclick="printCombinedReports()" style="flex:1;">🖨️ Print Combined</button>
+                    <button class="btn-success" onclick="printCombinedReports()" style="flex:1;">🖨️ Print / Save Combined PDF</button>
                     <button class="btn-secondary" onclick="closeCombineModal()" style="flex:1;">Cancel</button>
                 </div>
             </div>
@@ -480,8 +480,7 @@
     <script>
         // ========================================================================
         //  COMPLETE JAVASCRIPT – ALL FEATURES INCLUDED
-        //  (Full code is the same as the previous version, but with the
-        //   printCombinedReports() function fixed to ensure printing works.)
+        //  (Patched with Combine Reports print-in-place fix)
         // ========================================================================
 
         // ========== CONFIG & CONSTANTS ==========
@@ -596,6 +595,9 @@
         let tutorialIframeLoaded = false;
         let versionIframeLoaded = false;
         let longPressTimer = null;
+
+        // NEW: For combine reports restoration
+        let combinePreviousReportHTML = null;
 
         function generatePassengerId() {
             passengerIdCounter += 1;
@@ -1195,7 +1197,7 @@
         }
 
         // ========================================================================
-        //  COMBINE REPORTS MODAL (FIXED)
+        //  COMBINE REPORTS MODAL (FIXED – print-in-place)
         // ========================================================================
 
         function openCombineModal() {
@@ -1227,6 +1229,7 @@
             checkboxes.forEach(cb => cb.checked = select);
         }
 
+        // NEW combined printing function – replaces the popup version
         function printCombinedReports() {
             const selected = document.querySelectorAll('#combineTabList input[type="checkbox"]:checked');
             if (selected.length === 0) {
@@ -1246,71 +1249,52 @@
                 return;
             }
 
-            // Build combined HTML
+            // Save the currently displayed report so we can restore it after printing
+            const reportContentEl = document.getElementById('reportContent');
+            combinePreviousReportHTML = reportContentEl.innerHTML;
+
+            // Build combined HTML — each report wrapped so it gets its own page break
             const combinedHTML = tabsToPrint.map(function(tab, index) {
                 const isLast = index === tabsToPrint.length - 1;
-                const pageBreakStyle = isLast ? '' : 'page-break-after: always;';
-                return '<div style="' + pageBreakStyle + '">' + tab.html + '</div>';
+                const pageBreakClass = isLast ? '' : ' page-break';
+                return '<div class="zone-section' + pageBreakClass + '" style="margin:0;">' + tab.html + '</div>';
             }).join('');
 
-            // // Get the stylesheet link from the main page
-const styleLinkEl = document.querySelector('link[rel="stylesheet"]');
-const styleHref = styleLinkEl ? styleLinkEl.href : 'style.css';
-
-// Build the complete document with a fallback print button
-const doc = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Combined Report</title>
-                <link rel="stylesheet" href="${styleHref}">
-                <style>
-                    @page {
-                        margin: var(--print-margin-top, 4mm) var(--print-margin-right, 4mm) var(--print-margin-bottom, 4mm) var(--print-margin-left, 4mm);
-                    }
-                    @media print {
-                        .no-print, .report-actions, .summary-chip, .report-tab, .report-tab-close, .flight-info, .seat-lookup-hint, .editable-seat-cell, .seat-edit-icon {
-                            display: none !important;
-                        }
-                        .container { margin:0 !important; padding:0 !important; border:none !important; box-shadow:none !important; border-radius:0 !important; }
-                        .output-section { padding:0 !important; margin:0 !important; }
-                        .zone-section { page-break-inside: avoid !important; }
-                        .zone-section.page-break { page-break-before: always !important; }
-                        /* Hide the fallback button when printing */
-                        .print-fallback-btn { display: none !important; }
-                    }
-                </style>
-            </head>
-            <body style="padding:0; margin:0; background:white;">
-                <div class="container" style="max-width:100%; border:none; box-shadow:none;">
-                    <div class="output-section">
-                        ${combinedHTML}
-                    </div>
-                </div>
-                <!-- Fallback print button (hidden during print) -->
-                <button class="print-fallback-btn" onclick="window.print()" style="position:fixed; bottom:20px; right:20px; z-index:9999; padding:12px 24px; background:#2563EB; color:white; border:none; border-radius:25px; cursor:pointer; font-weight:bold; font-size:14px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-                    🖨️ Print Now
-                </button>
-                <script>
-                    // Auto-print after a short delay
-                    setTimeout(function() { window.print(); }, 400);
-                <\/script>
-            </body>
-            </html>
-            `;
-
-            const newWin = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes');
-            if (!newWin) {
-                showError('Popup blocked! Please allow popups for this site.');
-                return;
-            }
-            newWin.document.write(doc);
-            newWin.document.close();
-
-            // Close the modal after opening the window
+            reportContentEl.innerHTML = '<div id="reportBody">' + combinedHTML + '</div>';
             closeCombineModal();
+
+            // Small delay so the browser finishes rendering before the print dialog opens
+            setTimeout(function() {
+                window.print();
+            }, 200);
+        }
+
+        function restoreAfterCombinedPrint() {
+            if (combinePreviousReportHTML !== null) {
+                document.getElementById('reportContent').innerHTML = combinePreviousReportHTML;
+                combinePreviousReportHTML = null;
+            }
+        }
+
+        // Listen for the browser's native afterprint event
+        window.addEventListener('afterprint', function() {
+            restoreAfterCombinedPrint();
+        });
+
+        // Also listen to matchMedia for older browsers / print preview cancellation
+        if (window.matchMedia) {
+            const printMediaQuery = window.matchMedia('print');
+            const handlePrintMediaChange = function(mql) {
+                if (!mql.matches) {
+                    restoreAfterCombinedPrint();
+                }
+            };
+            if (printMediaQuery.addEventListener) {
+                printMediaQuery.addEventListener('change', handlePrintMediaChange);
+            } else if (printMediaQuery.addListener) {
+                // Older browser fallback
+                printMediaQuery.addListener(handlePrintMediaChange);
+            }
         }
 
         // ========================================================================
