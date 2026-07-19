@@ -1253,19 +1253,20 @@
                 return '<div style="' + pageBreakStyle + '">' + tab.html + '</div>';
             }).join('');
 
-            // Get styles from the main page
-            const styles = document.querySelector('style').innerHTML;
+            // // Get the stylesheet link from the main page
+const styleLinkEl = document.querySelector('link[rel="stylesheet"]');
+const styleHref = styleLinkEl ? styleLinkEl.href : 'style.css';
 
-            // Build the complete document with a fallback print button
-            const doc = `
+// Build the complete document with a fallback print button
+const doc = `
             <!DOCTYPE html>
             <html>
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Combined Report</title>
+                <link rel="stylesheet" href="${styleHref}">
                 <style>
-                    ${styles}
                     @page {
                         margin: var(--print-margin-top, 4mm) var(--print-margin-right, 4mm) var(--print-margin-bottom, 4mm) var(--print-margin-left, 4mm);
                     }
