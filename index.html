@@ -382,7 +382,7 @@
                 
                 <button class="btn-success" onclick="window.print()" style="width: 100%; margin-top: 10px;">Print Report with Current Settings</button>
                 
-                <!-- NEW: Combine Reports Button -->
+                <!-- Combine Reports Button -->
                 <div style="margin-top: 10px;">
                     <button class="btn-info" onclick="openCombineModal()" style="width: 100%;">
                         📄 Combine Reports
@@ -456,7 +456,7 @@
         </div>
     </div>
 
-    <!-- NEW: Combine Reports Modal -->
+    <!-- Combine Reports Modal -->
     <div id="combineOverlay" class="seat-lookup-overlay" onclick="closeCombineModalOnOverlay(event)">
         <div class="seat-lookup-modal" onclick="event.stopPropagation()">
             <button class="seat-lookup-close" onclick="closeCombineModal()">✕</button>
@@ -479,9 +479,12 @@
 
     <script>
         // ========================================================================
-        //  GLOBAL VARIABLES & CONFIGURATION
+        //  COMPLETE JAVASCRIPT – ALL FEATURES INCLUDED
+        //  (Full code is the same as the previous version, but with the
+        //   printCombinedReports() function fixed to ensure printing works.)
         // ========================================================================
 
+        // ========== CONFIG & CONSTANTS ==========
         const CONFIG = {
             SEAT_PATTERN: /^\d{2}[A-K]$/i,
             PNR_PATTERN: /^[A-Z0-9]{6,7}$/i,
@@ -588,8 +591,6 @@
 
         let lookupState = { phase: 'row', digits: [], letter: null, passengerId: null, editingPassengerId: null, seatEditDigits: [], seatEditLetter: null, cameFromCard: false, flashMessage: null };
         const LOOKUP_SEAT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'];
-
-        // UPDATED: Add LMU
         const SPECIAL_CODES = ['DEPO', 'MAAS', 'MEDA', 'NTL', 'UM', 'VVIP', 'WCHC', 'WCHR', 'WCHS', 'YPTA', 'LMU'];
 
         let tutorialIframeLoaded = false;
@@ -1194,7 +1195,7 @@
         }
 
         // ========================================================================
-        //  COMBINE REPORTS MODAL
+        //  COMBINE REPORTS MODAL (FIXED)
         // ========================================================================
 
         function openCombineModal() {
@@ -1232,22 +1233,30 @@
                 showError('Please select at least one report to combine.');
                 return;
             }
+
             const tabsToPrint = [];
             selected.forEach(function(cb) {
                 const tabId = cb.value;
                 const tab = reportTabs.find(t => t.id === tabId);
                 if (tab) tabsToPrint.push(tab);
             });
+
             if (tabsToPrint.length === 0) {
                 showError('Selected reports not found.');
                 return;
             }
+
+            // Build combined HTML
             const combinedHTML = tabsToPrint.map(function(tab, index) {
                 const isLast = index === tabsToPrint.length - 1;
                 const pageBreakStyle = isLast ? '' : 'page-break-after: always;';
                 return '<div style="' + pageBreakStyle + '">' + tab.html + '</div>';
             }).join('');
+
+            // Get styles from the main page
             const styles = document.querySelector('style').innerHTML;
+
+            // Build the complete document with a fallback print button
             const doc = `
             <!DOCTYPE html>
             <html>
@@ -1268,6 +1277,8 @@
                         .output-section { padding:0 !important; margin:0 !important; }
                         .zone-section { page-break-inside: avoid !important; }
                         .zone-section.page-break { page-break-before: always !important; }
+                        /* Hide the fallback button when printing */
+                        .print-fallback-btn { display: none !important; }
                     }
                 </style>
             </head>
@@ -1277,9 +1288,18 @@
                         ${combinedHTML}
                     </div>
                 </div>
+                <!-- Fallback print button (hidden during print) -->
+                <button class="print-fallback-btn" onclick="window.print()" style="position:fixed; bottom:20px; right:20px; z-index:9999; padding:12px 24px; background:#2563EB; color:white; border:none; border-radius:25px; cursor:pointer; font-weight:bold; font-size:14px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+                    🖨️ Print Now
+                </button>
+                <script>
+                    // Auto-print after a short delay
+                    setTimeout(function() { window.print(); }, 400);
+                <\/script>
             </body>
             </html>
             `;
+
             const newWin = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes');
             if (!newWin) {
                 showError('Popup blocked! Please allow popups for this site.');
@@ -1287,10 +1307,8 @@
             }
             newWin.document.write(doc);
             newWin.document.close();
-            setTimeout(function() {
-                newWin.focus();
-                newWin.print();
-            }, 500);
+
+            // Close the modal after opening the window
             closeCombineModal();
         }
 
