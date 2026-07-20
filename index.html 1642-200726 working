@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1402,10 +1401,9 @@
                 bbml: businessPassengers.filter(p => p.meal && p.meal.includes('BBML')).length
             };
             const businessChartData = {
-    flightInfo: flightInfo,
-    zoneSummary: businessZoneSummary,
-    passengers: businessPassengers,
-    tabId: activeTabId,
+                flightInfo: flightInfo,
+                zoneSummary: businessZoneSummary,
+                passengers: businessPassengers,
                 config: {
                     aircraftType: aircraftType,
                     templateFile: BUSINESS_CLASS_TEMPLATES[aircraftType]?.template || 'sc-a333.html',

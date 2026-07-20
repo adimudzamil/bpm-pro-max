@@ -16,26 +16,6 @@
             margin: 5mm;
         }
 
-        :root {
-            --sc-border-color: #000000;
-            --sc-seat-bg: #ffffff;
-            --sc-header-bg: #f0f0f0;
-            --sc-header-text: #000000;
-            --sc-title-color: #000000;
-            --sc-name-color: #000000;
-            --sc-meal-default-bg: #f0f0f0;
-            --sc-meal-default-text: #000000;
-            --sc-empty-placeholder: #cccccc;
-            --sc-tier-ELIT-bg: #e3f2fd; --sc-tier-ELIT-text: #0d47a1;
-            --sc-tier-PLAT-bg: #f3e5f5; --sc-tier-PLAT-text: #4a148c;
-            --sc-tier-GOLD-bg: #fff8e1; --sc-tier-GOLD-text: #e65100;
-            --sc-tier-RUBY-bg: #ffebee; --sc-tier-RUBY-text: #b71c1c;
-            --sc-tier-SLVR-bg: #eceff1; --sc-tier-SLVR-text: #37474f;
-            --sc-tier-BLUE-bg: #e1f5fe; --sc-tier-BLUE-text: #01579b;
-            --sc-tier-SAPH-bg: #e8eaf6; --sc-tier-SAPH-text: #1a237e;
-            --sc-tier-EMER-bg: #ffcdd2; --sc-tier-EMER-text: #b71c1c;
-        }
-
         body {
             font-family: Arial, sans-serif;
             padding: 5mm;
@@ -226,58 +206,6 @@
             display: inline-block;
         }
 
-        /* NEW: mode selector + swap controls */
-        .mode-selector {
-            display: flex;
-            gap: 4px;
-        }
-        .mode-btn {
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid #dee2e6;
-            background: #fff;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            color: #495057;
-        }
-        .mode-btn.active {
-            background: #007bff;
-            color: #fff;
-            border-color: #007bff;
-        }
-        .swap-btn {
-            display: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid #ffe08a;
-            background: #fff3cd;
-            color: #856404;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .swap-btn.active {
-            background: #28a745;
-            color: #fff;
-            border-color: #28a745;
-        }
-        .swap-hint {
-            display: none;
-            font-size: 11px;
-            color: #856404;
-            margin-left: 4px;
-        }
-        .theme-reset-btn {
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid #dee2e6;
-            background: #fff;
-            cursor: pointer;
-            font-size: 11px;
-            color: #6c757d;
-        }
-
         /* Adjust body padding to account for control bar */
         body {
             padding-top: 60px;
@@ -387,8 +315,7 @@
         }
 
         .seat-box {
-            border: 1px solid var(--sc-border-color);
-            background: var(--sc-seat-bg);
+            border: 1px solid #000;
             padding: 0;
             transition: all 0.3s ease;
             min-height: 55px;
@@ -400,7 +327,7 @@
 
         /* Empty seat placeholder styling */
         .seat-box.empty-seat {
-            border: 1px solid var(--sc-border-color);
+            border: 1px solid #000;
             visibility: visible !important;
         }
 
@@ -415,26 +342,22 @@
         .seat-box.empty-seat .name-line.firstname-line::after,
         .seat-box.empty-seat .field-line.meal-line::after {
             content: "______";
-            color: var(--sc-empty-placeholder);
+            color: #ccc;
             visibility: visible;
             font-weight: normal;
         }
 
-        /* Tier border colours (all 8 tiers) */
-        .seat-box.tier-ELIT { border-width: 2px !important; border-color: var(--sc-tier-ELIT-text) !important; }
-        .seat-box.tier-PLAT { border-width: 2px !important; border-color: var(--sc-tier-PLAT-text) !important; }
-        .seat-box.tier-GOLD { border-width: 2px !important; border-color: var(--sc-tier-GOLD-text) !important; }
-        .seat-box.tier-RUBY { border-width: 2px !important; border-color: var(--sc-tier-RUBY-text) !important; }
-        .seat-box.tier-SLVR { border-width: 2px !important; border-color: var(--sc-tier-SLVR-text) !important; }
-        .seat-box.tier-BLUE { border-width: 2px !important; border-color: var(--sc-tier-BLUE-text) !important; }
-        .seat-box.tier-SAPH { border-width: 2px !important; border-color: var(--sc-tier-SAPH-text) !important; }
-        .seat-box.tier-EMER { border-width: 2px !important; border-color: var(--sc-tier-EMER-text) !important; }
+        /* Thicker border for EMER/PLAT seats */
+        .seat-box.tier-emer,
+        .seat-box.tier-plat {
+            border-width: 2px !important;
+        }
 
         /* Seat number container */
         .seat-number-container {
-            background-color: var(--sc-header-bg);
+            background-color: #f0f0f0;
             padding: 2px 4px;
-            border-bottom: 1px solid var(--sc-border-color);
+            border-bottom: 1px solid #000;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -447,29 +370,22 @@
             font-size: 1.1em;
             text-align: left;
             transition: all 0.3s ease;
-            color: var(--sc-header-text);
+            color: #000;
             text-transform: uppercase;
             flex-grow: 1;
         }
 
-        /* Tier badge base + per-tier colours */
+        /* Tier indicator styling */
         .seat-number .tier {
+            color: #000000;
             font-weight: 900;
             font-size: 1.1em;
             margin-left: auto;
+            background-color: #ffebee;
             padding: 1px 3px;
             border-radius: 3px;
             text-align: right;
-            cursor: default;
         }
-        .tier.tier-ELIT { background-color: var(--sc-tier-ELIT-bg); color: var(--sc-tier-ELIT-text); }
-        .tier.tier-PLAT { background-color: var(--sc-tier-PLAT-bg); color: var(--sc-tier-PLAT-text); }
-        .tier.tier-GOLD { background-color: var(--sc-tier-GOLD-bg); color: var(--sc-tier-GOLD-text); }
-        .tier.tier-RUBY { background-color: var(--sc-tier-RUBY-bg); color: var(--sc-tier-RUBY-text); }
-        .tier.tier-SLVR { background-color: var(--sc-tier-SLVR-bg); color: var(--sc-tier-SLVR-text); }
-        .tier.tier-BLUE { background-color: var(--sc-tier-BLUE-bg); color: var(--sc-tier-BLUE-text); }
-        .tier.tier-SAPH { background-color: var(--sc-tier-SAPH-bg); color: var(--sc-tier-SAPH-text); }
-        .tier.tier-EMER { background-color: var(--sc-tier-EMER-bg); color: var(--sc-tier-EMER-text); }
 
         /* Name lines styling */
         .name-line {
@@ -482,26 +398,24 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             font-weight: 700;
+            color: #000;
             text-transform: uppercase;
             flex-shrink: 0;
         }
 
         .name-line.title-line {
             text-align: center;
-            border-bottom: 0.5px solid var(--sc-border-color);
-            color: var(--sc-title-color);
+            border-bottom: 0.5px solid #000;
         }
 
         .name-line.surname-line {
             text-align: center;
             border-bottom: none;
-            color: var(--sc-name-color);
         }
 
         .name-line.firstname-line {
             text-align: center;
-            border-bottom: 0.5px solid var(--sc-border-color);
-            color: var(--sc-name-color);
+            border-bottom: 0.5px solid #000;
         }
 
         /* Field lines styling */
@@ -517,12 +431,12 @@
             flex-shrink: 0;
         }
 
-        /* Meal field - default colour, overridden per-code inline via JS */
+        /* Meal field gets extra emphasis */
         .field-line.meal-line {
             font-weight: 1000;
             font-size: 1.1em;
-            color: var(--sc-meal-default-text);
-            background-color: var(--sc-meal-default-bg);
+            color: #000;
+            background-color: #f0f0f0;
             border-bottom: none;
             text-align: center;
         }
@@ -533,115 +447,6 @@
             border-bottom: none;
             font-weight: normal;
         }
-
-        /* Colour-edit mode affordances */
-        body.color-mode .seat-box,
-        body.color-mode .seat-number-container,
-        body.color-mode .name-line.title-line,
-        body.color-mode .name-line.surname-line,
-        body.color-mode .name-line.firstname-line,
-        body.color-mode .field-line.meal-line[data-meal-code],
-        body.color-mode .tier {
-            cursor: pointer;
-        }
-        body.color-mode .seat-box:hover {
-            outline: 2px dashed #007bff;
-            outline-offset: -2px;
-        }
-
-        /* Info/swap edit mode affordances */
-        body.edit-mode .seat-box {
-            cursor: pointer;
-        }
-        body.edit-mode .seat-box:hover {
-            outline: 2px dashed #6c757d;
-            outline-offset: -2px;
-        }
-        .seat-box.swap-selected {
-            outline: 3px solid #28a745 !important;
-            outline-offset: -3px;
-        }
-
-        /* Panels / modals */
-        .panel-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(15,23,42,0.55);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .panel-modal {
-            background: #fff;
-            border-radius: 12px;
-            padding: 20px;
-            max-width: 320px;
-            width: 100%;
-        }
-        .color-panel-title, .edit-modal-title {
-            font-weight: 700;
-            font-size: 14px;
-            margin-bottom: 12px;
-            color: #1E3A8A;
-        }
-        .color-field {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            gap: 10px;
-        }
-        .color-field label { font-size: 12px; color: #495057; font-weight: 600; }
-        .color-field input[type="color"] {
-            width: 50px;
-            height: 32px;
-            border: none;
-            padding: 0;
-            cursor: pointer;
-            background: none;
-        }
-        .btn-close-panel {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            background: #007bff;
-            color: #fff;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 8px;
-        }
-        #infoEditBody label {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            color: #495057;
-            margin: 10px 0 4px;
-        }
-        #infoEditBody select, #infoEditBody input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-        .edit-modal-buttons {
-            display: flex;
-            gap: 8px;
-            margin-top: 14px;
-        }
-        .edit-modal-buttons button {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .edit-modal-buttons button:first-child { background: #e2e8f0; color: #334155; }
-        .edit-modal-buttons button:last-child { background: #28a745; color: #fff; }
 
         @media print {
             @page {
@@ -670,8 +475,8 @@
                 padding: 5mm !important;
             }
             
-            .control-bar, .panel-overlay {
-                display: none !important;
+            .control-bar {
+                display: none;
             }
             
             .dual-chart-container {
@@ -694,6 +499,7 @@
             }
             
             .seat-number, .name-line, .field-line {
+                color: #000 !important;
                 font-weight: 700 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
@@ -708,6 +514,7 @@
             }
             
             .seat-number .tier {
+                color: #000 !important;
                 font-weight: 900 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
@@ -721,6 +528,7 @@
             
             .seat-number-container,
             .field-line.meal-line {
+                background-color: #f0f0f0 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
@@ -761,26 +569,15 @@
             </label>
         </div>
 
+        <!-- NEW: Row 4 Toggle (identical styling) -->
         <div class="control-group">
             <label for="row4Toggle">4‑Row Mode</label>
             <label class="toggle-switch">
                 <input type="checkbox" id="row4Toggle" checked onchange="toggleRow4Mode()">
                 <span class="toggle-slider"></span>
             </label>
+            <span style="font-size: 11px; color: #666; margin-left: 5px;">(uncheck to remove row 4 if you are Fahrin)</span>
         </div>
-
-        <div class="control-group">
-            <label>Mode:</label>
-            <div class="mode-selector">
-                <button type="button" class="mode-btn active" data-mode="view" onclick="setMode('view')">View</button>
-                <button type="button" class="mode-btn" data-mode="color" onclick="setMode('color')">🎨 Colours</button>
-                <button type="button" class="mode-btn" data-mode="edit" onclick="setMode('edit')">✏️ Edit</button>
-            </div>
-            <button type="button" id="swapSeatsBtn" class="swap-btn" onclick="toggleSwapMode()">🔀 Swap Seats</button>
-            <span id="swapHint" class="swap-hint">Tap seat A, then seat B</span>
-        </div>
-
-        <button type="button" class="theme-reset-btn" onclick="resetThemeToDefaults()">Reset colours</button>
         
         <div class="control-spacer"></div>
         
@@ -820,402 +617,22 @@
         </div>
     </div>
 
-    <!-- Colour edit panel -->
-    <div id="colorPanelOverlay" class="panel-overlay" onclick="if(event.target===this) closeColorPanel()">
-        <div class="panel-modal" id="colorPanelBody"></div>
-    </div>
-
-    <!-- Info edit modal -->
-    <div id="infoEditOverlay" class="panel-overlay" onclick="if(event.target===this) closeInfoEditModal()">
-        <div class="panel-modal" id="infoEditBody"></div>
-    </div>
-
     <script>
-        // ============== THEME CONSTANTS ==============
-        const DEFAULT_TIER_COLORS = {
-            ELIT: { bg: '#e3f2fd', text: '#0d47a1' },
-            PLAT: { bg: '#f3e5f5', text: '#4a148c' },
-            GOLD: { bg: '#fff8e1', text: '#e65100' },
-            RUBY: { bg: '#ffebee', text: '#b71c1c' },
-            SLVR: { bg: '#eceff1', text: '#37474f' },
-            BLUE: { bg: '#e1f5fe', text: '#01579b' },
-            SAPH: { bg: '#e8eaf6', text: '#1a237e' },
-            EMER: { bg: '#ffcdd2', text: '#b71c1c' }
-        };
-        const MEAL_PALETTE = ['#c8e6c9','#ffe0b2','#b3e5fc','#f8bbd0','#d1c4e9','#fff9c4','#b2dfdb','#ffccbc','#c5cae9','#dcedc8'];
-        const THEME_STORAGE_KEY = 'bpmSeatChartTheme';
-        const TABS_STORAGE_KEY = 'bpmReportTabs';
-
-        let theme = null;
-
-        function defaultTheme() {
-            return {
-                structural: {
-                    borderColor: '#000000', seatBg: '#ffffff', headerBg: '#f0f0f0', headerText: '#000000',
-                    titleColor: '#000000', nameColor: '#000000', mealBg: '#f0f0f0', mealText: '#000000',
-                    emptyPlaceholder: '#cccccc'
-                },
-                tiers: JSON.parse(JSON.stringify(DEFAULT_TIER_COLORS)),
-                mealColors: {}
-            };
-        }
-
-        function loadTheme() {
-            try {
-                const raw = localStorage.getItem(THEME_STORAGE_KEY);
-                theme = raw ? JSON.parse(raw) : defaultTheme();
-            } catch (e) { theme = defaultTheme(); }
-            const d = defaultTheme();
-            theme.structural = Object.assign(d.structural, theme.structural || {});
-            theme.tiers = Object.assign(d.tiers, theme.tiers || {});
-            theme.mealColors = theme.mealColors || {};
-        }
-
-        function saveTheme() {
-            try { localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(theme)); } catch (e) { console.error('Theme save failed', e); }
-        }
-
-        function resetThemeToDefaults() {
-            theme = defaultTheme();
-            saveTheme();
-            applyTheme();
-            showToast('Colours reset to defaults');
-        }
-
-        function applyTheme() {
-            const s = theme.structural;
-            const root = document.documentElement.style;
-            root.setProperty('--sc-border-color', s.borderColor);
-            root.setProperty('--sc-seat-bg', s.seatBg);
-            root.setProperty('--sc-header-bg', s.headerBg);
-            root.setProperty('--sc-header-text', s.headerText);
-            root.setProperty('--sc-title-color', s.titleColor);
-            root.setProperty('--sc-name-color', s.nameColor);
-            root.setProperty('--sc-meal-default-bg', s.mealBg);
-            root.setProperty('--sc-meal-default-text', s.mealText);
-            root.setProperty('--sc-empty-placeholder', s.emptyPlaceholder);
-            Object.keys(theme.tiers).forEach(function (t) {
-                root.setProperty('--sc-tier-' + t + '-bg', theme.tiers[t].bg);
-                root.setProperty('--sc-tier-' + t + '-text', theme.tiers[t].text);
-            });
-            document.querySelectorAll('.field-line.meal-line[data-meal-code]').forEach(applyMealColor);
-        }
-
-        function hashCode(str) {
-            let h = 0;
-            for (let i = 0; i < str.length; i++) { h = ((h << 5) - h) + str.charCodeAt(i); h |= 0; }
-            return h;
-        }
-
-        function getMealColor(code) {
-            if (!code) return null;
-            if (theme.mealColors[code]) return theme.mealColors[code];
-            const idx = Math.abs(hashCode(code)) % MEAL_PALETTE.length;
-            const c = { bg: MEAL_PALETTE[idx], text: '#000000' };
-            theme.mealColors[code] = c;
-            saveTheme();
-            return c;
-        }
-
-        function applyMealColor(el) {
-            const code = el.getAttribute('data-meal-code');
-            if (!code) { el.style.backgroundColor = ''; el.style.color = ''; return; }
-            const c = getMealColor(code);
-            el.style.backgroundColor = c.bg;
-            el.style.color = c.text;
-        }
-
-        function showToast(msg) {
-            let toast = document.getElementById('scToast');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.id = 'scToast';
-                toast.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1E3A8A;color:#fff;padding:8px 16px;border-radius:20px;font-size:12px;z-index:3000;box-shadow:0 4px 10px rgba(0,0,0,0.2);';
-                document.body.appendChild(toast);
-            }
-            toast.textContent = msg;
-            toast.style.opacity = '1';
-            clearTimeout(window._scToastTimer);
-            window._scToastTimer = setTimeout(function () { toast.style.opacity = '0'; }, 2000);
-        }
-
-        // ============== MODE MANAGEMENT ==============
-        let currentMode = 'view'; // 'view' | 'color' | 'edit'
-        let swapModeActive = false;
-        let swapFirstSeat = null;
-
-        function setMode(mode) {
-            currentMode = mode;
-            swapModeActive = false;
-            clearSwapSelection();
-            document.querySelectorAll('.mode-btn').forEach(function (b) {
-                b.classList.toggle('active', b.dataset.mode === mode);
-            });
-            document.getElementById('swapSeatsBtn').style.display = mode === 'edit' ? 'inline-flex' : 'none';
-            document.getElementById('swapSeatsBtn').classList.remove('active');
-            document.getElementById('swapHint').style.display = 'none';
-            document.body.classList.toggle('color-mode', mode === 'color');
-            document.body.classList.toggle('edit-mode', mode === 'edit');
-        }
-
-        function toggleSwapMode() {
-            swapModeActive = !swapModeActive;
-            clearSwapSelection();
-            document.getElementById('swapSeatsBtn').classList.toggle('active', swapModeActive);
-            document.getElementById('swapHint').style.display = swapModeActive ? 'inline-block' : 'none';
-        }
-
-        function clearSwapSelection() {
-            if (swapFirstSeat) swapFirstSeat.classList.remove('swap-selected');
-            swapFirstSeat = null;
-        }
-
-        document.addEventListener('click', function (e) {
-            if (currentMode === 'view') return;
-
-            if (currentMode === 'edit') {
-                const seatBox = e.target.closest('.seat-box');
-                if (!seatBox) return;
-                if (swapModeActive) { handleSwapTap(seatBox); return; }
-                openInfoEditModal(seatBox);
-                return;
-            }
-
-            if (currentMode === 'color') {
-                const tierBadge = e.target.closest('.tier');
-                if (tierBadge) {
-                    const tierClass = Array.from(tierBadge.classList).find(function (c) { return c.indexOf('tier-') === 0; });
-                    if (tierClass) { openTierColorPanel(tierClass.replace('tier-', '')); }
-                    return;
-                }
-                const mealLine = e.target.closest('.field-line.meal-line');
-                if (mealLine && mealLine.getAttribute('data-meal-code')) {
-                    openMealColorPanel(mealLine.getAttribute('data-meal-code'));
-                    return;
-                }
-                const titleLine = e.target.closest('.name-line.title-line');
-                if (titleLine) { openColorPanel([{ key: 'titleColor', label: 'Title text colour' }], 'Title Line'); return; }
-                const nameLine = e.target.closest('.name-line.surname-line, .name-line.firstname-line');
-                if (nameLine) { openColorPanel([{ key: 'nameColor', label: 'Name text colour' }], 'Passenger Name'); return; }
-                const header = e.target.closest('.seat-number-container');
-                if (header) {
-                    openColorPanel([{ key: 'headerBg', label: 'Header background' }, { key: 'headerText', label: 'Header text' }], 'Seat Number Header');
-                    return;
-                }
-                const box = e.target.closest('.seat-box');
-                if (box) {
-                    openColorPanel([{ key: 'seatBg', label: 'Seat background' }, { key: 'borderColor', label: 'Border colour' }, { key: 'emptyPlaceholder', label: 'Empty seat placeholder' }], 'Seat Box');
-                }
-            }
-        });
-
-        // ============== COLOUR PANELS ==============
-        function openColorPanel(fields, title) {
-            let html = '<div class="color-panel-title">' + title + '</div>';
-            fields.forEach(function (f) {
-                const val = theme.structural[f.key] || '#000000';
-                html += '<div class="color-field"><label>' + f.label + '</label><input type="color" value="' + val + '" onchange="updateStructuralColor(\'' + f.key + '\', this.value)"></div>';
-            });
-            html += '<button class="btn-close-panel" onclick="closeColorPanel()">Done</button>';
-            document.getElementById('colorPanelBody').innerHTML = html;
-            document.getElementById('colorPanelOverlay').style.display = 'flex';
-        }
-
-        function updateStructuralColor(key, val) {
-            theme.structural[key] = val;
-            saveTheme();
-            applyTheme();
-        }
-
-        function openTierColorPanel(tierCode) {
-            const t = theme.tiers[tierCode] || { bg: '#ffffff', text: '#000000' };
-            let html = '<div class="color-panel-title">' + tierCode + ' tier colours</div>' +
-                '<div class="color-field"><label>Badge background</label><input type="color" value="' + t.bg + '" onchange="updateTierColor(\'' + tierCode + '\',\'bg\',this.value)"></div>' +
-                '<div class="color-field"><label>Badge / border colour</label><input type="color" value="' + t.text + '" onchange="updateTierColor(\'' + tierCode + '\',\'text\',this.value)"></div>' +
-                '<button class="btn-close-panel" onclick="closeColorPanel()">Done</button>';
-            document.getElementById('colorPanelBody').innerHTML = html;
-            document.getElementById('colorPanelOverlay').style.display = 'flex';
-        }
-
-        function updateTierColor(tierCode, prop, val) {
-            if (!theme.tiers[tierCode]) theme.tiers[tierCode] = { bg: '#ffffff', text: '#000000' };
-            theme.tiers[tierCode][prop] = val;
-            saveTheme();
-            applyTheme();
-        }
-
-        function openMealColorPanel(code) {
-            const c = getMealColor(code);
-            let html = '<div class="color-panel-title">' + code + ' meal colour</div>' +
-                '<div class="color-field"><label>Background</label><input type="color" value="' + c.bg + '" onchange="updateMealColor(\'' + code + '\',\'bg\',this.value)"></div>' +
-                '<div class="color-field"><label>Text</label><input type="color" value="' + c.text + '" onchange="updateMealColor(\'' + code + '\',\'text\',this.value)"></div>' +
-                '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">Applies to every ' + code + ' seat, this flight and future ones.</div>' +
-                '<button class="btn-close-panel" onclick="closeColorPanel()">Done</button>';
-            document.getElementById('colorPanelBody').innerHTML = html;
-            document.getElementById('colorPanelOverlay').style.display = 'flex';
-        }
-
-        function updateMealColor(code, prop, val) {
-            if (!theme.mealColors[code]) theme.mealColors[code] = { bg: '#ffffff', text: '#000000' };
-            theme.mealColors[code][prop] = val;
-            saveTheme();
-            applyTheme();
-        }
-
-        function closeColorPanel() { document.getElementById('colorPanelOverlay').style.display = 'none'; }
-
-        // ============== INFO EDIT MODAL ==============
-        const TITLE_OPTIONS = ['MR','MS','MRS','MISS','MSTR','DATO','DATIN','DTUK','TSRI','MDM','DR','PROF'];
-        const TIER_OPTIONS = ['','ELIT','PLAT','GOLD','RUBY','SLVR','BLUE','SAPH','EMER'];
-
-        function sectionForBox(seatBox) {
-            return seatBox.closest('#topSeatContainer') ? 'top' : 'bottom';
-        }
-
-        function dataForSection(section) {
-            return section === 'top' ? topChartData : bottomChartData;
-        }
-
-        function openInfoEditModal(seatBox) {
-            const seat = seatBox.getAttribute('data-seat');
-            const section = sectionForBox(seatBox);
-            let data = dataForSection(section);
-            if (!data) { showToast('No manifest loaded for this chart yet'); return; }
-            if (!data.passengers) data.passengers = [];
-            let p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
-            if (!p) p = { seat: seat, title: '', name: '', meal: '', tier: '' };
-            const nameParts = parsePassengerName(p.name || '');
-
-            let html = '<div class="edit-modal-title">Edit ' + seat + '</div>';
-            html += '<label>Title</label><select id="editTitle"><option value="">-</option>' + TITLE_OPTIONS.map(function (t) { return '<option value="' + t + '"' + (p.title === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select>';
-            html += '<label>Surname</label><input type="text" id="editSurname" value="' + (nameParts.lastName || '').replace(/"/g, '&quot;') + '">';
-            html += '<label>First name</label><input type="text" id="editFirstname" value="' + (nameParts.firstName || '').replace(/"/g, '&quot;') + '">';
-            html += '<label>Meal code</label><input type="text" id="editMeal" value="' + (p.meal || '') + '" placeholder="e.g. VGML">';
-            html += '<label>Tier</label><select id="editTier">' + TIER_OPTIONS.map(function (t) { return '<option value="' + t + '"' + (p.tier === t ? ' selected' : '') + '>' + (t || 'None') + '</option>'; }).join('') + '</select>';
-            html += '<div class="edit-modal-buttons"><button onclick="closeInfoEditModal()">Cancel</button><button onclick="saveInfoEdit(\'' + section + '\',\'' + seat + '\')">Save</button></div>';
-
-            document.getElementById('infoEditBody').innerHTML = html;
-            document.getElementById('infoEditOverlay').style.display = 'flex';
-        }
-
-        function saveInfoEdit(section, seat) {
-            const data = dataForSection(section);
-            if (!data) return;
-            if (!data.passengers) data.passengers = [];
-            let p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
-            if (!p) { p = { seat: seat }; data.passengers.push(p); }
-
-            const title = document.getElementById('editTitle').value;
-            const surname = document.getElementById('editSurname').value.trim();
-            const firstname = document.getElementById('editFirstname').value.trim();
-            p.title = title;
-            p.name = surname + '/' + firstname;
-            p.meal = document.getElementById('editMeal').value.trim().toUpperCase();
-            p.tier = document.getElementById('editTier').value;
-            p.seat = seat;
-
-            const containerId = section + 'SeatContainer';
-            const seatBox = document.querySelector('#' + containerId + ' [data-seat="' + seat + '"]');
-            if (seatBox) {
-                clearTierClasses(seatBox);
-                seatBox.classList.remove('empty-seat');
-                populateSeatData(p, seatBox);
-                if (!p.title && !p.name.replace('/', '') && !p.meal && !p.tier) markSeatAsEmpty(seatBox);
-            }
-
-            closeInfoEditModal();
-            syncBackToMainPage();
-            showToast('Saved ' + seat);
-        }
-
-        function closeInfoEditModal() { document.getElementById('infoEditOverlay').style.display = 'none'; }
-
-        // ============== SWAP SEATS ==============
-        function handleSwapTap(seatBox) {
-            if (!swapFirstSeat) {
-                swapFirstSeat = seatBox;
-                seatBox.classList.add('swap-selected');
-                return;
-            }
-            if (swapFirstSeat === seatBox) { clearSwapSelection(); return; }
-            swapPassengers(swapFirstSeat, seatBox);
-            clearSwapSelection();
-        }
-
-        function swapPassengers(boxA, boxB) {
-            const seatA = boxA.getAttribute('data-seat');
-            const seatB = boxB.getAttribute('data-seat');
-            const section = sectionForBox(boxA);
-            if (sectionForBox(boxB) !== section) { showToast('Can only swap within the same service'); return; }
-            const data = dataForSection(section);
-            if (!data) return;
-            if (!data.passengers) data.passengers = [];
-
-            let pA = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seatA; });
-            let pB = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seatB; });
-
-            if (pA && pB) {
-                const tempA = Object.assign({}, pA);
-                Object.assign(pA, pB); pA.seat = seatA;
-                Object.assign(pB, tempA); pB.seat = seatB;
-            } else if (pA && !pB) {
-                pA.seat = seatB;
-            } else if (!pA && pB) {
-                pB.seat = seatA;
-            } else {
-                showToast('Both seats are empty');
-                return;
-            }
-
-            [boxA, boxB].forEach(function (box) {
-                const seat = box.getAttribute('data-seat');
-                const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
-                clearTierClasses(box);
-                if (p) { box.classList.remove('empty-seat'); populateSeatData(p, box); } else { markSeatAsEmpty(box); }
-            });
-
-            syncBackToMainPage();
-            showToast('Swapped ' + seatA + ' \u2194 ' + seatB);
-        }
-
-        function clearTierClasses(seatBox) {
-            Object.keys(DEFAULT_TIER_COLORS).forEach(function (t) { seatBox.classList.remove('tier-' + t); });
-        }
-
-        // ============== SYNC BACK TO MAIN PAGE ==============
-        function syncBackToMainPage() {
-            try {
-                const tabId = (topChartData && topChartData.tabId) || (bottomChartData && bottomChartData.tabId);
-                if (!tabId) return;
-                const raw = localStorage.getItem(TABS_STORAGE_KEY);
-                if (!raw) return;
-                const tabs = JSON.parse(raw);
-                const tab = tabs.find(function (t) { return t.id === tabId; });
-                if (!tab || !tab.passengers) return;
-                [topChartData, bottomChartData].forEach(function (data) {
-                    if (!data || !data.passengers) return;
-                    data.passengers.forEach(function (p) {
-                        const idx = tab.passengers.findIndex(function (tp) { return tp.seat === p.seat; });
-                        if (idx !== -1) tab.passengers[idx] = Object.assign({}, tab.passengers[idx], p);
-                    });
-                });
-                localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(tabs));
-            } catch (e) { console.error('Sync back failed', e); }
-        }
-
-        // ============== EXISTING APP LOGIC (structure unchanged) ==============
+        // Global variables
         let isAftView = false;
         let currentFontSize = 12;
-        let currentRowCount = 4;
-        let topChartData = null;
-        let bottomChartData = null;
+        let currentRowCount = 4;      // 4 rows by default (737NR)
+        let topChartData = null;       // Store passenger data for top chart
+        let bottomChartData = null;    // Store passenger data for bottom chart
         
+        // Generate seat rows for a specific container with given row count
         function generateSeatRows(containerId, rowCount) {
             const container = document.getElementById(containerId);
             if (!container) return;
             
             container.innerHTML = '';
             
+            // Create rows from 1 to rowCount (3 or 4)
             for (let rowNum = 1; rowNum <= rowCount; rowNum++) {
                 const row = document.createElement('div');
                 row.className = 'row';
@@ -1272,19 +689,29 @@
             }
         }
         
+        // Rebuild both charts from stored data
         function regenerateAllCharts() {
+            // Recreate empty seat grids with current row count
             generateSeatRows('topSeatContainer', currentRowCount);
             generateSeatRows('bottomSeatContainer', currentRowCount);
             
-            if (topChartData) populateChart('top', topChartData);
-            if (bottomChartData) populateChart('bottom', bottomChartData);
+            // Repopulate with stored data if any
+            if (topChartData) {
+                populateChart('top', topChartData);
+            }
+            if (bottomChartData) {
+                populateChart('bottom', bottomChartData);
+            }
             
+            // Reapply aft view if active
             if (isAftView) {
+                // Apply aft view transformation to both containers
                 applyAftViewToContainer('topSeatContainer', true);
                 applyAftViewToContainer('bottomSeatContainer', true);
             }
         }
         
+        // Toggle row 4 mode (checked = 4 rows, unchecked = 3 rows)
         function toggleRow4Mode() {
             const row4Toggle = document.getElementById('row4Toggle');
             const newRowCount = row4Toggle.checked ? 4 : 3;
@@ -1294,6 +721,7 @@
             currentRowCount = newRowCount;
             regenerateAllCharts();
             
+            // Check for passengers that would be hidden in row 4
             let hiddenPassengersTop = 0;
             let hiddenPassengersBottom = 0;
             
@@ -1311,6 +739,7 @@
             }
             
             if ((hiddenPassengersTop > 0 || hiddenPassengersBottom > 0) && currentRowCount === 3) {
+                // Show a warning in zone summaries
                 const warningMsg = `⚠️ ${hiddenPassengersTop + hiddenPassengersBottom} passenger(s) in row 4 not shown (3-row mode active)`;
                 if (topChartData && document.getElementById('topZoneSummary')) {
                     let oldText = document.getElementById('topZoneSummary').innerHTML;
@@ -1331,6 +760,7 @@
             }
         }
         
+        // Apply or remove aft view transformation to a specific container
         function applyAftViewToContainer(containerId, apply) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -1338,10 +768,12 @@
             const rows = Array.from(container.querySelectorAll('.row'));
             
             if (apply) {
+                // Reverse row order
                 rows.reverse().forEach(row => {
                     container.appendChild(row);
                 });
                 
+                // Reverse seat order inside each row
                 rows.forEach(row => {
                     row.classList.add('aft-view');
                     const seatA = row.querySelector(`[data-seat$="A"]`);
@@ -1363,6 +795,7 @@
                     if (seatA) row.appendChild(seatA);
                 });
             } else {
+                // Restore original row order (1 to currentRowCount)
                 rows.sort((a, b) => {
                     const seatA = a.querySelector('.seat-box');
                     const seatB = b.querySelector('.seat-box');
@@ -1373,6 +806,7 @@
                     container.appendChild(row);
                 });
                 
+                // Restore forward seat order
                 rows.forEach(row => {
                     row.classList.remove('aft-view');
                     const seatA = row.querySelector(`[data-seat$="A"]`);
@@ -1396,6 +830,7 @@
             }
         }
         
+        // Toggle aft view for both charts
         function toggleAftView() {
             const toggle = document.getElementById('aftViewToggle');
             isAftView = toggle.checked;
@@ -1406,6 +841,7 @@
             adjustFontSize(currentFontSize);
         }
         
+        // Function to adjust font sizes for both charts
         function adjustFontSize(fontSize) {
             currentFontSize = fontSize;
             document.getElementById('fontSizeValue').textContent = fontSize + 'px';
@@ -1449,6 +885,7 @@
             });
         }
         
+        // Helper functions for name parsing and truncation
         function parsePassengerName(fullName) {
             if (!fullName || !fullName.includes('/')) {
                 return { firstName: '', lastName: '' };
@@ -1481,16 +918,15 @@
             const { firstName, lastName } = parsePassengerName(passenger.name);
             const title = passenger.title || '';
             
-            clearTierClasses(seatBox);
             let seatNumberHTML = normalizedSeat;
-            if (passenger.tier && DEFAULT_TIER_COLORS[passenger.tier]) {
-                seatNumberHTML += ` <span class="tier tier-${passenger.tier}">*${passenger.tier}*</span>`;
-                seatBox.classList.add('tier-' + passenger.tier);
+            if (passenger.tier === 'EMER' || passenger.tier === 'PLAT') {
+                seatNumberHTML += ` <span class="tier">*${passenger.tier}*</span>`;
+                seatBox.classList.add(passenger.tier === 'EMER' ? 'tier-emer' : 'tier-plat');
                 seatBox.classList.remove('empty-seat');
             }
             
-            const seatNumberEl = seatBox.querySelector('.seat-number');
-            if (seatNumberEl) seatNumberEl.innerHTML = seatNumberHTML;
+            const seatNumberContainer = seatBox.querySelector('.seat-number');
+            if (seatNumberContainer) seatNumberContainer.innerHTML = seatNumberHTML;
             
             const titleLine = seatBox.querySelector('.name-line.title-line');
             if (titleLine) titleLine.textContent = title.toUpperCase() || '';
@@ -1504,23 +940,20 @@
             const mealField = seatBox.querySelector('.field-line.meal-line');
             if (mealField) {
                 if (passenger.meal && passenger.meal.trim()) {
-                    const code = passenger.meal.trim().toUpperCase();
-                    mealField.textContent = code;
-                    mealField.setAttribute('data-meal-code', code);
-                    applyMealColor(mealField);
+                    mealField.textContent = passenger.meal.toUpperCase();
+                    mealField.style.backgroundColor = '#f0f0f0';
                 } else {
                     mealField.textContent = '';
-                    mealField.removeAttribute('data-meal-code');
                     mealField.style.backgroundColor = '';
-                    mealField.style.color = '';
                 }
             }
             
             seatBox.classList.remove('empty-seat');
             seatBox.querySelectorAll('.name-line, .field-line').forEach(line => {
-                line.style.color = '';
+                line.style.color = '#000';
             });
             
+            // Remove placeholder pseudo-element content if any
             if (surnameLine) surnameLine.style.setProperty('--placeholder-content', 'none');
             if (firstNameLine) firstNameLine.style.setProperty('--placeholder-content', 'none');
             if (mealField) mealField.style.setProperty('--placeholder-content', 'none');
@@ -1528,44 +961,40 @@
         
         function markSeatAsEmpty(seatBox) {
             if (!seatBox) return;
-            clearTierClasses(seatBox);
             seatBox.classList.add('empty-seat');
-            const seatNumberEl = seatBox.querySelector('.seat-number');
-            if (seatNumberEl) seatNumberEl.innerHTML = seatBox.getAttribute('data-seat');
             seatBox.querySelectorAll('.name-line, .field-line').forEach(line => {
                 line.style.color = 'transparent';
             });
             const surnameLine = seatBox.querySelector('.name-line.surname-line');
             const firstNameLine = seatBox.querySelector('.name-line.firstname-line');
             const mealLine = seatBox.querySelector('.field-line.meal-line');
-            if (surnameLine) { surnameLine.textContent = ''; surnameLine.style.setProperty('--placeholder-content', '"______"'); }
-            if (firstNameLine) { firstNameLine.textContent = ''; firstNameLine.style.setProperty('--placeholder-content', '"______"'); }
+            if (surnameLine) surnameLine.style.setProperty('--placeholder-content', '"______"');
+            if (firstNameLine) firstNameLine.style.setProperty('--placeholder-content', '"______"');
             if (mealLine) {
-                mealLine.textContent = '';
-                mealLine.removeAttribute('data-meal-code');
                 mealLine.style.setProperty('--placeholder-content', '"______"');
                 mealLine.style.backgroundColor = '';
-                mealLine.style.color = '';
             }
-            const titleLine = seatBox.querySelector('.name-line.title-line');
-            if (titleLine) titleLine.textContent = '';
         }
         
+        // Populate a chart with data and store it globally
         function populateChart(chartPosition, chartData) {
             const prefix = chartPosition === 'top' ? 'top' : 'bottom';
             
+            // Store data for regeneration
             if (chartPosition === 'top') {
                 topChartData = chartData;
             } else {
                 bottomChartData = chartData;
             }
             
+            // Update header
             const flightInfo = chartData.flightInfo;
             if (flightInfo) {
                 document.getElementById(`${prefix}HeaderTitle`).textContent = 
                     `${flightInfo.flightNumber} | ${flightInfo.sector} | ${flightInfo.date} ${flightInfo.stdLocal} | ${flightInfo.aircraft}`;
             }
             
+            // Update zone summary
             const zoneSummary = chartData.zoneSummary;
             if (zoneSummary) {
                 let summaryText = `Business Class: ${zoneSummary.totalPassengers} passengers`;
@@ -1576,6 +1005,7 @@
                 document.getElementById(`${prefix}ZoneSummary`).textContent = summaryText;
             }
             
+            // Populate seats
             const passengers = chartData.passengers || [];
             const occupiedSeats = new Set();
             const container = document.getElementById(`${prefix}SeatContainer`);
@@ -1590,6 +1020,7 @@
                 }
             });
             
+            // Mark empty seats
             const allSeatBoxes = container.querySelectorAll('.seat-box');
             allSeatBoxes.forEach(seatBox => {
                 const seatNumber = seatBox.getAttribute('data-seat');
@@ -1601,6 +1032,7 @@
             console.log(`Loaded ${passengers.length} passengers for ${chartPosition} chart`);
         }
         
+        // Handle printing
         function handlePrint() {
             const orientationSelect = document.getElementById('orientationSelect');
             const isLandscape = orientationSelect.value === 'landscape';
@@ -1618,6 +1050,7 @@
             }, 100);
         }
         
+        // Listen for messages from index.html to load bottom chart
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'loadBottomChart') {
                 const dataKey = event.data.dataKey;
@@ -1631,6 +1064,7 @@
             }
         });
         
+        // Load initial top chart data from URL
         function loadInitialData() {
             const urlParams = new URLSearchParams(window.location.search);
             const dataKey = urlParams.get('data');
@@ -1644,25 +1078,28 @@
             }
         }
         
+        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            loadTheme();
-            applyTheme();
-
+            // Set initial row count based on toggle state (default checked = 4 rows)
             currentRowCount = 4;
             generateSeatRows('topSeatContainer', currentRowCount);
             generateSeatRows('bottomSeatContainer', currentRowCount);
             
+            // Set up font size slider
             const fontSizeSlider = document.getElementById('fontSizeSlider');
             fontSizeSlider.addEventListener('input', function(e) {
                 adjustFontSize(parseInt(e.target.value));
             });
             adjustFontSize(parseInt(fontSizeSlider.value));
             
+            // Set up aft view toggle
             const aftViewToggle = document.getElementById('aftViewToggle');
             aftViewToggle.checked = isAftView;
             
+            // Load initial top chart data
             loadInitialData();
             
+            // Notify parent window that we're ready for second manifest
             if (window.opener) {
                 window.opener.postMessage({ type: 'chartReady' }, '*');
             }
