@@ -47,44 +47,21 @@
             font-size: 12px;
         }
 
-        /* Control Bar - sticky and in normal flow, so it can never overlap the chart below it */
+        /* Control Bar */
         .control-bar {
-            position: sticky;
+            position: fixed;
             top: 0;
+            left: 0;
+            right: 0;
             background: #f8f9fa;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             z-index: 1000;
             border-bottom: 1px solid #dee2e6;
-        }
-        .control-bar-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
             flex-wrap: wrap;
-        }
-        .control-bar-secondary {
-            display: flex;
-            border-top: 1px solid #e9ecef;
-        }
-        .control-bar.collapsed .control-bar-secondary {
-            display: none;
-        }
-        .more-toggle {
-            padding: 8px 10px;
-            border-radius: 6px;
-            border: 1px solid #dee2e6;
-            background: #fff;
-            cursor: pointer;
-            font-size: 14px;
-            min-height: 36px;
-        }
-        @media (max-width: 600px) {
-            .control-bar-row { padding: 6px 8px; gap: 6px; }
-            .control-group { padding: 4px 8px; }
-            .mode-btn { padding: 8px 10px; font-size: 11px; }
-            .print-button { padding: 8px 12px; font-size: 12px; }
-            .font-slider { width: 90px; }
         }
 
         .control-group {
@@ -300,24 +277,16 @@
             font-size: 11px;
             color: #6c757d;
         }
-        .tier-chip-row {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
-        .tier-chip {
-            padding: 4px 8px;
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: 700;
-            cursor: pointer;
-            border: 1px solid rgba(0,0,0,0.15);
+
+        /* Adjust body padding to account for control bar */
+        body {
+            padding-top: 60px;
         }
 
-        /* Container for both charts - no fixed offset needed, control bar is sticky/in-flow */
+        /* Container for both charts */
         .dual-chart-container {
             width: 100%;
-            height: 100%;
+            height: calc(100% - 60px);
             display: flex;
             flex-direction: column;
             transition: all 0.3s ease;
@@ -370,180 +339,6 @@
             margin-bottom: 8px;
             transition: all 0.3s ease;
             text-align: left;
-        }
-
-        /* Summary chips - sit right under the flight/aircraft line in the header */
-        .header-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            margin-bottom: 6px;
-        }
-        .summary-chip {
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
-            padding: 3px 9px;
-            font-size: 10px;
-            font-weight: 700;
-            color: #334155;
-            cursor: pointer;
-        }
-        .summary-chip:active { background: #e2e8f0; }
-
-        .meal-menu-btn {
-            display: inline-flex;
-            padding: 5px 10px;
-            border-radius: 12px;
-            border: 1px solid #fbbf24;
-            background: #fffbeb;
-            color: #92400e;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-bottom: 6px;
-        }
-
-        /* Order mode affordances */
-        body.order-mode .field-line.meal-line {
-            cursor: pointer;
-        }
-        body.order-mode .seat-box:hover .field-line.meal-line {
-            outline: 2px dashed #d97706;
-            outline-offset: -2px;
-        }
-
-        /* Meal menu setup rows */
-        .menu-item-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-        .menu-item-row input[type="text"] {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-        .menu-item-row input[type="number"] {
-            width: 56px;
-            padding: 8px 4px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            font-size: 13px;
-            text-align: center;
-        }
-        .menu-item-remove {
-            border: none;
-            background: #fee2e2;
-            color: #b91c1c;
-            border-radius: 6px;
-            width: 30px;
-            height: 30px;
-            font-size: 14px;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-        .menu-add-btn {
-            width: 100%;
-            padding: 8px;
-            border: 1px dashed #94a3b8;
-            border-radius: 6px;
-            background: #f8fafc;
-            color: #475569;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-
-        /* Order-taking modal option rows */
-        .order-option-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            padding: 10px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            cursor: pointer;
-        }
-        .order-option-row.selected {
-            border-color: #28a745;
-            background: #f0fdf4;
-        }
-        .order-option-row.disabled {
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-        .order-option-row.disabled .order-option-name {
-            text-decoration: line-through;
-        }
-        .order-option-letter {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: #1E3A8A;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 13px;
-            flex-shrink: 0;
-        }
-        .order-option-name {
-            flex: 1;
-            font-size: 13px;
-            font-weight: 600;
-            color: #1e293b;
-        }
-        .order-option-qty {
-            font-size: 11px;
-            color: #64748b;
-            font-weight: 600;
-        }
-
-        /* Category list modal (seat / name / tag rows) */
-        .category-list {
-            max-height: 280px;
-            overflow-y: auto;
-            margin: 10px 0;
-        }
-        .category-list-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 4px;
-            border-bottom: 1px solid #f1f5f9;
-            cursor: pointer;
-        }
-        .category-list-row:active { background: #f8fafc; }
-        .category-list-seat {
-            font-weight: 700;
-            color: #2563eb;
-            min-width: 34px;
-            font-size: 12px;
-        }
-        .category-list-name {
-            flex: 1;
-            font-size: 11px;
-            color: #1e293b;
-        }
-        .category-list-tag {
-            font-size: 9px;
-            font-weight: 700;
-            color: #fff;
-            background: #2563eb;
-            padding: 2px 8px;
-            border-radius: 10px;
-            white-space: nowrap;
-            max-width: 110px;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         /* Zone Summary Styling */
@@ -681,9 +476,7 @@
             font-size: 1em;
             margin: 0;
             padding: 1px 4px;
-            height: 14px;
-            line-height: 12px;
-            box-sizing: content-box;
+            min-height: 10px;
             transition: all 0.3s ease;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -716,9 +509,7 @@
             font-size: 1em;
             margin: 0;
             padding: 1px 4px;
-            height: 14px;
-            line-height: 12px;
-            box-sizing: content-box;
+            min-height: 10px;
             transition: all 0.3s ease;
             font-weight: 700;
             color: #000;
@@ -726,7 +517,7 @@
             flex-shrink: 0;
         }
 
-        /* Meal field - default colour, overridden per-segment inline via JS */
+        /* Meal field - default colour, overridden per-code inline via JS */
         .field-line.meal-line {
             font-weight: 1000;
             font-size: 1.1em;
@@ -734,16 +525,6 @@
             background-color: var(--sc-meal-default-bg);
             border-bottom: none;
             text-align: center;
-        }
-        .meal-code-part, .special-code-part, .order-code-part {
-            display: inline-block;
-            padding: 0 2px;
-            border-radius: 2px;
-        }
-        .meal-sep {
-            color: #888;
-            font-weight: 400;
-            padding: 0 1px;
         }
 
         /* Drink and Dessert lines - no border, blank */
@@ -759,10 +540,7 @@
         body.color-mode .name-line.title-line,
         body.color-mode .name-line.surname-line,
         body.color-mode .name-line.firstname-line,
-        body.color-mode .field-line.meal-line,
-        body.color-mode .meal-code-part,
-        body.color-mode .special-code-part,
-        body.color-mode .order-code-part,
+        body.color-mode .field-line.meal-line[data-meal-code],
         body.color-mode .tier {
             cursor: pointer;
         }
@@ -801,8 +579,6 @@
             padding: 20px;
             max-width: 320px;
             width: 100%;
-            max-height: calc(100vh - 40px);
-            overflow-y: auto;
         }
         .color-panel-title, .edit-modal-title {
             font-weight: 700;
@@ -850,140 +626,6 @@
             border: 1px solid #dee2e6;
             border-radius: 6px;
             font-size: 13px;
-        }
-        #infoEditBody textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            font-size: 13px;
-            font-family: inherit;
-            resize: vertical;
-            box-sizing: border-box;
-        }
-        .edit-toggle-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 10px 0;
-        }
-        .edit-toggle-row .toggle-switch {
-            width: 44px;
-            height: 24px;
-        }
-        .edit-toggle-row .toggle-slider:before {
-            height: 16px;
-            width: 16px;
-            left: 4px;
-            bottom: 4px;
-        }
-        .edit-toggle-row input:checked + .toggle-slider:before {
-            transform: translateX(20px);
-        }
-        .edit-toggle-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #334155;
-        }
-
-        /* Order Mode - meal menu + order-taking */
-        .meal-menu-btn {
-            padding: 4px 10px;
-            border-radius: 12px;
-            border: 1px solid #f59e0b;
-            background: #fffbeb;
-            color: #92400e;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-bottom: 6px;
-        }
-        .meal-order-summary {
-            margin-top: 4px;
-            font-size: 10px;
-            color: #475569;
-        }
-        .meal-order-summary strong { color: #1e293b; }
-        .meal-order-summary .pen-gap {
-            display: inline-block;
-            letter-spacing: 1px;
-            color: #aaa;
-            margin-left: 1px;
-        }
-        .meal-menu-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 8px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .meal-menu-row.disabled .meal-menu-name {
-            text-decoration: line-through;
-            opacity: 0.5;
-        }
-        .meal-menu-name {
-            flex: 1;
-            min-width: 0;
-            padding: 6px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            font-size: 12px;
-        }
-        .meal-menu-qty {
-            width: 48px;
-            padding: 6px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            font-size: 12px;
-            text-align: center;
-        }
-        .meal-menu-select-btn {
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px solid #28a745;
-            background: #fff;
-            color: #28a745;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .meal-menu-select-btn.active {
-            background: #28a745;
-            color: #fff;
-        }
-        .meal-menu-select-btn:disabled {
-            border-color: #cbd5e1;
-            color: #cbd5e1;
-            cursor: not-allowed;
-            background: #f8fafc;
-        }
-        .meal-menu-remove-btn {
-            padding: 6px 8px;
-            border: none;
-            background: transparent;
-            color: #dc2626;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .add-meal-choice-btn {
-            width: 100%;
-            padding: 10px;
-            border: 1px dashed #94a3b8;
-            border-radius: 8px;
-            background: #f8fafc;
-            color: #475569;
-            font-weight: 600;
-            cursor: pointer;
-            margin: 8px 0;
-        }
-        body.order-mode .field-line.meal-line {
-            cursor: pointer;
-        }
-        body.order-mode .seat-box:hover .field-line.meal-line {
-            outline: 2px dashed #f59e0b;
-            outline-offset: -2px;
         }
         .edit-modal-buttons {
             display: flex;
@@ -1077,11 +719,6 @@
                 print-color-adjust: exact;
             }
             
-            .meal-code-part, .special-code-part {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            
             .seat-number-container,
             .field-line.meal-line {
                 -webkit-print-color-adjust: exact;
@@ -1109,64 +746,52 @@
 </head>
 <body>
     <!-- Control Bar -->
-    <div class="control-bar" id="controlBar">
-        <div class="control-bar-row control-bar-primary">
+    <div class="control-bar">
+        <div class="control-group">
+            <label for="fontSizeSlider">Font Size:</label>
+            <input type="range" id="fontSizeSlider" class="font-slider" min="8" max="20" value="12" step="1">
+            <span id="fontSizeValue" class="font-value">12px</span>
+        </div>
+        
+        <div class="control-group">
+            <label for="aftViewToggle">Aft View:</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="aftViewToggle" onchange="toggleAftView()">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label for="row4Toggle">4‑Row Mode</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="row4Toggle" checked onchange="toggleRow4Mode()">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label>Mode:</label>
             <div class="mode-selector">
                 <button type="button" class="mode-btn active" data-mode="view" onclick="setMode('view')">View</button>
                 <button type="button" class="mode-btn" data-mode="color" onclick="setMode('color')">🎨 Colours</button>
                 <button type="button" class="mode-btn" data-mode="edit" onclick="setMode('edit')">✏️ Edit</button>
-                <button type="button" class="mode-btn" data-mode="order" onclick="setMode('order')">🍽️ Order</button>
-                <button type="button" class="mode-btn" data-mode="order" onclick="setMode('order')">🍽️ Order</button>
             </div>
-            <button type="button" id="swapSeatsBtn" class="swap-btn" onclick="toggleSwapMode()">🔀 Swap</button>
-            <span id="swapHint" class="swap-hint">Tap seat A, then B</span>
-
-            <div class="control-spacer"></div>
-
-            <button type="button" class="more-toggle" onclick="toggleMoreControls()" aria-label="More settings">⚙️</button>
-            <button class="print-button" onclick="handlePrint()">
-                <span style="font-size: 16px;">🖨️</span> Print
-            </button>
+            <button type="button" id="swapSeatsBtn" class="swap-btn" onclick="toggleSwapMode()">🔀 Swap Seats</button>
+            <span id="swapHint" class="swap-hint">Tap seat A, then seat B</span>
         </div>
 
-        <div class="control-bar-row control-bar-secondary">
-            <div class="control-group">
-                <label for="fontSizeSlider">Font Size:</label>
-                <input type="range" id="fontSizeSlider" class="font-slider" min="8" max="20" value="12" step="1">
-                <span id="fontSizeValue" class="font-value">12px</span>
-            </div>
-
-            <div class="control-group">
-                <label for="aftViewToggle">Aft View:</label>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="aftViewToggle" onchange="toggleAftView()">
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-
-            <div class="control-group">
-                <label for="row4Toggle">4‑Row</label>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="row4Toggle" checked onchange="toggleRow4Mode()">
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-
-            <button type="button" class="theme-reset-btn" onclick="resetThemeToDefaults()">Reset colours</button>
-
-            <div class="control-group" id="tierColorChipsGroup" style="display:none;">
-                <label>Tier colours:</label>
-                <div id="tierColorChips" class="tier-chip-row"></div>
-            </div>
-
-            <div class="control-spacer"></div>
-
-            <div class="print-options">
-                <select id="orientationSelect">
-                    <option value="portrait">Portrait</option>
-                    <option value="landscape">Landscape</option>
-                </select>
-            </div>
+        <button type="button" class="theme-reset-btn" onclick="resetThemeToDefaults()">Reset colours</button>
+        
+        <div class="control-spacer"></div>
+        
+        <div class="print-options">
+            <select id="orientationSelect">
+                <option value="portrait">Portrait</option>
+                <option value="landscape">Landscape</option>
+            </select>
+            <button class="print-button" onclick="handlePrint()">
+                <span style="font-size: 16px;">🖨️</span> Print Both Charts
+            </button>
         </div>
     </div>
     
@@ -1176,10 +801,7 @@
         <div class="chart-section" id="topChartSection">
             <div class="header" id="topHeader">
                 <h1 id="topHeaderTitle">737 - First Service</h1>
-                <div class="header-chips" id="topSummaryChips"></div>
-                <button type="button" class="meal-menu-btn" id="topMealMenuBtn" style="display:none;" onclick="openMealMenuSetup('top')">🍽️ Meal Menu</button>
                 <div class="zone-summary" id="topZoneSummary">Waiting for first manifest...</div>
-                <div class="meal-order-summary" id="topMealOrderSummary"></div>
             </div>
             <div class="seat-grid" id="topSeatContainer">
                 <!-- Top chart seat rows will be generated dynamically -->
@@ -1190,20 +812,12 @@
         <div class="chart-section" id="bottomChartSection">
             <div class="header" id="bottomHeader">
                 <h1 id="bottomHeaderTitle">737 - Second Service</h1>
-                <div class="header-chips" id="bottomSummaryChips"></div>
-                <button type="button" class="meal-menu-btn" id="bottomMealMenuBtn" style="display:none;" onclick="openMealMenuSetup('bottom')">🍽️ Meal Menu</button>
                 <div class="zone-summary" id="bottomZoneSummary">Waiting for second manifest...</div>
-                <div class="meal-order-summary" id="bottomMealOrderSummary"></div>
             </div>
             <div class="seat-grid" id="bottomSeatContainer">
                 <!-- Bottom chart seat rows will be generated dynamically -->
             </div>
         </div>
-    </div>
-
-    <!-- Category list modal (tap a summary chip) -->
-    <div id="categoryListOverlay" class="panel-overlay" onclick="if(event.target===this) closeCategoryList()">
-        <div class="panel-modal" id="categoryListBody"></div>
     </div>
 
     <!-- Colour edit panel -->
@@ -1214,16 +828,6 @@
     <!-- Info edit modal -->
     <div id="infoEditOverlay" class="panel-overlay" onclick="if(event.target===this) closeInfoEditModal()">
         <div class="panel-modal" id="infoEditBody"></div>
-    </div>
-
-    <!-- Meal Menu setup modal (Order mode) -->
-    <div id="mealMenuOverlay" class="panel-overlay" onclick="if(event.target===this) closeMealMenuSetup()">
-        <div class="panel-modal" id="mealMenuBody"></div>
-    </div>
-
-    <!-- Order-taking modal (tap a seat's meal line in Order mode) -->
-    <div id="orderModalOverlay" class="panel-overlay" onclick="if(event.target===this) closeOrderModal()">
-        <div class="panel-modal" id="orderModalBody"></div>
     </div>
 
     <script>
@@ -1239,21 +843,10 @@
             EMER: { bg: '#ffcdd2', text: '#b71c1c' }
         };
         const MEAL_PALETTE = ['#c8e6c9','#ffe0b2','#b3e5fc','#f8bbd0','#d1c4e9','#fff9c4','#b2dfdb','#ffccbc','#c5cae9','#dcedc8'];
-        const SPECIAL_PALETTE = ['#bbdefb','#c5cae9','#d1c4e9','#b39ddb','#90caf9','#80deea','#b2ebf2','#cfd8dc'];
-        const ORDER_PALETTE = ['#fff3cd','#d4edda','#cce5ff','#f8d7da','#e2d9f3','#d1ecf1','#fde2e2','#e8f5e9'];
-        const SPECIAL_CODES = ['DEPO', 'MAAS', 'MEDA', 'NTL', 'UM', 'VVIP', 'WCHC', 'WCHR', 'WCHS', 'YPTA', 'LMU X Meal', 'LMU EY Meal'];
         const THEME_STORAGE_KEY = 'bpmSeatChartTheme';
         const TABS_STORAGE_KEY = 'bpmReportTabs';
 
         let theme = null;
-
-        function getSpecialLabel(p) {
-            if (!p || !p.specialCode) return '';
-            if (p.specialCode === 'OTHERS') {
-                return p.specialOtherText ? p.specialOtherText.trim().toUpperCase() : '';
-            }
-            return p.specialCode;
-        }
 
         function defaultTheme() {
             return {
@@ -1263,9 +856,7 @@
                     emptyPlaceholder: '#cccccc'
                 },
                 tiers: JSON.parse(JSON.stringify(DEFAULT_TIER_COLORS)),
-                mealColors: {},
-                specialColors: {},
-                orderColors: {}
+                mealColors: {}
             };
         }
 
@@ -1278,8 +869,6 @@
             theme.structural = Object.assign(d.structural, theme.structural || {});
             theme.tiers = Object.assign(d.tiers, theme.tiers || {});
             theme.mealColors = theme.mealColors || {};
-            theme.specialColors = theme.specialColors || {};
-            theme.orderColors = theme.orderColors || {};
         }
 
         function saveTheme() {
@@ -1309,7 +898,7 @@
                 root.setProperty('--sc-tier-' + t + '-bg', theme.tiers[t].bg);
                 root.setProperty('--sc-tier-' + t + '-text', theme.tiers[t].text);
             });
-            document.querySelectorAll('.field-line.meal-line').forEach(applyMealLineColors);
+            document.querySelectorAll('.field-line.meal-line[data-meal-code]').forEach(applyMealColor);
         }
 
         function hashCode(str) {
@@ -1328,48 +917,12 @@
             return c;
         }
 
-        function getSpecialColor(code) {
-            if (!code) return null;
-            if (theme.specialColors[code]) return theme.specialColors[code];
-            const idx = Math.abs(hashCode(code + '::special')) % SPECIAL_PALETTE.length;
-            const c = { bg: SPECIAL_PALETTE[idx], text: '#000000' };
-            theme.specialColors[code] = c;
-            saveTheme();
-            return c;
-        }
-
-        function getOrderColor(choiceId) {
-            if (!choiceId) return { bg: '#ffffff', text: '#000000' };
-            if (theme.orderColors[choiceId]) return theme.orderColors[choiceId];
-            const idx = Math.abs(hashCode(choiceId + '::order')) % ORDER_PALETTE.length;
-            const c = { bg: ORDER_PALETTE[idx], text: '#000000' };
-            theme.orderColors[choiceId] = c;
-            saveTheme();
-            return c;
-        }
-
-        function applyMealLineColors(mealField) {
-            const mealSpan = mealField.querySelector('.meal-code-part');
-            if (mealSpan) {
-                const code = mealSpan.getAttribute('data-meal-code');
-                const c = getMealColor(code);
-                mealSpan.style.backgroundColor = c.bg;
-                mealSpan.style.color = c.text;
-            }
-            const orderSpan = mealField.querySelector('.order-code-part');
-            if (orderSpan) {
-                const choiceId = orderSpan.getAttribute('data-order-choice');
-                const c = getOrderColor(choiceId);
-                orderSpan.style.backgroundColor = c.bg;
-                orderSpan.style.color = c.text;
-            }
-            const specialSpan = mealField.querySelector('.special-code-part');
-            if (specialSpan) {
-                const code = specialSpan.getAttribute('data-special-code');
-                const c = getSpecialColor(code);
-                specialSpan.style.backgroundColor = c.bg;
-                specialSpan.style.color = c.text;
-            }
+        function applyMealColor(el) {
+            const code = el.getAttribute('data-meal-code');
+            if (!code) { el.style.backgroundColor = ''; el.style.color = ''; return; }
+            const c = getMealColor(code);
+            el.style.backgroundColor = c.bg;
+            el.style.color = c.text;
         }
 
         function showToast(msg) {
@@ -1403,19 +956,6 @@
             document.getElementById('swapHint').style.display = 'none';
             document.body.classList.toggle('color-mode', mode === 'color');
             document.body.classList.toggle('edit-mode', mode === 'edit');
-            document.body.classList.toggle('order-mode', mode === 'order');
-            document.getElementById('tierColorChipsGroup').style.display = mode === 'color' ? 'flex' : 'none';
-            if (mode === 'color') renderTierColorChips();
-            document.getElementById('topMealMenuBtn').style.display = mode === 'order' ? 'inline-flex' : 'none';
-            document.getElementById('bottomMealMenuBtn').style.display = mode === 'order' ? 'inline-flex' : 'none';
-        }
-
-        function renderTierColorChips() {
-            const holder = document.getElementById('tierColorChips');
-            holder.innerHTML = Object.keys(DEFAULT_TIER_COLORS).map(function (t) {
-                const c = theme.tiers[t] || DEFAULT_TIER_COLORS[t];
-                return '<span class="tier-chip" style="background:' + c.bg + ';color:' + c.text + ';" onclick="openTierColorPanel(\'' + t + '\')">' + t + '</span>';
-            }).join('');
         }
 
         function toggleSwapMode() {
@@ -1423,10 +963,6 @@
             clearSwapSelection();
             document.getElementById('swapSeatsBtn').classList.toggle('active', swapModeActive);
             document.getElementById('swapHint').style.display = swapModeActive ? 'inline-block' : 'none';
-        }
-
-        function toggleMoreControls() {
-            document.getElementById('controlBar').classList.toggle('collapsed');
         }
 
         function clearSwapSelection() {
@@ -1445,17 +981,6 @@
                 return;
             }
 
-            if (currentMode === 'order') {
-                const specialSpan = e.target.closest('.special-code-part');
-                if (specialSpan) return; // special-assistance side is not editable here
-                const mealLineHit = e.target.closest('.field-line.meal-line');
-                if (!mealLineHit) return;
-                const seatBox = mealLineHit.closest('.seat-box');
-                if (!seatBox) return;
-                openOrderModal(seatBox);
-                return;
-            }
-
             if (currentMode === 'color') {
                 const tierBadge = e.target.closest('.tier');
                 if (tierBadge) {
@@ -1463,26 +988,9 @@
                     if (tierClass) { openTierColorPanel(tierClass.replace('tier-', '')); }
                     return;
                 }
-                const mealCodeSpan = e.target.closest('.meal-code-part');
-                if (mealCodeSpan) {
-                    openMealColorPanel(mealCodeSpan.getAttribute('data-meal-code'));
-                    return;
-                }
-                const orderCodeSpan = e.target.closest('.order-code-part');
-                if (orderCodeSpan) {
-                    const choiceId = orderCodeSpan.getAttribute('data-order-choice');
-                    const orderSeatBox = orderCodeSpan.closest('.seat-box');
-                    openOrderColorPanel(choiceId, orderSeatBox ? sectionForBox(orderSeatBox) : 'top');
-                    return;
-                }
-                const specialCodeSpan = e.target.closest('.special-code-part');
-                if (specialCodeSpan) {
-                    openSpecialColorPanel(specialCodeSpan.getAttribute('data-special-code'));
-                    return;
-                }
-                const mealLineEmpty = e.target.closest('.field-line.meal-line');
-                if (mealLineEmpty && !mealLineEmpty.querySelector('.meal-code-part, .special-code-part, .order-code-part')) {
-                    openColorPanel([{ key: 'mealBg', label: 'Meal line background (default)' }, { key: 'mealText', label: 'Meal line text (default)' }], 'Meal Line (no code set)');
+                const mealLine = e.target.closest('.field-line.meal-line');
+                if (mealLine && mealLine.getAttribute('data-meal-code')) {
+                    openMealColorPanel(mealLine.getAttribute('data-meal-code'));
                     return;
                 }
                 const titleLine = e.target.closest('.name-line.title-line');
@@ -1534,7 +1042,6 @@
             theme.tiers[tierCode][prop] = val;
             saveTheme();
             applyTheme();
-            if (currentMode === 'color') renderTierColorChips();
         }
 
         function openMealColorPanel(code) {
@@ -1551,44 +1058,6 @@
         function updateMealColor(code, prop, val) {
             if (!theme.mealColors[code]) theme.mealColors[code] = { bg: '#ffffff', text: '#000000' };
             theme.mealColors[code][prop] = val;
-            saveTheme();
-            applyTheme();
-        }
-
-        function openSpecialColorPanel(code) {
-            const c = getSpecialColor(code);
-            let html = '<div class="color-panel-title">' + code + ' special code colour</div>' +
-                '<div class="color-field"><label>Background</label><input type="color" value="' + c.bg + '" onchange="updateSpecialColor(\'' + code + '\',\'bg\',this.value)"></div>' +
-                '<div class="color-field"><label>Text</label><input type="color" value="' + c.text + '" onchange="updateSpecialColor(\'' + code + '\',\'text\',this.value)"></div>' +
-                '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">Applies to every ' + code + ' seat, this flight and future ones.</div>' +
-                '<button class="btn-close-panel" onclick="closeColorPanel()">Done</button>';
-            document.getElementById('colorPanelBody').innerHTML = html;
-            document.getElementById('colorPanelOverlay').style.display = 'flex';
-        }
-
-        function updateSpecialColor(code, prop, val) {
-            if (!theme.specialColors[code]) theme.specialColors[code] = { bg: '#ffffff', text: '#000000' };
-            theme.specialColors[code][prop] = val;
-            saveTheme();
-            applyTheme();
-        }
-
-        function openOrderColorPanel(choiceId, section) {
-            const menu = getMealMenu(section);
-            const choice = menu.find(function (c) { return c.id === choiceId; });
-            const label = choice ? choice.name : 'Meal choice';
-            const c = getOrderColor(choiceId);
-            let html = '<div class="color-panel-title">' + label + ' colour</div>' +
-                '<div class="color-field"><label>Background</label><input type="color" value="' + c.bg + '" onchange="updateOrderColor(\'' + choiceId + '\',\'bg\',this.value)"></div>' +
-                '<div class="color-field"><label>Text</label><input type="color" value="' + c.text + '" onchange="updateOrderColor(\'' + choiceId + '\',\'text\',this.value)"></div>' +
-                '<button class="btn-close-panel" onclick="closeColorPanel()">Done</button>';
-            document.getElementById('colorPanelBody').innerHTML = html;
-            document.getElementById('colorPanelOverlay').style.display = 'flex';
-        }
-
-        function updateOrderColor(choiceId, prop, val) {
-            if (!theme.orderColors[choiceId]) theme.orderColors[choiceId] = { bg: '#ffffff', text: '#000000' };
-            theme.orderColors[choiceId][prop] = val;
             saveTheme();
             applyTheme();
         }
@@ -1614,15 +1083,8 @@
             if (!data) { showToast('No manifest loaded for this chart yet'); return; }
             if (!data.passengers) data.passengers = [];
             let p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
-            if (!p) p = { seat: seat, title: '', name: '', meal: '', tier: '', specialCode: '', specialOtherText: '', isInfant: false, extSeatbelt: false, remarksText: '' };
+            if (!p) p = { seat: seat, title: '', name: '', meal: '', tier: '' };
             const nameParts = parsePassengerName(p.name || '');
-
-            let specialOptionsHTML = '<option value="">— None —</option>';
-            SPECIAL_CODES.forEach(function (code) {
-                specialOptionsHTML += '<option value="' + code + '"' + (p.specialCode === code ? ' selected' : '') + '>' + code + '</option>';
-            });
-            specialOptionsHTML += '<option value="OTHERS"' + (p.specialCode === 'OTHERS' ? ' selected' : '') + '>Others</option>';
-            const othersDisplay = p.specialCode === 'OTHERS' ? 'block' : 'none';
 
             let html = '<div class="edit-modal-title">Edit ' + seat + '</div>';
             html += '<label>Title</label><select id="editTitle"><option value="">-</option>' + TITLE_OPTIONS.map(function (t) { return '<option value="' + t + '"' + (p.title === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select>';
@@ -1630,20 +1092,10 @@
             html += '<label>First name</label><input type="text" id="editFirstname" value="' + (nameParts.firstName || '').replace(/"/g, '&quot;') + '">';
             html += '<label>Meal code</label><input type="text" id="editMeal" value="' + (p.meal || '') + '" placeholder="e.g. VGML">';
             html += '<label>Tier</label><select id="editTier">' + TIER_OPTIONS.map(function (t) { return '<option value="' + t + '"' + (p.tier === t ? ' selected' : '') + '>' + (t || 'None') + '</option>'; }).join('') + '</select>';
-            html += '<label>Special</label><select id="editSpecial" onchange="toggleEditOthersInput(this)">' + specialOptionsHTML + '</select>';
-            html += '<input type="text" id="editSpecialOther" style="display:' + othersDisplay + ';margin-top:6px;" placeholder="Enter special handling code" value="' + (p.specialOtherText || '').replace(/"/g, '&quot;') + '">';
-            html += '<div class="edit-toggle-row"><label class="toggle-switch"><input type="checkbox" id="editInfant" ' + (p.isInfant ? 'checked' : '') + '><span class="toggle-slider"></span></label><span class="edit-toggle-label">INF (Infant)</span></div>';
-            html += '<div class="edit-toggle-row"><label class="toggle-switch"><input type="checkbox" id="editExtSeatbelt" ' + (p.extSeatbelt ? 'checked' : '') + '><span class="toggle-slider"></span></label><span class="edit-toggle-label">EXT (Extension Seatbelt)</span></div>';
-            html += '<label>Remarks</label><textarea id="editRemarks" rows="2" placeholder="Add remarks...">' + (p.remarksText || '') + '</textarea>';
             html += '<div class="edit-modal-buttons"><button onclick="closeInfoEditModal()">Cancel</button><button onclick="saveInfoEdit(\'' + section + '\',\'' + seat + '\')">Save</button></div>';
 
             document.getElementById('infoEditBody').innerHTML = html;
             document.getElementById('infoEditOverlay').style.display = 'flex';
-        }
-
-        function toggleEditOthersInput(selectEl) {
-            const input = document.getElementById('editSpecialOther');
-            if (input) input.style.display = selectEl.value === 'OTHERS' ? 'block' : 'none';
         }
 
         function saveInfoEdit(section, seat) {
@@ -1660,11 +1112,6 @@
             p.name = surname + '/' + firstname;
             p.meal = document.getElementById('editMeal').value.trim().toUpperCase();
             p.tier = document.getElementById('editTier').value;
-            p.specialCode = document.getElementById('editSpecial').value;
-            p.specialOtherText = document.getElementById('editSpecialOther').value.trim();
-            p.isInfant = document.getElementById('editInfant').checked;
-            p.extSeatbelt = document.getElementById('editExtSeatbelt').checked;
-            p.remarksText = document.getElementById('editRemarks').value;
             p.seat = seat;
 
             const containerId = section + 'SeatContainer';
@@ -1673,290 +1120,15 @@
                 clearTierClasses(seatBox);
                 seatBox.classList.remove('empty-seat');
                 populateSeatData(p, seatBox);
-                const hasAnyData = p.title || p.name.replace('/', '') || p.meal || p.tier || p.specialCode || p.isInfant || p.extSeatbelt || (p.remarksText && p.remarksText.trim());
-                if (!hasAnyData) markSeatAsEmpty(seatBox);
+                if (!p.title && !p.name.replace('/', '') && !p.meal && !p.tier) markSeatAsEmpty(seatBox);
             }
 
             closeInfoEditModal();
             syncBackToMainPage();
-            renderSummaryChips(section);
             showToast('Saved ' + seat);
         }
 
         function closeInfoEditModal() { document.getElementById('infoEditOverlay').style.display = 'none'; }
-
-        // ============== ORDER MODE: MEAL MENU + ORDER-TAKING ==============
-        function getMealMenu(section) {
-            const data = dataForSection(section);
-            if (!data) return [];
-            if (!data.mealMenu) data.mealMenu = [];
-            return data.mealMenu;
-        }
-
-        function getOrderLetter(p, section) {
-            if (!p || !p.orderChoiceId) return '';
-            const menu = getMealMenu(section);
-            const choice = menu.find(function (c) { return c.id === p.orderChoiceId; });
-            if (!choice || !choice.name) return '';
-            const trimmed = choice.name.trim();
-            return trimmed ? trimmed.charAt(0).toUpperCase() : '';
-        }
-
-        function penGap(value) {
-            return value + '<span class="pen-gap">___</span>';
-        }
-
-        function renderMealCountSummary(section) {
-            const holder = document.getElementById(section + 'MealOrderSummary');
-            if (!holder) return;
-            const menu = getMealMenu(section);
-            if (!menu.length) { holder.innerHTML = ''; return; }
-            const data = dataForSection(section);
-            const passengers = (data && data.passengers) ? data.passengers : [];
-            const parts = menu.map(function (choice) {
-                const ordered = passengers.filter(function (p) { return p.orderChoiceId === choice.id; }).length;
-                return choice.name + ': ' + penGap(ordered);
-            });
-            holder.innerHTML = '<strong>Meal Orders:</strong> ' + parts.join(' &nbsp;|&nbsp; ');
-        }
-
-        // ---- Meal Menu setup (add/edit/remove choices + quantities) ----
-        function openMealMenuSetup(section) {
-            renderMealMenuSetup(section);
-            document.getElementById('mealMenuOverlay').style.display = 'flex';
-        }
-
-        function renderMealMenuSetup(section) {
-            const menu = getMealMenu(section);
-            let html = '<div class="edit-modal-title">Meal Menu \u2014 ' + (section === 'top' ? 'First' : 'Second') + ' Service</div>';
-            html += '<div id="mealMenuRows">';
-            if (menu.length === 0) {
-                html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">No meal choices yet. Add the options loaded for this flight.</div>';
-            }
-            menu.forEach(function (choice) {
-                html += '<div class="meal-menu-row">' +
-                    '<input type="text" class="meal-menu-name" value="' + choice.name.replace(/"/g, '&quot;') + '" onchange="updateMealMenuField(\'' + section + '\',\'' + choice.id + '\',\'name\',this.value)">' +
-                    '<input type="number" min="0" class="meal-menu-qty" value="' + choice.qty + '" onchange="updateMealMenuField(\'' + section + '\',\'' + choice.id + '\',\'qty\',this.value)">' +
-                    '<button class="meal-menu-remove-btn" onclick="removeMealChoice(\'' + section + '\',\'' + choice.id + '\')">\u2715</button>' +
-                    '</div>';
-            });
-            html += '</div>';
-            html += '<button class="add-meal-choice-btn" onclick="addMealChoice(\'' + section + '\')">+ Add meal choice</button>';
-            html += '<button class="btn-close-panel" onclick="closeMealMenuSetup()">Done</button>';
-            document.getElementById('mealMenuBody').innerHTML = html;
-        }
-
-        function addMealChoice(section) {
-            const menu = getMealMenu(section);
-            menu.push({ id: 'meal_' + Date.now() + '_' + Math.floor(Math.random() * 1000), name: 'New Meal', qty: 0 });
-            renderMealMenuSetup(section);
-            renderMealCountSummary(section);
-        }
-
-        function removeMealChoice(section, choiceId) {
-            const data = dataForSection(section);
-            const menu = getMealMenu(section);
-            const idx = menu.findIndex(function (c) { return c.id === choiceId; });
-            if (idx === -1) return;
-            if (data && data.passengers) {
-                data.passengers.forEach(function (p) {
-                    if (p.orderChoiceId === choiceId) {
-                        p.orderChoiceId = null;
-                        refreshSeatDisplay(section, p.seat);
-                    }
-                });
-            }
-            menu.splice(idx, 1);
-            renderMealMenuSetup(section);
-            renderMealCountSummary(section);
-            syncBackToMainPage();
-        }
-
-        function updateMealMenuField(section, choiceId, field, value) {
-            const menu = getMealMenu(section);
-            const choice = menu.find(function (c) { return c.id === choiceId; });
-            if (!choice) return;
-            if (field === 'qty') {
-                choice.qty = Math.max(0, parseInt(value, 10) || 0);
-            } else {
-                choice.name = value;
-                const data = dataForSection(section);
-                if (data && data.passengers) {
-                    data.passengers.forEach(function (p) {
-                        if (p.orderChoiceId === choiceId) refreshSeatDisplay(section, p.seat);
-                    });
-                }
-            }
-            renderMealCountSummary(section);
-        }
-
-        function closeMealMenuSetup() { document.getElementById('mealMenuOverlay').style.display = 'none'; }
-
-        // ---- Order-taking (tap a seat's meal line in Order mode) ----
-        function openOrderModal(seatBox) {
-            const seat = seatBox.getAttribute('data-seat');
-            const section = sectionForBox(seatBox);
-            const data = dataForSection(section);
-            if (!data) { showToast('No manifest loaded for this chart yet'); return; }
-            if (seatBox.classList.contains('empty-seat')) { showToast('No passenger in this seat'); return; }
-            if (!data.passengers) data.passengers = [];
-            const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
-            if (!p) { showToast('No passenger in this seat'); return; }
-            if (p.meal && p.meal.trim()) { showToast('Seat ' + seat + ' already has a declared special meal: ' + p.meal); return; }
-            if (getMealMenu(section).length === 0) { showToast('No meal choices set up yet \u2014 tap 🍽️ Meal Menu first'); return; }
-
-            renderOrderModal(section, seat);
-            document.getElementById('orderModalOverlay').style.display = 'flex';
-        }
-
-        function renderOrderModal(section, seat) {
-            const data = dataForSection(section);
-            const menu = getMealMenu(section);
-            const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
-            const currentChoiceId = p ? p.orderChoiceId : null;
-
-            let html = '<div class="edit-modal-title">Meal order \u2014 Seat ' + seat + '</div>';
-            html += '<div id="orderMenuRows">';
-            menu.forEach(function (choice) {
-                const isSelected = choice.id === currentChoiceId;
-                const isDisabled = choice.qty <= 0 && !isSelected;
-                html += '<div class="meal-menu-row' + (isDisabled ? ' disabled' : '') + '">' +
-                    '<span class="meal-menu-name" style="border:none;padding:6px 0;">' + choice.name + ' (' + choice.qty + ' left)</span>' +
-                    '<button class="meal-menu-select-btn' + (isSelected ? ' active' : '') + '" ' + (isDisabled ? 'disabled' : '') + ' onclick="selectMealChoice(\'' + section + '\',\'' + seat + '\',\'' + choice.id + '\')">' + (isSelected ? '\u2713 Selected' : 'Select') + '</button>' +
-                    '</div>';
-            });
-            html += '</div>';
-            html += '<button class="btn-close-panel" onclick="closeOrderModal()">Done</button>';
-
-            document.getElementById('orderModalBody').innerHTML = html;
-        }
-
-        function selectMealChoice(section, seat, choiceId) {
-            const data = dataForSection(section);
-            if (!data || !data.passengers) return;
-            const menu = getMealMenu(section);
-            const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
-            if (!p) return;
-            const newChoice = menu.find(function (c) { return c.id === choiceId; });
-            if (!newChoice) return;
-
-            if (p.orderChoiceId === choiceId) {
-                newChoice.qty += 1;
-                p.orderChoiceId = null;
-            } else {
-                if (newChoice.qty <= 0) { showToast('No more ' + newChoice.name + ' left'); return; }
-                if (p.orderChoiceId) {
-                    const oldChoice = menu.find(function (c) { return c.id === p.orderChoiceId; });
-                    if (oldChoice) oldChoice.qty += 1;
-                }
-                newChoice.qty -= 1;
-                p.orderChoiceId = choiceId;
-            }
-
-            refreshSeatDisplay(section, seat);
-            syncBackToMainPage();
-            renderMealCountSummary(section);
-            renderOrderModal(section, seat);
-        }
-
-        function refreshSeatDisplay(section, seat) {
-            const data = dataForSection(section);
-            if (!data || !data.passengers) return;
-            const normSeat = normalizeSeatNumber(seat);
-            const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === normSeat; });
-            const seatBox = document.querySelector('#' + section + 'SeatContainer [data-seat="' + normSeat + '"]');
-            if (p && seatBox) populateSeatData(p, seatBox);
-        }
-
-        function closeOrderModal() { document.getElementById('orderModalOverlay').style.display = 'none'; }
-
-        // ============== SUMMARY CHIPS + CATEGORY LIST ==============
-        function renderSummaryChips(section) {
-            const holder = document.getElementById(section + 'SummaryChips');
-            if (!holder) return;
-            const data = dataForSection(section);
-            const passengers = (data && data.passengers) ? data.passengers : [];
-
-            const specialCounts = {};
-            passengers.forEach(function (p) {
-                const label = getSpecialLabel(p);
-                if (label) specialCounts[label] = (specialCounts[label] || 0) + 1;
-            });
-            const infCount = passengers.filter(function (p) { return p.isInfant; }).length;
-            const extCount = passengers.filter(function (p) { return p.extSeatbelt; }).length;
-            const remarksCount = passengers.filter(function (p) { return p.remarksText && p.remarksText.trim(); }).length;
-
-            let chips = [];
-            Object.keys(specialCounts).sort().forEach(function (code) {
-                chips.push('<span class="summary-chip" onclick="openCategoryList(\'' + section + '\',\'special\',\'' + code.replace(/'/g, "\\'") + '\')">' + code + ' (' + specialCounts[code] + ')</span>');
-            });
-            if (infCount > 0) chips.push('<span class="summary-chip" onclick="openCategoryList(\'' + section + '\',\'inf\')">INF (' + infCount + ')</span>');
-            if (extCount > 0) chips.push('<span class="summary-chip" onclick="openCategoryList(\'' + section + '\',\'ext\')">EXT (' + extCount + ')</span>');
-            if (remarksCount > 0) chips.push('<span class="summary-chip" onclick="openCategoryList(\'' + section + '\',\'remarks\')">REMARKS (' + remarksCount + ')</span>');
-
-            holder.innerHTML = chips.join('');
-        }
-
-        function openCategoryList(section, category, code) {
-            const data = dataForSection(section);
-            const passengers = (data && data.passengers) ? data.passengers : [];
-            let items = [];
-            let title = '';
-
-            if (category === 'special') {
-                title = code + ' (' + passengers.filter(function (p) { return getSpecialLabel(p) === code; }).length + ')';
-                items = passengers.filter(function (p) { return getSpecialLabel(p) === code; })
-                    .map(function (p) { return { seat: p.seat || '—', name: p.name || '', tag: code }; });
-            } else if (category === 'inf') {
-                title = 'Infants (' + passengers.filter(function (p) { return p.isInfant; }).length + ')';
-                items = passengers.filter(function (p) { return p.isInfant; })
-                    .map(function (p) { return { seat: p.seat || '—', name: p.name || '', tag: 'INF' }; });
-            } else if (category === 'ext') {
-                title = 'Extension Seatbelt (' + passengers.filter(function (p) { return p.extSeatbelt; }).length + ')';
-                items = passengers.filter(function (p) { return p.extSeatbelt; })
-                    .map(function (p) { return { seat: p.seat || '—', name: p.name || '', tag: 'EXT' }; });
-            } else if (category === 'remarks') {
-                title = 'Remarks (' + passengers.filter(function (p) { return p.remarksText && p.remarksText.trim(); }).length + ')';
-                items = passengers.filter(function (p) { return p.remarksText && p.remarksText.trim(); })
-                    .map(function (p) { return { seat: p.seat || '—', name: p.name || '', tag: p.remarksText }; });
-            }
-
-            items.sort(function (a, b) {
-                if (a.seat === '—') return 1;
-                if (b.seat === '—') return -1;
-                return normalizeSeatNumber(a.seat).localeCompare(normalizeSeatNumber(b.seat));
-            });
-
-            const listHTML = items.length === 0
-                ? '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:12px;">No passengers found.</div>'
-                : items.map(function (it) {
-                    return '<div class="category-list-row" onclick="closeCategoryList(); jumpToSeatEdit(\'' + section + '\',\'' + normalizeSeatNumber(it.seat) + '\');">' +
-                        '<span class="category-list-seat">' + it.seat + '</span>' +
-                        '<span class="category-list-name">' + (it.name || '—').replace(/\//g, ' / ') + '</span>' +
-                        '<span class="category-list-tag">' + it.tag + '</span>' +
-                        '</div>';
-                }).join('');
-
-            document.getElementById('categoryListBody').innerHTML =
-                '<div class="color-panel-title">' + title + '</div>' +
-                '<div class="category-list">' + listHTML + '</div>' +
-                '<button class="btn-close-panel" onclick="closeCategoryList()">Close</button>';
-
-            document.getElementById('categoryListOverlay').style.display = 'flex';
-        }
-
-        function jumpToSeatEdit(section, seat) {
-            const containerId = section + 'SeatContainer';
-            const seatBox = document.querySelector('#' + containerId + ' [data-seat="' + seat + '"]');
-            if (seatBox) {
-                setMode('edit');
-                openInfoEditModal(seatBox);
-            } else {
-                showToast('Seat ' + seat + ' not visible in current row mode');
-            }
-        }
-
-        function closeCategoryList() { document.getElementById('categoryListOverlay').style.display = 'none'; }
 
         // ============== SWAP SEATS ==============
         function handleSwapTap(seatBox) {
@@ -2003,7 +1175,6 @@
             });
 
             syncBackToMainPage();
-            renderSummaryChips(section);
             showToast('Swapped ' + seatA + ' \u2194 ' + seatB);
         }
 
@@ -2247,16 +1418,14 @@
                 
                 const nameLines = box.querySelectorAll('.name-line');
                 nameLines.forEach(line => {
-                    line.style.height = (14 * scale) + 'px';
-                    line.style.lineHeight = (12 * scale) + 'px';
+                    line.style.minHeight = (10 * scale) + 'px';
                     line.style.padding = (1 * scale) + 'px 4px';
                     line.style.fontSize = (1 * fontSize) + 'px';
                 });
                 
                 const fieldLines = box.querySelectorAll('.field-line');
                 fieldLines.forEach(line => {
-                    line.style.height = (14 * scale) + 'px';
-                    line.style.lineHeight = (12 * scale) + 'px';
+                    line.style.minHeight = (10 * scale) + 'px';
                     line.style.padding = (1 * scale) + 'px 4px';
                     if (line.classList.contains('meal-line')) {
                         line.style.fontSize = (1.1 * fontSize) + 'px';
@@ -2314,8 +1483,7 @@
             
             clearTierClasses(seatBox);
             let seatNumberHTML = normalizedSeat;
-            const DISPLAYED_TIERS = ['EMER', 'PLAT'];
-            if (passenger.tier && DISPLAYED_TIERS.includes(passenger.tier)) {
+            if (passenger.tier && DEFAULT_TIER_COLORS[passenger.tier]) {
                 seatNumberHTML += ` <span class="tier tier-${passenger.tier}">*${passenger.tier}*</span>`;
                 seatBox.classList.add('tier-' + passenger.tier);
                 seatBox.classList.remove('empty-seat');
@@ -2335,22 +1503,17 @@
             
             const mealField = seatBox.querySelector('.field-line.meal-line');
             if (mealField) {
-                const mealCode = (passenger.meal || '').trim().toUpperCase();
-                const specialLabel = getSpecialLabel(passenger);
-                const section = sectionForBox(seatBox);
-                const orderLetter = !mealCode ? getOrderLetter(passenger, section) : '';
-                let innerHTML = '';
-                if (mealCode) {
-                    innerHTML += '<span class="meal-code-part" data-meal-code="' + mealCode + '">' + mealCode + '</span>';
-                } else if (orderLetter) {
-                    innerHTML += '<span class="order-code-part" data-order-choice="' + passenger.orderChoiceId + '">' + orderLetter + '</span>';
+                if (passenger.meal && passenger.meal.trim()) {
+                    const code = passenger.meal.trim().toUpperCase();
+                    mealField.textContent = code;
+                    mealField.setAttribute('data-meal-code', code);
+                    applyMealColor(mealField);
+                } else {
+                    mealField.textContent = '';
+                    mealField.removeAttribute('data-meal-code');
+                    mealField.style.backgroundColor = '';
+                    mealField.style.color = '';
                 }
-                if ((mealCode || orderLetter) && specialLabel) innerHTML += '<span class="meal-sep"> | </span>';
-                if (specialLabel) innerHTML += '<span class="special-code-part" data-special-code="' + specialLabel + '">' + specialLabel + '</span>';
-                mealField.innerHTML = innerHTML;
-                mealField.style.backgroundColor = '';
-                mealField.style.color = '';
-                if (innerHTML) applyMealLineColors(mealField);
             }
             
             seatBox.classList.remove('empty-seat');
@@ -2363,4 +1526,147 @@
             if (mealField) mealField.style.setProperty('--placeholder-content', 'none');
         }
         
-   
+        function markSeatAsEmpty(seatBox) {
+            if (!seatBox) return;
+            clearTierClasses(seatBox);
+            seatBox.classList.add('empty-seat');
+            const seatNumberEl = seatBox.querySelector('.seat-number');
+            if (seatNumberEl) seatNumberEl.innerHTML = seatBox.getAttribute('data-seat');
+            seatBox.querySelectorAll('.name-line, .field-line').forEach(line => {
+                line.style.color = 'transparent';
+            });
+            const surnameLine = seatBox.querySelector('.name-line.surname-line');
+            const firstNameLine = seatBox.querySelector('.name-line.firstname-line');
+            const mealLine = seatBox.querySelector('.field-line.meal-line');
+            if (surnameLine) { surnameLine.textContent = ''; surnameLine.style.setProperty('--placeholder-content', '"______"'); }
+            if (firstNameLine) { firstNameLine.textContent = ''; firstNameLine.style.setProperty('--placeholder-content', '"______"'); }
+            if (mealLine) {
+                mealLine.textContent = '';
+                mealLine.removeAttribute('data-meal-code');
+                mealLine.style.setProperty('--placeholder-content', '"______"');
+                mealLine.style.backgroundColor = '';
+                mealLine.style.color = '';
+            }
+            const titleLine = seatBox.querySelector('.name-line.title-line');
+            if (titleLine) titleLine.textContent = '';
+        }
+        
+        function populateChart(chartPosition, chartData) {
+            const prefix = chartPosition === 'top' ? 'top' : 'bottom';
+            
+            if (chartPosition === 'top') {
+                topChartData = chartData;
+            } else {
+                bottomChartData = chartData;
+            }
+            
+            const flightInfo = chartData.flightInfo;
+            if (flightInfo) {
+                document.getElementById(`${prefix}HeaderTitle`).textContent = 
+                    `${flightInfo.flightNumber} | ${flightInfo.sector} | ${flightInfo.date} ${flightInfo.stdLocal} | ${flightInfo.aircraft}`;
+            }
+            
+            const zoneSummary = chartData.zoneSummary;
+            if (zoneSummary) {
+                let summaryText = `Business Class: ${zoneSummary.totalPassengers} passengers`;
+                if (zoneSummary.specialMeals > 0) summaryText += ` | Special Meals: ${zoneSummary.specialMeals}`;
+                if (zoneSummary.emerPlat > 0) summaryText += ` | EMER/PLAT: ${zoneSummary.emerPlat}`;
+                if (zoneSummary.mealBreakdown) summaryText += ` | ${zoneSummary.mealBreakdown}`;
+                if (zoneSummary.bbml > 0) summaryText += ` | BBML: ${zoneSummary.bbml}`;
+                document.getElementById(`${prefix}ZoneSummary`).textContent = summaryText;
+            }
+            
+            const passengers = chartData.passengers || [];
+            const occupiedSeats = new Set();
+            const container = document.getElementById(`${prefix}SeatContainer`);
+            
+            passengers.forEach(passenger => {
+                if (!passenger.seat) return;
+                const normalizedSeat = normalizeSeatNumber(passenger.seat);
+                const seatBox = container.querySelector(`[data-seat="${normalizedSeat}"]`);
+                if (seatBox) {
+                    populateSeatData(passenger, seatBox);
+                    occupiedSeats.add(normalizedSeat);
+                }
+            });
+            
+            const allSeatBoxes = container.querySelectorAll('.seat-box');
+            allSeatBoxes.forEach(seatBox => {
+                const seatNumber = seatBox.getAttribute('data-seat');
+                if (!occupiedSeats.has(seatNumber)) {
+                    markSeatAsEmpty(seatBox);
+                }
+            });
+            
+            console.log(`Loaded ${passengers.length} passengers for ${chartPosition} chart`);
+        }
+        
+        function handlePrint() {
+            const orientationSelect = document.getElementById('orientationSelect');
+            const isLandscape = orientationSelect.value === 'landscape';
+            if (isLandscape) {
+                document.body.classList.add('landscape-print');
+            } else {
+                document.body.classList.remove('landscape-print');
+            }
+            document.documentElement.style.setProperty('--print-font-size', currentFontSize + 'px');
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => {
+                    document.body.classList.remove('landscape-print');
+                }, 100);
+            }, 100);
+        }
+        
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'loadBottomChart') {
+                const dataKey = event.data.dataKey;
+                if (dataKey) {
+                    const chartData = JSON.parse(localStorage.getItem(dataKey));
+                    if (chartData) {
+                        populateChart('bottom', chartData);
+                        localStorage.removeItem(dataKey);
+                    }
+                }
+            }
+        });
+        
+        function loadInitialData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const dataKey = urlParams.get('data');
+            const chartType = urlParams.get('chart') || 'top';
+            if (dataKey && chartType === 'top') {
+                const chartData = JSON.parse(localStorage.getItem(dataKey));
+                if (chartData) {
+                    populateChart('top', chartData);
+                    localStorage.removeItem(dataKey);
+                }
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            applyTheme();
+
+            currentRowCount = 4;
+            generateSeatRows('topSeatContainer', currentRowCount);
+            generateSeatRows('bottomSeatContainer', currentRowCount);
+            
+            const fontSizeSlider = document.getElementById('fontSizeSlider');
+            fontSizeSlider.addEventListener('input', function(e) {
+                adjustFontSize(parseInt(e.target.value));
+            });
+            adjustFontSize(parseInt(fontSizeSlider.value));
+            
+            const aftViewToggle = document.getElementById('aftViewToggle');
+            aftViewToggle.checked = isAftView;
+            
+            loadInitialData();
+            
+            if (window.opener) {
+                window.opener.postMessage({ type: 'chartReady' }, '*');
+            }
+        });
+    </script>
+</body>
+</html>
