@@ -1153,6 +1153,9 @@
             </div>
 
             <button type="button" class="theme-reset-btn" onclick="resetThemeToDefaults()">Reset colours</button>
+            <button type="button" class="theme-reset-btn" onclick="exportTheme()">💾 Backup colours</button>
+            <button type="button" class="theme-reset-btn" onclick="triggerImportTheme()">📂 Restore colours</button>
+            <input type="file" id="themeImportInput" accept="application/json" style="display:none;" onchange="importThemeFromFile(event)">
 
             <div class="control-group" id="tierColorChipsGroup" style="display:none;">
                 <label>Tier colours:</label>
@@ -1291,6 +1294,56 @@
             saveTheme();
             applyTheme();
             showToast('Colours reset to defaults');
+        }
+
+        function exportTheme() {
+            try {
+                const dataStr = JSON.stringify(theme, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'bpm-seat-chart-colours-backup.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('\u2713 Colour theme backed up');
+            } catch (e) {
+                console.error('Theme export failed', e);
+                showToast('Backup failed');
+            }
+        }
+
+        function triggerImportTheme() {
+            document.getElementById('themeImportInput').click();
+        }
+
+        function importThemeFromFile(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    theme = imported;
+                    const d = defaultTheme();
+                    theme.structural = Object.assign(d.structural, theme.structural || {});
+                    theme.tiers = Object.assign(d.tiers, theme.tiers || {});
+                    theme.mealColors = theme.mealColors || {};
+                    theme.specialColors = theme.specialColors || {};
+                    theme.orderColors = theme.orderColors || {};
+                    saveTheme();
+                    applyTheme();
+                    if (currentMode === 'color') renderTierColorChips();
+                    showToast('\u2713 Colour theme restored');
+                } catch (err) {
+                    console.error('Theme import failed', err);
+                    showToast('Could not read that file');
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
         }
 
         function applyTheme() {
@@ -2363,4 +2416,142 @@
             if (mealField) mealField.style.setProperty('--placeholder-content', 'none');
         }
         
-   
+        function markSeatAsEmpty(seatBox) {
+            if (!seatBox) return;
+            clearTierClasses(seatBox);
+            seatBox.classList.add('empty-seat');
+            const seatNumberEl = seatBox.querySelector('.seat-number');
+            if (seatNumberEl) seatNumberEl.innerHTML = seatBox.getAttribute('data-seat');
+            seatBox.querySelectorAll('.name-line, .field-line').forEach(line => {
+                line.style.color = 'transparent';
+            });
+            const surnameLine = seatBox.querySelector('.name-line.surname-line');
+            const firstNameLine = seatBox.querySelector('.name-line.firstname-line');
+            const mealLine = seatBox.querySelector('.field-line.meal-line');
+            if (surnameLine) { surnameLine.textContent = ''; surnameLine.style.setProperty('--placeholder-content', '"______"'); }
+            if (firstNameLine) { firstNameLine.textContent = ''; firstNameLine.style.setProperty('--placeholder-content', '"______"'); }
+            if (mealLine) {
+                mealLine.innerHTML = '';
+                mealLine.style.setProperty('--placeholder-content', '"______"');
+                mealLine.style.backgroundColor = '';
+                mealLine.style.color = '';
+            }
+            const titleLine = seatBox.querySelector('.name-line.title-line');
+            if (titleLine) titleLine.textContent = '';
+        }
+        
+        function populateChart(chartPosition, chartData) {
+            const prefix = chartPosition === 'top' ? 'top' : 'bottom';
+            
+            if (chartPosition === 'top') {
+                topChartData = chartData;
+            } else {
+                bottomChartData = chartData;
+            }
+            if (!chartData.mealMenu) chartData.mealMenu = [];
+            
+            const flightInfo = chartData.flightInfo;
+            if (flightInfo) {
+                document.getElementById(`${prefix}HeaderTitle`).textContent = 
+                    `${flightInfo.flightNumber} | ${flightInfo.sector} | ${flightInfo.date} ${flightInfo.stdLocal} | ${flightInfo.aircraft}`;
+            }
+            
+            renderZoneSummaryLine(prefix);
+            
+            const passengers = chartData.passengers || [];
+            const occupiedSeats = new Set();
+            const container = document.getElementById(`${prefix}SeatContainer`);
+            
+            passengers.forEach(passenger => {
+                if (!passenger.seat) return;
+                const normalizedSeat = normalizeSeatNumber(passenger.seat);
+                const seatBox = container.querySelector(`[data-seat="${normalizedSeat}"]`);
+                if (seatBox) {
+                    populateSeatData(passenger, seatBox);
+                    occupiedSeats.add(normalizedSeat);
+                }
+            });
+            
+            const allSeatBoxes = container.querySelectorAll('.seat-box');
+            allSeatBoxes.forEach(seatBox => {
+                const seatNumber = seatBox.getAttribute('data-seat');
+                if (!occupiedSeats.has(seatNumber)) {
+                    markSeatAsEmpty(seatBox);
+                }
+            });
+
+            renderSummaryChips(prefix);
+            renderMealCountSummary(prefix);
+            
+            console.log(`Loaded ${passengers.length} passengers for ${chartPosition} chart`);
+        }
+        
+        function handlePrint() {
+            const orientationSelect = document.getElementById('orientationSelect');
+            const isLandscape = orientationSelect.value === 'landscape';
+            if (isLandscape) {
+                document.body.classList.add('landscape-print');
+            } else {
+                document.body.classList.remove('landscape-print');
+            }
+            document.documentElement.style.setProperty('--print-font-size', currentFontSize + 'px');
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => {
+                    document.body.classList.remove('landscape-print');
+                }, 100);
+            }, 100);
+        }
+        
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'loadBottomChart') {
+                const dataKey = event.data.dataKey;
+                if (dataKey) {
+                    const chartData = JSON.parse(localStorage.getItem(dataKey));
+                    if (chartData) {
+                        populateChart('bottom', chartData);
+                        localStorage.removeItem(dataKey);
+                    }
+                }
+            }
+        });
+        
+        function loadInitialData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const dataKey = urlParams.get('data');
+            const chartType = urlParams.get('chart') || 'top';
+            if (dataKey && chartType === 'top') {
+                const chartData = JSON.parse(localStorage.getItem(dataKey));
+                if (chartData) {
+                    populateChart('top', chartData);
+                    localStorage.removeItem(dataKey);
+                }
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            applyTheme();
+
+            currentRowCount = 4;
+            generateSeatRows('topSeatContainer', currentRowCount);
+            generateSeatRows('bottomSeatContainer', currentRowCount);
+            
+            const fontSizeSlider = document.getElementById('fontSizeSlider');
+            fontSizeSlider.addEventListener('input', function(e) {
+                adjustFontSize(parseInt(e.target.value));
+            });
+            adjustFontSize(parseInt(fontSizeSlider.value));
+            
+            const aftViewToggle = document.getElementById('aftViewToggle');
+            aftViewToggle.checked = isAftView;
+            
+            loadInitialData();
+            
+            if (window.opener) {
+                window.opener.postMessage({ type: 'chartReady' }, '*');
+            }
+        });
+    </script>
+</body>
+</html>
