@@ -47,7 +47,7 @@
             font-size: 12px;
         }
 
-        /* Control Bar - sticky and in normal flow */
+        /* Control Bar - sticky and in normal flow, so it can never overlap the chart below it */
         .control-bar {
             position: sticky;
             top: 0;
@@ -145,7 +145,7 @@
             text-align: center;
         }
 
-        /* Toggle Switch */
+        /* Toggle Switch (common for both aft view and row 4 mode) */
         .toggle-switch {
             position: relative;
             display: inline-block;
@@ -249,6 +249,7 @@
             display: inline-block;
         }
 
+        /* NEW: mode selector + swap controls */
         .mode-selector {
             display: flex;
             gap: 4px;
@@ -313,7 +314,7 @@
             border: 1px solid rgba(0,0,0,0.15);
         }
 
-        /* Container for both charts */
+        /* Container for both charts - no fixed offset needed, control bar is sticky/in-flow */
         .dual-chart-container {
             width: 100%;
             height: 100%;
@@ -330,6 +331,7 @@
             flex-direction: column;
         }
 
+        /* Divider between charts */
         .chart-divider {
             flex: 0 0 10%;
             display: flex;
@@ -352,6 +354,7 @@
             text-transform: uppercase;
         }
 
+        /* Header styling for each chart */
         .header {
             text-align: center;
             margin-bottom: 8px;
@@ -369,6 +372,7 @@
             text-align: left;
         }
 
+        /* Summary chips - sit right under the flight/aircraft line in the header */
         .header-chips {
             display: flex;
             flex-wrap: wrap;
@@ -400,6 +404,7 @@
             margin-bottom: 6px;
         }
 
+        /* Order mode affordances */
         body.order-mode .field-line.meal-line {
             cursor: pointer;
         }
@@ -408,6 +413,7 @@
             outline-offset: -2px;
         }
 
+        /* Meal menu setup rows */
         .menu-item-row {
             display: flex;
             align-items: center;
@@ -453,6 +459,7 @@
             margin-bottom: 10px;
         }
 
+        /* Order-taking modal option rows */
         .order-option-row {
             display: flex;
             align-items: center;
@@ -500,6 +507,7 @@
             font-weight: 600;
         }
 
+        /* Category list modal (seat / name / tag rows) */
         .category-list {
             max-height: 280px;
             overflow-y: auto;
@@ -538,6 +546,7 @@
             text-overflow: ellipsis;
         }
 
+        /* Zone Summary Styling */
         .zone-summary {
             margin-top: 8px;
             padding: 5px;
@@ -549,6 +558,7 @@
             text-align: left;
         }
 
+        /* Seat grid container */
         .seat-grid {
             flex: 1;
             overflow: hidden;
@@ -556,6 +566,7 @@
             flex-direction: column;
         }
 
+        /* Row grid templates for 737 - 4 seats per row (A, C, D, F) */
         .row {
             display: grid;
             grid-template-columns: 24% 1% 24% 2% 24% 1% 24%;
@@ -565,6 +576,7 @@
             flex-shrink: 0;
         }
 
+        /* Aft view grid templates for 737 */
         .row.aft-view {
             grid-template-columns: 24% 1% 24% 2% 24% 1% 24%;
         }
@@ -591,25 +603,21 @@
             flex-direction: column;
         }
 
-        /* ===================================================== */
-        /* FIXED: Order Fill Overlay (No overflow into header)  */
-        /* ===================================================== */
+        /* Order Mode full-cell fill overlay */
         .order-fill-overlay {
             display: none;
             position: absolute;
             left: 0;
             right: 0;
             bottom: 0;
-            top: calc(1.8em + 6px); /* Dynamically scales with font size, avoids header overflow */
+            top: 20px;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
             border-top: 1px solid rgba(0,0,0,0.15);
             z-index: 5;
-            padding: 2px;
         }
         .order-fill-letter {
-            font-size: 2.5em;
+            font-size: 1.8em;
             font-weight: 900;
             line-height: 1;
         }
@@ -617,17 +625,8 @@
             font-size: 1.6em;
             line-height: 1;
         }
-        .order-remark-input {
-            width: 90%;
-            font-size: 0.7em;
-            border: 1px solid rgba(0,0,0,0.2);
-            border-radius: 4px;
-            padding: 2px 4px;
-            margin-top: 2px;
-            background: rgba(255,255,255,0.8);
-            text-align: center;
-        }
 
+        /* Empty seat placeholder styling */
         .seat-box.empty-seat {
             border: 1px solid var(--sc-border-color);
             visibility: visible !important;
@@ -639,6 +638,7 @@
             color: transparent;
         }
 
+        /* Empty seat with placeholder text for manual writing */
         .seat-box.empty-seat .name-line.surname-line::after,
         .seat-box.empty-seat .name-line.firstname-line::after,
         .seat-box.empty-seat .field-line.meal-line::after {
@@ -648,6 +648,7 @@
             font-weight: normal;
         }
 
+        /* Tier border colours (all 8 tiers) */
         .seat-box.tier-ELIT { border-width: 2px !important; border-color: var(--sc-tier-ELIT-text) !important; }
         .seat-box.tier-PLAT { border-width: 2px !important; border-color: var(--sc-tier-PLAT-text) !important; }
         .seat-box.tier-GOLD { border-width: 2px !important; border-color: var(--sc-tier-GOLD-text) !important; }
@@ -657,6 +658,7 @@
         .seat-box.tier-SAPH { border-width: 2px !important; border-color: var(--sc-tier-SAPH-text) !important; }
         .seat-box.tier-EMER { border-width: 2px !important; border-color: var(--sc-tier-EMER-text) !important; }
 
+        /* Seat number container */
         .seat-number-container {
             background-color: var(--sc-header-bg);
             padding: 2px 4px;
@@ -667,6 +669,7 @@
             flex-shrink: 0;
         }
 
+        /* Larger, bolder font for seat number */
         .seat-number {
             font-weight: 900;
             font-size: 1.1em;
@@ -677,6 +680,7 @@
             flex-grow: 1;
         }
 
+        /* Tier badge base + per-tier colours */
         .seat-number .tier {
             font-weight: 900;
             font-size: 1.1em;
@@ -695,6 +699,7 @@
         .tier.tier-SAPH { background-color: var(--sc-tier-SAPH-bg); color: var(--sc-tier-SAPH-text); }
         .tier.tier-EMER { background-color: var(--sc-tier-EMER-bg); color: var(--sc-tier-EMER-text); }
 
+        /* Name lines styling */
         .name-line {
             font-size: 1em;
             margin: 0;
@@ -729,6 +734,7 @@
             color: var(--sc-name-color);
         }
 
+        /* Field lines styling */
         .field-line {
             font-size: 1em;
             margin: 0;
@@ -743,6 +749,7 @@
             flex-shrink: 0;
         }
 
+        /* Meal field - default colour, overridden per-segment inline via JS */
         .field-line.meal-line {
             font-weight: 1000;
             font-size: 1.1em;
@@ -762,12 +769,14 @@
             padding: 0 1px;
         }
 
+        /* Drink and Dessert lines - no border, blank */
         .field-line.drink-line,
         .field-line.dessert-line {
             border-bottom: none;
             font-weight: normal;
         }
 
+        /* Colour-edit mode affordances */
         body.color-mode .seat-box,
         body.color-mode .seat-number-container,
         body.color-mode .name-line.title-line,
@@ -785,6 +794,7 @@
             outline-offset: -2px;
         }
 
+        /* Info/swap edit mode affordances */
         body.edit-mode .seat-box {
             cursor: pointer;
         }
@@ -797,6 +807,7 @@
             outline-offset: -3px;
         }
 
+        /* Panels / modals */
         .panel-overlay {
             display: none;
             position: fixed;
@@ -898,6 +909,7 @@
             color: #334155;
         }
 
+        /* Order Mode - chart selector, service tabs, meal menu, order-taking */
         .chart-selector {
             display: flex;
             gap: 2px;
@@ -1055,30 +1067,6 @@
         .edit-modal-buttons button:first-child { background: #e2e8f0; color: #334155; }
         .edit-modal-buttons button:last-child { background: #28a745; color: #fff; }
 
-        /* ============================================= */
-        /* NEW: Floating Popups for Presets and Keypad   */
-        /* ============================================= */
-        .popup-overlay {
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 2100;
-            align-items: center; justify-content: center;
-        }
-        .popup-modal {
-            background: #fff; border-radius: 12px; padding: 20px;
-            width: 90%; max-width: 350px; max-height: 80vh; overflow-y: auto;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        .preset-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 15px 0;
-        }
-        .preset-btn {
-            padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;
-            font-size: 14px; font-weight: 600; cursor: pointer; text-align: center;
-        }
-        .preset-btn:hover { background: #e2e8f0; }
-        .preset-custom-input { 
-            width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; margin-top: 10px; 
-        }
-
         @media print {
             @page {
                 size: A4;
@@ -1110,7 +1098,7 @@
                 padding: 5mm !important;
             }
             
-            .control-bar, .panel-overlay, .popup-overlay {
+            .control-bar, .panel-overlay {
                 display: none !important;
             }
             
@@ -1198,7 +1186,7 @@
                 <button type="button" class="mode-btn" data-mode="color" onclick="setMode('color')">🎨 Colours</button>
                 <button type="button" class="mode-btn" data-mode="edit" onclick="setMode('edit')">✏️ Edit</button>
                 <button type="button" class="mode-btn" data-mode="order" onclick="setMode('order')">🍽️ Order</button>
-                <!-- Duplicate button removed above -->
+                <button type="button" class="mode-btn" data-mode="order" onclick="setMode('order')">🍽️ Order</button>
             </div>
             <button type="button" id="swapSeatsBtn" class="swap-btn" onclick="toggleSwapMode()">🔀 Swap</button>
             <span id="swapHint" class="swap-hint">Tap seat A, then B</span>
@@ -1300,52 +1288,29 @@
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- Category list modal (tap a summary chip) -->
     <div id="categoryListOverlay" class="panel-overlay" onclick="if(event.target===this) closeCategoryList()">
         <div class="panel-modal" id="categoryListBody"></div>
     </div>
+
+    <!-- Colour edit panel -->
     <div id="colorPanelOverlay" class="panel-overlay" onclick="if(event.target===this) closeColorPanel()">
         <div class="panel-modal" id="colorPanelBody"></div>
     </div>
+
+    <!-- Info edit modal -->
     <div id="infoEditOverlay" class="panel-overlay" onclick="if(event.target===this) closeInfoEditModal()">
         <div class="panel-modal" id="infoEditBody"></div>
     </div>
+
+    <!-- Meal Menu setup modal (Order mode) -->
     <div id="mealMenuOverlay" class="panel-overlay" onclick="if(event.target===this) closeMealMenuSetup()">
         <div class="panel-modal" id="mealMenuBody"></div>
     </div>
+
+    <!-- Order-taking modal (tap a seat's meal line in Order mode) -->
     <div id="orderModalOverlay" class="panel-overlay" onclick="if(event.target===this) closeOrderModal()">
         <div class="panel-modal" id="orderModalBody"></div>
-    </div>
-
-    <!-- NEW: Meal Preset Popup -->
-    <div id="presetPopup" class="popup-overlay" onclick="if(event.target===this) closeNamePreset()">
-        <div class="popup-modal">
-            <div style="font-weight:700; margin-bottom:10px;">Select Meal Name</div>
-            <div class="preset-grid" id="presetGrid"></div>
-            <input type="text" id="presetCustomInput" class="preset-custom-input" placeholder="Type custom name..." oninput="customPresetName(this.value)">
-            <button class="btn-close-panel" style="margin-top:10px;" onclick="closeNamePreset()">Cancel</button>
-        </div>
-    </div>
-
-    <!-- NEW: Numeric Keypad Popup -->
-    <div id="keypadPopup" class="popup-overlay" onclick="if(event.target===this) closeKeypad()">
-        <div class="popup-modal">
-            <div style="text-align:center; font-size:2em; font-weight:bold; margin-bottom:15px;" id="keypadDisplay">0</div>
-            <div class="preset-grid" style="grid-template-columns: repeat(3, 1fr);">
-                <button class="preset-btn" onclick="keypadPress('1')">1</button>
-                <button class="preset-btn" onclick="keypadPress('2')">2</button>
-                <button class="preset-btn" onclick="keypadPress('3')">3</button>
-                <button class="preset-btn" onclick="keypadPress('4')">4</button>
-                <button class="preset-btn" onclick="keypadPress('5')">5</button>
-                <button class="preset-btn" onclick="keypadPress('6')">6</button>
-                <button class="preset-btn" onclick="keypadPress('7')">7</button>
-                <button class="preset-btn" onclick="keypadPress('8')">8</button>
-                <button class="preset-btn" onclick="keypadPress('9')">9</button>
-                <button class="preset-btn" onclick="keypadPress('backspace')">⌫</button>
-                <button class="preset-btn" onclick="keypadPress('0')">0</button>
-                <button class="preset-btn" style="background:#22c55e;color:white;" onclick="keypadPress('done')">Done</button>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -1366,12 +1331,8 @@
         const SPECIAL_CODES = ['DEPO', 'MAAS', 'MEDA', 'NTL', 'UM', 'VVIP', 'WCHC', 'WCHR', 'WCHS', 'YPTA', 'LMU X Meal', 'LMU EY Meal'];
         const THEME_STORAGE_KEY = 'bpmSeatChartTheme';
         const TABS_STORAGE_KEY = 'bpmReportTabs';
-        const LAST_TAB_ID_KEY = 'bpmLastActiveTabId';
-        const PRESET_NAMES = ['Chicken', 'Beef', 'Fish', 'Seafood', 'Prawn', 'Vegetarian'];
 
         let theme = null;
-        let activePresetInputId = null; // For Preset popup
-        let activeKeypadInputId = null; // For Keypad popup
 
         function getSpecialLabel(p) {
             if (!p || !p.specialCode) return '';
@@ -1563,7 +1524,7 @@
         }
 
         // ============== MODE MANAGEMENT ==============
-        let currentMode = 'view';
+        let currentMode = 'view'; // 'view' | 'color' | 'edit'
         let swapModeActive = false;
         let swapFirstSeat = null;
 
@@ -1676,6 +1637,7 @@
             }
         });
 
+        // Long-press in Order mode reopens the order modal (to change or clear a choice)
         document.addEventListener('mousedown', function (e) {
             if (currentMode !== 'order') return;
             const seatBox = e.target.closest('.seat-box');
@@ -1751,6 +1713,7 @@
             let html = '<div class="color-panel-title">' + code + ' special code colour</div>' +
                 '<div class="color-field"><label>Background</label><input type="color" value="' + c.bg + '" onchange="updateSpecialColor(\'' + code + '\',\'bg\',this.value)"></div>' +
                 '<div class="color-field"><label>Text</label><input type="color" value="' + c.text + '" onchange="updateSpecialColor(\'' + code + '\',\'text\',this.value)"></div>' +
+                '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">Applies to every ' + code + ' seat, this flight and future ones.</div>' +
                 '<button class="btn-close-panel" onclick="closeColorPanel()">Done</button>';
             document.getElementById('colorPanelBody').innerHTML = html;
             document.getElementById('colorPanelOverlay').style.display = 'flex';
@@ -1884,6 +1847,7 @@
             const data = dataForSection(section);
             if (!data) return [];
             if (!data.mealServices) data.mealServices = [];
+            // migrate old single-menu shape if present from an earlier session
             if (data.mealMenu && data.mealMenu.length && data.mealServices.length === 0) {
                 const migratedId = 'service_' + Date.now();
                 data.mealServices.push({ id: migratedId, label: 'Meal Service 1', menu: data.mealMenu });
@@ -1967,7 +1931,7 @@
             holder.innerHTML = serviceParts.join('<br>');
         }
 
-        // ---- Meal Menu setup ----
+        // ---- Meal Menu setup (name the service + add/edit/remove choices & quantities) ----
         function openMealMenuSetup() {
             if (getMealServices(activeOrderSection).length === 0) {
                 addMealService();
@@ -1980,36 +1944,16 @@
         function renderMealMenuSetup() {
             const svc = getActiveService(activeOrderSection);
             if (!svc) return;
-            const isCustom = !['Breakfast','Brunch','Lunch','Dinner','All Day Dining','Supper','Refreshments','DAT'].includes(svc.label);
-            
             let html = '<div class="edit-modal-title">Meal Menu \u2014 ' + (activeOrderSection === 'top' ? 'Top' : 'Bottom') + ' Chart</div>';
-            
-            // 1. Service Name Dropdown
-            html += '<label>Service name</label>';
-            html += `<select id="serviceNameSelect" onchange="handleServiceNameChange(this.value)" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #dee2e6; border-radius:6px; font-size:13px; margin-bottom:6px;">
-                <option value="Breakfast" ${svc.label === 'Breakfast' ? 'selected' : ''}>Breakfast</option>
-                <option value="Brunch" ${svc.label === 'Brunch' ? 'selected' : ''}>Brunch</option>
-                <option value="Lunch" ${svc.label === 'Lunch' ? 'selected' : ''}>Lunch</option>
-                <option value="Dinner" ${svc.label === 'Dinner' ? 'selected' : ''}>Dinner</option>
-                <option value="All Day Dining" ${svc.label === 'All Day Dining' ? 'selected' : ''}>All Day Dining</option>
-                <option value="Supper" ${svc.label === 'Supper' ? 'selected' : ''}>Supper</option>
-                <option value="Refreshments" ${svc.label === 'Refreshments' ? 'selected' : ''}>Refreshments</option>
-                <option value="DAT" ${svc.label === 'DAT' ? 'selected' : ''}>DAT</option>
-                <option value="Custom" ${isCustom ? 'selected' : ''}>Custom</option>
-            </select>`;
-            html += `<input type="text" id="customServiceName" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #dee2e6; border-radius:6px; font-size:13px; margin-bottom:10px; display:${isCustom ? 'block' : 'none'};" value="${isCustom ? svc.label : ''}" oninput="updateServiceLabel(this.value)" placeholder="Type custom service name...">`;
-
-            // 2. Meal choices
+            html += '<label>Service name</label><input type="text" class="meal-menu-name" style="width:100%;box-sizing:border-box;" value="' + svc.label.replace(/"/g, '&quot;') + '" onchange="updateServiceLabel(this.value)">';
             html += '<div id="mealMenuRows" style="margin-top:10px;">';
             if (svc.menu.length === 0) {
                 html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">No meal choices yet. Add the options loaded for this flight.</div>';
             }
             svc.menu.forEach(function (choice) {
-                const randId = 'name_' + choice.id + '_' + Date.now();
-                const qtyId = 'qty_' + choice.id + '_' + Date.now();
                 html += '<div class="meal-menu-row">' +
-                    `<input type="text" id="${randId}" class="meal-menu-name" value="${choice.name.replace(/"/g, '&quot;')}" onfocus="openNamePreset(this.id)" onchange="updateMealMenuField('${choice.id}','name',this.value)">` +
-                    `<input type="number" id="${qtyId}" class="meal-menu-qty" value="${choice.qty}" onfocus="openKeypad(this.id)" onchange="updateMealMenuField('${choice.id}','qty',this.value)">` +
+                    '<input type="text" class="meal-menu-name" value="' + choice.name.replace(/"/g, '&quot;') + '" onchange="updateMealMenuField(\'' + choice.id + '\',\'name\',this.value)">' +
+                    '<input type="number" min="0" class="meal-menu-qty" value="' + choice.qty + '" onchange="updateMealMenuField(\'' + choice.id + '\',\'qty\',this.value)">' +
                     '<button class="meal-menu-remove-btn" onclick="removeMealChoice(\'' + choice.id + '\')">\u2715</button>' +
                     '</div>';
             });
@@ -2017,88 +1961,6 @@
             html += '<button class="add-meal-choice-btn" onclick="addMealChoice()">+ Add meal choice</button>';
             html += '<button class="btn-close-panel" onclick="closeMealMenuSetup()">Done</button>';
             document.getElementById('mealMenuBody').innerHTML = html;
-        }
-
-        // 3. Service Name Dropdown Logic
-        function handleServiceNameChange(value) {
-            const svc = getActiveService(activeOrderSection);
-            if (!svc) return;
-            const customInput = document.getElementById('customServiceName');
-            if (value === 'Custom') {
-                customInput.style.display = 'block';
-                customInput.value = '';
-                svc.label = '';
-            } else {
-                customInput.style.display = 'none';
-                svc.label = value;
-                renderServiceTabs();
-                renderMealCountSummary(activeOrderSection);
-                persistChartState();
-            }
-        }
-
-        // 4. Meal Name Preset Popups
-        function openNamePreset(inputId) {
-            activePresetInputId = inputId;
-            const popup = document.getElementById('presetPopup');
-            const grid = document.getElementById('presetGrid');
-            grid.innerHTML = PRESET_NAMES.map(name => 
-                `<button class="preset-btn" onclick="selectPresetName('${name}')">${name}</button>`
-            ).join('');
-            document.getElementById('presetCustomInput').value = '';
-            popup.style.display = 'flex';
-        }
-        function selectPresetName(name) {
-            if (activePresetInputId) {
-                document.getElementById(activePresetInputId).value = name;
-                // Trigger onchange manually
-                const evt = new Event('change', { bubbles: true });
-                document.getElementById(activePresetInputId).dispatchEvent(evt);
-                closeNamePreset();
-            }
-        }
-        function customPresetName(val) {
-            if (activePresetInputId && val.trim()) {
-                document.getElementById(activePresetInputId).value = val.trim();
-                const evt = new Event('change', { bubbles: true });
-                document.getElementById(activePresetInputId).dispatchEvent(evt);
-            }
-        }
-        function closeNamePreset() {
-            document.getElementById('presetPopup').style.display = 'none';
-            activePresetInputId = null;
-        }
-
-        // 5. Numeric Keypad Popup
-        function openKeypad(inputId) {
-            activeKeypadInputId = inputId;
-            document.getElementById('keypadDisplay').textContent = document.getElementById(inputId).value || '0';
-            document.getElementById('keypadPopup').style.display = 'flex';
-        }
-        function keypadPress(value) {
-            const display = document.getElementById('keypadDisplay');
-            let current = display.textContent;
-            if (value === 'backspace') {
-                current = current.slice(0, -1) || '0';
-            } else if (value === 'done') {
-                if (activeKeypadInputId) {
-                    const input = document.getElementById(activeKeypadInputId);
-                    input.value = parseInt(current, 10) || 0;
-                    const evt = new Event('change', { bubbles: true });
-                    input.dispatchEvent(evt);
-                    closeKeypad();
-                    return;
-                }
-                return;
-            } else {
-                if (current === '0') current = value;
-                else current += value;
-            }
-            display.textContent = current;
-        }
-        function closeKeypad() {
-            document.getElementById('keypadPopup').style.display = 'none';
-            activeKeypadInputId = null;
         }
 
         function updateServiceLabel(value) {
@@ -2162,7 +2024,7 @@
 
         function closeMealMenuSetup() { document.getElementById('mealMenuOverlay').style.display = 'none'; }
 
-        // ---- Order-taking ----
+        // ---- Order-taking (tap a seat cell in Order mode) ----
         let orderLongPressTimer = null;
         let orderLongPressFired = false;
 
@@ -2272,7 +2134,7 @@
                     if (oldChoice) oldChoice.qty += 1;
                 }
                 newChoice.qty -= 1;
-                p.orders[svc.id] = { choiceId: choiceId, served: false, remark: '' };
+                p.orders[svc.id] = { choiceId: choiceId, served: false };
             }
 
             refreshSeatOrderOverlayBySeat(section, seat);
@@ -2303,7 +2165,6 @@
             if (seatBox) refreshSeatOrderOverlay(seatBox);
         }
 
-        // 6. Overlay rendering with Remarks input
         function refreshSeatOrderOverlay(seatBox) {
             const overlay = seatBox.querySelector('.order-fill-overlay');
             if (!overlay) return;
@@ -2320,11 +2181,10 @@
                 return;
             }
 
-            let html = '';
             if (order.served) {
                 overlay.style.display = 'flex';
                 overlay.style.backgroundColor = '#dcfce7';
-                html = '<span class="order-fill-icon">\u2705</span>';
+                overlay.innerHTML = '<span class="order-fill-icon">\u2705</span>';
             } else {
                 const choice = svc.menu.find(function (c) { return c.id === order.choiceId; });
                 const letter = choice && choice.name ? choice.name.trim().charAt(0).toUpperCase() : '?';
@@ -2332,29 +2192,8 @@
                 overlay.style.display = 'flex';
                 overlay.style.backgroundColor = c.bg;
                 overlay.style.color = c.text;
-                const remark = order.remark || '';
-                // Render larger letter + remarks input
-                html = `
-                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%;">
-                        <span class="order-fill-letter">${letter}</span>
-                        <input type="text" class="order-remark-input" value="${remark.replace(/"/g, '&quot;')}" placeholder="Remarks" oninput="updateOrderRemark('${section}','${seat}',this.value)">
-                    </div>
-                `;
+                overlay.innerHTML = '<span class="order-fill-letter">' + letter + '</span>';
             }
-            overlay.innerHTML = html;
-        }
-
-        // 7. Save order remark
-        function updateOrderRemark(section, seat, value) {
-            const data = dataForSection(section);
-            const svc = getActiveService(section);
-            const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
-            if (!p || !svc) return;
-            if (!p.orders) p.orders = {};
-            if (!p.orders[svc.id]) return;
-            p.orders[svc.id].remark = value;
-            syncBackToMainPage();
-            persistChartState();
         }
 
         function refreshAllOrderOverlays() {
@@ -2530,18 +2369,19 @@
             } catch (e) { console.error('Sync back failed', e); }
         }
 
-        // ============== EXISTING APP LOGIC ==============
+        // ============== EXISTING APP LOGIC (structure unchanged) ==============
         let isAftView = false;
         let currentFontSize = 12;
         let currentRowCount = 4;
         let topChartData = null;
         let bottomChartData = null;
-        let currentTabId = null;
         
         function generateSeatRows(containerId, rowCount) {
             const container = document.getElementById(containerId);
             if (!container) return;
+            
             container.innerHTML = '';
+            
             for (let rowNum = 1; rowNum <= rowCount; rowNum++) {
                 const row = document.createElement('div');
                 row.className = 'row';
@@ -2605,8 +2445,10 @@
         function regenerateAllCharts() {
             generateSeatRows('topSeatContainer', currentRowCount);
             generateSeatRows('bottomSeatContainer', currentRowCount);
+            
             if (topChartData) populateChart('top', topChartData);
             if (bottomChartData) populateChart('bottom', bottomChartData);
+            
             if (isAftView) {
                 applyAftViewToContainer('topSeatContainer', true);
                 applyAftViewToContainer('bottomSeatContainer', true);
@@ -2616,11 +2458,15 @@
         function toggleRow4Mode() {
             const row4Toggle = document.getElementById('row4Toggle');
             const newRowCount = row4Toggle.checked ? 4 : 3;
+            
             if (newRowCount === currentRowCount) return;
+            
             currentRowCount = newRowCount;
             regenerateAllCharts();
+            
             let hiddenPassengersTop = 0;
             let hiddenPassengersBottom = 0;
+            
             if (topChartData && topChartData.passengers) {
                 hiddenPassengersTop = topChartData.passengers.filter(p => {
                     const rowNum = parseInt(p.seat.match(/\d+/)[0]);
@@ -2633,6 +2479,7 @@
                     return rowNum === 4;
                 }).length;
             }
+            
             if ((hiddenPassengersTop > 0 || hiddenPassengersBottom > 0) && currentRowCount === 3) {
                 const warningMsg = `⚠️ ${hiddenPassengersTop + hiddenPassengersBottom} passenger(s) in row 4 not shown (3-row mode active)`;
                 if (topChartData && document.getElementById('topZoneSummary')) {
@@ -2657,9 +2504,14 @@
         function applyAftViewToContainer(containerId, apply) {
             const container = document.getElementById(containerId);
             if (!container) return;
+            
             const rows = Array.from(container.querySelectorAll('.row'));
+            
             if (apply) {
-                rows.reverse().forEach(row => { container.appendChild(row); });
+                rows.reverse().forEach(row => {
+                    container.appendChild(row);
+                });
+                
                 rows.forEach(row => {
                     row.classList.add('aft-view');
                     const seatA = row.querySelector(`[data-seat$="A"]`);
@@ -2668,7 +2520,9 @@
                     const seatF = row.querySelector(`[data-seat$="F"]`);
                     const gaps = row.querySelectorAll('.gap');
                     const aisles = row.querySelectorAll('.aisle');
+                    
                     if (!seatA || !seatC || !seatD || !seatF) return;
+                    
                     row.innerHTML = '';
                     if (seatF) row.appendChild(seatF);
                     if (gaps[1]) row.appendChild(gaps[1]);
@@ -2685,7 +2539,10 @@
                     const rowNumA = seatA ? parseInt(seatA.dataset.seat.match(/\d+/)[0]) : 0;
                     const rowNumB = seatB ? parseInt(seatB.dataset.seat.match(/\d+/)[0]) : 0;
                     return rowNumA - rowNumB;
-                }).forEach(row => { container.appendChild(row); });
+                }).forEach(row => {
+                    container.appendChild(row);
+                });
+                
                 rows.forEach(row => {
                     row.classList.remove('aft-view');
                     const seatA = row.querySelector(`[data-seat$="A"]`);
@@ -2694,7 +2551,9 @@
                     const seatF = row.querySelector(`[data-seat$="F"]`);
                     const gaps = row.querySelectorAll('.gap');
                     const aisles = row.querySelectorAll('.aisle');
+                    
                     if (!seatA || !seatC || !seatD || !seatF) return;
+                    
                     row.innerHTML = '';
                     if (seatA) row.appendChild(seatA);
                     if (gaps[0]) row.appendChild(gaps[0]);
@@ -2710,8 +2569,10 @@
         function toggleAftView() {
             const toggle = document.getElementById('aftViewToggle');
             isAftView = toggle.checked;
+            
             applyAftViewToContainer('topSeatContainer', isAftView);
             applyAftViewToContainer('bottomSeatContainer', isAftView);
+            
             adjustFontSize(currentFontSize);
         }
         
@@ -2719,9 +2580,12 @@
             currentFontSize = fontSize;
             document.getElementById('fontSizeValue').textContent = fontSize + 'px';
             document.body.style.fontSize = fontSize + 'px';
+            
             const scale = fontSize / 12;
+            
             document.querySelectorAll('.seat-box').forEach(box => {
                 box.style.minHeight = (55 * scale) + 'px';
+                
                 const nameLines = box.querySelectorAll('.name-line');
                 nameLines.forEach(line => {
                     line.style.height = (14 * scale) + 'px';
@@ -2729,6 +2593,7 @@
                     line.style.padding = (1 * scale) + 'px 4px';
                     line.style.fontSize = (1 * fontSize) + 'px';
                 });
+                
                 const fieldLines = box.querySelectorAll('.field-line');
                 fieldLines.forEach(line => {
                     line.style.height = (14 * scale) + 'px';
@@ -2740,6 +2605,7 @@
                         line.style.fontSize = (1 * fontSize) + 'px';
                     }
                 });
+                
                 const seatNumberContainer = box.querySelector('.seat-number-container');
                 if (seatNumberContainer) {
                     seatNumberContainer.style.padding = (2 * scale) + 'px ' + (4 * scale) + 'px';
@@ -2749,6 +2615,7 @@
                     }
                 }
             });
+            
             document.querySelectorAll('.row').forEach(row => {
                 row.style.marginBottom = (4 * scale) + 'px';
             });
@@ -2781,9 +2648,11 @@
         
         function populateSeatData(passenger, seatBox) {
             if (!passenger || !seatBox) return;
+            
             const normalizedSeat = normalizeSeatNumber(passenger.seat);
             const { firstName, lastName } = parsePassengerName(passenger.name);
             const title = passenger.title || '';
+            
             clearTierClasses(seatBox);
             let seatNumberHTML = normalizedSeat;
             const DISPLAYED_TIERS = ['EMER', 'PLAT'];
@@ -2792,14 +2661,19 @@
                 seatBox.classList.add('tier-' + passenger.tier);
                 seatBox.classList.remove('empty-seat');
             }
+            
             const seatNumberEl = seatBox.querySelector('.seat-number');
             if (seatNumberEl) seatNumberEl.innerHTML = seatNumberHTML;
+            
             const titleLine = seatBox.querySelector('.name-line.title-line');
             if (titleLine) titleLine.textContent = title.toUpperCase() || '';
+            
             const surnameLine = seatBox.querySelector('.name-line.surname-line');
             if (surnameLine) surnameLine.textContent = truncateIntelligently(lastName, 25).toUpperCase() || '';
+            
             const firstNameLine = seatBox.querySelector('.name-line.firstname-line');
             if (firstNameLine) firstNameLine.textContent = truncateIntelligently(firstName, 25).toUpperCase() || '';
+            
             const mealField = seatBox.querySelector('.field-line.meal-line');
             if (mealField) {
                 const mealCode = (passenger.meal || '').trim().toUpperCase();
@@ -2814,8 +2688,12 @@
                 if (innerHTML) applyMealLineColors(mealField);
             }
             refreshSeatOrderOverlay(seatBox);
+            
             seatBox.classList.remove('empty-seat');
-            seatBox.querySelectorAll('.name-line, .field-line').forEach(line => { line.style.color = ''; });
+            seatBox.querySelectorAll('.name-line, .field-line').forEach(line => {
+                line.style.color = '';
+            });
+            
             if (surnameLine) surnameLine.style.setProperty('--placeholder-content', 'none');
             if (firstNameLine) firstNameLine.style.setProperty('--placeholder-content', 'none');
             if (mealField) mealField.style.setProperty('--placeholder-content', 'none');
@@ -2827,7 +2705,9 @@
             seatBox.classList.add('empty-seat');
             const seatNumberEl = seatBox.querySelector('.seat-number');
             if (seatNumberEl) seatNumberEl.innerHTML = seatBox.getAttribute('data-seat');
-            seatBox.querySelectorAll('.name-line, .field-line').forEach(line => { line.style.color = 'transparent'; });
+            seatBox.querySelectorAll('.name-line, .field-line').forEach(line => {
+                line.style.color = 'transparent';
+            });
             const surnameLine = seatBox.querySelector('.name-line.surname-line');
             const firstNameLine = seatBox.querySelector('.name-line.firstname-line');
             const mealLine = seatBox.querySelector('.field-line.meal-line');
@@ -2845,13 +2725,20 @@
         
         function populateChart(chartPosition, chartData) {
             const prefix = chartPosition === 'top' ? 'top' : 'bottom';
-            if (chartPosition === 'top') { topChartData = chartData; } else { bottomChartData = chartData; }
+            
+            if (chartPosition === 'top') {
+                topChartData = chartData;
+            } else {
+                bottomChartData = chartData;
+            }
             if (!chartData.mealMenu) chartData.mealMenu = [];
+            
             const flightInfo = chartData.flightInfo;
             if (flightInfo) {
                 document.getElementById(`${prefix}HeaderTitle`).textContent = 
                     `${flightInfo.flightNumber} | ${flightInfo.sector} | ${flightInfo.date} ${flightInfo.stdLocal} | ${flightInfo.aircraft}`;
             }
+            
             const zoneSummary = chartData.zoneSummary;
             if (zoneSummary) {
                 let summaryText = `Business Class: ${zoneSummary.totalPassengers} passengers`;
@@ -2862,9 +2749,11 @@
                 const zoneSummaryEl = document.getElementById(`${prefix}ZoneSummary`);
                 if (zoneSummaryEl) zoneSummaryEl.textContent = summaryText;
             }
+            
             const passengers = chartData.passengers || [];
             const occupiedSeats = new Set();
             const container = document.getElementById(`${prefix}SeatContainer`);
+            
             passengers.forEach(passenger => {
                 if (!passenger.seat) return;
                 const normalizedSeat = normalizeSeatNumber(passenger.seat);
@@ -2874,6 +2763,7 @@
                     occupiedSeats.add(normalizedSeat);
                 }
             });
+            
             const allSeatBoxes = container.querySelectorAll('.seat-box');
             allSeatBoxes.forEach(seatBox => {
                 const seatNumber = seatBox.getAttribute('data-seat');
@@ -2881,19 +2771,27 @@
                     markSeatAsEmpty(seatBox);
                 }
             });
+
             renderSummaryChips(prefix);
             renderMealCountSummary(prefix);
+            
             console.log(`Loaded ${passengers.length} passengers for ${chartPosition} chart`);
         }
         
         function handlePrint() {
             const orientationSelect = document.getElementById('orientationSelect');
             const isLandscape = orientationSelect.value === 'landscape';
-            if (isLandscape) { document.body.classList.add('landscape-print'); } else { document.body.classList.remove('landscape-print'); }
+            if (isLandscape) {
+                document.body.classList.add('landscape-print');
+            } else {
+                document.body.classList.remove('landscape-print');
+            }
             document.documentElement.style.setProperty('--print-font-size', currentFontSize + 'px');
             setTimeout(() => {
                 window.print();
-                setTimeout(() => { document.body.classList.remove('landscape-print'); }, 100);
+                setTimeout(() => {
+                    document.body.classList.remove('landscape-print');
+                }, 100);
             }, 100);
         }
         
@@ -2911,7 +2809,9 @@
             }
         });
 
-        // ============== PERSISTENCE FIXES ==============
+        // ============== PERSISTENCE (survive refresh / close / crash) ==============
+        let currentTabId = null;
+
         function stateKey() {
             return currentTabId ? ('bpmSeatChartState_' + currentTabId) : null;
         }
@@ -2939,14 +2839,7 @@
 
         function loadInitialData() {
             const urlParams = new URLSearchParams(window.location.search);
-            const urlTabId = urlParams.get('tabId');
-            // Prefer URL parameter, otherwise use localStorage for persistent refresh
-            if (urlTabId) {
-                currentTabId = urlTabId;
-                localStorage.setItem(LAST_TAB_ID_KEY, urlTabId);
-            } else {
-                currentTabId = localStorage.getItem(LAST_TAB_ID_KEY) || null;
-            }
+            currentTabId = urlParams.get('tabId') || currentTabId;
 
             const restored = loadPersistedState();
             if (restored) {
@@ -2959,10 +2852,7 @@
             if (dataKey && chartType === 'top') {
                 const chartData = JSON.parse(localStorage.getItem(dataKey));
                 if (chartData) {
-                    if (!currentTabId && chartData.tabId) {
-                        currentTabId = chartData.tabId;
-                        localStorage.setItem(LAST_TAB_ID_KEY, currentTabId);
-                    }
+                    if (!currentTabId && chartData.tabId) currentTabId = chartData.tabId;
                     populateChart('top', chartData);
                     localStorage.removeItem(dataKey);
                     persistChartState();
@@ -2973,15 +2863,22 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadTheme();
             applyTheme();
+
             currentRowCount = 4;
             generateSeatRows('topSeatContainer', currentRowCount);
             generateSeatRows('bottomSeatContainer', currentRowCount);
+            
             const fontSizeSlider = document.getElementById('fontSizeSlider');
-            fontSizeSlider.addEventListener('input', function(e) { adjustFontSize(parseInt(e.target.value)); });
+            fontSizeSlider.addEventListener('input', function(e) {
+                adjustFontSize(parseInt(e.target.value));
+            });
             adjustFontSize(parseInt(fontSizeSlider.value));
+            
             const aftViewToggle = document.getElementById('aftViewToggle');
             aftViewToggle.checked = isAftView;
+            
             loadInitialData();
+            
             if (window.opener) {
                 window.opener.postMessage({ type: 'chartReady' }, '*');
             }
