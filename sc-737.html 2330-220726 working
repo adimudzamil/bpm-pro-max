@@ -47,7 +47,7 @@
             font-size: 12px;
         }
 
-        /* Control Bar */
+        /* Control Bar - sticky and in normal flow */
         .control-bar {
             position: sticky;
             top: 0;
@@ -238,6 +238,17 @@
             flex: 1;
         }
 
+        /* Warning message */
+        .warning-message {
+            background: #fff3cd;
+            color: #856404;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-left: 10px;
+            display: inline-block;
+        }
+
         .mode-selector {
             display: flex;
             gap: 4px;
@@ -302,6 +313,7 @@
             border: 1px solid rgba(0,0,0,0.15);
         }
 
+        /* Container for both charts */
         .dual-chart-container {
             width: 100%;
             height: 100%;
@@ -310,6 +322,7 @@
             transition: all 0.3s ease;
         }
 
+        /* Each chart section takes ~45% of height */
         .chart-section {
             flex: 0 0 45%;
             margin-bottom: 10px;
@@ -440,6 +453,53 @@
             margin-bottom: 10px;
         }
 
+        .order-option-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        .order-option-row.selected {
+            border-color: #28a745;
+            background: #f0fdf4;
+        }
+        .order-option-row.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .order-option-row.disabled .order-option-name {
+            text-decoration: line-through;
+        }
+        .order-option-letter {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #1E3A8A;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+        .order-option-name {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .order-option-qty {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
         .category-list {
             max-height: 280px;
             overflow-y: auto;
@@ -532,51 +592,40 @@
         }
 
         /* ===================================================== */
-        /* FIXED: Order Fill Overlay (Full Cell height)         */
+        /* FIXED: Order Fill Overlay (No overflow into header)  */
         /* ===================================================== */
         .order-fill-overlay {
             display: none;
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            top: calc(1.8em + 6px); /* Dynamically scales with font size, avoids header overflow */
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            border: 1px solid transparent;
+            border-top: 1px solid rgba(0,0,0,0.15);
             z-index: 5;
-            padding: 0;
-            border-radius: 1px;
-        }
-        .seat-box.has-order .seat-number-container {
-            visibility: hidden;
+            padding: 2px;
         }
         .order-fill-letter {
             font-size: 2.5em;
             font-weight: 900;
-            line-height: 1.2;
-            text-shadow: 0 0 4px rgba(255,255,255,0.8);
+            line-height: 1;
         }
-        /* Make checkmark larger to match the letter */
         .order-fill-icon {
-            font-size: 2.5em;
-            font-weight: 900;
-            line-height: 1.2;
+            font-size: 1.6em;
+            line-height: 1;
         }
         .order-remark-input {
-            width: 80%;
-            max-width: 150px;
-            font-size: 0.8em;
+            width: 90%;
+            font-size: 0.7em;
             border: 1px solid rgba(0,0,0,0.2);
             border-radius: 4px;
             padding: 2px 4px;
-            margin-top: 4px;
-            background: rgba(255,255,255,0.9);
+            margin-top: 2px;
+            background: rgba(255,255,255,0.8);
             text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .order-remark-input:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
         }
 
         .seat-box.empty-seat {
@@ -1006,6 +1055,9 @@
         .edit-modal-buttons button:first-child { background: #e2e8f0; color: #334155; }
         .edit-modal-buttons button:last-child { background: #28a745; color: #fff; }
 
+        /* ============================================= */
+        /* NEW: Floating Popups for Presets and Keypad   */
+        /* ============================================= */
         .popup-overlay {
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 2100;
             align-items: center; justify-content: center;
@@ -1146,6 +1198,7 @@
                 <button type="button" class="mode-btn" data-mode="color" onclick="setMode('color')">🎨 Colours</button>
                 <button type="button" class="mode-btn" data-mode="edit" onclick="setMode('edit')">✏️ Edit</button>
                 <button type="button" class="mode-btn" data-mode="order" onclick="setMode('order')">🍽️ Order</button>
+                <!-- Duplicate button removed above -->
             </div>
             <button type="button" id="swapSeatsBtn" class="swap-btn" onclick="toggleSwapMode()">🔀 Swap</button>
             <span id="swapHint" class="swap-hint">Tap seat A, then B</span>
@@ -1317,8 +1370,8 @@
         const PRESET_NAMES = ['Chicken', 'Beef', 'Fish', 'Seafood', 'Prawn', 'Vegetarian'];
 
         let theme = null;
-        let activePresetInputId = null; 
-        let activeKeypadInputId = null; 
+        let activePresetInputId = null; // For Preset popup
+        let activeKeypadInputId = null; // For Keypad popup
 
         function getSpecialLabel(p) {
             if (!p || !p.specialCode) return '';
@@ -1680,6 +1733,7 @@
             let html = '<div class="color-panel-title">' + code + ' meal colour</div>' +
                 '<div class="color-field"><label>Background</label><input type="color" value="' + c.bg + '" onchange="updateMealColor(\'' + code + '\',\'bg\',this.value)"></div>' +
                 '<div class="color-field"><label>Text</label><input type="color" value="' + c.text + '" onchange="updateMealColor(\'' + code + '\',\'text\',this.value)"></div>' +
+                '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">Applies to every ' + code + ' seat, this flight and future ones.</div>' +
                 '<button class="btn-close-panel" onclick="closeColorPanel()">Done</button>';
             document.getElementById('colorPanelBody').innerHTML = html;
             document.getElementById('colorPanelOverlay').style.display = 'flex';
@@ -1930,6 +1984,7 @@
             
             let html = '<div class="edit-modal-title">Meal Menu \u2014 ' + (activeOrderSection === 'top' ? 'Top' : 'Bottom') + ' Chart</div>';
             
+            // 1. Service Name Dropdown
             html += '<label>Service name</label>';
             html += `<select id="serviceNameSelect" onchange="handleServiceNameChange(this.value)" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #dee2e6; border-radius:6px; font-size:13px; margin-bottom:6px;">
                 <option value="Breakfast" ${svc.label === 'Breakfast' ? 'selected' : ''}>Breakfast</option>
@@ -1944,6 +1999,7 @@
             </select>`;
             html += `<input type="text" id="customServiceName" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #dee2e6; border-radius:6px; font-size:13px; margin-bottom:10px; display:${isCustom ? 'block' : 'none'};" value="${isCustom ? svc.label : ''}" oninput="updateServiceLabel(this.value)" placeholder="Type custom service name...">`;
 
+            // 2. Meal choices
             html += '<div id="mealMenuRows" style="margin-top:10px;">';
             if (svc.menu.length === 0) {
                 html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">No meal choices yet. Add the options loaded for this flight.</div>';
@@ -1963,6 +2019,7 @@
             document.getElementById('mealMenuBody').innerHTML = html;
         }
 
+        // 3. Service Name Dropdown Logic
         function handleServiceNameChange(value) {
             const svc = getActiveService(activeOrderSection);
             if (!svc) return;
@@ -1980,6 +2037,7 @@
             }
         }
 
+        // 4. Meal Name Preset Popups
         function openNamePreset(inputId) {
             activePresetInputId = inputId;
             const popup = document.getElementById('presetPopup');
@@ -1993,6 +2051,7 @@
         function selectPresetName(name) {
             if (activePresetInputId) {
                 document.getElementById(activePresetInputId).value = name;
+                // Trigger onchange manually
                 const evt = new Event('change', { bubbles: true });
                 document.getElementById(activePresetInputId).dispatchEvent(evt);
                 closeNamePreset();
@@ -2010,6 +2069,7 @@
             activePresetInputId = null;
         }
 
+        // 5. Numeric Keypad Popup
         function openKeypad(inputId) {
             activeKeypadInputId = inputId;
             document.getElementById('keypadDisplay').textContent = document.getElementById(inputId).value || '0';
@@ -2243,9 +2303,7 @@
             if (seatBox) refreshSeatOrderOverlay(seatBox);
         }
 
-        // ================================================================
-        // UPDATED: Overlay rendering with Full Cell cover & Event stopPropagation
-        // ================================================================
+        // 6. Overlay rendering with Remarks input
         function refreshSeatOrderOverlay(seatBox) {
             const overlay = seatBox.querySelector('.order-fill-overlay');
             if (!overlay) return;
@@ -2255,16 +2313,8 @@
             const svc = getActiveService(section);
             const p = data && data.passengers ? data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; }) : null;
             const order = (p && svc && p.orders) ? p.orders[svc.id] : null;
-            const seatNumberContainer = seatBox.querySelector('.seat-number-container');
 
-            // Manage the hidden state of the original title bar and the overlay class
-            if (order) {
-                seatBox.classList.add('has-order');
-                seatNumberContainer.style.visibility = 'hidden';
-                overlay.style.display = 'flex';
-            } else {
-                seatBox.classList.remove('has-order');
-                seatNumberContainer.style.visibility = 'visible';
+            if (currentMode !== 'order' || !order) {
                 overlay.style.display = 'none';
                 overlay.innerHTML = '';
                 return;
@@ -2272,34 +2322,29 @@
 
             let html = '';
             if (order.served) {
+                overlay.style.display = 'flex';
                 overlay.style.backgroundColor = '#dcfce7';
-                overlay.style.color = '#166534';
-                // Embed the seat number, make checkmark huge
-                html = `
-                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; position:relative;">
-                        <div style="position:absolute; top:2px; left:4px; font-size:0.6em; font-weight:bold; color:#333;">${seat}</div>
-                        <span class="order-fill-icon">\u2705</span>
-                    </div>
-                `;
+                html = '<span class="order-fill-icon">\u2705</span>';
             } else {
                 const choice = svc.menu.find(function (c) { return c.id === order.choiceId; });
                 const letter = choice && choice.name ? choice.name.trim().charAt(0).toUpperCase() : '?';
                 const c = getOrderColor(order.choiceId);
+                overlay.style.display = 'flex';
                 overlay.style.backgroundColor = c.bg;
                 overlay.style.color = c.text;
                 const remark = order.remark || '';
-                // Embed the seat number + letter + remarks input. Stop mouse/touch events bubbling up so typing doesn't toggle served.
+                // Render larger letter + remarks input
                 html = `
-                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; position:relative;">
-                        <div style="position:absolute; top:2px; left:4px; font-size:0.6em; font-weight:bold; color:#333;">${seat}</div>
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%;">
                         <span class="order-fill-letter">${letter}</span>
-                        <input type="text" class="order-remark-input" value="${remark.replace(/"/g, '&quot;')}" placeholder="Remarks" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()" oninput="updateOrderRemark('${section}','${seat}',this.value)">
+                        <input type="text" class="order-remark-input" value="${remark.replace(/"/g, '&quot;')}" placeholder="Remarks" oninput="updateOrderRemark('${section}','${seat}',this.value)">
                     </div>
                 `;
             }
             overlay.innerHTML = html;
         }
 
+        // 7. Save order remark
         function updateOrderRemark(section, seat, value) {
             const data = dataForSection(section);
             const svc = getActiveService(section);
@@ -2571,8 +2616,6 @@
         function toggleRow4Mode() {
             const row4Toggle = document.getElementById('row4Toggle');
             const newRowCount = row4Toggle.checked ? 4 : 3;
-            // Persist setting
-            localStorage.setItem('scUIRow4', row4Toggle.checked ? 'true' : 'false');
             if (newRowCount === currentRowCount) return;
             currentRowCount = newRowCount;
             regenerateAllCharts();
@@ -2667,8 +2710,6 @@
         function toggleAftView() {
             const toggle = document.getElementById('aftViewToggle');
             isAftView = toggle.checked;
-            // Persist setting
-            localStorage.setItem('scUIAftView', isAftView ? 'true' : 'false');
             applyAftViewToContainer('topSeatContainer', isAftView);
             applyAftViewToContainer('bottomSeatContainer', isAftView);
             adjustFontSize(currentFontSize);
@@ -2676,8 +2717,6 @@
         
         function adjustFontSize(fontSize) {
             currentFontSize = fontSize;
-            // Persist setting
-            localStorage.setItem('scUIFontSize', fontSize);
             document.getElementById('fontSizeValue').textContent = fontSize + 'px';
             document.body.style.fontSize = fontSize + 'px';
             const scale = fontSize / 12;
@@ -2901,6 +2940,7 @@
         function loadInitialData() {
             const urlParams = new URLSearchParams(window.location.search);
             const urlTabId = urlParams.get('tabId');
+            // Prefer URL parameter, otherwise use localStorage for persistent refresh
             if (urlTabId) {
                 currentTabId = urlTabId;
                 localStorage.setItem(LAST_TAB_ID_KEY, urlTabId);
@@ -2931,39 +2971,16 @@
         }
         
         document.addEventListener('DOMContentLoaded', function() {
-            // 1. Load Theme & apply
             loadTheme();
             applyTheme();
-
-            // 2. Load Persisted UI Settings (Font, Aft, Row4) before generating rows
-            const savedFont = parseInt(localStorage.getItem('scUIFontSize')) || 12;
-            const savedAft = localStorage.getItem('scUIAftView') === 'true';
-            const savedRow4 = localStorage.getItem('scUIRow4') !== 'false'; // Default to 4 rows
-            currentFontSize = savedFont;
-            isAftView = savedAft;
-            currentRowCount = savedRow4 ? 4 : 3;
-
-            // 3. Apply UI settings to DOM
-            document.getElementById('fontSizeSlider').value = savedFont;
-            document.getElementById('aftViewToggle').checked = savedAft;
-            document.getElementById('row4Toggle').checked = savedRow4;
-
-            // 4. Generate rows with the correct settings
+            currentRowCount = 4;
             generateSeatRows('topSeatContainer', currentRowCount);
             generateSeatRows('bottomSeatContainer', currentRowCount);
-            
-            // 5. Apply the attached settings
-            adjustFontSize(currentFontSize);
-            if (isAftView) {
-                applyAftViewToContainer('topSeatContainer', true);
-                applyAftViewToContainer('bottomSeatContainer', true);
-            }
-
-            // 6. Listen for slider changes to save persistent states
             const fontSizeSlider = document.getElementById('fontSizeSlider');
             fontSizeSlider.addEventListener('input', function(e) { adjustFontSize(parseInt(e.target.value)); });
-
-            // 7. Load chart data
+            adjustFontSize(parseInt(fontSizeSlider.value));
+            const aftViewToggle = document.getElementById('aftViewToggle');
+            aftViewToggle.checked = isAftView;
             loadInitialData();
             if (window.opener) {
                 window.opener.postMessage({ type: 'chartReady' }, '*');
