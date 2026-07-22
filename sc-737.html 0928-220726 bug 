@@ -1113,19 +1113,19 @@
         <div class="control-bar-row control-bar-primary">
             <div class="mode-selector">
                 <button type="button" class="mode-btn active" data-mode="view" onclick="setMode('view')">View</button>
-                <button type="button" class="mode-btn" data-mode="color" onclick="setMode('color')">🎨 Colours</button>
-                <button type="button" class="mode-btn" data-mode="edit" onclick="setMode('edit')">✏️ Edit</button>
-                <button type="button" class="mode-btn" data-mode="order" onclick="setMode('order')">🍽️ Order</button>
-                <button type="button" class="mode-btn" data-mode="order" onclick="setMode('order')">🍽️ Order</button>
+                <button type="button" class="mode-btn" data-mode="color" onclick="setMode('color')">ðŸŽ¨ Colours</button>
+                <button type="button" class="mode-btn" data-mode="edit" onclick="setMode('edit')">âœï¸ Edit</button>
+                <button type="button" class="mode-btn" data-mode="order" onclick="setMode('order')">ðŸ½ï¸ Order</button>
+                <button type="button" class="mode-btn" data-mode="order" onclick="setMode('order')">ðŸ½ï¸ Order</button>
             </div>
-            <button type="button" id="swapSeatsBtn" class="swap-btn" onclick="toggleSwapMode()">🔀 Swap</button>
+            <button type="button" id="swapSeatsBtn" class="swap-btn" onclick="toggleSwapMode()">ðŸ”€ Swap</button>
             <span id="swapHint" class="swap-hint">Tap seat A, then B</span>
 
             <div class="control-spacer"></div>
 
-            <button type="button" class="more-toggle" onclick="toggleMoreControls()" aria-label="More settings">⚙️</button>
+            <button type="button" class="more-toggle" onclick="toggleMoreControls()" aria-label="More settings">âš™ï¸</button>
             <button class="print-button" onclick="handlePrint()">
-                <span style="font-size: 16px;">🖨️</span> Print
+                <span style="font-size: 16px;">ðŸ–¨ï¸</span> Print
             </button>
         </div>
 
@@ -1145,7 +1145,7 @@
             </div>
 
             <div class="control-group">
-                <label for="row4Toggle">4‑Row</label>
+                <label for="row4Toggle">4â€‘Row</label>
                 <label class="toggle-switch">
                     <input type="checkbox" id="row4Toggle" checked onchange="toggleRow4Mode()">
                     <span class="toggle-slider"></span>
@@ -1153,8 +1153,8 @@
             </div>
 
             <button type="button" class="theme-reset-btn" onclick="resetThemeToDefaults()">Reset colours</button>
-            <button type="button" class="theme-reset-btn" onclick="exportTheme()">💾 Backup colours</button>
-            <button type="button" class="theme-reset-btn" onclick="triggerImportTheme()">📂 Restore colours</button>
+            <button type="button" class="theme-reset-btn" onclick="exportTheme()">ðŸ’¾ Backup colours</button>
+            <button type="button" class="theme-reset-btn" onclick="triggerImportTheme()">ðŸ“‚ Restore colours</button>
             <input type="file" id="themeImportInput" accept="application/json" style="display:none;" onchange="importThemeFromFile(event)">
 
             <div class="control-group" id="tierColorChipsGroup" style="display:none;">
@@ -1180,7 +1180,7 @@
             <div class="header" id="topHeader">
                 <h1 id="topHeaderTitle">737 - First Service</h1>
                 <div class="header-chips" id="topSummaryChips"></div>
-                <button type="button" class="meal-menu-btn" id="topMealMenuBtn" style="display:none;" onclick="openMealMenuSetup('top')">🍽️ Meal Menu</button>
+                <button type="button" class="meal-menu-btn" id="topMealMenuBtn" style="display:none;" onclick="openMealMenuSetup('top')">ðŸ½ï¸ Meal Menu</button>
                 <div class="zone-summary" id="topZoneSummary">Waiting for first manifest...</div>
                 <div class="meal-order-summary" id="topMealOrderSummary"></div>
             </div>
@@ -1194,7 +1194,7 @@
             <div class="header" id="bottomHeader">
                 <h1 id="bottomHeaderTitle">737 - Second Service</h1>
                 <div class="header-chips" id="bottomSummaryChips"></div>
-                <button type="button" class="meal-menu-btn" id="bottomMealMenuBtn" style="display:none;" onclick="openMealMenuSetup('bottom')">🍽️ Meal Menu</button>
+                <button type="button" class="meal-menu-btn" id="bottomMealMenuBtn" style="display:none;" onclick="openMealMenuSetup('bottom')">ðŸ½ï¸ Meal Menu</button>
                 <div class="zone-summary" id="bottomZoneSummary">Waiting for second manifest...</div>
                 <div class="meal-order-summary" id="bottomMealOrderSummary"></div>
             </div>
@@ -1670,7 +1670,7 @@
             if (!p) p = { seat: seat, title: '', name: '', meal: '', tier: '', specialCode: '', specialOtherText: '', isInfant: false, extSeatbelt: false, remarksText: '' };
             const nameParts = parsePassengerName(p.name || '');
 
-            let specialOptionsHTML = '<option value="">— None —</option>';
+            let specialOptionsHTML = '<option value="">â€” None â€”</option>';
             SPECIAL_CODES.forEach(function (code) {
                 specialOptionsHTML += '<option value="' + code + '"' + (p.specialCode === code ? ' selected' : '') + '>' + code + '</option>';
             });
@@ -1856,7 +1856,7 @@
             const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
             if (!p) { showToast('No passenger in this seat'); return; }
             if (p.meal && p.meal.trim()) { showToast('Seat ' + seat + ' already has a declared special meal: ' + p.meal); return; }
-            if (getMealMenu(section).length === 0) { showToast('No meal choices set up yet \u2014 tap 🍽️ Meal Menu first'); return; }
+            if (getMealMenu(section).length === 0) { showToast('No meal choices set up yet \u2014 tap ðŸ½ï¸ Meal Menu first'); return; }
 
             renderOrderModal(section, seat);
             document.getElementById('orderModalOverlay').style.display = 'flex';
@@ -1959,24 +1959,24 @@
             if (category === 'special') {
                 title = code + ' (' + passengers.filter(function (p) { return getSpecialLabel(p) === code; }).length + ')';
                 items = passengers.filter(function (p) { return getSpecialLabel(p) === code; })
-                    .map(function (p) { return { seat: p.seat || '—', name: p.name || '', tag: code }; });
+                    .map(function (p) { return { seat: p.seat || 'â€”', name: p.name || '', tag: code }; });
             } else if (category === 'inf') {
                 title = 'Infants (' + passengers.filter(function (p) { return p.isInfant; }).length + ')';
                 items = passengers.filter(function (p) { return p.isInfant; })
-                    .map(function (p) { return { seat: p.seat || '—', name: p.name || '', tag: 'INF' }; });
+                    .map(function (p) { return { seat: p.seat || 'â€”', name: p.name || '', tag: 'INF' }; });
             } else if (category === 'ext') {
                 title = 'Extension Seatbelt (' + passengers.filter(function (p) { return p.extSeatbelt; }).length + ')';
                 items = passengers.filter(function (p) { return p.extSeatbelt; })
-                    .map(function (p) { return { seat: p.seat || '—', name: p.name || '', tag: 'EXT' }; });
+                    .map(function (p) { return { seat: p.seat || 'â€”', name: p.name || '', tag: 'EXT' }; });
             } else if (category === 'remarks') {
                 title = 'Remarks (' + passengers.filter(function (p) { return p.remarksText && p.remarksText.trim(); }).length + ')';
                 items = passengers.filter(function (p) { return p.remarksText && p.remarksText.trim(); })
-                    .map(function (p) { return { seat: p.seat || '—', name: p.name || '', tag: p.remarksText }; });
+                    .map(function (p) { return { seat: p.seat || 'â€”', name: p.name || '', tag: p.remarksText }; });
             }
 
             items.sort(function (a, b) {
-                if (a.seat === '—') return 1;
-                if (b.seat === '—') return -1;
+                if (a.seat === 'â€”') return 1;
+                if (b.seat === 'â€”') return -1;
                 return normalizeSeatNumber(a.seat).localeCompare(normalizeSeatNumber(b.seat));
             });
 
@@ -1985,7 +1985,7 @@
                 : items.map(function (it) {
                     return '<div class="category-list-row" onclick="closeCategoryList(); jumpToSeatEdit(\'' + section + '\',\'' + normalizeSeatNumber(it.seat) + '\');">' +
                         '<span class="category-list-seat">' + it.seat + '</span>' +
-                        '<span class="category-list-name">' + (it.name || '—').replace(/\//g, ' / ') + '</span>' +
+                        '<span class="category-list-name">' + (it.name || 'â€”').replace(/\//g, ' / ') + '</span>' +
                         '<span class="category-list-tag">' + it.tag + '</span>' +
                         '</div>';
                 }).join('');
@@ -2193,7 +2193,7 @@
             }
             
             if ((hiddenPassengersTop > 0 || hiddenPassengersBottom > 0) && currentRowCount === 3) {
-                const warningMsg = `⚠️ ${hiddenPassengersTop + hiddenPassengersBottom} passenger(s) in row 4 not shown (3-row mode active)`;
+                const warningMsg = `âš ï¸ ${hiddenPassengersTop + hiddenPassengersBottom} passenger(s) in row 4 not shown (3-row mode active)`;
                 if (topChartData && document.getElementById('topZoneSummary')) {
                     let oldText = document.getElementById('topZoneSummary').innerHTML;
                     document.getElementById('topZoneSummary').innerHTML = oldText + `<span class="warning-message">${warningMsg}</span>`;
@@ -2350,7 +2350,7 @@
             if (lastSpace > maxLength * 0.7 && lastSpace > 0) {
                 return text.substring(0, lastSpace);
             }
-            return truncated + '…';
+            return truncated + 'â€¦';
         }
         
         function normalizeSeatNumber(seat) {
@@ -2371,196 +2371,4 @@
             if (passenger.tier && DISPLAYED_TIERS.includes(passenger.tier)) {
                 seatNumberHTML += ` <span class="tier tier-${passenger.tier}">*${passenger.tier}*</span>`;
                 seatBox.classList.add('tier-' + passenger.tier);
-                seatBox.classList.remove('empty-seat');
-            }
-            
-            const seatNumberEl = seatBox.querySelector('.seat-number');
-            if (seatNumberEl) seatNumberEl.innerHTML = seatNumberHTML;
-            
-            const titleLine = seatBox.querySelector('.name-line.title-line');
-            if (titleLine) titleLine.textContent = title.toUpperCase() || '';
-            
-            const surnameLine = seatBox.querySelector('.name-line.surname-line');
-            if (surnameLine) surnameLine.textContent = truncateIntelligently(lastName, 25).toUpperCase() || '';
-            
-            const firstNameLine = seatBox.querySelector('.name-line.firstname-line');
-            if (firstNameLine) firstNameLine.textContent = truncateIntelligently(firstName, 25).toUpperCase() || '';
-            
-            const mealField = seatBox.querySelector('.field-line.meal-line');
-            if (mealField) {
-                const mealCode = (passenger.meal || '').trim().toUpperCase();
-                const specialLabel = getSpecialLabel(passenger);
-                const section = sectionForBox(seatBox);
-                const orderLetter = !mealCode ? getOrderLetter(passenger, section) : '';
-                let innerHTML = '';
-                if (mealCode) {
-                    innerHTML += '<span class="meal-code-part" data-meal-code="' + mealCode + '">' + mealCode + '</span>';
-                } else if (orderLetter) {
-                    innerHTML += '<span class="order-code-part" data-order-choice="' + passenger.orderChoiceId + '">' + orderLetter + '</span>';
-                }
-                if ((mealCode || orderLetter) && specialLabel) innerHTML += '<span class="meal-sep"> | </span>';
-                if (specialLabel) innerHTML += '<span class="special-code-part" data-special-code="' + specialLabel + '">' + specialLabel + '</span>';
-                mealField.innerHTML = innerHTML;
-                mealField.style.backgroundColor = '';
-                mealField.style.color = '';
-                if (innerHTML) applyMealLineColors(mealField);
-            }
-            
-            seatBox.classList.remove('empty-seat');
-            seatBox.querySelectorAll('.name-line, .field-line').forEach(line => {
-                line.style.color = '';
-            });
-            
-            if (surnameLine) surnameLine.style.setProperty('--placeholder-content', 'none');
-            if (firstNameLine) firstNameLine.style.setProperty('--placeholder-content', 'none');
-            if (mealField) mealField.style.setProperty('--placeholder-content', 'none');
-        }
-        
-        function markSeatAsEmpty(seatBox) {
-            if (!seatBox) return;
-            clearTierClasses(seatBox);
-            seatBox.classList.add('empty-seat');
-            const seatNumberEl = seatBox.querySelector('.seat-number');
-            if (seatNumberEl) seatNumberEl.innerHTML = seatBox.getAttribute('data-seat');
-            seatBox.querySelectorAll('.name-line, .field-line').forEach(line => {
-                line.style.color = 'transparent';
-            });
-            const surnameLine = seatBox.querySelector('.name-line.surname-line');
-            const firstNameLine = seatBox.querySelector('.name-line.firstname-line');
-            const mealLine = seatBox.querySelector('.field-line.meal-line');
-            if (surnameLine) { surnameLine.textContent = ''; surnameLine.style.setProperty('--placeholder-content', '"______"'); }
-            if (firstNameLine) { firstNameLine.textContent = ''; firstNameLine.style.setProperty('--placeholder-content', '"______"'); }
-            if (mealLine) {
-                mealLine.innerHTML = '';
-                mealLine.style.setProperty('--placeholder-content', '"______"');
-                mealLine.style.backgroundColor = '';
-                mealLine.style.color = '';
-            }
-            const titleLine = seatBox.querySelector('.name-line.title-line');
-            if (titleLine) titleLine.textContent = '';
-        }
-        
-        function populateChart(chartPosition, chartData) {
-            const prefix = chartPosition === 'top' ? 'top' : 'bottom';
-            
-            if (chartPosition === 'top') {
-                topChartData = chartData;
-            } else {
-                bottomChartData = chartData;
-            }
-            if (!chartData.mealMenu) chartData.mealMenu = [];
-            
-            const flightInfo = chartData.flightInfo;
-            if (flightInfo) {
-                document.getElementById(`${prefix}HeaderTitle`).textContent = 
-                    `${flightInfo.flightNumber} | ${flightInfo.sector} | ${flightInfo.date} ${flightInfo.stdLocal} | ${flightInfo.aircraft}`;
-            }
-            
-            const zoneSummary = chartData.zoneSummary;
-            if (zoneSummary) {
-                let summaryText = `Business Class: ${zoneSummary.totalPassengers} passengers`;
-                if (zoneSummary.specialMeals > 0) summaryText += ` | Special Meals: ${zoneSummary.specialMeals}`;
-                if (zoneSummary.emerPlat > 0) summaryText += ` | EMER/PLAT: ${zoneSummary.emerPlat}`;
-                if (zoneSummary.mealBreakdown) summaryText += ` | ${zoneSummary.mealBreakdown}`;
-                if (zoneSummary.bbml > 0) summaryText += ` | BBML: ${zoneSummary.bbml}`;
-                const zoneSummaryEl = document.getElementById(`${prefix}ZoneSummary`);
-                if (zoneSummaryEl) zoneSummaryEl.textContent = summaryText;
-            }
-            
-            const passengers = chartData.passengers || [];
-            const occupiedSeats = new Set();
-            const container = document.getElementById(`${prefix}SeatContainer`);
-            
-            passengers.forEach(passenger => {
-                if (!passenger.seat) return;
-                const normalizedSeat = normalizeSeatNumber(passenger.seat);
-                const seatBox = container.querySelector(`[data-seat="${normalizedSeat}"]`);
-                if (seatBox) {
-                    populateSeatData(passenger, seatBox);
-                    occupiedSeats.add(normalizedSeat);
-                }
-            });
-            
-            const allSeatBoxes = container.querySelectorAll('.seat-box');
-            allSeatBoxes.forEach(seatBox => {
-                const seatNumber = seatBox.getAttribute('data-seat');
-                if (!occupiedSeats.has(seatNumber)) {
-                    markSeatAsEmpty(seatBox);
-                }
-            });
-
-            renderSummaryChips(prefix);
-            renderMealCountSummary(prefix);
-            
-            console.log(`Loaded ${passengers.length} passengers for ${chartPosition} chart`);
-        }
-        
-        function handlePrint() {
-            const orientationSelect = document.getElementById('orientationSelect');
-            const isLandscape = orientationSelect.value === 'landscape';
-            if (isLandscape) {
-                document.body.classList.add('landscape-print');
-            } else {
-                document.body.classList.remove('landscape-print');
-            }
-            document.documentElement.style.setProperty('--print-font-size', currentFontSize + 'px');
-            setTimeout(() => {
-                window.print();
-                setTimeout(() => {
-                    document.body.classList.remove('landscape-print');
-                }, 100);
-            }, 100);
-        }
-        
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'loadBottomChart') {
-                const dataKey = event.data.dataKey;
-                if (dataKey) {
-                    const chartData = JSON.parse(localStorage.getItem(dataKey));
-                    if (chartData) {
-                        populateChart('bottom', chartData);
-                        localStorage.removeItem(dataKey);
-                    }
-                }
-            }
-        });
-        
-        function loadInitialData() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const dataKey = urlParams.get('data');
-            const chartType = urlParams.get('chart') || 'top';
-            if (dataKey && chartType === 'top') {
-                const chartData = JSON.parse(localStorage.getItem(dataKey));
-                if (chartData) {
-                    populateChart('top', chartData);
-                    localStorage.removeItem(dataKey);
-                }
-            }
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            loadTheme();
-            applyTheme();
-
-            currentRowCount = 4;
-            generateSeatRows('topSeatContainer', currentRowCount);
-            generateSeatRows('bottomSeatContainer', currentRowCount);
-            
-            const fontSizeSlider = document.getElementById('fontSizeSlider');
-            fontSizeSlider.addEventListener('input', function(e) {
-                adjustFontSize(parseInt(e.target.value));
-            });
-            adjustFontSize(parseInt(fontSizeSlider.value));
-            
-            const aftViewToggle = document.getElementById('aftViewToggle');
-            aftViewToggle.checked = isAftView;
-            
-            loadInitialData();
-            
-            if (window.opener) {
-                window.opener.postMessage({ type: 'chartReady' }, '*');
-            }
-        });
-    </script>
-</body>
-</html>
+                seatBox.classList.remove('empty-sea…
