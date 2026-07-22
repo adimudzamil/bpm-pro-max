@@ -532,7 +532,7 @@
         }
 
         /* ===================================================== */
-        /* ORDER OVERLAY: FULL CELL SCALING & PEEK MODE         */
+        /* FIXED: Order Fill Overlay (Full Cell height)         */
         /* ===================================================== */
         .order-fill-overlay {
             display: none;
@@ -545,75 +545,39 @@
             z-index: 5;
             padding: 0;
             border-radius: 1px;
-            cursor: pointer;
         }
-        
-        .seat-box.peek-mode .order-fill-overlay {
-            display: none !important;
-        }
-        
         .seat-box.has-order .seat-number-container {
             visibility: hidden;
         }
-
-        .overlay-content-bg {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-        }
-        
-        .order-seat-number {
-            position: absolute;
-            top: 4px;
-            left: 6px;
-            font-size: 1.1em; /* Scales with main font slider */
-            font-weight: 900;
-            color: #000;
-            cursor: pointer;
-            z-index: 2;
-            text-shadow: 0 1px 2px rgba(255,255,255,0.5);
-            padding: 2px;
-        }
-
         .order-fill-letter {
-            font-size: 2.5em; /* Scales with main font slider */
+            font-size: 2.5em;
             font-weight: 900;
-            line-height: 1.1;
-            z-index: 2;
+            line-height: 1.2;
             text-shadow: 0 0 4px rgba(255,255,255,0.8);
-            pointer-events: none; /* Click on the background passes through */
         }
-        
+        /* Make checkmark larger to match the letter */
         .order-fill-icon {
             font-size: 2.5em;
             font-weight: 900;
-            line-height: 1.1;
-            z-index: 2;
-            pointer-events: none;
+            line-height: 1.2;
         }
-
         .order-remark-input {
-            width: 85%;
-            font-size: 1em; /* Scales with main font slider */
-            font-weight: 700;
-            padding: 4px 6px;
-            border-radius: 6px;
-            border: 1px solid rgba(0,0,0,0.15);
-            background: rgba(255,255,255,0.85);
+            width: 80%;
+            max-width: 150px;
+            font-size: 0.8em;
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 4px;
+            padding: 2px 4px;
+            margin-top: 4px;
+            background: rgba(255,255,255,0.9);
             text-align: center;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-            margin-top: 8px; /* Keeps strict gap below the letter */
-            min-height: 2em;
-            z-index: 3;
-            cursor: text;
-            outline: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .order-remark-input:focus {
+            outline: none;
             border-color: #2563eb;
-            box-shadow: 0 0 0 2px rgba(37,99,235,0.3);
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
         }
-
-        /* ===================================================== */
 
         .seat-box.empty-seat {
             border: 1px solid var(--sc-border-color);
@@ -1610,13 +1574,6 @@
             if (currentMode === 'order') {
                 const seatBox = e.target.closest('.seat-box');
                 if (!seatBox) return;
-                
-                // Handle "Peek mode" -> Clicking the seat brings the overlay back
-                if (seatBox.classList.contains('peek-mode')) {
-                    seatBox.classList.remove('peek-mode');
-                    refreshSeatOrderOverlay(seatBox);
-                    return;
-                }
                 handleOrderTap(seatBox);
                 return;
             }
@@ -2287,7 +2244,7 @@
         }
 
         // ================================================================
-        // FINALIZED: Overlay rendering with scale, gap, and Click Peek
+        // UPDATED: Overlay rendering with Full Cell cover & Event stopPropagation
         // ================================================================
         function refreshSeatOrderOverlay(seatBox) {
             const overlay = seatBox.querySelector('.order-fill-overlay');
@@ -2300,27 +2257,27 @@
             const order = (p && svc && p.orders) ? p.orders[svc.id] : null;
             const seatNumberContainer = seatBox.querySelector('.seat-number-container');
 
-            // 1. Force reset to View mode for any non-order states
-            if (currentMode !== 'order' || !order) {
-                seatBox.classList.remove('has-order', 'peek-mode');
+            // Manage the hidden state of the original title bar and the overlay class
+            if (order) {
+                seatBox.classList.add('has-order');
+                seatNumberContainer.style.visibility = 'hidden';
+                overlay.style.display = 'flex';
+            } else {
+                seatBox.classList.remove('has-order');
                 seatNumberContainer.style.visibility = 'visible';
                 overlay.style.display = 'none';
                 overlay.innerHTML = '';
                 return;
             }
 
-            // 2. Setup Order mode state
-            seatBox.classList.add('has-order');
-            seatNumberContainer.style.visibility = 'hidden';
-            overlay.style.display = 'flex';
-
             let html = '';
             if (order.served) {
                 overlay.style.backgroundColor = '#dcfce7';
                 overlay.style.color = '#166534';
+                // Embed the seat number, make checkmark huge
                 html = `
-                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; position:relative; cursor:pointer;" onclick="handleOverlayBackgroundClick(event, '${section}', '${seat}')">
-                        <div class="order-seat-number" onclick="event.stopPropagation(); toggleOrderServed('${section}','${seat}')">${seat}</div>
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; position:relative;">
+                        <div style="position:absolute; top:2px; left:4px; font-size:0.6em; font-weight:bold; color:#333;">${seat}</div>
                         <span class="order-fill-icon">\u2705</span>
                     </div>
                 `;
@@ -2331,48 +2288,16 @@
                 overlay.style.backgroundColor = c.bg;
                 overlay.style.color = c.text;
                 const remark = order.remark || '';
-                
+                // Embed the seat number + letter + remarks input. Stop mouse/touch events bubbling up so typing doesn't toggle served.
                 html = `
-                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; position:relative; cursor:pointer;" onclick="handleOverlayBackgroundClick(event, '${section}', '${seat}')">
-                        <div class="order-seat-number" onclick="event.stopPropagation(); toggleOrderServed('${section}','${seat}')">${seat}</div>
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; position:relative;">
+                        <div style="position:absolute; top:2px; left:4px; font-size:0.6em; font-weight:bold; color:#333;">${seat}</div>
                         <span class="order-fill-letter">${letter}</span>
                         <input type="text" class="order-remark-input" value="${remark.replace(/"/g, '&quot;')}" placeholder="Remarks" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()" oninput="updateOrderRemark('${section}','${seat}',this.value)">
                     </div>
                 `;
             }
             overlay.innerHTML = html;
-        }
-
-        // ================================================================
-        // HANDLE ORDER CLICK INTERACTIONS
-        // ================================================================
-        
-        // 1. Handle background clicks (to "Peek" raw data by hiding overlay)
-        function handleOverlayBackgroundClick(event, section, seat) {
-            event.stopPropagation();
-            // Prevent accidental click triggers if user is dragging
-            if (event.target.closest('.order-remark-input') || event.target.closest('.order-seat-number')) return;
-            
-            const seatBox = document.querySelector('#' + section + 'SeatContainer [data-seat="' + normalizeSeatNumber(seat) + '"]');
-            if (!seatBox) return;
-            
-            // Add peek-mode which hides the overlay and reveals raw passenger info
-            seatBox.classList.add('peek-mode');
-            // No mode change; we stay in ORDER mode.
-        }
-
-        // 2. Handle Seat Number clicks (to toggle Served/Unserved)
-        function toggleOrderServed(section, seat) {
-            const data = dataForSection(section);
-            const svc = getActiveService(section);
-            const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
-            if (!p || !svc || !p.orders || !p.orders[svc.id]) return;
-            
-            p.orders[svc.id].served = !p.orders[svc.id].served;
-            const seatBox = document.querySelector('#' + section + 'SeatContainer [data-seat="' + normalizeSeatNumber(seat) + '"]');
-            if (seatBox) refreshSeatOrderOverlay(seatBox);
-            syncBackToMainPage();
-            persistChartState();
         }
 
         function updateOrderRemark(section, seat, value) {
@@ -2646,6 +2571,7 @@
         function toggleRow4Mode() {
             const row4Toggle = document.getElementById('row4Toggle');
             const newRowCount = row4Toggle.checked ? 4 : 3;
+            // Persist setting
             localStorage.setItem('scUIRow4', row4Toggle.checked ? 'true' : 'false');
             if (newRowCount === currentRowCount) return;
             currentRowCount = newRowCount;
@@ -2741,6 +2667,7 @@
         function toggleAftView() {
             const toggle = document.getElementById('aftViewToggle');
             isAftView = toggle.checked;
+            // Persist setting
             localStorage.setItem('scUIAftView', isAftView ? 'true' : 'false');
             applyAftViewToContainer('topSeatContainer', isAftView);
             applyAftViewToContainer('bottomSeatContainer', isAftView);
@@ -2749,6 +2676,7 @@
         
         function adjustFontSize(fontSize) {
             currentFontSize = fontSize;
+            // Persist setting
             localStorage.setItem('scUIFontSize', fontSize);
             document.getElementById('fontSizeValue').textContent = fontSize + 'px';
             document.body.style.fontSize = fontSize + 'px';
