@@ -408,10 +408,9 @@
   /* ── Print styles ── */
   @media print {
     body { background: #fff; }
-    header, .card, .report-card .report-inner { border: none; background: none; padding: 0; }
+    header, .card:not(.reportcard), .noprint, .noprint-inline { display: none !important; }
     .report-card { background: none; border: none; padding: 0; }
     .report-card .report-inner { border-radius: 0; padding: 0; }
-    .noprint { display: none !important; }
     .stats-row, .btnrow, .status, .badge-group { display: none !important; }
     .container { max-width: 100%; padding: 0; }
     #report { border-radius: 0; }
@@ -457,8 +456,8 @@
 
 <div class="container">
 
-  <!-- ===== HEADER ===== -->
-  <header>
+  <!-- ===== HEADER (hidden in print) ===== -->
+  <header class="noprint">
     <div class="logo-area">
       <div class="logo">CTR<span>.</span></div>
       <div class="byline">by 2100551 · crew report tool</div>
@@ -528,7 +527,7 @@
   </div>
 
   <!-- ===== Empty state ===== -->
-  <div class="card" id="emptyCard">
+  <div class="card noprint" id="emptyCard">
     <div class="card-header">
       <div class="card-title" style="color:var(--text-muted); font-weight:400;">📭 No report generated yet</div>
     </div>
@@ -562,8 +561,8 @@
 <!-- ===== TOAST ===== -->
 <div id="toastMsg" class="toast"></div>
 
-<!-- ===== FOOTER ===== -->
-<footer>
+<!-- ===== FOOTER (hidden in print) ===== -->
+<footer class="noprint">
   🔒 All processing is local — your data never leaves your device.<br>
   <span style="color:var(--accent);">CTR</span> · 2100551
 </footer>
