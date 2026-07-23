@@ -40,7 +40,7 @@
   .rtitle{text-align:center;border-bottom:1px solid #111;padding-bottom:4px;margin-bottom:8px;}
   .rtitle h2{margin:0;font-size:7pt;font-weight:700;letter-spacing:.03em;text-transform:uppercase;}
   .rsection-title{font-size:10px;font-weight:700;text-transform:uppercase;margin:8px 0 3px;color:#333;display:flex;justify-content:space-between;align-items:center;}
-  table.rtab{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:6px;table-layout:fixed;}
+  table.rtab{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:6px;table-layout:auto;}
   table.rtab th, table.rtab td{border:1px solid #333;padding:2px 3px;text-align:center;overflow:hidden;}
   table.rtab th{background:#eee;font-weight:600;font-size:9px;}
   table.rtab td input{border:none;width:100%;text-align:center;font-size:9.5px;background:transparent;font-family:inherit;min-width:0;padding:1px;}
@@ -58,11 +58,11 @@
   .pick select{font-size:10px;padding:2px;color:#111;background:#fff;}
 
   /* ---- Flight Time Details ---- */
-  .ft-table{width:100%;border-collapse:collapse;font-size:8.5px;margin-top:4px;}
+  .ft-table{width:100%;border-collapse:collapse;font-size:8.5px;margin-top:4px;table-layout:fixed;}
   .ft-table th{background:#eee;font-weight:600;font-size:8px;border:1px solid #333;padding:2px;}
-  .ft-table td{border:1px solid #333;padding:2px;text-align:center;}
+  .ft-table td{border:1px solid #333;padding:2px;text-align:center;width:9%;} /* 9 cats + 1 for flight = 10 cols */
+  .ft-table td:first-child{width:19%; font-weight:bold; text-align:left; padding-left:4px;}
   .ft-box{display:inline-block;width:100%;min-height:1.2em;border:1px solid #aaa;background:#fafafa;padding:1px 0;font-size:8.5px;color:#333;}
-  .ft-box.faint{opacity:0.3;}
 
   /* ---- Position modal ---- */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
@@ -86,21 +86,23 @@
     .reportcard{border:none;padding:0;margin:0;}
     #report{border-radius:0;}
 
-    /* Crew table widths */
-    .crew-table{table-layout:fixed;}
-    .crew-table th:nth-child(1), .crew-table td:nth-child(1){width:10%;}  /* staff no */
-    .crew-table th:nth-child(2), .crew-table td:nth-child(2){width:5%;}   /* rank */
-    .crew-table th:nth-child(3), .crew-table td:nth-child(3){width:75%;}  /* name */
-    .crew-table th:nth-child(4), .crew-table td:nth-child(4){width:5%;}   /* position */
-    .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:5%;}   /* door */
+    /* Crew table fixed layout & widths */
+    .crew-table{table-layout:fixed !important; width:100% !important;}
+    .crew-table th, .crew-table td{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    .crew-table th:nth-child(1), .crew-table td:nth-child(1){width:10% !important;}  /* staff no */
+    .crew-table th:nth-child(2), .crew-table td:nth-child(2){width:5% !important;}   /* rank */
+    .crew-table th:nth-child(3), .crew-table td:nth-child(3){width:75% !important;}  /* name */
+    .crew-table th:nth-child(4), .crew-table td:nth-child(4){width:5% !important;}   /* position */
+    .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:5% !important;}   /* door */
 
-    /* Hide "tap" text in position cells that are unset */
-    .pos-cell.unset{color:transparent !important;font-style:normal !important;}
-    .pos-cell.unset::before{content:"";}
+    /* Hide "tap" indicator completely */
+    .tap-indicator{display:none !important;}
 
-    /* Flight time details boxes: faint */
-    .ft-box.faint{opacity:0.3 !important;border-color:#999;}
-    .ft-box{background:#fff !important;}
+    /* Make position cell blank but keep clickable area invisible */
+    .pos-cell.unset{color:transparent !important; font-size:0 !important;}
+
+    /* Flight time boxes faint */
+    .ft-box{opacity:0.3 !important; border-color:#999 !important; background:#fff !important;}
   }
 </style>
 </head>
@@ -109,7 +111,7 @@
 <header>
   <h1>CCVR Autofill</h1>
   <p>Paste iFlight Crew Trip Report text → auto-fill a printable Cabin Crew Voyage Report</p>
-  <p style="font-size:10px;color:#555;margin-top:4px;">build v5</p>
+  <p style="font-size:10px;color:#555;margin-top:4px;">build v6</p>
 </header>
 
 <div class="wrap">
@@ -344,7 +346,6 @@
     // Captain / PIC
     let picChosen = null;
     if(isNarrow && captains.length > 1){
-      // multiple captains, use dropdown selection
       picChosen = state.selectedPIC || captains[0];
     } else if(captains.length === 1){
       picChosen = captains[0];
@@ -399,7 +400,8 @@
       cabinCrew.forEach(c => {
         const isCIC = cicChosen && c.crewId === cicChosen.crewId;
         const pos = state.positions[c.crewId] || '';
-        const posDisplay = pos || (window.matchMedia('print').matches ? '' : 'tap');
+        // Use a span with class "tap-indicator" to hide in print
+        const posDisplay = pos ? esc(pos) : `<span class="tap-indicator">tap</span>`;
         crewRows += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
           <td>${esc(c.crewId)}</td>
           <td>${esc(c.opRank)}</td>
@@ -426,14 +428,12 @@
     // Captain cell content
     let captainHtml = '';
     if(isNarrow){
-      // narrowbody: show selected PIC (with dropdown if multiple)
       if(captains.length === 0){
         captainHtml = '—';
       } else {
         const pic = picChosen || captains[0];
         captainHtml = esc(pic.crewName) + ' (' + esc(pic.crewId) + ')';
         if(captains.length > 1){
-          // dropdown in non-print
           captainHtml += `<div class="pick noprint-inline">
             <select id="picSelect">
               ${captains.map(c => `<option value="${esc(c.crewId)}" ${pic && pic.crewId===c.crewId?'selected':''}>${esc(c.crewName)} (${esc(c.crewId)})</option>`).join('')}
@@ -442,7 +442,7 @@
         }
       }
     } else {
-      // widebody: list all captains (print and non-print)
+      // widebody: list all captains
       if(captains.length === 0){
         captainHtml = '—';
       } else {
@@ -455,11 +455,10 @@
     if(d.itin.length){
       d.itin.forEach((l, i) => {
         const flightNo = esc(l.flightId);
-        // categories: LP, CB, CAT, AIC, BC, 1P, BC, DC, DO
         const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
         ftRows += `<tr>
           <td style="font-weight:bold;font-size:9px;">${flightNo}</td>
-          ${cats.map(cat => `<td><span class="ft-box faint">&nbsp;</span></td>`).join('')}
+          ${cats.map(() => `<td><span class="ft-box">&nbsp;</span></td>`).join('')}
         </tr>`;
       });
     } else {
@@ -499,7 +498,7 @@
       </div>
     `;
 
-    // Event listeners
+    // Event listeners for dropdowns
     const cicSel = document.getElementById('cicSelect');
     if(cicSel){
       cicSel.addEventListener('change', (e) => {
