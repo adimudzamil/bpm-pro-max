@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>CCVR Autofill</title>
-<!-- pdf.js for PDF text extraction -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<!-- pdf.js from CDN (stable) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   :root{
     --bg:#0f1115; --panel:#171a21; --panel2:#1e2229; --border:#2a2f3a;
@@ -109,7 +109,7 @@
 <header>
   <h1>CCVR Autofill</h1>
   <p>iFlight Crew Trip Report <b>OR</b> PDF CrewTripReport → auto‑fill a printable Cabin Crew Voyage Report</p>
-  <p style="font-size:10px;color:#555;margin-top:4px;">build v8</p>
+  <p style="font-size:10px;color:#555;margin-top:4px;">build v9</p>
 </header>
 
 <div class="wrap">
@@ -273,13 +273,9 @@
     const acMatch = raw.match(/(7M8|A330|B737|A380|B777|9M-)/);
     if(acMatch) result.acReg = acMatch[1];
 
-    // Parse flight summary lines: they look like "MH725 ... 02:15 7M8MVS"
-    // Regex: (MH\d+)([A-Z]{3})([A-Z]{3})(\d{2}:\d{2})(\d{2}:\d{2})(\d{2}:\d{2})([A-Z0-9]+)
-    // But the sample has "MH725LSOPKUL 17:50CGK 19:0500:4502:157M8MVS" - messed up.
-    // We'll use a more robust approach: find lines containing "MH" and "KUL" or "CGK" etc.
-    // Actually, from the sample we saw: "MH725LSOPKUL 17:50CGK 19:0500:4502:157M8MVS"
-    // After splitting, we can parse by spaces? Let's just do a flexible regex.
-    const flightRegex = /(MH\d+)\s*([A-Z]{3})\s*(\d{2}:\d{2})\s*([A-Z]{3})\s*(\d{2}:\d{2})\s*(\d{2}:\d{2})\s*([A-Z0-9]+)/g;
+    // Parse flight summary lines - more robust regex
+    // Try to find lines containing MHxxx and time patterns
+    const flightRegex = /(MH\d+)[\s]*([A-Z]{3})[\s]*(\d{2}:\d{2})[\s]*([A-Z]{3})[\s]*(\d{2}:\d{2})[\s]*(\d{2}:\d{2})[\s]*([A-Z0-9]+)/g;
     let match;
     while((match = flightRegex.exec(raw)) !== null){
       const flightId = match[1];
@@ -292,9 +288,8 @@
       result.flights.push({ flightId, from, to, std, sta, fh, acReg });
     }
 
-    // If above fails, try the simpler pattern without sector names
+    // If above fails, try simpler: MHxxx followed by times
     if(result.flights.length === 0){
-      // Try: MH725 ... 1750 ... 1905 ... 0215 7M8MVS
       const simpleRegex = /(MH\d+)[\s\S]*?(\d{2}:\d{2})[\s\S]*?(\d{2}:\d{2})[\s\S]*?(\d{2}:\d{2})[\s\S]*?([A-Z0-9]+)/g;
       while((match = simpleRegex.exec(raw)) !== null){
         const flightId = match[1];
@@ -302,66 +297,54 @@
         const sta = match[3];
         const fh = match[4];
         const acReg = match[5];
-        // Try to get from/to from context (maybe from nearby)
+        // Try to get from/to from surrounding text
         let from='', to='';
-        const parts = raw.substring(match.index, match.index+200).split(/\s+/);
-        for(let p of parts){
-          if(p.length===3 && p.match(/[A-Z]{3}/)){ if(!from) from=p; else if(!to) to=p; }
+        const ctx = raw.substring(match.index, match.index+300).split(/\s+/);
+        let airportCount=0;
+        for(let p of ctx){
+          if(p.length===3 && p.match(/[A-Z]{3}/) && !p.match(/MH\d+/)){
+            if(!from){ from=p; } else if(!to && p!==from){ to=p; break; }
+          }
         }
         result.flights.push({ flightId, from, to, std, sta, fh, acReg });
       }
     }
 
-    // Parse crew: find "Inbound" and "Outbound" sections
-    let section = null;
+    // Parse crew: look for lines containing staff ID (7 digits)
     const crewRows = [];
-    for(let i=0; i<lines.length; i++){
-      const l = lines[i].trim();
-      if(l.toLowerCase().includes('inbound')){ section = 'inbound'; continue; }
-      if(l.toLowerCase().includes('outbound')){ section = 'outbound'; continue; }
-      // If line looks like data row: ID + name + rank
-      if(section && l.match(/\d{7}/)){
-        // Pattern: ID + rank + name (maybe with spaces)
-        // Example: "2108428AGUS RIZAL HASHIM BIN HARITHCAPTOPKULSIGNING ON"
-        // Try to parse
-        const idMatch = l.match(/(\d{7})([A-Z]+)([A-Z]{2,3})([A-Z]+)(SIGNING ON|SIGNING OFF)/);
+    const lines2 = raw.split('\n');
+    for(let l of lines2){
+      l = l.trim();
+      // If line has 7 digits and contains a name/rank pattern
+      if(l.match(/\d{7}/)){
+        // Try to extract ID, rank, name
+        const idMatch = l.match(/(\d{7})/);
         if(idMatch){
           const id = idMatch[1];
-          const rank = idMatch[2];
-          const wt = idMatch[3];
-          const base = idMatch[4];
-          const action = idMatch[5];
-          // name is between id and rank
-          const nameStart = idMatch.index + id.length;
-          const nameEnd = l.indexOf(rank, nameStart);
-          const name = l.substring(nameStart, nameEnd).trim();
-          crewRows.push({ flight: '?', id, name, rank, wt, base, action, direction: section });
-        } else {
-          // Try alternative: ID + name + rank separated by spaces? but sample has no spaces.
-          // We'll do a fallback: split by rank strings
+          // Find rank among known ranks
           const rankList = ['CAPT','FO','SO','FS','LSOP','IFS','LS'];
-          let found = false;
+          let foundRank = '';
+          let name = '';
           for(let r of rankList){
-            if(l.includes(r)){
-              const parts = l.split(r);
-              if(parts.length>=2){
-                const id = parts[0].trim();
-                const name = parts[1].trim();
-                crewRows.push({ flight: '?', id, name, rank: r, wt: '', base: '', action: '', direction: section });
-                found = true;
-                break;
-              }
+            if(l.toUpperCase().includes(r)){
+              // get everything after ID and before rank
+              const idx = l.indexOf(r);
+              const before = l.substring(0, idx);
+              const after = l.substring(idx + r.length);
+              // ID is at start, the rest before rank is name
+              const namePart = before.replace(id, '').trim();
+              name = namePart;
+              foundRank = r;
+              break;
             }
           }
-          if(!found){
-            // Last resort: just take first word as ID, rest as name
-            const words = l.split(/\s+/);
-            if(words.length>=2){
-              const id = words[0];
-              const name = words.slice(1).join(' ');
-              crewRows.push({ flight: '?', id, name, rank: '', wt: '', base: '', action: '', direction: section });
-            }
+          if(!foundRank){
+            // Fallback: if no rank, treat as cabin crew with rank 'FS'
+            const namePart = l.replace(id, '').trim();
+            name = namePart;
+            foundRank = 'FS';
           }
+          crewRows.push({ id, name, rank: foundRank });
         }
       }
     }
@@ -376,7 +359,7 @@
       }
     });
 
-    // Build itinerary and crew list in the standard format used by the app
+    // Build itinerary and crew list in the standard format
     const itin = result.flights.map(f => ({
       flightId: f.flightId,
       date: result.date,
@@ -793,9 +776,14 @@
     const reader = new FileReader();
     reader.onload = function(loadEvent){
       const arrayBuffer = loadEvent.target.result;
-      // Use pdf.js to extract text
-      const pdfjsLib = window['pdfjs-dist/build/pdf'];
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+      // Set worker source
+      const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+      if(!pdfjsLib){
+        pdfStatus.textContent = 'Error: pdf.js library not loaded.';
+        pdfStatus.className = 'status err';
+        return;
+      }
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       pdfjsLib.getDocument({data: arrayBuffer}).promise.then(function(pdf){
         let fullText = '';
         const pages = [];
