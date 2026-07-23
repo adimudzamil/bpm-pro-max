@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>CCVR Autofill</title>
+<!-- pdf.js for PDF text extraction -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <style>
   :root{
     --bg:#0f1115; --panel:#171a21; --panel2:#1e2229; --border:#2a2f3a;
@@ -18,8 +20,8 @@
   .wrap{padding:14px;max-width:900px;margin:0 auto;}
   .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;}
   .card h2{font-size:14px;margin:0 0 10px;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;}
-  textarea#pasteBox{width:100%;min-height:160px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-size:13px;font-family:monospace;resize:vertical;}
-  .btnrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  textarea{width:100%;min-height:120px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-size:13px;font-family:monospace;resize:vertical;}
+  .btnrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;}
   button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;}
   button.secondary{background:var(--panel2);border:1px solid var(--border);color:var(--text);}
   button:active{opacity:.8;}
@@ -33,8 +35,10 @@
   table.dbg th{background:var(--panel2);color:var(--muted);}
   select{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 6px;font-size:11px;}
   .emptyState{color:var(--muted);font-size:13px;text-align:center;padding:30px 10px;}
+  .file-upload-wrapper{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .file-upload-wrapper input[type="file"]{color:var(--text);padding:4px;}
 
-  /* ---- Report ---- */
+  /* ---- Report (common) ---- */
   #report{background:#fff;color:#111;border-radius:6px;overflow:hidden;}
   #report .rpad{padding:10px;}
   .rtitle{text-align:center;border-bottom:1px solid #111;padding-bottom:4px;margin-bottom:8px;}
@@ -44,25 +48,25 @@
   table.rtab th, table.rtab td{border:1px solid #333;padding:2px 3px;text-align:center;overflow:hidden;}
   table.rtab th{background:#eee;font-weight:600;font-size:9px;}
   table.rtab td input{border:none;width:100%;text-align:center;font-size:9.5px;background:transparent;font-family:inherit;min-width:0;padding:1px;}
-  table.rtab.mini{font-size:8.5px;margin-top:3px;}
-  table.rtab.mini th{font-size:8px;padding:1px 2px;}
-  table.rtab.mini td input{font-size:8.5px;}
   .remarksRow input.remarksTxt{width:100%;border:none;border-bottom:1px dashed #999;font-size:9.5px;padding:2px 0;background:transparent;font-family:inherit;}
   .pos-cell{cursor:pointer;font-weight:700;color:#1d4ed8;}
   .pos-cell.unset{color:#aaa;font-weight:400;font-style:italic;}
-  .footrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
-  .footrow .fbox{flex:1;min-width:110px;}
-  .footrow label{font-size:9px;color:#555;text-transform:uppercase;display:block;margin-bottom:2px;}
-  .footrow input{width:100%;border:1px solid #333;border-radius:4px;padding:4px;font-size:11px;}
   .pick{font-size:10px;color:#a33;margin-top:3px;}
   .pick select{font-size:10px;padding:2px;color:#111;background:#fff;}
 
-  /* ---- Flight Time Details ---- */
-  .ft-table{width:100%;border-collapse:collapse;font-size:8.5px;margin-top:4px;table-layout:fixed;}
-  .ft-table th{background:#eee;font-weight:600;font-size:8px;border:1px solid #333;padding:2px;}
-  .ft-table td{border:1px solid #333;padding:2px;text-align:center;width:9%;} /* 9 cats + 1 for flight = 10 cols */
-  .ft-table td:first-child{width:19%; font-weight:bold; text-align:left; padding-left:4px;}
-  .ft-box{display:inline-block;width:100%;min-height:1.2em;border:1px solid #aaa;background:#fafafa;padding:1px 0;font-size:8.5px;color:#333;}
+  /* ---- New PDF layout specific ---- */
+  .pdf-top-info{display:flex;flex-wrap:wrap;gap:10px;font-size:9px;margin-bottom:6px;align-items:center;}
+  .pdf-top-info .label{font-weight:bold;color:#444;}
+  .pdf-top-info input{width:80px;border:1px solid #333;border-radius:4px;padding:2px;font-size:9px;}
+  .pdf-top-info input.wide{width:120px;}
+
+  .pdf-airport{font-size:9px;text-align:left;padding:2px 4px;margin-top:2px;}
+  .pdf-airport input{width:100%;border:1px solid #333;border-radius:4px;padding:2px;font-size:9px;}
+
+  .pdf-bottom-fields{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;justify-content:space-between;}
+  .pdf-bottom-fields .fbox{display:flex;align-items:center;gap:4px;font-size:9px;}
+  .pdf-bottom-fields .fbox label{font-weight:bold;color:#444;}
+  .pdf-bottom-fields .fbox input{width:60px;border:1px solid #333;border-radius:4px;padding:2px;font-size:9px;}
 
   /* ---- Position modal ---- */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
@@ -86,23 +90,17 @@
     .reportcard{border:none;padding:0;margin:0;}
     #report{border-radius:0;}
 
-    /* Crew table fixed layout & widths */
     .crew-table{table-layout:fixed !important; width:100% !important;}
     .crew-table th, .crew-table td{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-    .crew-table th:nth-child(1), .crew-table td:nth-child(1){width:10% !important;}  /* staff no */
-    .crew-table th:nth-child(2), .crew-table td:nth-child(2){width:5% !important;}   /* rank */
-    .crew-table th:nth-child(3), .crew-table td:nth-child(3){width:75% !important;}  /* name */
-    .crew-table th:nth-child(4), .crew-table td:nth-child(4){width:5% !important;}   /* position */
-    .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:5% !important;}   /* door */
+    .crew-table th:nth-child(1), .crew-table td:nth-child(1){width:10% !important;}
+    .crew-table th:nth-child(2), .crew-table td:nth-child(2){width:5% !important;}
+    .crew-table th:nth-child(3), .crew-table td:nth-child(3){width:70% !important;}
+    .crew-table th:nth-child(4), .crew-table td:nth-child(4){width:10% !important;}
+    .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:5% !important;}
 
-    /* Hide "tap" indicator completely */
     .tap-indicator{display:none !important;}
-
-    /* Make position cell blank but keep clickable area invisible */
     .pos-cell.unset{color:transparent !important; font-size:0 !important;}
-
-    /* Flight time boxes faint */
-    .ft-box{opacity:0.3 !important; border-color:#999 !important; background:#fff !important;}
+    .pdf-top-info input, .pdf-airport input, .pdf-bottom-fields input{border-color:#999 !important;}
   }
 </style>
 </head>
@@ -110,14 +108,15 @@
 
 <header>
   <h1>CCVR Autofill</h1>
-  <p>Paste iFlight Crew Trip Report text → auto-fill a printable Cabin Crew Voyage Report</p>
-  <p style="font-size:10px;color:#555;margin-top:4px;">build v6</p>
+  <p>iFlight Crew Trip Report <b>OR</b> PDF CrewTripReport → auto‑fill a printable Cabin Crew Voyage Report</p>
+  <p style="font-size:10px;color:#555;margin-top:4px;">build v8</p>
 </header>
 
 <div class="wrap">
 
+  <!-- iFlight parser -->
   <div class="card noprint">
-    <h2>1. Paste trip report text</h2>
+    <h2>1. Paste iFlight trip report text</h2>
     <textarea id="pasteBox" placeholder="Select-all + copy from the iFlight Crew Trip Report page, then paste here…"></textarea>
     <div class="btnrow">
       <button id="parseBtn">Parse & Fill Report</button>
@@ -130,6 +129,22 @@
     </details>
   </div>
 
+  <!-- PDF parser with upload -->
+  <div class="card noprint">
+    <h2>2. Paste PDF CrewTripReport text or upload PDF</h2>
+    <textarea id="pdfBox" placeholder="Copy text from the PDF CrewTripReport and paste here…"></textarea>
+    <div class="btnrow">
+      <button id="parsePdfBtn">Parse PDF Report</button>
+      <button class="secondary" id="clearPdfBtn">Clear</button>
+      <div class="file-upload-wrapper">
+        <label for="pdfFile" style="font-size:12px;color:var(--muted);">Upload PDF:</label>
+        <input type="file" id="pdfFile" accept=".pdf">
+      </div>
+    </div>
+    <div class="status" id="pdfStatus"></div>
+  </div>
+
+  <!-- Report display -->
   <div class="card reportcard" id="reportCard" style="display:none;">
     <div class="btnrow noprint" style="margin-bottom:10px;">
       <button id="printBtn">Print / Save PDF</button>
@@ -138,7 +153,7 @@
   </div>
 
   <div class="card" id="emptyCard">
-    <div class="emptyState">No report generated yet. Paste your trip report text above and tap "Parse & Fill Report".</div>
+    <div class="emptyState">No report generated yet. Paste a trip report above and tap "Parse & Fill Report" or "Parse PDF Report".</div>
   </div>
 
 </div>
@@ -154,10 +169,14 @@
 
 <script>
 (function(){
+  // ===== DOM refs =====
   const pasteBox = document.getElementById('pasteBox');
   const statusEl = document.getElementById('status');
   const dbgWrap = document.getElementById('dbgWrap');
   const dbgContent = document.getElementById('dbgContent');
+  const pdfBox = document.getElementById('pdfBox');
+  const pdfStatus = document.getElementById('pdfStatus');
+  const pdfFile = document.getElementById('pdfFile');
   const reportCard = document.getElementById('reportCard');
   const emptyCard = document.getElementById('emptyCard');
   const reportEl = document.getElementById('report');
@@ -165,59 +184,19 @@
   const posGrid = document.getElementById('posGrid');
   const modalCrewName = document.getElementById('modalCrewName');
 
+  // ===== Constants =====
   const DUTY_HEADERS = ["Start","End","Pairing Id","Duty Hours","Flying Hours","Rest Required","Rest Available"];
   const ITIN_HEADERS = ["Flight/Acy Id","Date","From","Dep.","To","Arr.","A/C","Version","A/C Reg","Flight Time","Ground Time","Activity Start","Activity End","Activity Location"];
   const CREW_HEADERS = ["OP Rank","Postion Rank","Crew Id","Crew Name","WT","Work Pos.","Base","SDC","Check In"];
   const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary'];
   const COCKPIT_RANKS = ['CAPT','FO','SO'];
-
   const POSITIONS_NARROW = ['P1','P2','P3','P4','A1','A2','SNY'];
   const POSITIONS_WIDE = ['ICC','LSB','LSC','LSD','AG','BG1','BG2','CG','DG','BC','BC1','CC','DC','DC2','SNY'];
 
+  // ===== Utilities =====
   function norm(s){ return (s===undefined||s===null) ? '' : String(s).trim(); }
-
-  function esc(s){
-    return String(s===undefined||s===null?'':s)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function findHeaderEnd(lines, seq){
-    for(let start=0; start<lines.length; start++){
-      let li = start;
-      let ok = true;
-      for(let s=0; s<seq.length; s++){
-        while(li < lines.length && norm(lines[li]) === '') li++;
-        if(li >= lines.length || norm(lines[li]).toLowerCase() !== seq[s].toLowerCase()){ ok = false; break; }
-        li++;
-      }
-      if(ok) return li;
-    }
-    return -1;
-  }
-
-  function extractRows(lines, headerSeq, cols){
-    const idxAfterHeader = findHeaderEnd(lines, headerSeq);
-    if(idxAfterHeader === -1) return { rows: [], found:false };
-    let idx = idxAfterHeader;
-    const rows = [];
-    while(idx + cols <= lines.length){
-      const firstCell = norm(lines[idx]).toLowerCase();
-      if(firstCell === 'results per page' || firstCell.startsWith('page ') || STOP_TITLES.indexOf(firstCell) !== -1){
-        break;
-      }
-      const chunk = lines.slice(idx, idx+cols).map(norm);
-      rows.push(chunk);
-      idx += cols;
-    }
-    return { rows, found:true };
-  }
-
-  function timeOnly(dt){
-    if(!dt) return '';
-    const parts = dt.trim().split(/\s+/);
-    return parts.length>1 ? parts[parts.length-1] : dt;
-  }
-
+  function esc(s){ return String(s===undefined||s===null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function timeOnly(dt){ if(!dt) return ''; const parts = dt.trim().split(/\s+/); return parts.length>1 ? parts[parts.length-1] : dt; }
   function subtractMinutes(hhmm, mins){
     const m = (hhmm||'').match(/^(\d{1,2}):(\d{2})$/);
     if(!m) return '----';
@@ -227,47 +206,7 @@
     const mm = String(total%60).padStart(2,'0');
     return hh + mm;
   }
-
-  function isNarrowbody(ac){
-    if(!ac) return false;
-    const a = ac.trim().toUpperCase();
-    return a === '737' || a.indexOf('73') === 0 || a.indexOf('7M') === 0;
-  }
-
-  function parseTripText(raw){
-    const lines = raw.split(/\r?\n/);
-
-    const duty = extractRows(lines, DUTY_HEADERS, DUTY_HEADERS.length).rows.map(r => ({
-      start:r[0], end:r[1], pairingId:r[2], dutyHours:r[3], flyingHours:r[4], restRequired:r[5], restAvailable:r[6]
-    }));
-
-    const itinRaw = extractRows(lines, ITIN_HEADERS, ITIN_HEADERS.length);
-    const itin = itinRaw.rows.map(r => ({
-      flightId:r[0], date:r[1], from:r[2], dep:r[3], to:r[4], arr:r[5], ac:r[6], version:r[7],
-      acReg:r[8], flightTime:r[9], groundTime:r[10], actStart:r[11], actEnd:r[12], actLoc:r[13]
-    }));
-
-    const crewRaw = extractRows(lines, CREW_HEADERS, CREW_HEADERS.length);
-    const crew = crewRaw.rows.map(r => ({
-      opRank:r[0], posRank:r[1], crewId:r[2], crewName:r[3], wt:r[4], workPos:r[5], base:r[6], sdc:r[7], checkIn:r[8]
-    })).filter(c => c.crewId);
-
-    return {
-      duty, itin, crew,
-      found: { duty: duty.length>0, itin: itin.length>0, crew: crew.length>0 }
-    };
-  }
-
-  function renderDebugTable(rows, cols){
-    if(!rows.length) return '<p style="color:#888;font-size:11px;">none found</p>';
-    let html = '<table class="dbg"><tr>' + cols.map(c=>'<th>'+c+'</th>').join('') + '</tr>';
-    rows.forEach(row=>{
-      html += '<tr>' + cols.map(c=> '<td>'+(row[c]!==undefined?row[c]:'')+'</td>').join('') + '</tr>';
-    });
-    html += '</table>';
-    return html;
-  }
-
+  function isNarrowbody(ac){ if(!ac) return false; const a = ac.trim().toUpperCase(); return a === '737' || a.indexOf('73') === 0 || a.indexOf('7M') === 0; }
   function determineCrewInCharge(cabinCrew){
     const ifs = cabinCrew.filter(c => c.opRank.toUpperCase() === 'IFS');
     const ls = cabinCrew.filter(c => c.opRank.toUpperCase() === 'LS');
@@ -278,25 +217,220 @@
     return { auto: null, candidates: cabinCrew.slice() };
   }
 
-  // ---- Persistent state ----
+  // ===== iFlight parser =====
+  function findHeaderEnd(lines, seq){
+    for(let start=0; start<lines.length; start++){
+      let li = start, ok = true;
+      for(let s=0; s<seq.length; s++){
+        while(li < lines.length && norm(lines[li]) === '') li++;
+        if(li >= lines.length || norm(lines[li]).toLowerCase() !== seq[s].toLowerCase()){ ok = false; break; }
+        li++;
+      }
+      if(ok) return li;
+    }
+    return -1;
+  }
+  function extractRows(lines, headerSeq, cols){
+    const idxAfterHeader = findHeaderEnd(lines, headerSeq);
+    if(idxAfterHeader === -1) return { rows: [], found:false };
+    let idx = idxAfterHeader;
+    const rows = [];
+    while(idx + cols <= lines.length){
+      const firstCell = norm(lines[idx]).toLowerCase();
+      if(firstCell === 'results per page' || firstCell.startsWith('page ') || STOP_TITLES.indexOf(firstCell) !== -1) break;
+      const chunk = lines.slice(idx, idx+cols).map(norm);
+      rows.push(chunk);
+      idx += cols;
+    }
+    return { rows, found:true };
+  }
+  function parseTripText(raw){
+    const lines = raw.split(/\r?\n/);
+    const duty = extractRows(lines, DUTY_HEADERS, DUTY_HEADERS.length).rows.map(r => ({ start:r[0], end:r[1], pairingId:r[2], dutyHours:r[3], flyingHours:r[4], restRequired:r[5], restAvailable:r[6] }));
+    const itinRaw = extractRows(lines, ITIN_HEADERS, ITIN_HEADERS.length);
+    const itin = itinRaw.rows.map(r => ({ flightId:r[0], date:r[1], from:r[2], dep:r[3], to:r[4], arr:r[5], ac:r[6], version:r[7], acReg:r[8], flightTime:r[9], groundTime:r[10], actStart:r[11], actEnd:r[12], actLoc:r[13] }));
+    const crewRaw = extractRows(lines, CREW_HEADERS, CREW_HEADERS.length);
+    const crew = crewRaw.rows.map(r => ({ opRank:r[0], posRank:r[1], crewId:r[2], crewName:r[3], wt:r[4], workPos:r[5], base:r[6], sdc:r[7], checkIn:r[8] })).filter(c => c.crewId);
+    return { duty, itin, crew, found: { duty: duty.length>0, itin: itin.length>0, crew: crew.length>0 } };
+  }
+
+  // ===== PDF CrewTripReport parser (enhanced) =====
+  function parseCrewTripReport(raw){
+    const lines = raw.split(/\r?\n/);
+    const result = {
+      date: '',
+      acReg: '',
+      flights: [], // { flightId, from, to, std, sta, fh, acReg }
+      cockpit: [], // { crewId, opRank, crewName }
+      cabinCrew: [], // { crewId, opRank, crewName }
+    };
+
+    // Extract date from lines like "19-Jul-2026"
+    const dateMatch = raw.match(/\d{2}-[A-Za-z]{3}-\d{4}/);
+    if(dateMatch) result.date = dateMatch[0];
+
+    // Extract A/C Reg from summary lines: e.g., "7M8MVS"
+    const acMatch = raw.match(/(7M8|A330|B737|A380|B777|9M-)/);
+    if(acMatch) result.acReg = acMatch[1];
+
+    // Parse flight summary lines: they look like "MH725 ... 02:15 7M8MVS"
+    // Regex: (MH\d+)([A-Z]{3})([A-Z]{3})(\d{2}:\d{2})(\d{2}:\d{2})(\d{2}:\d{2})([A-Z0-9]+)
+    // But the sample has "MH725LSOPKUL 17:50CGK 19:0500:4502:157M8MVS" - messed up.
+    // We'll use a more robust approach: find lines containing "MH" and "KUL" or "CGK" etc.
+    // Actually, from the sample we saw: "MH725LSOPKUL 17:50CGK 19:0500:4502:157M8MVS"
+    // After splitting, we can parse by spaces? Let's just do a flexible regex.
+    const flightRegex = /(MH\d+)\s*([A-Z]{3})\s*(\d{2}:\d{2})\s*([A-Z]{3})\s*(\d{2}:\d{2})\s*(\d{2}:\d{2})\s*([A-Z0-9]+)/g;
+    let match;
+    while((match = flightRegex.exec(raw)) !== null){
+      const flightId = match[1];
+      const from = match[2];
+      const std = match[3];
+      const to = match[4];
+      const sta = match[5];
+      const fh = match[6];
+      const acReg = match[7];
+      result.flights.push({ flightId, from, to, std, sta, fh, acReg });
+    }
+
+    // If above fails, try the simpler pattern without sector names
+    if(result.flights.length === 0){
+      // Try: MH725 ... 1750 ... 1905 ... 0215 7M8MVS
+      const simpleRegex = /(MH\d+)[\s\S]*?(\d{2}:\d{2})[\s\S]*?(\d{2}:\d{2})[\s\S]*?(\d{2}:\d{2})[\s\S]*?([A-Z0-9]+)/g;
+      while((match = simpleRegex.exec(raw)) !== null){
+        const flightId = match[1];
+        const std = match[2];
+        const sta = match[3];
+        const fh = match[4];
+        const acReg = match[5];
+        // Try to get from/to from context (maybe from nearby)
+        let from='', to='';
+        const parts = raw.substring(match.index, match.index+200).split(/\s+/);
+        for(let p of parts){
+          if(p.length===3 && p.match(/[A-Z]{3}/)){ if(!from) from=p; else if(!to) to=p; }
+        }
+        result.flights.push({ flightId, from, to, std, sta, fh, acReg });
+      }
+    }
+
+    // Parse crew: find "Inbound" and "Outbound" sections
+    let section = null;
+    const crewRows = [];
+    for(let i=0; i<lines.length; i++){
+      const l = lines[i].trim();
+      if(l.toLowerCase().includes('inbound')){ section = 'inbound'; continue; }
+      if(l.toLowerCase().includes('outbound')){ section = 'outbound'; continue; }
+      // If line looks like data row: ID + name + rank
+      if(section && l.match(/\d{7}/)){
+        // Pattern: ID + rank + name (maybe with spaces)
+        // Example: "2108428AGUS RIZAL HASHIM BIN HARITHCAPTOPKULSIGNING ON"
+        // Try to parse
+        const idMatch = l.match(/(\d{7})([A-Z]+)([A-Z]{2,3})([A-Z]+)(SIGNING ON|SIGNING OFF)/);
+        if(idMatch){
+          const id = idMatch[1];
+          const rank = idMatch[2];
+          const wt = idMatch[3];
+          const base = idMatch[4];
+          const action = idMatch[5];
+          // name is between id and rank
+          const nameStart = idMatch.index + id.length;
+          const nameEnd = l.indexOf(rank, nameStart);
+          const name = l.substring(nameStart, nameEnd).trim();
+          crewRows.push({ flight: '?', id, name, rank, wt, base, action, direction: section });
+        } else {
+          // Try alternative: ID + name + rank separated by spaces? but sample has no spaces.
+          // We'll do a fallback: split by rank strings
+          const rankList = ['CAPT','FO','SO','FS','LSOP','IFS','LS'];
+          let found = false;
+          for(let r of rankList){
+            if(l.includes(r)){
+              const parts = l.split(r);
+              if(parts.length>=2){
+                const id = parts[0].trim();
+                const name = parts[1].trim();
+                crewRows.push({ flight: '?', id, name, rank: r, wt: '', base: '', action: '', direction: section });
+                found = true;
+                break;
+              }
+            }
+          }
+          if(!found){
+            // Last resort: just take first word as ID, rest as name
+            const words = l.split(/\s+/);
+            if(words.length>=2){
+              const id = words[0];
+              const name = words.slice(1).join(' ');
+              crewRows.push({ flight: '?', id, name, rank: '', wt: '', base: '', action: '', direction: section });
+            }
+          }
+        }
+      }
+    }
+
+    // Separate cockpit and cabin
+    const cockpitRanks = ['CAPT','FO','SO'];
+    crewRows.forEach(c => {
+      if(cockpitRanks.includes(c.rank.toUpperCase())){
+        result.cockpit.push({ crewId: c.id, opRank: c.rank, crewName: c.name });
+      } else {
+        result.cabinCrew.push({ crewId: c.id, opRank: c.rank || 'FS', crewName: c.name });
+      }
+    });
+
+    // Build itinerary and crew list in the standard format used by the app
+    const itin = result.flights.map(f => ({
+      flightId: f.flightId,
+      date: result.date,
+      from: f.from || '',
+      dep: f.std || '',
+      to: f.to || '',
+      arr: f.sta || '',
+      ac: '',
+      version: '',
+      acReg: f.acReg || result.acReg || '',
+      flightTime: f.fh || '',
+      groundTime: '',
+      actStart: '',
+      actEnd: '',
+      actLoc: ''
+    }));
+
+    const crew = result.cockpit.concat(result.cabinCrew).map(c => ({
+      opRank: c.opRank,
+      posRank: c.opRank,
+      crewId: c.crewId,
+      crewName: c.crewName,
+      wt: '',
+      workPos: '',
+      base: '',
+      sdc: '',
+      checkIn: ''
+    }));
+
+    return {
+      duty: [],
+      itin: itin,
+      crew: crew,
+      found: { duty: false, itin: itin.length>0, crew: crew.length>0 },
+      source: 'pdf',
+      pdfData: { date: result.date, acReg: result.acReg, flights: result.flights }
+    };
+  }
+
+  // ===== Shared state & rendering =====
   let state = null;
 
   function fval(key, def){
-    if(state.fields.hasOwnProperty(key) && state.fields[key] !== '') return state.fields[key];
-    if(state.fields.hasOwnProperty(key)) return state.fields[key];
+    if(state.fields && state.fields.hasOwnProperty(key) && state.fields[key] !== '') return state.fields[key];
     return def || '';
   }
 
-  window.updateField = function(key, val){
-    state.fields[key] = val;
-  };
+  window.updateField = function(key, val){ state.fields[key] = val; };
 
   window.openPositionModal = function(crewId, crewName){
     const ac0 = state.itin.length ? state.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
     const posList = isNarrow ? POSITIONS_NARROW : POSITIONS_WIDE;
     const gridClass = isNarrow ? 'narrow' : 'wide';
-
     state.modalCrew = crewId;
     modalCrewName.textContent = crewName;
     posGrid.className = 'pos-grid ' + gridClass;
@@ -322,17 +456,25 @@
     buildReport();
   };
 
-  document.getElementById('modalCloseBtn').addEventListener('click', () => {
-    posModalOverlay.style.display = 'none';
-  });
-  posModalOverlay.addEventListener('click', (e) => {
-    if(e.target === posModalOverlay) posModalOverlay.style.display = 'none';
-  });
+  document.getElementById('modalCloseBtn').addEventListener('click', () => { posModalOverlay.style.display = 'none'; });
+  posModalOverlay.addEventListener('click', (e) => { if(e.target === posModalOverlay) posModalOverlay.style.display = 'none'; });
+
+  function renderDebugTable(rows, cols){
+    if(!rows.length) return '<p style="color:#888;font-size:11px;">none found</p>';
+    let html = '<table class="dbg"><tr>' + cols.map(c=>'<th>'+c+'</th>').join('') + '</tr>';
+    rows.forEach(row=>{
+      html += '<tr>' + cols.map(c=> '<td>'+(row[c]!==undefined?row[c]:'')+'</td>').join('') + '</tr>';
+    });
+    html += '</table>';
+    return html;
+  }
 
   function buildReport(){
     const d = state;
+    const isPdf = (d.source === 'pdf');
     const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
     const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
+    const fos = d.crew.filter(c => c.opRank.toUpperCase() === 'FO');
     const ac0 = d.itin.length ? d.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
 
@@ -349,22 +491,120 @@
       picChosen = state.selectedPIC || captains[0];
     } else if(captains.length === 1){
       picChosen = captains[0];
-    } else {
-      picChosen = null;
     }
 
-    // Flight Info + REP time
+    // REP time
     const std0 = d.itin.length ? fval('std-0', timeOnly(d.itin[0].dep)) : '';
     const repOffset = isNarrow ? 75 : 90;
     const rep = std0 ? subtractMinutes(std0, repOffset) : '----';
 
-    // Build leg rows
-    let legRows = '';
-    if(d.itin.length){
-      d.itin.forEach((l,i) => {
-        legRows += `<tr>
+    // If PDF, use pdfData for date/acReg
+    let pdfDate = d.pdfData ? d.pdfData.date : '';
+    let pdfAcReg = d.pdfData ? d.pdfData.acReg : '';
+
+    // ---- Build HTML based on source ----
+    let html = '';
+
+    if(isPdf){
+      // ---- NEW PDF LAYOUT ----
+      html += `<div class="rpad">`;
+
+      // Top info: Date, A/C Reg, Bay, REP
+      html += `<div class="pdf-top-info">
+        <span><span class="label">DATE:</span> <input value="${esc(pdfDate || fval('pdfDate', ''))}" oninput="updateField('pdfDate', this.value)" style="width:100px;"></span>
+        <span><span class="label">A/C REG:</span> <input value="${esc(pdfAcReg || fval('pdfAcReg', ''))}" oninput="updateField('pdfAcReg', this.value)" style="width:80px;"></span>
+        <span><span class="label">BAY:</span> <input value="${esc(fval('bay', ''))}" oninput="updateField('bay', this.value)" style="width:60px;"></span>
+        <span><span class="label">REP TIME:</span> <input value="${esc(rep)}" style="width:60px;font-weight:bold;" readonly></span>
+      </div>`;
+
+      // Flight table
+      html += `<table class="rtab" style="font-size:9px;">
+        <tr><th>F.NO</th><th>SECTOR</th><th>STD</th><th>STA</th><th>ATD</th><th>ATA</th><th>FT</th><th>REMARKS</th></tr>`;
+      d.itin.forEach((l, i) => {
+        const ft = l.flightTime || fval('ft-'+i, '');
+        html += `<tr>
           <td>${esc(l.flightId)}</td>
           <td>${esc((l.from||'')+'/'+(l.to||''))}</td>
+          <td><input value="${esc(fval('std-'+i, timeOnly(l.dep)))}" oninput="updateField('std-${i}', this.value)"></td>
+          <td><input value="${esc(fval('sta-'+i, timeOnly(l.arr)))}" oninput="updateField('sta-${i}', this.value)"></td>
+          <td><input value="${esc(fval('atd-'+i, ''))}" placeholder="—" oninput="updateField('atd-${i}', this.value)"></td>
+          <td><input value="${esc(fval('ata-'+i, ''))}" placeholder="—" oninput="updateField('ata-${i}', this.value)"></td>
+          <td><input value="${esc(ft)}" oninput="updateField('ft-${i}', this.value)"></td>
+          <td><input class="remarksTxt" value="${esc(fval('remarks-'+i, ''))}" oninput="updateField('remarks-${i}', this.value)"></td>
+        </tr>`;
+      });
+      html += `</table>`;
+
+      // Airport name (editable)
+      html += `<div class="pdf-airport"><input placeholder="Airport name (write with pen)" value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)"></div>`;
+
+      // Captain & FO
+      html += `<table class="rtab" style="margin-top:4px;">
+        <tr><th style="width:20%;">Staff No</th><th style="width:10%;">Rank</th><th style="width:70%;">Name</th></tr>`;
+      if(captains.length){
+        captains.forEach(c => {
+          html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
+        });
+      } else {
+        html += `<tr><td colspan="3">—</td></tr>`;
+      }
+      if(fos.length){
+        fos.forEach(c => {
+          html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
+        });
+      }
+      html += `</table>`;
+
+      // Cabin Crew table
+      html += `<div style="margin-top:6px;font-weight:bold;font-size:9px;">CABIN CREW (${cabinCrew.length})</div>`;
+      html += `<table class="rtab crew-table" style="font-size:9px;">
+        <tr><th>S/No</th><th>Rank</th><th style="text-align:left;">Name</th><th>Working Post</th><th>Door</th></tr>`;
+      cabinCrew.forEach(c => {
+        const pos = state.positions[c.crewId] || '';
+        const posDisplay = pos ? esc(pos) : `<span class="tap-indicator">tap</span>`;
+        html += `<tr>
+          <td>${esc(c.crewId)}</td>
+          <td>${esc(c.opRank)}</td>
+          <td style="text-align:left;">${esc(c.crewName)}</td>
+          <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${posDisplay}</td>
+          <td><input value="${esc(fval('door-'+c.crewId, ''))}" oninput="updateField('door-${c.crewId}', this.value)"></td>
+        </tr>`;
+      });
+      html += `</table>`;
+
+      // Bottom fields
+      html += `<div class="pdf-bottom-fields">
+        <div class="fbox"><label>BD</label><input value="${esc(fval('bd',''))}" oninput="updateField('bd', this.value)"></div>
+        <div class="fbox"><label>LAST PAX</label><input value="${esc(fval('lastpax',''))}" oninput="updateField('lastpax', this.value)"></div>
+        <div class="fbox"><label>CAT</label><input value="${esc(fval('cat',''))}" oninput="updateField('cat', this.value)"></div>
+        <div class="fbox"><label>AIC</label><input value="${esc(fval('aic',''))}" oninput="updateField('aic', this.value)"></div>
+        <div class="fbox"><label>CLC</label><input value="${esc(fval('clc',''))}" oninput="updateField('clc', this.value)"></div>
+        <div class="fbox"><label>1ST</label><input value="${esc(fval('first',''))}" oninput="updateField('first', this.value)"></div>
+        <div class="fbox"><label>LAST</label><input value="${esc(fval('last',''))}" oninput="updateField('last', this.value)"></div>
+        <div class="fbox"><label>DOOR</label><input value="${esc(fval('door',''))}" oninput="updateField('door', this.value)"></div>
+      </div>`;
+
+      html += `</div>`;
+    } else {
+      // ---- OLD iFLIGHT LAYOUT (unchanged) ----
+      const cicPickerHtml = (cic.candidates.length) ? `<div class="pick noprint-inline">Multiple supervisory crew — choose: <select id="cicSelect">${cic.candidates.map(c => `<option value="${esc(c.crewId)}" ${cicChosen && cicChosen.crewId===c.crewId?'selected':''}>${esc(c.crewName)} (${esc(c.opRank)})</option>`).join('')}</select></div>` : '';
+      let captainHtml = '';
+      if(isNarrow){
+        if(captains.length === 0) captainHtml = '—';
+        else {
+          const pic = picChosen || captains[0];
+          captainHtml = esc(pic.crewName) + ' (' + esc(pic.crewId) + ')';
+          if(captains.length > 1) captainHtml += `<div class="pick noprint-inline"><select id="picSelect">${captains.map(c => `<option value="${esc(c.crewId)}" ${pic && pic.crewId===c.crewId?'selected':''}>${esc(c.crewName)} (${esc(c.crewId)})</option>`).join('')}</select></div>`;
+        }
+      } else {
+        captainHtml = (captains.length === 0) ? '—' : captains.map(c => esc(c.crewName)+' ('+esc(c.crewId)+')').join(', ');
+      }
+
+      // Leg rows
+      let legRows = '';
+      d.itin.forEach((l,i) => {
+        legRows += `<tr>
+          <td>${esc(l.flightId)}</td><td>${esc((l.from||'')+'/'+(l.to||''))}</td>
           <td><input value="${esc(fval('std-'+i, timeOnly(l.dep)))}" oninput="updateField('std-${i}', this.value)"></td>
           <td><input value="${esc(fval('sta-'+i, timeOnly(l.arr)))}" oninput="updateField('sta-${i}', this.value)"></td>
           <td><input value="${esc(fval('atd-'+i, ''))}" placeholder="—" oninput="updateField('atd-${i}', this.value)"></td>
@@ -374,149 +614,75 @@
         </tr>
         <tr class="remarksRow"><td colspan="8" style="text-align:left;">
           <input class="remarksTxt" placeholder="Remarks" value="${esc(fval('remarks-'+i,''))}" oninput="updateField('remarks-${i}', this.value)">
-          <table class="rtab mini">
-            <tr><th colspan="3">Meals</th><th colspan="5">Passenger Load</th></tr>
-            <tr><th>FC</th><th>CCC</th><th>EY</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
-            <tr>
-              <td><input value="${esc(fval('mfc-'+i,''))}" oninput="updateField('mfc-${i}', this.value)"></td>
-              <td><input value="${esc(fval('mccc-'+i,''))}" oninput="updateField('mccc-${i}', this.value)"></td>
-              <td><input value="${esc(fval('mey-'+i,''))}" oninput="updateField('mey-${i}', this.value)"></td>
-              <td><input value="${esc(fval('la-'+i,''))}" oninput="updateField('la-${i}', this.value)"></td>
-              <td><input value="${esc(fval('lb-'+i,''))}" oninput="updateField('lb-${i}', this.value)"></td>
-              <td><input value="${esc(fval('lc-'+i,''))}" oninput="updateField('lc-${i}', this.value)"></td>
-              <td><input value="${esc(fval('ld-'+i,''))}" oninput="updateField('ld-${i}', this.value)"></td>
-              <td><input value="${esc(fval('le-'+i,''))}" oninput="updateField('le-${i}', this.value)"></td>
-            </tr>
-          </table>
+          <table class="rtab mini"><tr><th colspan="3">Meals</th><th colspan="5">Passenger Load</th></tr>
+          <tr><th>FC</th><th>CCC</th><th>EY</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+          <tr><td><input value="${esc(fval('mfc-'+i,''))}" oninput="updateField('mfc-${i}', this.value)"></td>
+          <td><input value="${esc(fval('mccc-'+i,''))}" oninput="updateField('mccc-${i}', this.value)"></td>
+          <td><input value="${esc(fval('mey-'+i,''))}" oninput="updateField('mey-${i}', this.value)"></td>
+          <td><input value="${esc(fval('la-'+i,''))}" oninput="updateField('la-${i}', this.value)"></td>
+          <td><input value="${esc(fval('lb-'+i,''))}" oninput="updateField('lb-${i}', this.value)"></td>
+          <td><input value="${esc(fval('lc-'+i,''))}" oninput="updateField('lc-${i}', this.value)"></td>
+          <td><input value="${esc(fval('ld-'+i,''))}" oninput="updateField('ld-${i}', this.value)"></td>
+          <td><input value="${esc(fval('le-'+i,''))}" oninput="updateField('le-${i}', this.value)"></td></tr></table>
         </td></tr>`;
       });
-    } else {
-      legRows = '<tr><td colspan="8" style="color:#888;">No itinerary rows detected — fill manually</td></tr>';
-    }
 
-    // Crew rows
-    let crewRows = '';
-    if(cabinCrew.length){
+      // Crew rows
+      let crewRows = '';
       cabinCrew.forEach(c => {
         const isCIC = cicChosen && c.crewId === cicChosen.crewId;
         const pos = state.positions[c.crewId] || '';
-        // Use a span with class "tap-indicator" to hide in print
         const posDisplay = pos ? esc(pos) : `<span class="tap-indicator">tap</span>`;
         crewRows += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
-          <td>${esc(c.crewId)}</td>
-          <td>${esc(c.opRank)}</td>
-          <td style="text-align:left;">${esc(c.crewName)}</td>
+          <td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td>
           <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${posDisplay}</td>
           <td><input value="${esc(fval('door-'+c.crewId,''))}" oninput="updateField('door-${c.crewId}', this.value)"></td>
         </tr>`;
       });
-    } else {
-      crewRows = '<tr><td colspan="5" style="color:#888;">No crew rows detected — fill manually</td></tr>';
-    }
 
-    // CIC dropdown (non-print only)
-    let cicPickerHtml = '';
-    if(cic.candidates.length){
-      cicPickerHtml = `<div class="pick noprint-inline">
-        Multiple supervisory crew — choose:
-        <select id="cicSelect">
-          ${cic.candidates.map(c => `<option value="${esc(c.crewId)}" ${cicChosen && cicChosen.crewId===c.crewId?'selected':''}>${esc(c.crewName)} (${esc(c.opRank)})</option>`).join('')}
-        </select>
+      // Flight Time Details (old)
+      let ftRows = '';
+      d.itin.forEach((l) => {
+        const flightNo = esc(l.flightId);
+        const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
+        ftRows += `<tr><td style="font-weight:bold;font-size:9px;">${flightNo}</td>${cats.map(() => `<td><span class="ft-box">&nbsp;</span></td>`).join('')}</tr>`;
+      });
+
+      html = `<div class="rpad">
+        <div class="rtitle"><h2>Cabin Crew Voyage Report</h2></div>
+        <div class="rsection-title"><span>Flight Info</span><span>REP ${esc(rep)}</span></div>
+        <table class="rtab"><tr><th>Flt No</th><th>Sector</th><th>STD</th><th>STA</th><th>ATD</th><th>ATA</th><th>A/C Type</th><th>A/C Reg</th></tr>${legRows}</table>
+        <table class="rtab"><tr><th>Captain</th><th>Crew In Charge</th></tr><tr><td>${captainHtml}</td><td>${cicChosen ? esc(cicChosen.crewName)+' ('+esc(cicChosen.crewId)+')' : '—'}${cicPickerHtml}</td></tr></table>
+        <div class="rsection-title"><span>Cabin Crew (${cabinCrew.length})</span></div>
+        <table class="rtab crew-table"><tr><th>S/No</th><th>Rank</th><th style="text-align:left;">Name</th><th>Position</th><th>Door</th></tr>${crewRows}</table>
+        <div class="rsection-title">Flight Time Details</div>
+        <table class="ft-table"><tr><th>Flt</th><th>LP</th><th>CB</th><th>CAT</th><th>AIC</th><th>BC</th><th>1P</th><th>BC</th><th>DC</th><th>DO</th></tr>${ftRows}</table>
       </div>`;
     }
 
-    // Captain cell content
-    let captainHtml = '';
-    if(isNarrow){
-      if(captains.length === 0){
-        captainHtml = '—';
-      } else {
-        const pic = picChosen || captains[0];
-        captainHtml = esc(pic.crewName) + ' (' + esc(pic.crewId) + ')';
-        if(captains.length > 1){
-          captainHtml += `<div class="pick noprint-inline">
-            <select id="picSelect">
-              ${captains.map(c => `<option value="${esc(c.crewId)}" ${pic && pic.crewId===c.crewId?'selected':''}>${esc(c.crewName)} (${esc(c.crewId)})</option>`).join('')}
-            </select>
-          </div>`;
-        }
+    reportEl.innerHTML = html;
+
+    // Event listeners for dropdowns (only if not PDF)
+    if(!isPdf){
+      const cicSel = document.getElementById('cicSelect');
+      if(cicSel){
+        cicSel.addEventListener('change', (e) => {
+          const chosen = cic.candidates.find(c => c.crewId === e.target.value);
+          state.chosenCIC = chosen;
+          buildReport();
+        });
       }
-    } else {
-      // widebody: list all captains
-      if(captains.length === 0){
-        captainHtml = '—';
-      } else {
-        captainHtml = captains.map(c => esc(c.crewName) + ' (' + esc(c.crewId) + ')').join(', ');
+      const picSel = document.getElementById('picSelect');
+      if(picSel){
+        picSel.addEventListener('change', (e) => {
+          const chosen = captains.find(c => c.crewId === e.target.value);
+          state.selectedPIC = chosen;
+          buildReport();
+        });
       }
     }
 
-    // Flight Time Details
-    let ftRows = '';
-    if(d.itin.length){
-      d.itin.forEach((l, i) => {
-        const flightNo = esc(l.flightId);
-        const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
-        ftRows += `<tr>
-          <td style="font-weight:bold;font-size:9px;">${flightNo}</td>
-          ${cats.map(() => `<td><span class="ft-box">&nbsp;</span></td>`).join('')}
-        </tr>`;
-      });
-    } else {
-      ftRows = `<tr><td colspan="10" style="color:#888;">No flights</td></tr>`;
-    }
-
-    // Assemble report
-    reportEl.innerHTML = `
-      <div class="rpad">
-        <div class="rtitle"><h2>Cabin Crew Voyage Report</h2></div>
-
-        <div class="rsection-title"><span>Flight Info</span><span>REP ${esc(rep)}</span></div>
-        <table class="rtab">
-          <tr><th>Flt No</th><th>Sector</th><th>STD</th><th>STA</th><th>ATD</th><th>ATA</th><th>A/C Type</th><th>A/C Reg</th></tr>
-          ${legRows}
-        </table>
-
-        <table class="rtab">
-          <tr><th>Captain</th><th>Crew In Charge</th></tr>
-          <tr>
-            <td>${captainHtml}</td>
-            <td>${cicChosen ? esc(cicChosen.crewName)+' ('+esc(cicChosen.crewId)+')' : '—'}${cicPickerHtml}</td>
-          </tr>
-        </table>
-
-        <div class="rsection-title"><span>Cabin Crew (${cabinCrew.length})</span></div>
-        <table class="rtab crew-table">
-          <tr><th>S/No</th><th>Rank</th><th style="text-align:left;">Name</th><th>Position</th><th>Door</th></tr>
-          ${crewRows}
-        </table>
-
-        <div class="rsection-title">Flight Time Details</div>
-        <table class="ft-table">
-          <tr><th>Flt</th><th>LP</th><th>CB</th><th>CAT</th><th>AIC</th><th>BC</th><th>1P</th><th>BC</th><th>DC</th><th>DO</th></tr>
-          ${ftRows}
-        </table>
-      </div>
-    `;
-
-    // Event listeners for dropdowns
-    const cicSel = document.getElementById('cicSelect');
-    if(cicSel){
-      cicSel.addEventListener('change', (e) => {
-        const chosen = cic.candidates.find(c => c.crewId === e.target.value);
-        state.chosenCIC = chosen;
-        buildReport();
-      });
-    }
-    const picSel = document.getElementById('picSelect');
-    if(picSel){
-      picSel.addEventListener('change', (e) => {
-        const chosen = captains.find(c => c.crewId === e.target.value);
-        state.selectedPIC = chosen;
-        buildReport();
-      });
-    }
-
-    // Position cell click
+    // Position cell clicks
     reportEl.querySelectorAll('.pos-cell').forEach(el => {
       el.addEventListener('click', () => {
         window.openPositionModal(el.getAttribute('data-crewid'), el.getAttribute('data-crewname'));
@@ -524,18 +690,36 @@
     });
   }
 
-  function parseAndRender(){
+  // ===== Shared state setter =====
+  function setStateAndRender(parsed, source){
+    state = parsed;
+    state.chosenCIC = null;
+    state.selectedPIC = null;
+    state.fields = {};
+    state.positions = {};
+    state.source = source || 'iflight';
+    buildReport();
+    reportCard.style.display = '';
+    emptyCard.style.display = 'none';
+    if(source === 'iflight'){
+      dbgContent.innerHTML =
+        '<p style="font-size:11px;color:#888;">Duty Details</p>' + renderDebugTable(parsed.duty, ['start','end','pairingId','dutyHours','flyingHours','restRequired','restAvailable']) +
+        '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, ['flightId','date','from','dep','to','arr','ac','version','acReg','flightTime']) +
+        '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, ['opRank','posRank','crewId','crewName','base','sdc','checkIn']);
+      dbgWrap.style.display = '';
+    } else {
+      dbgWrap.style.display = 'none';
+    }
+  }
+
+  // ===== iFlight parse handler =====
+  document.getElementById('parseBtn').addEventListener('click', function(){
     statusEl.textContent = 'Parsing…';
     statusEl.className = 'status';
     try{
       const raw = pasteBox.value;
-      if(!raw.trim()){
-        statusEl.textContent = 'Paste the trip report text first.';
-        statusEl.className = 'status err';
-        return;
-      }
+      if(!raw.trim()){ statusEl.textContent = 'Paste the trip report text first.'; statusEl.className = 'status err'; return; }
       const parsed = parseTripText(raw);
-
       if(!parsed.found.itin && !parsed.found.crew){
         statusEl.textContent = 'Could not find Itinerary Details or Crew List sections. Make sure you copied the full page (select-all), including the table headers.';
         statusEl.className = 'status err';
@@ -544,40 +728,21 @@
         emptyCard.style.display = '';
         return;
       }
-
       const missing = [];
       if(!parsed.found.duty) missing.push('Duty Details');
       if(!parsed.found.itin) missing.push('Itinerary Details');
       if(!parsed.found.crew) missing.push('Crew List');
-
       statusEl.className = missing.length ? 'status err' : 'status ok';
-      statusEl.textContent = missing.length
-        ? 'Parsed with missing sections: ' + missing.join(', ') + '. Those parts left blank in the report.'
-        : 'Parsed OK — ' + parsed.duty.length + ' duty period(s), ' + parsed.itin.length + ' leg(s), ' + parsed.crew.length + ' crew.';
-
-      dbgContent.innerHTML =
-        '<p style="font-size:11px;color:#888;">Duty Details</p>' + renderDebugTable(parsed.duty, ['start','end','pairingId','dutyHours','flyingHours','restRequired','restAvailable']) +
-        '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, ['flightId','date','from','dep','to','arr','ac','version','acReg','flightTime']) +
-        '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, ['opRank','posRank','crewId','crewName','base','sdc','checkIn']);
-      dbgWrap.style.display = '';
-
-      state = parsed;
-      state.chosenCIC = null;
-      state.selectedPIC = null;
-      state.fields = {};
-      state.positions = {};
-      buildReport();
-      reportCard.style.display = '';
-      emptyCard.style.display = 'none';
+      statusEl.textContent = missing.length ? 'Parsed with missing sections: '+missing.join(', ')+'. Those parts left blank.' : 'Parsed OK — '+parsed.duty.length+' duty period(s), '+parsed.itin.length+' leg(s), '+parsed.crew.length+' crew.';
+      setStateAndRender(parsed, 'iflight');
     } catch(err){
-      statusEl.textContent = 'Error while parsing: ' + (err && err.message ? err.message : err);
+      statusEl.textContent = 'Error: '+ (err.message||err);
       statusEl.className = 'status err';
       console.error(err);
     }
-  }
+  });
 
-  document.getElementById('parseBtn').addEventListener('click', parseAndRender);
-  document.getElementById('clearBtn').addEventListener('click', () => {
+  document.getElementById('clearBtn').addEventListener('click', function(){
     pasteBox.value = '';
     statusEl.textContent = '';
     statusEl.className = 'status';
@@ -585,7 +750,84 @@
     reportCard.style.display = 'none';
     emptyCard.style.display = '';
   });
+
+  // ===== PDF parse handler =====
+  function handlePdfParse(text){
+    pdfStatus.textContent = 'Parsing PDF…';
+    pdfStatus.className = 'status';
+    try{
+      if(!text.trim()){ pdfStatus.textContent = 'No text to parse.'; pdfStatus.className = 'status err'; return; }
+      const parsed = parseCrewTripReport(text);
+      if(!parsed.found.crew){
+        pdfStatus.textContent = 'Could not parse crew data. Make sure you copied the full table rows from the PDF.';
+        pdfStatus.className = 'status err';
+        return;
+      }
+      pdfStatus.className = 'status ok';
+      pdfStatus.textContent = 'Parsed OK — '+parsed.itin.length+' leg(s), '+parsed.crew.length+' crew members.';
+      setStateAndRender(parsed, 'pdf');
+    } catch(err){
+      pdfStatus.textContent = 'Error: '+ (err.message||err);
+      pdfStatus.className = 'status err';
+      console.error(err);
+    }
+  }
+
+  document.getElementById('parsePdfBtn').addEventListener('click', function(){
+    handlePdfParse(pdfBox.value);
+  });
+
+  document.getElementById('clearPdfBtn').addEventListener('click', function(){
+    pdfBox.value = '';
+    pdfStatus.textContent = '';
+    pdfStatus.className = 'status';
+    pdfFile.value = '';
+  });
+
+  // ===== PDF file upload with pdf.js =====
+  pdfFile.addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    pdfStatus.textContent = 'Reading PDF…';
+    pdfStatus.className = 'status';
+    const reader = new FileReader();
+    reader.onload = function(loadEvent){
+      const arrayBuffer = loadEvent.target.result;
+      // Use pdf.js to extract text
+      const pdfjsLib = window['pdfjs-dist/build/pdf'];
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+      pdfjsLib.getDocument({data: arrayBuffer}).promise.then(function(pdf){
+        let fullText = '';
+        const pages = [];
+        for(let i=1; i<=pdf.numPages; i++){
+          pages.push(pdf.getPage(i));
+        }
+        return Promise.all(pages).then(function(pagePromises){
+          return Promise.all(pagePromises.map(function(page){
+            return page.getTextContent().then(function(textContent){
+              const strings = textContent.items.map(item => item.str);
+              return strings.join(' ');
+            });
+          }));
+        }).then(function(texts){
+          fullText = texts.join('\n');
+          pdfBox.value = fullText;
+          pdfStatus.textContent = 'PDF text extracted. Auto‑parsing…';
+          // Auto-parse
+          handlePdfParse(fullText);
+        });
+      }).catch(function(err){
+        pdfStatus.textContent = 'Error reading PDF: ' + err.message;
+        pdfStatus.className = 'status err';
+        console.error(err);
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  // ===== Print =====
   document.getElementById('printBtn').addEventListener('click', () => window.print());
+
 })();
 </script>
 </body>
