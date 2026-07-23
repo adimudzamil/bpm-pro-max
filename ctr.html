@@ -77,6 +77,7 @@
 <header>
   <h1>CCVR Autofill</h1>
   <p>Paste iFlight Crew Trip Report text → auto-fill a printable Cabin Crew Voyage Report</p>
+  <p style="font-size:10px;color:#555;margin-top:4px;">build v3</p>
 </header>
 
 <div class="wrap">
@@ -126,21 +127,27 @@
 
   function norm(s){ return (s===undefined||s===null) ? '' : String(s).trim(); }
 
-  function findSeq(lines, seq){
-    for(let i=0;i<=lines.length-seq.length;i++){
-      let ok=true;
-      for(let j=0;j<seq.length;j++){
-        if(norm(lines[i+j]).toLowerCase() !== seq[j].toLowerCase()){ ok=false; break; }
+  // Source pastes have a blank filler line between each header cell (but NOT
+  // between data cells), so header search skips blanks while data extraction
+  // below keeps them (blanks there mean an empty column value).
+  function findHeaderEnd(lines, seq){
+    for(let start=0; start<lines.length; start++){
+      let li = start;
+      let ok = true;
+      for(let s=0; s<seq.length; s++){
+        while(li < lines.length && norm(lines[li]) === '') li++;
+        if(li >= lines.length || norm(lines[li]).toLowerCase() !== seq[s].toLowerCase()){ ok = false; break; }
+        li++;
       }
-      if(ok) return i;
+      if(ok) return li;
     }
     return -1;
   }
 
   function extractRows(lines, headerSeq, cols){
-    const startHeader = findSeq(lines, headerSeq);
-    if(startHeader === -1) return { rows: [], found:false };
-    let idx = startHeader + headerSeq.length;
+    const idxAfterHeader = findHeaderEnd(lines, headerSeq);
+    if(idxAfterHeader === -1) return { rows: [], found:false };
+    let idx = idxAfterHeader;
     const rows = [];
     while(idx + cols <= lines.length){
       const firstCell = norm(lines[idx]).toLowerCase();
@@ -330,6 +337,9 @@
   }
 
   function parseAndRender(){
+    statusEl.textContent = 'Parsing…';
+    statusEl.className = 'status';
+    try{
     const raw = pasteBox.value;
     if(!raw.trim()){
       statusEl.textContent = 'Paste the trip report text first.';
@@ -355,7 +365,7 @@
     statusEl.className = missing.length ? 'status err' : 'status ok';
     statusEl.textContent = missing.length
       ? 'Parsed with missing sections: ' + missing.join(', ') + '. Those parts left blank in the report.'
-      = 'Parsed OK — ' + parsed.duty.length + ' duty period(s), ' + parsed.itin.length + ' leg(s), ' + parsed.crew.length + ' crew.';
+      : 'Parsed OK — ' + parsed.duty.length + ' duty period(s), ' + parsed.itin.length + ' leg(s), ' + parsed.crew.length + ' crew.';
 
     dbgContent.innerHTML =
       '<p style="font-size:11px;color:#888;">Duty Details</p>' + renderDebugTable(parsed.duty, ['start','end','pairingId','dutyHours','flyingHours','restRequired','restAvailable']) +
@@ -368,6 +378,11 @@
     buildReport();
     reportCard.style.display = '';
     emptyCard.style.display = 'none';
+    } catch(err){
+      statusEl.textContent = 'Error while parsing: ' + (err && err.message ? err.message : err);
+      statusEl.className = 'status err';
+      console.error(err);
+    }
   }
 
   document.getElementById('parseBtn').addEventListener('click', parseAndRender);
