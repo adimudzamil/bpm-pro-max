@@ -646,7 +646,7 @@
     toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
   }
 
-  // ===== iFlight parser =====
+  // ===== iFlight parser (unchanged) =====
   function findHeaderEnd(lines, seq){
     for(let start=0; start<lines.length; start++){
       let li = start, ok = true;
@@ -690,9 +690,8 @@
     return { duty, itin, crew, found: { duty: duty.length>0, itin: itin.length>0, crew: crew.length>0 }, dutyStart: dutyStart, dutyDate: dutyDate };
   }
 
-  // ===== Combined PDF parser (handles both formats) =====
+  // ===== PDF CrewTripReport parser (corrected) =====
   function parseCrewTripReport(raw){
-    // Collapse multiple spaces
     let text = raw.replace(/\r?\n/g,' ').replace(/\s+/g,' ').trim();
 
     const idxInbound = text.search(/\bInbound\b/i);
@@ -705,7 +704,6 @@
     else if(idxOutbound >= 0) headerSection = text.substring(0, idxOutbound);
     else if(idxCrewPairing >= 0) headerSection = text.substring(0, idxCrewPairing);
 
-    // Extract date and rep time
     let dutyDate = '', repTime = '';
     const dateRepMatch = headerSection.match(/(\d{2}-[A-Za-z]{3}-\d{4})\s+(\d{2}:\d{2})/);
     if(dateRepMatch){ dutyDate = dateRepMatch[1]; repTime = dateRepMatch[2]; }
@@ -716,9 +714,7 @@
       if(timeMatch) repTime = timeMatch[1];
     }
 
-    let itin = [];
-
-    // 1) Try token‑based parser (requires spaces)
+    const itin = [];
     const flightRegex = /(MH\d{3,4})/g;
     let match;
     const flightPositions = [];
@@ -817,44 +813,19 @@
         acReg: rego || '',
         flightTime: ft || '',
         groundTime: gt || '',
-        actStart: '', actEnd: '', actLoc: ''
+        actStart: '',
+        actEnd: '',
+        actLoc: ''
       });
     }
 
-    // 2) If token‑based produced no flights, fallback to the regex parser
     if(itin.length === 0){
-      // This regex is designed for the concatenated format (e.g., "MH070LSOPKUL 09:50NRT 18:05...")
-      // It's the same one that worked for the older PDFs.
-      const oldRegex = /([A-Z]{3})\s+(\d{2}:\d{2})\s+(?:(\d{1,3}:\d{2})\s+)?(MH\d{3,4})\s+([A-Z]{2,4})\s+([A-Z]{1,3})\s+([A-Z]{3})\s+(\d{2}:\d{2}(?:\(\+1\))?)\s+(\d{2}:\d{2}(?:\(\+1\))?)\s+(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2,4})\s+(\d{2}-[A-Za-z]{3}-\d{4})\s+(\d{2}:\d{2})\s+([A-Za-z0-9]{2,6})/g;
+      const rowRe = /([A-Z]{3})\s+(\d{2}:\d{2})\s+(?:(\d{1,3}:\d{2})\s+)?(MH\d{3,4})\s+([A-Z]{2,4})\s+([A-Z]{1,3})\s+([A-Z]{3})\s+(\d{2}:\d{2}(?:\(\+1\))?)\s+(\d{2}:\d{2}(?:\(\+1\))?)\s+(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2,4})\s+(\d{2}-[A-Za-z]{3}-\d{4})\s+(\d{2}:\d{2})\s+([A-Za-z0-9]{2,6})/g;
       let rm;
-      while((rm = oldRegex.exec(headerSection)) !== null){
-        // Map groups (1-indexed): 1:from, 2:dep, 3:GT(opt), 4:flight, 5:?, 6:?, 7:to, 8:arr, 9:?, 10:?, 11:?, 12:acs, 13:date, 14:rep, 15:reg
-        const flightId = rm[4];
-        const from = rm[1];
-        const dep = rm[2];
-        const to = rm[7];
-        const arr = rm[8];
-        const acs = rm[12] || '';
-        const reg = rm[15] || '';
-        // Try to extract FH – it's often group 10 or 11, but not reliable – leave blank.
-        let ft = '';
-        let acType = acs;
-        if(acType){
-          const acMap = {
-            '359': 'A350-900', '350': 'A350-900H', '339': 'A330-900',
-            '333': 'A330-300', '332': 'A330-200',
-            '738': '737-800NR', '73H': '737-800R', '7M8': '737-800MAX'
-          };
-          acType = acMap[acType] || acType;
-        }
-        let rego = reg;
-        if(rego && !rego.startsWith('9M-')) rego = '9M-' + rego;
+      while((rm = rowRe.exec(headerSection)) !== null){
         itin.push({
-          flightId, date: dutyDate || rm[13] || '', from, dep, to, arr,
-          ac: acType,
-          acReg: rego,
-          flightTime: ft,
-          groundTime: '',
+          flightId: rm[4], date: rm[13], from: rm[1], dep: rm[2], to: rm[7], arr: rm[8],
+          ac: rm[12], version:'', acReg: rm[15], flightTime: '', groundTime: rm[3]||'',
           actStart:'', actEnd:'', actLoc:''
         });
       }
