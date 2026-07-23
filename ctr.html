@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CCVR Autofill</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e2229; --border:#2a2f3a;
+    --text:#e8eaed; --muted:#8b93a3; --accent:#3b82f6; --accent2:#1d4ed8;
+    --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding-bottom:60px;}
+  header{position:sticky;top:0;z-index:10;background:var(--panel);border-bottom:1px solid var(--border);padding:14px 16px;}
+  header h1{font-size:17px;margin:0;}
+  header p{margin:2px 0 0;color:var(--muted);font-size:12px;}
+  .wrap{padding:14px;max-width:900px;margin:0 auto;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;}
+  .card h2{font-size:14px;margin:0 0 10px;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;}
+  textarea#pasteBox{width:100%;min-height:160px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-size:13px;font-family:monospace;resize:vertical;}
+  .btnrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;}
+  button.secondary{background:var(--panel2);border:1px solid var(--border);color:var(--text);}
+  button.danger{background:transparent;border:1px solid var(--danger);color:var(--danger);}
+  button:active{opacity:.8;}
+  .status{font-size:12px;color:var(--muted);margin-top:8px;white-space:pre-line;}
+  .status.err{color:var(--danger);}
+  .status.ok{color:var(--ok);}
+  details{margin-top:8px;}
+  summary{cursor:pointer;color:var(--muted);font-size:12px;}
+  table.dbg{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px;}
+  table.dbg th,table.dbg td{border:1px solid var(--border);padding:4px 6px;text-align:left;}
+  table.dbg th{background:var(--panel2);color:var(--muted);}
+  select, input[type=text], input[type=number]{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-size:13px;}
+
+  /* ---- Report ---- */
+  #report{background:#fff;color:#111;border-radius:6px;overflow:hidden;}
+  #report .rpad{padding:14px;}
+  .rtitle{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:10px;}
+  .rtitle h2{margin:0;font-size:16px;}
+  .rtitle .ref{font-size:11px;color:#444;}
+  .rtitle input{border:none;border-bottom:1px dashed #999;font-size:11px;width:140px;}
+  table.rtab{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px;}
+  table.rtab th, table.rtab td{border:1px solid #333;padding:4px 5px;text-align:center;}
+  table.rtab th{background:#eee;font-weight:600;}
+  table.rtab td input, table.rtab td textarea{border:none;width:100%;text-align:center;font-size:11px;background:transparent;font-family:inherit;}
+  .rsection-title{font-size:11px;font-weight:700;text-transform:uppercase;margin:10px 0 4px;color:#333;}
+  .boxrow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .box{flex:1;min-width:200px;border:1px solid #333;border-radius:4px;padding:8px;}
+  .box .lbl{font-size:10px;color:#555;text-transform:uppercase;margin-bottom:4px;}
+  .box .name{font-size:13px;font-weight:600;}
+  .box .sub{font-size:11px;color:#444;}
+  .remarks textarea{width:100%;min-height:44px;border:1px solid #333;border-radius:4px;padding:6px;font-size:12px;font-family:inherit;}
+  .footrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+  .footrow .fbox{flex:1;min-width:130px;}
+  .footrow label{font-size:10px;color:#555;text-transform:uppercase;display:block;margin-bottom:2px;}
+  .footrow input{width:100%;border:1px solid #333;border-radius:4px;padding:5px;font-size:12px;}
+  .pick{font-size:11px;color:#a33;margin-top:4px;}
+  .pick select{font-size:11px;padding:3px;}
+  .emptyState{color:var(--muted);font-size:13px;text-align:center;padding:30px 10px;}
+  .totalcrew{font-size:11px;margin-top:4px;color:#333;}
+  .totalcrew input{width:40px;border:1px solid #333;border-radius:4px;text-align:center;font-size:11px;}
+
+  @media print{
+    body{background:#fff;}
+    header, .card:not(.reportcard), .noprint{display:none !important;}
+    .wrap{padding:0;max-width:none;}
+    .reportcard{border:none;padding:0;margin:0;}
+    #report{border-radius:0;}
+    select, .noprint-inline{display:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>CCVR Autofill</h1>
+  <p>Paste iFlight Crew Trip Report text → auto-fill a printable Cabin Crew Voyage Report</p>
+</header>
+
+<div class="wrap">
+
+  <div class="card noprint">
+    <h2>1. Paste trip report text</h2>
+    <textarea id="pasteBox" placeholder="Select-all + copy from the iFlight Crew Trip Report page, then paste here…"></textarea>
+    <div class="btnrow">
+      <button id="parseBtn">Parse & Fill Report</button>
+      <button class="secondary" id="clearBtn">Clear</button>
+    </div>
+    <div class="status" id="status"></div>
+    <details id="dbgWrap" style="display:none;">
+      <summary>Parsed data (debug)</summary>
+      <div id="dbgContent"></div>
+    </details>
+  </div>
+
+  <div class="card reportcard" id="reportCard" style="display:none;">
+    <div class="btnrow noprint" style="margin-bottom:10px;">
+      <button id="printBtn">Print / Save PDF</button>
+    </div>
+    <div id="report"></div>
+  </div>
+
+  <div class="card" id="emptyCard">
+    <div class="emptyState">No report generated yet. Paste your trip report text above and tap "Parse & Fill Report".</div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const pasteBox = document.getElementById('pasteBox');
+  const statusEl = document.getElementById('status');
+  const dbgWrap = document.getElementById('dbgWrap');
+  const dbgContent = document.getElementById('dbgContent');
+  const reportCard = document.getElementById('reportCard');
+  const emptyCard = document.getElementById('emptyCard');
+  const reportEl = document.getElementById('report');
+
+  const DUTY_HEADERS = ["Start","End","Pairing Id","Duty Hours","Flying Hours","Rest Required","Rest Available"];
+  const ITIN_HEADERS = ["Flight/Acy Id","Date","From","Dep.","To","Arr.","A/C","Version","A/C Reg","Flight Time","Ground Time","Activity Start","Activity End","Activity Location"];
+  const CREW_HEADERS = ["OP Rank","Postion Rank","Crew Id","Crew Name","WT","Work Pos.","Base","SDC","Check In"];
+  const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary'];
+  const COCKPIT_RANKS = ['CAPT','FO','SO'];
+
+  function norm(s){ return (s===undefined||s===null) ? '' : String(s).trim(); }
+
+  function findSeq(lines, seq){
+    for(let i=0;i<=lines.length-seq.length;i++){
+      let ok=true;
+      for(let j=0;j<seq.length;j++){
+        if(norm(lines[i+j]).toLowerCase() !== seq[j].toLowerCase()){ ok=false; break; }
+      }
+      if(ok) return i;
+    }
+    return -1;
+  }
+
+  function extractRows(lines, headerSeq, cols){
+    const startHeader = findSeq(lines, headerSeq);
+    if(startHeader === -1) return { rows: [], found:false };
+    let idx = startHeader + headerSeq.length;
+    const rows = [];
+    while(idx + cols <= lines.length){
+      const firstCell = norm(lines[idx]).toLowerCase();
+      if(firstCell === 'results per page' || firstCell.startsWith('page ') || STOP_TITLES.includes(firstCell)){
+        break;
+      }
+      const chunk = lines.slice(idx, idx+cols).map(norm);
+      rows.push(chunk);
+      idx += cols;
+    }
+    return { rows, found:true };
+  }
+
+  function timeOnly(dt){
+    if(!dt) return '';
+    const parts = dt.trim().split(/\s+/);
+    return parts.length>1 ? parts[parts.length-1] : dt;
+  }
+
+  function parseTripText(raw){
+    const lines = raw.split(/\r?\n/);
+
+    const duty = extractRows(lines, DUTY_HEADERS, DUTY_HEADERS.length).rows.map(r => ({
+      start:r[0], end:r[1], pairingId:r[2], dutyHours:r[3], flyingHours:r[4], restRequired:r[5], restAvailable:r[6]
+    }));
+
+    const itinRaw = extractRows(lines, ITIN_HEADERS, ITIN_HEADERS.length);
+    const itin = itinRaw.rows.map(r => ({
+      flightId:r[0], date:r[1], from:r[2], dep:r[3], to:r[4], arr:r[5], ac:r[6], version:r[7],
+      acReg:r[8], flightTime:r[9], groundTime:r[10], actStart:r[11], actEnd:r[12], actLoc:r[13]
+    }));
+
+    const crewRaw = extractRows(lines, CREW_HEADERS, CREW_HEADERS.length);
+    const crew = crewRaw.rows.map(r => ({
+      opRank:r[0], posRank:r[1], crewId:r[2], crewName:r[3], wt:r[4], workPos:r[5], base:r[6], sdc:r[7], checkIn:r[8]
+    })).filter(c => c.crewId);
+
+    return {
+      duty, itin, crew,
+      found: { duty: duty.length>0, itin: itin.length>0, crew: crew.length>0 }
+    };
+  }
+
+  function renderDebugTable(rows, cols){
+    if(!rows.length) return '<p style="color:#888;font-size:11px;">none found</p>';
+    let html = '<table class="dbg"><tr>' + cols.map(c=>'<th>'+c+'</th>').join('') + '</tr>';
+    rows.forEach(row=>{
+      html += '<tr>' + cols.map(c=> '<td>'+(row[c]!==undefined?row[c]:'')+'</td>').join('') + '</tr>';
+    });
+    html += '</table>';
+    return html;
+  }
+
+  function determineCrewInCharge(cabinCrew){
+    const ifs = cabinCrew.filter(c => c.opRank.toUpperCase() === 'IFS');
+    const ls = cabinCrew.filter(c => c.opRank.toUpperCase() === 'LS');
+    if(ifs.length === 1) return { auto: ifs[0], candidates: [] };
+    if(ifs.length > 1) return { auto: null, candidates: ifs };
+    if(ls.length === 1) return { auto: ls[0], candidates: [] };
+    if(ls.length > 1) return { auto: null, candidates: ls };
+    return { auto: null, candidates: cabinCrew.slice() };
+  }
+
+  let state = null; // holds parsed data + chosen crew-in-charge
+
+  function buildReport(){
+    const d = state;
+    const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
+    const captain = d.crew.find(c => c.opRank.toUpperCase() === 'CAPT');
+    const cic = determineCrewInCharge(cabinCrew);
+
+    let cicChosen = cic.auto;
+    if(!cicChosen && cic.candidates.length){
+      cicChosen = state.chosenCIC || cic.candidates[0];
+    }
+
+    // Flight legs table
+    let legRows = '';
+    if(d.itin.length){
+      d.itin.forEach(l => {
+        legRows += `<tr>
+          <td>${l.flightId||''}</td>
+          <td>${(l.from||'')+'/'+(l.to||'')}</td>
+          <td><input placeholder="—"></td>
+          <td><input placeholder="—"></td>
+          <td>${timeOnly(l.dep)}</td>
+          <td>${timeOnly(l.arr)}</td>
+          <td><input value="${l.ac||''}"></td>
+          <td><input value="${l.acReg||''}"></td>
+        </tr>`;
+      });
+    } else {
+      legRows = '<tr><td colspan="8" style="color:#888;">No itinerary rows detected — fill manually</td></tr>';
+    }
+
+    // Cabin crew table
+    let crewRows = '';
+    if(cabinCrew.length){
+      cabinCrew.forEach(c => {
+        const isCIC = cicChosen && c.crewId === cicChosen.crewId;
+        crewRows += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
+          <td>${c.crewId}</td>
+          <td>${c.opRank}</td>
+          <td style="text-align:left;">${c.crewName}</td>
+          <td><input placeholder="—"></td>
+        </tr>`;
+      });
+    } else {
+      crewRows = '<tr><td colspan="4" style="color:#888;">No crew rows detected — fill manually</td></tr>';
+    }
+
+    let cicPickerHtml = '';
+    if(cic.candidates.length){
+      cicPickerHtml = `<div class="pick noprint-inline">
+        Multiple supervisory crew found — choose Crew in Charge:
+        <select id="cicSelect">
+          ${cic.candidates.map(c => `<option value="${c.crewId}" ${cicChosen && cicChosen.crewId===c.crewId?'selected':''}>${c.crewName} (${c.opRank})</option>`).join('')}
+        </select>
+      </div>`;
+    }
+
+    reportEl.innerHTML = `
+      <div class="rpad">
+        <div class="rtitle">
+          <h2>Cabin Crew Voyage Report</h2>
+          <div class="ref">Reference: <input value=""></div>
+        </div>
+
+        <div class="rsection-title">Flight Info</div>
+        <table class="rtab">
+          <tr><th>Flt No</th><th>Sector</th><th>STD</th><th>STA</th><th>ATD</th><th>ATA</th><th>A/C Type</th><th>A/C Reg</th></tr>
+          ${legRows}
+        </table>
+
+        <div class="rsection-title">Meals</div>
+        <table class="rtab">
+          <tr><th>FC</th><th>CCC</th><th>EY</th></tr>
+          <tr><td><input></td><td><input></td><td><input></td></tr>
+        </table>
+
+        <div class="rsection-title">Passenger Load Zone</div>
+        <table class="rtab">
+          <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>INF</th></tr>
+          <tr><td><input></td><td><input></td><td><input></td><td><input></td><td><input></td><td><input></td></tr>
+        </table>
+
+        <div class="rsection-title">Remarks</div>
+        <div class="remarks"><textarea placeholder="e.g. consequential delay due to late arrival"></textarea></div>
+
+        <div class="boxrow">
+          <div class="box">
+            <div class="lbl">Crew in Charge</div>
+            <div class="name">${cicChosen ? cicChosen.crewName : '—'}</div>
+            <div class="sub">${cicChosen ? cicChosen.crewId + ' · ' + cicChosen.opRank : 'Not determined — fill manually'}</div>
+            ${cicPickerHtml}
+          </div>
+          <div class="box">
+            <div class="lbl">Captain</div>
+            <div class="name">${captain ? captain.crewName : '—'}</div>
+            <div class="sub">${captain ? captain.crewId : 'Not found in crew list'}</div>
+          </div>
+        </div>
+
+        <div class="rsection-title">Cabin Crew</div>
+        <table class="rtab">
+          <tr><th>S/No</th><th>Rank</th><th style="text-align:left;">Name</th><th>Zone</th></tr>
+          ${crewRows}
+        </table>
+        <div class="totalcrew">Total Crew: <input value="${cabinCrew.length}"></div>
+
+        <div class="footrow">
+          <div class="fbox"><label>Rep Time</label><input></div>
+          <div class="fbox"><label>Boarding Time</label><input></div>
+          <div class="fbox"><label>Signature</label><input></div>
+        </div>
+      </div>
+    `;
+
+    const sel = document.getElementById('cicSelect');
+    if(sel){
+      sel.addEventListener('change', (e) => {
+        const chosen = cic.candidates.find(c => c.crewId === e.target.value);
+        state.chosenCIC = chosen;
+        buildReport();
+      });
+    }
+  }
+
+  function parseAndRender(){
+    const raw = pasteBox.value;
+    if(!raw.trim()){
+      statusEl.textContent = 'Paste the trip report text first.';
+      statusEl.className = 'status err';
+      return;
+    }
+    const parsed = parseTripText(raw);
+
+    if(!parsed.found.itin && !parsed.found.crew){
+      statusEl.textContent = 'Could not find Itinerary Details or Crew List sections. Make sure you copied the full page (select-all), including the table headers.';
+      statusEl.className = 'status err';
+      dbgWrap.style.display = 'none';
+      reportCard.style.display = 'none';
+      emptyCard.style.display = '';
+      return;
+    }
+
+    const missing = [];
+    if(!parsed.found.duty) missing.push('Duty Details');
+    if(!parsed.found.itin) missing.push('Itinerary Details');
+    if(!parsed.found.crew) missing.push('Crew List');
+
+    statusEl.className = missing.length ? 'status err' : 'status ok';
+    statusEl.textContent = missing.length
+      ? 'Parsed with missing sections: ' + missing.join(', ') + '. Those parts left blank in the report.'
+      = 'Parsed OK — ' + parsed.duty.length + ' duty period(s), ' + parsed.itin.length + ' leg(s), ' + parsed.crew.length + ' crew.';
+
+    dbgContent.innerHTML =
+      '<p style="font-size:11px;color:#888;">Duty Details</p>' + renderDebugTable(parsed.duty, ['start','end','pairingId','dutyHours','flyingHours','restRequired','restAvailable']) +
+      '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, ['flightId','date','from','dep','to','arr','ac','version','acReg','flightTime']) +
+      '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, ['opRank','posRank','crewId','crewName','base','sdc','checkIn']);
+    dbgWrap.style.display = '';
+
+    state = parsed;
+    state.chosenCIC = null;
+    buildReport();
+    reportCard.style.display = '';
+    emptyCard.style.display = 'none';
+  }
+
+  document.getElementById('parseBtn').addEventListener('click', parseAndRender);
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    pasteBox.value = '';
+    statusEl.textContent = '';
+    statusEl.className = 'status';
+    dbgWrap.style.display = 'none';
+    reportCard.style.display = 'none';
+    emptyCard.style.display = '';
+  });
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+})();
+</script>
+</body>
+</html>
