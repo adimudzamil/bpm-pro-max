@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CTR Autofill</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>">
+<!-- pdf.js for PDF upload -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & Variables ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0b;
+    --surface: #111113;
+    --surface2: #18181c;
+    --border: rgba(255,255,255,0.07);
+    --border-bright: rgba(255,255,255,0.15);
+    --text: #f0f0f0;
+    --text-muted: #8a8a8a;
+    --text-dim: #4a4a4a;
+    --accent: #ff6f00;      /* cyberpunk orange */
+    --accent-dim: rgba(255,111,0,0.12);
+    --accent-glow: rgba(255,111,0,0.25);
+    --accent-hover: #ff8c00;
+    --red: #ff4757;
+    --green: #2ecc71;
+    --radius: 20px;
+    --radius-sm: 12px;
+  }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-bottom: 40px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.3;
+  }
+
+  .container {
+    position: relative;
+    z-index: 2;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 48px 0 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .logo-area .logo {
+    font-size: clamp(40px, 9vw, 60px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  .logo span { color: var(--accent); display: inline-block; animation: flicker 3s infinite; }
+  @keyframes flicker { 0%,100% { opacity:1; } 95% { opacity:0.3; } }
+
+  .byline {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    color: #555;
+    margin-top: 8px;
+  }
+
+  .badge-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-family: 'DM Mono', monospace;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+
+  .badge.accent {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  /* ── Cards / Drop Zones ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: var(--border-bright); }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+
+  .card-title {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title .icon { color: var(--accent); }
+
+  .card-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+  }
+
+  /* textarea styling */
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 12px 14px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    resize: vertical;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .btnrow {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  /* ── Buttons ── */
+  .primary-btn {
+    background: var(--accent);
+    border: none;
+    padding: 10px 24px;
+    border-radius: 50px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #0a0a0b;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .primary-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .secondary-btn {
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .secondary-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* file upload wrapper */
+  .file-upload-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .file-upload-wrapper input[type="file"] {
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+
+  /* ── Report preview card ── */
+  .report-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .report-card .report-inner {
+    background: #ffffff;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    padding: 8px;
+  }
+
+  /* ── Stats chips ── */
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 16px 0 20px;
+  }
+
+  .stat-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 18px;
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .stat-number {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+
+  /* ── Status messages ── */
+  .status {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    white-space: pre-line;
+  }
+  .status.err { color: var(--red); }
+  .status.ok { color: var(--green); }
+
+  /* ── Modal (position & door) ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+
+  .modal-box {
+    background: #fff;
+    color: #111;
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  }
+
+  .modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .modal-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 16px;
+  }
+
+  .pos-grid {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .pos-grid.narrow { grid-template-columns: repeat(3, 1fr); }
+  .pos-grid.wide { grid-template-columns: repeat(4, 1fr); }
+
+  .pos-btn, .door-btn {
+    padding: 14px 8px;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    border: 2px solid #ddd;
+    background: #f7f7f7;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .pos-btn:active, .door-btn:active { transform: scale(0.95); }
+  .pos-btn.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 0 4px var(--accent-glow);
+  }
+
+  .door-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+  .door-btn.assigned { background: #fff6cc; border-color: #f5a623; }
+  .door-btn.selected { background: #dbeafe; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+  .modal-box .secondary-btn { width: 100%; margin-top: 6px; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    backdrop-filter: blur(12px);
+    padding: 12px 24px;
+    border-radius: 60px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    z-index: 2000;
+    transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    white-space: nowrap;
+    color: var(--text);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    margin-top: 48px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Utility ── */
+  .hidden { display: none !important; }
+  .flex { display: flex; align-items: center; gap: 8px; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2c2c2c; border-radius: 6px; }
+
+  /* ── Print styles ── */
+  @media print {
+    body { background: #fff; }
+    header, .card, .report-card .report-inner { border: none; background: none; padding: 0; }
+    .report-card { background: none; border: none; padding: 0; }
+    .report-card .report-inner { border-radius: 0; padding: 0; }
+    .noprint { display: none !important; }
+    .stats-row, .btnrow, .status, .badge-group { display: none !important; }
+    .container { max-width: 100%; padding: 0; }
+    #report { border-radius: 0; }
+    .top-info input, .top-info input.rep { border-color: #999 !important; background: #fff !important; }
+    .ft-table td input { border: none !important; }
+    .crew-table th, .crew-table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .crew-table th:nth-child(1), .crew-table td:nth-child(1){width:10% !important;}
+    .crew-table th:nth-child(2), .crew-table td:nth-child(2){width:5% !important;}
+    .crew-table th:nth-child(3), .crew-table td:nth-child(3){width:70% !important;}
+    .crew-table th:nth-child(4), .crew-table td:nth-child(4){width:10% !important;}
+    .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:5% !important;}
+    .pos-cell.unset { color: transparent !important; font-size: 0 !important; }
+    .door-cell.unset { color: transparent !important; font-size: 0 !important; }
+    .tap-indicator { display: none !important; }
+  }
+
+  /* Inline report styles (kept from original) */
+  #report { background: #fff; color: #111; border-radius: 6px; overflow: hidden; }
+  #report .rpad { padding: 10px; }
+  .rtitle { text-align: center; border-bottom: 1px solid #111; padding-bottom: 4px; margin-bottom: 8px; }
+  .rtitle h2 { margin:0; font-size:7pt; font-weight:700; letter-spacing:.03em; text-transform:uppercase; }
+  table.rtab { width:100%; border-collapse:collapse; font-size:9px; margin-bottom:4px; table-layout:fixed; }
+  table.rtab th, table.rtab td { border:1px solid #333; padding:2px 3px; text-align:center; overflow:hidden; }
+  table.rtab th { background:#eee; font-weight:600; font-size:8.5px; }
+  table.rtab td input { border:none; width:100%; text-align:center; font-size:9px; background:transparent; font-family:inherit; min-width:0; padding:1px; }
+  table.rtab td input.remarksTxt { text-align:left; border-bottom:1px dashed #999; }
+  .pos-cell { cursor:pointer; font-weight:700; color:#1d4ed8; }
+  .pos-cell.unset { color:#aaa; font-weight:400; font-style:italic; }
+  .door-cell { cursor:pointer; font-weight:600; color:#1d4ed8; }
+  .door-cell.unset { color:#aaa; font-weight:400; }
+  .top-info { display:flex; flex-wrap:wrap; gap:12px; font-size:9px; margin-bottom:6px; align-items:center; font-weight:bold; }
+  .top-info .label { font-weight:bold; color:#444; }
+  .top-info input { border:1px solid #333; border-radius:4px; padding:2px 4px; font-size:9px; background:#fff; }
+  .top-info input.small { width:60px; }
+  .top-info input.rep { font-weight:bold; width:180px; background:#f0f0f0; border-color:#555; }
+  .ft-table { width:100%; border-collapse:collapse; font-size:8.5px; margin-top:4px; table-layout:fixed; }
+  .ft-table th { background:#eee; font-weight:600; font-size:8px; border:1px solid #333; padding:2px; }
+  .ft-table td { border:1px solid #333; padding:2px; text-align:center; height:1.6em; }
+  .ft-table td input { width:100%; border:none; background:transparent; font-size:8.5px; text-align:center; font-family:inherit; padding:1px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ===== HEADER ===== -->
+  <header>
+    <div class="logo-area">
+      <div class="logo">CTR<span>.</span></div>
+      <div class="byline">by 2100551 · crew report tool</div>
+    </div>
+    <div class="badge-group">
+      <div class="badge accent">✈️ Crew Report</div>
+      <div class="badge">📄 PDF Parser</div>
+      <div class="badge">🔒 Offline</div>
+    </div>
+  </header>
+
+  <!-- ===== iFlight Parser Card ===== -->
+  <div class="card noprint">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">📋</span> 1. Paste iFlight text</div>
+      <span class="card-sub">select-all + copy</span>
+    </div>
+    <textarea id="pasteBox" placeholder="Paste the iFlight Crew Trip Report here…"></textarea>
+    <div class="btnrow">
+      <button class="primary-btn" id="parseBtn">⚡ Parse & Fill Report</button>
+      <button class="secondary-btn" id="clearBtn">Clear</button>
+    </div>
+    <div class="status" id="status"></div>
+    <details id="dbgWrap" style="display:none; margin-top:10px;">
+      <summary style="color:var(--text-muted); font-family:'DM Mono',monospace; font-size:11px; cursor:pointer;">Parsed data (debug)</summary>
+      <div id="dbgContent"></div>
+    </details>
+  </div>
+
+  <!-- ===== PDF Parser Card ===== -->
+  <div class="card noprint">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">📄</span> 2. Upload or paste PDF text</div>
+      <span class="card-sub">CrewTripReport export</span>
+    </div>
+    <textarea id="pdfBox" placeholder="Paste text from the PDF CrewTripReport here, or upload a PDF…"></textarea>
+    <div class="btnrow">
+      <button class="primary-btn" id="parsePdfBtn">⚡ Parse PDF Report</button>
+      <button class="secondary-btn" id="clearPdfBtn">Clear</button>
+      <div class="file-upload-wrapper">
+        <label for="pdfFile" style="font-size:12px; color:var(--text-muted);">Upload PDF:</label>
+        <input type="file" id="pdfFile" accept=".pdf">
+      </div>
+    </div>
+    <div class="status" id="pdfStatus"></div>
+    <details id="pdfDbgWrap" style="display:none; margin-top:10px;">
+      <summary style="color:var(--text-muted); font-family:'DM Mono',monospace; font-size:11px; cursor:pointer;">Parsed data (debug)</summary>
+      <div id="pdfDbgContent"></div>
+    </details>
+  </div>
+
+  <!-- ===== Stats (dynamically shown after parse) ===== -->
+  <div id="statsContainer" style="display:none;" class="stats-row noprint">
+    <div class="stat-chip"><div class="stat-number" id="statFlights">0</div><div class="stat-label">Flights</div></div>
+    <div class="stat-chip"><div class="stat-number" id="statCrew">0</div><div class="stat-label">Crew</div></div>
+    <div class="stat-chip"><div class="stat-number" id="statCabin">0</div><div class="stat-label">Cabin Crew</div></div>
+  </div>
+
+  <!-- ===== Report Preview ===== -->
+  <div class="report-card" id="reportCard" style="display:none;">
+    <div class="btnrow noprint" style="margin-bottom:10px;">
+      <button class="primary-btn" id="printBtn">🖨️ Print / Save PDF</button>
+    </div>
+    <div class="report-inner">
+      <div id="report"></div>
+    </div>
+  </div>
+
+  <!-- ===== Empty state ===== -->
+  <div class="card" id="emptyCard">
+    <div class="card-header">
+      <div class="card-title" style="color:var(--text-muted); font-weight:400;">📭 No report generated yet</div>
+    </div>
+    <div style="font-family:'DM Mono',monospace; font-size:13px; color:var(--text-dim);">
+      Paste a trip report above and tap <span style="color:var(--accent);">Parse & Fill Report</span> or <span style="color:var(--accent);">Parse PDF Report</span>.
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== POSITION MODAL ===== -->
+<div class="modal-overlay" id="posModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">Working Position</div>
+    <div class="modal-sub" id="modalCrewName"></div>
+    <div class="pos-grid" id="posGrid"></div>
+    <button class="secondary-btn" id="modalCloseBtn">Close</button>
+  </div>
+</div>
+
+<!-- ===== DOOR MODAL ===== -->
+<div class="modal-overlay" id="doorModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">Assign Door</div>
+    <div class="modal-sub" id="doorModalCrewName"></div>
+    <div class="door-grid" id="doorGrid"></div>
+    <button class="secondary-btn" id="doorModalCloseBtn">Close</button>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toastMsg" class="toast"></div>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  🔒 All processing is local — your data never leaves your device.<br>
+  <span style="color:var(--accent);">CTR</span> · 2100551
+</footer>
+
+<script>
+(function(){
+  // ===== DOM refs =====
+  const pasteBox = document.getElementById('pasteBox');
+  const statusEl = document.getElementById('status');
+  const dbgWrap = document.getElementById('dbgWrap');
+  const dbgContent = document.getElementById('dbgContent');
+  const pdfBox = document.getElementById('pdfBox');
+  const pdfStatus = document.getElementById('pdfStatus');
+  const pdfFile = document.getElementById('pdfFile');
+  const pdfDbgWrap = document.getElementById('pdfDbgWrap');
+  const pdfDbgContent = document.getElementById('pdfDbgContent');
+  const reportCard = document.getElementById('reportCard');
+  const emptyCard = document.getElementById('emptyCard');
+  const reportEl = document.getElementById('report');
+  const posModalOverlay = document.getElementById('posModalOverlay');
+  const posGrid = document.getElementById('posGrid');
+  const modalCrewName = document.getElementById('modalCrewName');
+  const doorModalOverlay = document.getElementById('doorModalOverlay');
+  const doorGrid = document.getElementById('doorGrid');
+  const doorModalCrewName = document.getElementById('doorModalCrewName');
+  const statsContainer = document.getElementById('statsContainer');
+  const statFlights = document.getElementById('statFlights');
+  const statCrew = document.getElementById('statCrew');
+  const statCabin = document.getElementById('statCabin');
+
+  // ===== Constants =====
+  const DUTY_HEADERS = ["Start","End","Pairing Id","Duty Hours","Flying Hours","Rest Required","Rest Available"];
+  const ITIN_HEADERS = ["Flight/Acy Id","Date","From","Dep.","To","Arr.","A/C","Version","A/C Reg","Flight Time","Ground Time","Activity Start","Activity End","Activity Location"];
+  const CREW_HEADERS = ["OP Rank","Postion Rank","Crew Id","Crew Name","WT","Work Pos.","Base","SDC","Check In"];
+  const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary'];
+  const COCKPIT_RANKS = ['CAPT','FO','SO'];
+  const POSITIONS_NARROW = ['P1','P2','P3','P4','A1','A2','SNY'];
+  const POSITIONS_WIDE = ['ICC','LSB','LSC','LSD','AG','BG1','BG2','CG','DG','BC','BC1','CC','DC','DC2','SNY'];
+  const RANK_PRIORITY = { 'IFS': 1, 'LS': 2, 'FS': 3, 'FSS': 4, 'SS': 5, 'CS': 6, 'AS': 7 };
+  const DOORS_NARROW = ['1L','1R','2L','2R'];
+  const DOORS_WIDE = ['1L','1R','2L','2R','3L','3R','4L','4R'];
+
+  // ===== Utilities =====
+  function norm(s){ return (s===undefined||s===null) ? '' : String(s).trim(); }
+  function esc(s){ return String(s===undefined||s===null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function timeOnly(dt){ if(!dt) return ''; const parts = dt.trim().split(/\s+/); return parts.length>1 ? parts[parts.length-1] : dt; }
+  function subtractMinutes(hhmm, mins){
+    const m = (hhmm||'').match(/^(\d{1,2}):(\d{2})$/);
+    if(!m) return '';
+    let total = parseInt(m[1],10)*60 + parseInt(m[2],10) - mins;
+    total = ((total % 1440) + 1440) % 1440;
+    const hh = String(Math.floor(total/60)).padStart(2,'0');
+    const mm = String(total%60).padStart(2,'0');
+    return hh + mm;
+  }
+  function isNarrowbody(ac){ if(!ac) return false; const a = ac.trim().toUpperCase(); return a === '737' || a.indexOf('73') === 0 || a.indexOf('7M') === 0; }
+  function determineCrewInCharge(cabinCrew){
+    const ifs = cabinCrew.filter(c => c.opRank.toUpperCase() === 'IFS');
+    const ls = cabinCrew.filter(c => c.opRank.toUpperCase() === 'LS');
+    if(ifs.length === 1) return { auto: ifs[0], candidates: [] };
+    if(ifs.length > 1) return { auto: null, candidates: ifs };
+    if(ls.length === 1) return { auto: ls[0], candidates: [] };
+    if(ls.length > 1) return { auto: null, candidates: ls };
+    return { auto: null, candidates: cabinCrew.slice() };
+  }
+  function getDayName(dateStr){
+    try{
+      const d = new Date(dateStr);
+      if(isNaN(d)) return '???';
+      return ['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()];
+    }catch(e){ return '???'; }
+  }
+  function sortCabinCrew(crew){
+    return crew.slice().sort((a,b) => {
+      const rankA = a.opRank.toUpperCase();
+      const rankB = b.opRank.toUpperCase();
+      const priA = RANK_PRIORITY[rankA] || 99;
+      const priB = RANK_PRIORITY[rankB] || 99;
+      if(priA !== priB) return priA - priB;
+      if(rankA === 'FS' || rankA === 'FSS'){
+        return parseInt(a.crewId,10) - parseInt(b.crewId,10);
+      }
+      return 0;
+    });
+  }
+  function renderDebugTable(rows, cols){
+    if(!rows.length) return '<p style="color:#888;font-size:11px;">none found</p>';
+    let html = '<table style="width:100%; border-collapse:collapse; font-size:11px; margin-top:6px;">';
+    html += '<tr>' + cols.map(c=>'<th style="border:1px solid var(--border); padding:4px 6px; background:var(--surface2); color:var(--muted);">'+c+'</th>').join('') + '</tr>';
+    rows.forEach(row=>{
+      html += '<tr>' + cols.map(c=> '<td style="border:1px solid var(--border); padding:4px 6px;">'+(row[c]!==undefined?row[c]:'')+'</td>').join('') + '</tr>';
+    });
+    html += '</table>';
+    return html;
+  }
+
+  // ===== Toast =====
+  function showToast(msg, type='default'){
+    const toast = document.getElementById('toastMsg');
+    toast.textContent = msg;
+    toast.className = `toast ${type} show`;
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // ===== iFlight parser =====
+  function findHeaderEnd(lines, seq){
+    for(let start=0; start<lines.length; start++){
+      let li = start, ok = true;
+      for(let s=0; s<seq.length; s++){
+        while(li < lines.length && norm(lines[li]) === '') li++;
+        if(li >= lines.length || norm(lines[li]).toLowerCase() !== seq[s].toLowerCase()){ ok = false; break; }
+        li++;
+      }
+      if(ok) return li;
+    }
+    return -1;
+  }
+  function extractRows(lines, headerSeq, cols){
+    const idxAfterHeader = findHeaderEnd(lines, headerSeq);
+    if(idxAfterHeader === -1) return { rows: [], found:false };
+    let idx = idxAfterHeader;
+    const rows = [];
+    while(idx + cols <= lines.length){
+      const firstCell = norm(lines[idx]).toLowerCase();
+      if(firstCell === 'results per page' || firstCell.startsWith('page ') || STOP_TITLES.indexOf(firstCell) !== -1) break;
+      const chunk = lines.slice(idx, idx+cols).map(norm);
+      rows.push(chunk);
+      idx += cols;
+    }
+    return { rows, found:true };
+  }
+  function parseTripText(raw){
+    const lines = raw.split(/\r?\n/);
+    const duty = extractRows(lines, DUTY_HEADERS, DUTY_HEADERS.length).rows.map(r => ({ start:r[0], end:r[1], pairingId:r[2], dutyHours:r[3], flyingHours:r[4], restRequired:r[5], restAvailable:r[6] }));
+    const itinRaw = extractRows(lines, ITIN_HEADERS, ITIN_HEADERS.length);
+    const itin = itinRaw.rows.map(r => ({ flightId:r[0], date:r[1], from:r[2], dep:r[3], to:r[4], arr:r[5], ac:r[6], version:r[7], acReg:r[8], flightTime:r[9], groundTime:r[10], actStart:r[11], actEnd:r[12], actLoc:r[13] }));
+    const crewRaw = extractRows(lines, CREW_HEADERS, CREW_HEADERS.length);
+    const crew = crewRaw.rows.map(r => ({ opRank:r[0], posRank:r[1], crewId:r[2], crewName:r[3], wt:r[4], workPos:r[5], base:r[6], sdc:r[7], checkIn:r[8] })).filter(c => c.crewId);
+    let dutyStart = duty.length ? duty[0].start : '';
+    let dutyDate = '';
+    if(dutyStart){
+      const parts = dutyStart.split(/\s+/);
+      if(parts.length>=2) dutyDate = parts[0] + ' ' + parts[1];
+      else dutyDate = dutyStart;
+    }
+    return { duty, itin, crew, found: { duty: duty.length>0, itin: itin.length>0, crew: crew.length>0 }, dutyStart: dutyStart, dutyDate: dutyDate };
+  }
+
+  // ===== PDF CrewTripReport parser (robust) =====
+  function parseCrewTripReport(raw){
+    // Collapse to single-spaced text
+    let text = raw.replace(/\r?\n/g,' ').replace(/\s+/g,' ').trim();
+
+    const RANKS = 'CAPT|FO|SO|IFS|LS|FSS|FS|SS|CS|AS';
+
+    const idxInbound = text.search(/\bInbound\b/i);
+    const idxOutbound = text.search(/\bOutbound\b/i);
+    const idxCrewPairing = text.search(/Crew On My Pairing/i);
+    const idxReportGen = text.search(/Report generated by/i);
+
+    const headerSection = text.substring(0, idxInbound >= 0 ? idxInbound : text.length);
+    const inboundSection = idxInbound >= 0 ? text.substring(idxInbound, idxOutbound >= 0 ? idxOutbound : text.length) : '';
+    const outboundSection = idxOutbound >= 0 ? text.substring(idxOutbound, idxCrewPairing >= 0 ? idxCrewPairing : text.length) : '';
+    const pairingSection = idxCrewPairing >= 0 ? text.substring(idxCrewPairing, idxReportGen >= 0 ? idxReportGen : text.length) : '';
+
+    // ---- Flight legs from header section ----
+    const rowRe = /([A-Z]{3})\s+(\d{2}:\d{2})\s+(?:(\d{1,3}:\d{2})\s+)?(MH\d{3,4})\s+([A-Z]{2,4})\s+([A-Z]{1,3})\s+([A-Z]{3})\s+(\d{2}:\d{2}(?:\(\+1\))?)\s+(\d{2}:\d{2}(?:\(\+1\))?)\s+(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2,4})\s+(\d{2}-[A-Za-z]{3}-\d{4})\s+(\d{2}:\d{2})\s+([A-Za-z0-9]{2,6})/g;
+    const itin = [];
+    let rm;
+    while((rm = rowRe.exec(headerSection)) !== null){
+      itin.push({
+        flightId: rm[4], date: rm[13], from: rm[1], dep: rm[2], to: rm[7], arr: rm[8],
+        ac: rm[12], version:'', acReg: rm[15], flightTime:'', groundTime: rm[3]||'',
+        actStart:'', actEnd:'', actLoc:''
+      });
+    }
+    // Fallback: just flight numbers
+    if(!itin.length){
+      const seen = new Set();
+      let fm;
+      const fRe = /MH\d{3,4}/g;
+      while((fm = fRe.exec(headerSection)) !== null){
+        if(!seen.has(fm[0])){ seen.add(fm[0]); itin.push({ flightId: fm[0], date:'', from:'', dep:'', to:'', arr:'', ac:'', version:'', acReg:'', flightTime:'', groundTime:'', actStart:'', actEnd:'', actLoc:'' }); }
+      }
+    }
+
+    // ---- Crew extraction ----
+    const crewMap = {};
+
+    // Inbound: "...SIGNING ON NAME ID WT"
+    const inRe = new RegExp('(MH\\d{3,4})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING ON\\s+([A-Z][A-Z .]*?)\\s+(\\d{7})\\s+([A-Z]{1,3})\\b', 'g');
+    let m;
+    while((m = inRe.exec(inboundSection)) !== null){
+      crewMap[m[5]] = { opRank: m[2], crewId: m[5], crewName: m[4].trim() };
+    }
+
+    // Outbound: "...ID NAME RANK BASE SIGNING OFF WT"
+    const outRe = new RegExp('(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING OFF\\s+([A-Z]{1,3})\\b', 'g');
+    while((m = outRe.exec(outboundSection)) !== null){
+      if(!crewMap[m[2]]) crewMap[m[2]] = { opRank: m[4], crewId: m[2], crewName: m[3].trim() };
+    }
+
+    // Pairing: "BASE RANK ID NAME"
+    const pairRe = new RegExp('([A-Z]{3})\\s+(' + RANKS + ')\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)(?=\\s+[A-Z]{3}\\s+(?:' + RANKS + ')\\s+\\d{7}|$)', 'g');
+    while((m = pairRe.exec(pairingSection)) !== null){
+      crewMap[m[3]] = { opRank: m[2], crewId: m[3], crewName: m[4].trim() };
+    }
+
+    // Owner line at top: "NAME | ID | TYPE | BASE | RANK"
+    const ownerMatch = headerSection.match(/([A-Z][A-Z .]+?)\s*\|\s*(\d{7})\s*\|\s*([A-Z]+)\s*\|\s*([A-Z]{3})\s*\|\s*(CAPT|FO|SO|IFS|LS|FSS|FS|SS|CS|AS)\b/);
+    if(ownerMatch){
+      crewMap[ownerMatch[2]] = { opRank: ownerMatch[5], crewId: ownerMatch[2], crewName: ownerMatch[1].trim() };
+    }
+
+    const crew = Object.keys(crewMap).map(id => ({
+      opRank: crewMap[id].opRank, posRank: crewMap[id].opRank, crewId: id, crewName: crewMap[id].crewName,
+      wt:'', workPos:'', base:'', sdc:'', checkIn:''
+    }));
+
+    const dutyDate = itin.length ? itin[0].date : '';
+    const dutyStartTimeMatch = headerSection.match(/(\d{2}-[A-Za-z]{3}-\d{4})\s+(\d{2}:\d{2})/);
+    const repTime = dutyStartTimeMatch ? dutyStartTimeMatch[2] : (itin.length ? itin[0].dep : '');
+    const dutyStart = dutyDate ? (dutyDate + ' ' + repTime) : '';
+
+    return {
+      duty: [], itin, crew,
+      found: { duty:false, itin: itin.length>0, crew: crew.length>0 },
+      source: 'pdf',
+      dutyStart, dutyDate,
+      pdfData: { date: dutyDate, acReg: itin.length ? itin[0].acReg : '', repTime }
+    };
+  }
+
+  // ===== Shared state & rendering =====
+  let state = null;
+
+  function fval(key, def){
+    if(state.fields && state.fields.hasOwnProperty(key) && state.fields[key] !== '') return state.fields[key];
+    return def || '';
+  }
+
+  window.updateField = function(key, val){ state.fields[key] = val; };
+
+  // ---- Position modal ----
+  window.openPositionModal = function(crewId, crewName){
+    const ac0 = state.itin.length ? state.itin[0].ac : '';
+    const isNarrow = isNarrowbody(ac0);
+    const posList = isNarrow ? POSITIONS_NARROW : POSITIONS_WIDE;
+    const gridClass = isNarrow ? 'narrow' : 'wide';
+    state.modalCrew = crewId;
+    modalCrewName.textContent = crewName;
+    posGrid.className = 'pos-grid ' + gridClass;
+    posGrid.innerHTML = '';
+    posList.forEach(pos => {
+      const btn = document.createElement('button');
+      btn.className = 'pos-btn' + (state.positions[crewId] === pos ? ' selected' : '');
+      btn.textContent = pos;
+      btn.addEventListener('click', () => window.assignPosition(crewId, pos));
+      posGrid.appendChild(btn);
+    });
+    posModalOverlay.style.display = 'flex';
+  };
+
+  window.assignPosition = function(crewId, pos){
+    if(pos !== 'SNY'){
+      Object.keys(state.positions).forEach(id => {
+        if(id !== crewId && state.positions[id] === pos) state.positions[id] = '';
+      });
+    }
+    state.positions[crewId] = pos;
+    posModalOverlay.style.display = 'none';
+    buildReport();
+  };
+
+  document.getElementById('modalCloseBtn').addEventListener('click', () => { posModalOverlay.style.display = 'none'; });
+  posModalOverlay.addEventListener('click', (e) => { if(e.target === posModalOverlay) posModalOverlay.style.display = 'none'; });
+
+  // ---- Door modal ----
+  window.openDoorModal = function(crewId, crewName){
+    const ac0 = state.itin.length ? state.itin[0].ac : '';
+    const isNarrow = isNarrowbody(ac0);
+    const doors = isNarrow ? DOORS_NARROW : DOORS_WIDE;
+    state.doorModalCrew = crewId;
+    doorModalCrewName.textContent = crewName;
+    doorGrid.innerHTML = '';
+    doors.forEach(door => {
+      const assignedCrew = state.doors[door] || null;
+      const isAssignedToCurrent = (assignedCrew === crewId);
+      const isAssignedToOther = (assignedCrew && assignedCrew !== crewId);
+      const btn = document.createElement('button');
+      btn.className = 'door-btn';
+      if(isAssignedToCurrent) btn.classList.add('selected');
+      if(isAssignedToOther) btn.classList.add('assigned');
+      let label = door;
+      if(isAssignedToCurrent || isAssignedToOther){
+        label += ' ✅';
+      }
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        if(isAssignedToCurrent){
+          state.doors[door] = null;
+        } else if(isAssignedToOther){
+          state.doors[door] = crewId;
+        } else {
+          for(let d in state.doors){
+            if(state.doors[d] === crewId){
+              state.doors[d] = null;
+              break;
+            }
+          }
+          state.doors[door] = crewId;
+        }
+        doorModalOverlay.style.display = 'none';
+        buildReport();
+      });
+      doorGrid.appendChild(btn);
+    });
+    doorModalOverlay.style.display = 'flex';
+  };
+
+  document.getElementById('doorModalCloseBtn').addEventListener('click', () => { doorModalOverlay.style.display = 'none'; });
+  doorModalOverlay.addEventListener('click', (e) => { if(e.target === doorModalOverlay) doorModalOverlay.style.display = 'none'; });
+
+  // ---- Build report (same as original) ----
+  function buildReport(){
+    const d = state;
+    const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
+    const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
+    const fos = d.crew.filter(c => c.opRank.toUpperCase() === 'FO');
+    const ac0 = d.itin.length ? d.itin[0].ac : '';
+    const isNarrow = isNarrowbody(ac0);
+
+    const sortedCabin = sortCabinCrew(cabinCrew);
+
+    const cic = determineCrewInCharge(sortedCabin);
+    let cicChosen = cic.auto;
+    if(!cicChosen && cic.candidates.length){
+      cicChosen = state.chosenCIC || cic.candidates[0];
+    }
+
+    let picChosen = null;
+    if(isNarrow && captains.length > 1){
+      picChosen = state.selectedPIC || captains[0];
+    } else if(captains.length === 1){
+      picChosen = captains[0];
+    }
+
+    // REP display
+    let repDisplay = '';
+    if(d.dutyDate || (d.pdfData && d.pdfData.date)){
+      const dateStr = (d.pdfData && d.pdfData.date) || d.dutyDate || '';
+      const day = getDayName(dateStr);
+      const repTime = (d.pdfData && d.pdfData.repTime) || (d.dutyStart ? d.dutyStart.split(/\s+/).pop() : '') || '';
+      repDisplay = dateStr + ' (' + day + ') ' + repTime;
+    } else if(d.dutyStart){
+      const parts = d.dutyStart.split(/\s+/);
+      if(parts.length>=2){
+        const dateStr = parts[0] + ' ' + (parts[1] || '');
+        const day = getDayName(dateStr);
+        const repTime = parts[parts.length-1] || '';
+        repDisplay = dateStr + ' (' + day + ') ' + repTime;
+      } else {
+        repDisplay = d.dutyStart;
+      }
+    }
+    if(!repDisplay) repDisplay = '----';
+
+    let html = `<div class="rpad">`;
+
+    // Top info: BAY and REP
+    html += `<div class="top-info">
+      <span><span class="label">BAY:</span> <input value="${esc(fval('bay', ''))}" oninput="updateField('bay', this.value)" class="small"></span>
+      <span><input value="${esc(repDisplay)}" class="rep" readonly></span>
+    </div>`;
+
+    // Flight table
+    html += `<table class="rtab" style="font-size:9px;">
+      <tr>
+        <th style="width:8%;">F.NO</th>
+        <th style="width:8%;">STATION</th>
+        <th style="width:8%;">STD</th>
+        <th style="width:8%;">STA</th>
+        <th style="width:8%;">FT</th>
+        <th style="width:8%;">ATD</th>
+        <th style="width:8%;">ATA</th>
+        <th style="width:8%;">A/C TYPE</th>
+        <th style="width:8%;">A/C REG</th>
+        <th style="width:28%;">REMARKS</th>
+      </tr>`;
+    d.itin.forEach((l, i) => {
+      const ft = l.flightTime || fval('ft-'+i, '');
+      html += `<tr>
+        <td>${esc(l.flightId)}</td>
+        <td>${esc((l.from||'')+'/'+(l.to||''))}</td>
+        <td><input value="${esc(fval('std-'+i, timeOnly(l.dep)))}" oninput="updateField('std-${i}', this.value)"></td>
+        <td><input value="${esc(fval('sta-'+i, timeOnly(l.arr)))}" oninput="updateField('sta-${i}', this.value)"></td>
+        <td><input value="${esc(ft)}" oninput="updateField('ft-${i}', this.value)"></td>
+        <td><input value="${esc(fval('atd-'+i, ''))}" oninput="updateField('atd-${i}', this.value)"></td>
+        <td><input value="${esc(fval('ata-'+i, ''))}" oninput="updateField('ata-${i}', this.value)"></td>
+        <td><input value="${esc(fval('ac-'+i, l.ac||''))}" oninput="updateField('ac-${i}', this.value)"></td>
+        <td><input value="${esc(fval('acreg-'+i, l.acReg||''))}" oninput="updateField('acreg-${i}', this.value)"></td>
+        <td><input class="remarksTxt" value="${esc(fval('remarks-'+i, ''))}" oninput="updateField('remarks-${i}', this.value)"></td>
+      </tr>`;
+    });
+    html += `</table>`;
+
+    // Airport name – blank
+    html += `<div style="font-size:9px;margin-top:2px;text-align:left;border:1px solid #333;border-top:none;padding:2px 4px;">
+      <input value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;" placeholder="">
+    </div>`;
+
+    // Captain & FO
+    html += `<table class="rtab" style="margin-top:4px;width:60%;">
+      <tr><th style="width:25%;">Staff No</th><th style="width:15%;">Rank</th><th style="width:60%;">Name</th></tr>`;
+    if(captains.length){
+      captains.forEach(c => {
+        html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
+      });
+    } else {
+      html += `<tr><td colspan="3">—</td></tr>`;
+    }
+    if(fos.length){
+      fos.forEach(c => {
+        html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
+      });
+    }
+    html += `</table>`;
+
+    // Cabin Crew
+    html += `<div style="margin-top:6px;font-weight:bold;font-size:9px;">CABIN CREW (${sortedCabin.length})</div>`;
+    html += `<table class="rtab crew-table" style="font-size:9px;">
+      <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:62%;text-align:left;">Name</th><th style="width:10%;">Working Post</th><th style="width:10%;">Door</th></tr>`;
+    sortedCabin.forEach(c => {
+      const isCIC = cicChosen && c.crewId === cicChosen.crewId;
+      const pos = state.positions[c.crewId] || '';
+      let doorAssigned = '';
+      for(let d in state.doors){
+        if(state.doors[d] === c.crewId){
+          doorAssigned = d;
+          break;
+        }
+      }
+      html += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
+        <td>${esc(c.crewId)}</td>
+        <td>${esc(c.opRank)}</td>
+        <td style="text-align:left;">${esc(c.crewName)}</td>
+        <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${pos ? esc(pos) : ''}</td>
+        <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${doorAssigned ? esc(doorAssigned) : '+'}</td>
+      </tr>`;
+    });
+    html += `</table>`;
+
+    // Bottom Flight Time Details
+    html += `<div style="margin-top:8px;font-weight:bold;font-size:9px;">Flight Time Details</div>`;
+    html += `<table class="ft-table">
+      <tr>
+        <th style="width:10%;">Flt</th>
+        <th style="width:10%;">LP</th>
+        <th style="width:10%;">CB</th>
+        <th style="width:10%;">CAT</th>
+        <th style="width:10%;">AIC</th>
+        <th style="width:10%;">BC</th>
+        <th style="width:10%;">1P</th>
+        <th style="width:10%;">BC</th>
+        <th style="width:10%;">DC</th>
+        <th style="width:10%;">DO</th>
+      </tr>`;
+    d.itin.forEach((l) => {
+      const flightNo = esc(l.flightId);
+      const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
+      html += `<tr>
+        <td style="font-weight:bold;">${flightNo}</td>
+        ${cats.map(() => `<td><input value="" placeholder=""></td>`).join('')}
+      </tr>`;
+    });
+    html += `</table>`;
+
+    html += `</div>`;
+    reportEl.innerHTML = html;
+
+    // Position cell clicks
+    reportEl.querySelectorAll('.pos-cell').forEach(el => {
+      el.addEventListener('click', () => {
+        window.openPositionModal(el.getAttribute('data-crewid'), el.getAttribute('data-crewname'));
+      });
+    });
+
+    // Door cell clicks
+    reportEl.querySelectorAll('.door-cell').forEach(el => {
+      el.addEventListener('click', () => {
+        window.openDoorModal(el.getAttribute('data-crewid'), el.getAttribute('data-crewname'));
+      });
+    });
+
+    // Update stats
+    statFlights.textContent = d.itin.length;
+    statCrew.textContent = d.crew.length;
+    statCabin.textContent = sortedCabin.length;
+    statsContainer.style.display = 'flex';
+  }
+
+  // ===== Shared state setter =====
+  function setStateAndRender(parsed, source){
+    state = parsed;
+    state.chosenCIC = null;
+    state.selectedPIC = null;
+    state.fields = {};
+    state.positions = {};
+    state.doors = {};
+    state.source = source || 'iflight';
+    buildReport();
+    reportCard.style.display = 'block';
+    emptyCard.style.display = 'none';
+    if(source === 'iflight'){
+      dbgContent.innerHTML =
+        '<p style="font-size:11px;color:#888;">Duty Details</p>' + renderDebugTable(parsed.duty, ['start','end','pairingId','dutyHours','flyingHours','restRequired','restAvailable']) +
+        '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, ['flightId','date','from','dep','to','arr','ac','version','acReg','flightTime']) +
+        '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, ['opRank','posRank','crewId','crewName','base','sdc','checkIn']);
+      dbgWrap.style.display = 'block';
+      pdfDbgWrap.style.display = 'none';
+    } else {
+      dbgWrap.style.display = 'none';
+      pdfDbgContent.innerHTML =
+        '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, ['flightId','date','from','dep','to','arr','ac','acReg']) +
+        '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, ['opRank','crewId','crewName']);
+      pdfDbgWrap.style.display = 'block';
+    }
+  }
+
+  // ===== iFlight parse handler =====
+  document.getElementById('parseBtn').addEventListener('click', function(){
+    statusEl.textContent = 'Parsing…';
+    statusEl.className = 'status';
+    try{
+      const raw = pasteBox.value;
+      if(!raw.trim()){ statusEl.textContent = 'Paste the trip report text first.'; statusEl.className = 'status err'; showToast('Please paste text first', 'error'); return; }
+      const parsed = parseTripText(raw);
+      if(!parsed.found.itin && !parsed.found.crew){
+        statusEl.textContent = 'Could not find Itinerary Details or Crew List sections. Make sure you copied the full page (select-all), including the table headers.';
+        statusEl.className = 'status err';
+        showToast('Parsing failed – check debug', 'error');
+        return;
+      }
+      const missing = [];
+      if(!parsed.found.duty) missing.push('Duty Details');
+      if(!parsed.found.itin) missing.push('Itinerary Details');
+      if(!parsed.found.crew) missing.push('Crew List');
+      statusEl.className = missing.length ? 'status err' : 'status ok';
+      statusEl.textContent = missing.length ? 'Parsed with missing sections: '+missing.join(', ')+'. Those parts left blank.' : 'Parsed OK — '+parsed.duty.length+' duty period(s), '+parsed.itin.length+' leg(s), '+parsed.crew.length+' crew.';
+      setStateAndRender(parsed, 'iflight');
+      showToast('Report generated!', 'success');
+    } catch(err){
+      statusEl.textContent = 'Error: '+ (err.message||err);
+      statusEl.className = 'status err';
+      showToast('Error: '+err.message, 'error');
+      console.error(err);
+    }
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', function(){
+    pasteBox.value = '';
+    statusEl.textContent = '';
+    statusEl.className = 'status';
+    dbgWrap.style.display = 'none';
+    reportCard.style.display = 'none';
+    emptyCard.style.display = 'block';
+    statsContainer.style.display = 'none';
+    showToast('Cleared', 'default');
+  });
+
+  // ===== PDF parse handler =====
+  function handlePdfParse(text){
+    pdfStatus.textContent = 'Parsing PDF…';
+    pdfStatus.className = 'status';
+    try{
+      if(!text.trim()){ pdfStatus.textContent = 'No text to parse.'; pdfStatus.className = 'status err'; showToast('No text to parse', 'error'); return; }
+      const parsed = parseCrewTripReport(text);
+      if(!parsed.found.crew){
+        pdfStatus.textContent = 'Could not parse crew data. Make sure you copied the full table rows from the PDF.';
+        pdfStatus.className = 'status err';
+        showToast('PDF parsing failed', 'error');
+        return;
+      }
+      pdfStatus.className = 'status ok';
+      pdfStatus.textContent = 'Parsed OK — '+parsed.itin.length+' leg(s), '+parsed.crew.length+' crew members.';
+      setStateAndRender(parsed, 'pdf');
+      showToast('PDF report generated!', 'success');
+    } catch(err){
+      pdfStatus.textContent = 'Error: '+ (err.message||err);
+      pdfStatus.className = 'status err';
+      showToast('Error: '+err.message, 'error');
+      console.error(err);
+    }
+  }
+
+  document.getElementById('parsePdfBtn').addEventListener('click', function(){
+    handlePdfParse(pdfBox.value);
+  });
+
+  document.getElementById('clearPdfBtn').addEventListener('click', function(){
+    pdfBox.value = '';
+    pdfStatus.textContent = '';
+    pdfStatus.className = 'status';
+    pdfDbgWrap.style.display = 'none';
+    pdfFile.value = '';
+    showToast('PDF cleared', 'default');
+  });
+
+  // ===== PDF file upload =====
+  pdfFile.addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    pdfStatus.textContent = 'Reading PDF…';
+    pdfStatus.className = 'status';
+    const reader = new FileReader();
+    reader.onload = function(loadEvent){
+      const arrayBuffer = loadEvent.target.result;
+      const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+      if(!pdfjsLib){
+        pdfStatus.textContent = 'Error: pdf.js library not loaded.';
+        pdfStatus.className = 'status err';
+        showToast('pdf.js not loaded', 'error');
+        return;
+      }
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      pdfjsLib.getDocument({data: arrayBuffer}).promise.then(function(pdf){
+        let fullText = '';
+        const pages = [];
+        for(let i=1; i<=pdf.numPages; i++){
+          pages.push(pdf.getPage(i));
+        }
+        return Promise.all(pages).then(function(pagePromises){
+          return Promise.all(pagePromises.map(function(page){
+            return page.getTextContent().then(function(textContent){
+              const strings = textContent.items.map(item => item.str);
+              return strings.join(' ');
+            });
+          }));
+        }).then(function(texts){
+          fullText = texts.join('\n');
+          pdfBox.value = fullText;
+          pdfStatus.textContent = 'PDF text extracted. Auto‑parsing…';
+          handlePdfParse(fullText);
+        });
+      }).catch(function(err){
+        pdfStatus.textContent = 'Error reading PDF: ' + err.message;
+        pdfStatus.className = 'status err';
+        showToast('PDF read error', 'error');
+        console.error(err);
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  // ===== Print =====
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+})();
+</script>
+</body>
+</html>
