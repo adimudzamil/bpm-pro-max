@@ -56,9 +56,9 @@
   /* ---- Top info ---- */
   .top-info{display:flex;flex-wrap:wrap;gap:12px;font-size:9px;margin-bottom:6px;align-items:center;font-weight:bold;}
   .top-info .label{font-weight:bold;color:#444;}
-  .top-info input{border:1px solid #333;border-radius:4px;padding:2px 4px;font-size:9px;}
+  .top-info input{border:1px solid #333;border-radius:4px;padding:2px 4px;font-size:9px;width:90px;}
   .top-info input.small{width:60px;}
-  .top-info input.rep{font-weight:bold;width:180px;background:#f0f0f0;border-color:#555;}
+  .top-info input.rep{font-weight:bold;width:130px;background:#f0f0f0;}
 
   /* ---- Bottom Flight Time Details ---- */
   .ft-table{width:100%;border-collapse:collapse;font-size:8.5px;margin-top:4px;table-layout:fixed;}
@@ -108,7 +108,7 @@
 <header>
   <h1>CCVR Autofill</h1>
   <p>iFlight Crew Trip Report <b>OR</b> PDF CrewTripReport → auto‑fill a printable Cabin Crew Voyage Report</p>
-  <p style="font-size:10px;color:#555;margin-top:4px;">build v12</p>
+  <p style="font-size:10px;color:#555;margin-top:4px;">build v10</p>
 </header>
 
 <div class="wrap">
@@ -199,7 +199,7 @@
   function timeOnly(dt){ if(!dt) return ''; const parts = dt.trim().split(/\s+/); return parts.length>1 ? parts[parts.length-1] : dt; }
   function subtractMinutes(hhmm, mins){
     const m = (hhmm||'').match(/^(\d{1,2}):(\d{2})$/);
-    if(!m) return '';
+    if(!m) return '----';
     let total = parseInt(m[1],10)*60 + parseInt(m[2],10) - mins;
     total = ((total % 1440) + 1440) % 1440;
     const hh = String(Math.floor(total/60)).padStart(2,'0');
@@ -224,12 +224,14 @@
     }catch(e){ return '???'; }
   }
   function sortCabinCrew(crew){
+    // sort by rank priority: IFS > LS > FS > others, then by staff number ascending for FS
     return crew.slice().sort((a,b) => {
       const rankA = a.opRank.toUpperCase();
       const rankB = b.opRank.toUpperCase();
       const priA = RANK_PRIORITY[rankA] || 99;
       const priB = RANK_PRIORITY[rankB] || 99;
       if(priA !== priB) return priA - priB;
+      // for FS, sort by ID ascending (smallest first, largest last)
       if(rankA === 'FS' || rankA === 'FSS'){
         return parseInt(a.crewId,10) - parseInt(b.crewId,10);
       }
@@ -271,6 +273,7 @@
     const itin = itinRaw.rows.map(r => ({ flightId:r[0], date:r[1], from:r[2], dep:r[3], to:r[4], arr:r[5], ac:r[6], version:r[7], acReg:r[8], flightTime:r[9], groundTime:r[10], actStart:r[11], actEnd:r[12], actLoc:r[13] }));
     const crewRaw = extractRows(lines, CREW_HEADERS, CREW_HEADERS.length);
     const crew = crewRaw.rows.map(r => ({ opRank:r[0], posRank:r[1], crewId:r[2], crewName:r[3], wt:r[4], workPos:r[5], base:r[6], sdc:r[7], checkIn:r[8] })).filter(c => c.crewId);
+    // duty start for REP
     let dutyStart = duty.length ? duty[0].start : '';
     let dutyDate = '';
     if(dutyStart){
@@ -281,7 +284,7 @@
     return { duty, itin, crew, found: { duty: duty.length>0, itin: itin.length>0, crew: crew.length>0 }, dutyStart: dutyStart, dutyDate: dutyDate };
   }
 
-  // ===== PDF CrewTripReport parser (robust) =====
+  // ===== PDF CrewTripReport parser (enhanced) =====
   function parseCrewTripReport(raw){
     const lines = raw.split(/\r?\n/);
     const result = {
@@ -294,15 +297,18 @@
       dutyStart: '',
     };
 
-    // 1. Extract date and rep time from first line with date
+    // 1. Find duty start from the first line that looks like "05-Jul-202608:20MH070..."
+    // We'll extract date and rep time from the very first line.
     for(let l of lines){
       l = l.trim();
       const dateMatch = l.match(/(\d{2}-[A-Za-z]{3}-\d{4})/);
       if(dateMatch){
         result.date = dateMatch[1];
+        // try to extract time after date (HH:MM)
         const timeMatch = l.match(/\d{2}:\d{2}/);
         if(timeMatch) result.repTime = timeMatch[0];
         else {
+          // try to find 4-digit time without colon, e.g. "0820"
           const tMatch = l.match(/\b(\d{2})(\d{2})\b/);
           if(tMatch) result.repTime = tMatch[1] + ':' + tMatch[2];
         }
@@ -310,7 +316,7 @@
       }
     }
 
-    // 2. Extract flights from the line containing MHxxx
+    // 2. Extract flights from the top line(s) — the line containing MHxxx
     let flightLine = '';
     for(let l of lines){
       if(l.includes('MH') && l.match(/MH\d{3}/)){
@@ -319,6 +325,8 @@
       }
     }
     if(flightLine){
+      // Pattern: MH070LSOPKUL 09:50NRT 18:0527:4007:1509:15333MTN
+      // We'll extract all flights by splitting on MH
       const flightsRaw = flightLine.split(/(MH\d{3})/).filter(s => s.trim());
       let currentFlight = null;
       for(let part of flightsRaw){
@@ -326,9 +334,13 @@
           if(currentFlight) result.flights.push(currentFlight);
           currentFlight = { flightId: part.trim(), from: '', to: '', std: '', sta: '', ft: '', acReg: '' };
         } else if(currentFlight){
+          // parse this part: e.g., "LSOPKUL 09:50NRT 18:0527:4007:1509:15333MTN"
           const tokens = part.match(/[A-Z]{3}|\d{2}:\d{2}|[A-Z0-9]+/g);
           if(tokens){
-            let from='', to='', std='', sta='', ft='', acReg='';
+            let idx=0;
+            // find first 3-letter code (from) and next (to)
+            let from='', to='';
+            let std='', sta='', ft='', acReg='';
             for(let t of tokens){
               if(t.match(/^[A-Z]{3}$/) && !from) from = t;
               else if(t.match(/^[A-Z]{3}$/) && from && !to) to = t;
@@ -349,14 +361,9 @@
       if(currentFlight) result.flights.push(currentFlight);
     }
 
-    // 3. Parse crew using robust regex
-    const rankList = ['CAPT','FO','SO','IFS','LS','FS','FSS','SS','CS','AS'];
-    const rankRegex = new RegExp('(' + rankList.join('|') + ')', 'i');
-    // Pattern: ID (7 digits) followed by name (any characters) then rank
-    // This will match both compact and spaced formats.
-    const crewRegex = /(\d{7})(.*?)(CAPT|FO|SO|IFS|LS|FS|FSS|SS|CS|AS)/i;
-
+    // 3. Parse crew from Inbound, Outbound, and "Crew On My Pairing"
     const allCrew = [];
+    const sections = ['inbound','outbound','crew on my pairing'];
     let currentSection = '';
     for(let l of lines){
       const low = l.toLowerCase();
@@ -364,45 +371,35 @@
       if(low.includes('outbound')){ currentSection = 'outbound'; continue; }
       if(low.includes('crew on my pairing')){ currentSection = 'extra'; continue; }
       if(!currentSection) continue;
-      // Try to match the crew line
-      const match = l.match(crewRegex);
-      if(match){
-        const id = match[1];
-        let name = match[2].trim();
-        let rank = match[3].toUpperCase();
-        // Sometimes name might have extra stuff like "OP" or "KUL" – we can clean it
-        // but for now keep as is.
-        allCrew.push({ crewId: id, opRank: rank, crewName: name, section: currentSection });
-      } else {
-        // Fallback: try to find ID and rank separately
-        const idMatch = l.match(/(\d{7})/);
-        if(idMatch){
-          const id = idMatch[1];
-          // Find rank in the line
-          let foundRank = '';
-          let name = '';
-          for(let r of rankList){
-            if(l.toUpperCase().includes(r)){
-              const idx = l.toUpperCase().indexOf(r);
-              const before = l.substring(0, idx);
-              const namePart = before.replace(id, '').trim();
-              name = namePart;
-              foundRank = r;
-              break;
-            }
-          }
-          if(foundRank){
-            allCrew.push({ crewId: id, opRank: foundRank, crewName: name, section: currentSection });
-          } else {
-            // If still no rank, treat as FS (cabin) with the whole remaining as name
-            const namePart = l.replace(id, '').trim();
-            allCrew.push({ crewId: id, opRank: 'FS', crewName: namePart, section: currentSection });
-          }
+      // Look for lines with 7-digit ID
+      const idMatch = l.match(/(\d{7})/);
+      if(!idMatch) continue;
+      const id = idMatch[1];
+      // Find rank in the line
+      const rankList = ['CAPT','FO','SO','IFS','LS','FS','FSS','SS','CS','AS'];
+      let foundRank = '';
+      let name = '';
+      for(let r of rankList){
+        if(l.toUpperCase().includes(r)){
+          // Extract name: between ID and rank
+          const idx = l.toUpperCase().indexOf(r);
+          const before = l.substring(0, idx);
+          const namePart = before.replace(id, '').trim();
+          name = namePart;
+          foundRank = r;
+          break;
         }
       }
+      if(!foundRank){
+        // fallback: if no rank found, treat as FS
+        const namePart = l.replace(id, '').trim();
+        name = namePart;
+        foundRank = 'FS';
+      }
+      allCrew.push({ crewId: id, opRank: foundRank, crewName: name, section: currentSection });
     }
 
-    // Deduplicate by crewId
+    // Deduplicate by crewId (keep first occurrence)
     const seen = new Set();
     const uniqueCrew = [];
     for(let c of allCrew){
@@ -422,7 +419,7 @@
       }
     }
 
-    // Build itinerary
+    // Build itinerary from flights
     const itin = result.flights.map(f => ({
       flightId: f.flightId || '',
       date: result.date || '',
@@ -453,6 +450,7 @@
       checkIn: ''
     }));
 
+    // Duty start: use date + repTime
     let dutyStart = result.repTime ? (result.date + ' ' + result.repTime) : '';
     let dutyDate = result.date || '';
 
@@ -529,14 +527,17 @@
     const ac0 = d.itin.length ? d.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
 
+    // Sort cabin crew: IFS > LS > FS (ascending ID for FS)
     const sortedCabin = sortCabinCrew(cabinCrew);
 
+    // CIC
     const cic = determineCrewInCharge(sortedCabin);
     let cicChosen = cic.auto;
     if(!cicChosen && cic.candidates.length){
       cicChosen = state.chosenCIC || cic.candidates[0];
     }
 
+    // Captain / PIC
     let picChosen = null;
     if(isNarrow && captains.length > 1){
       picChosen = state.selectedPIC || captains[0];
@@ -544,36 +545,40 @@
       picChosen = captains[0];
     }
 
-    // REP display
-    let repDisplay = '';
+    // REP line: date + day + time from duty start
+    let repDisplay = '----';
     if(d.dutyDate || d.pdfData?.date){
       const dateStr = d.pdfData?.date || d.dutyDate || '';
       const day = getDayName(dateStr);
       const repTime = d.pdfData?.repTime || d.dutyStart?.split(/\s+/).pop() || '';
-      repDisplay = dateStr + ' (' + day + ') ' + repTime;
+      repDisplay = dateStr + ' (' + day + ') REP: ' + repTime;
     } else if(d.dutyStart){
       const parts = d.dutyStart.split(/\s+/);
       if(parts.length>=2){
         const dateStr = parts[0] + ' ' + (parts[1] || '');
         const day = getDayName(dateStr);
         const repTime = parts[parts.length-1] || '';
-        repDisplay = dateStr + ' (' + day + ') ' + repTime;
+        repDisplay = dateStr + ' (' + day + ') REP: ' + repTime;
       } else {
         repDisplay = d.dutyStart;
       }
     }
-    if(!repDisplay) repDisplay = '----';
 
     // ---- Build unified layout ----
     let html = `<div class="rpad">`;
 
-    // Top info: only BAY and REP
+    // Top info: DATE, A/C REG, BAY, REP
+    const pdfDate = d.pdfData?.date || '';
+    const pdfAcReg = d.pdfData?.acReg || '';
     html += `<div class="top-info">
+      <span><span class="label">DATE:</span> <input value="${esc(pdfDate || fval('pdfDate', ''))}" oninput="updateField('pdfDate', this.value)" style="width:110px;"></span>
+      <span><span class="label">A/C REG:</span> <input value="${esc(pdfAcReg || fval('pdfAcReg', ''))}" oninput="updateField('pdfAcReg', this.value)" style="width:80px;"></span>
       <span><span class="label">BAY:</span> <input value="${esc(fval('bay', ''))}" oninput="updateField('bay', this.value)" class="small"></span>
-      <span><input value="${esc(repDisplay)}" class="rep" readonly></span>
+      <span><span class="label">REP:</span> <input value="${esc(repDisplay)}" class="rep" readonly></span>
     </div>`;
 
-    // Flight table
+    // Flight table - 10 columns: F.NO, STATION, STD, STA, FT, ATD, ATA, A/C TYPE, A/C REG, REMARKS
+    // Fixed columns: ~8% each for 9 cols = 72%, REMARKS gets 28%
     html += `<table class="rtab" style="font-size:9px;">
       <tr>
         <th style="width:8%;">F.NO</th>
@@ -604,7 +609,7 @@
     });
     html += `</table>`;
 
-    // Airport name
+    // Airport name (editable)
     html += `<div style="font-size:9px;margin-top:2px;text-align:left;border:1px solid #333;border-top:none;padding:2px 4px;">
       <input placeholder="Airport name (write with pen)" value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;">
     </div>`;
@@ -626,7 +631,7 @@
     }
     html += `</table>`;
 
-    // Cabin Crew
+    // Cabin Crew table
     html += `<div style="margin-top:6px;font-weight:bold;font-size:9px;">CABIN CREW (${sortedCabin.length})</div>`;
     html += `<table class="rtab crew-table" style="font-size:9px;">
       <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:62%;text-align:left;">Name</th><th style="width:10%;">Working Post</th><th style="width:10%;">Door</th></tr>`;
@@ -644,7 +649,7 @@
     });
     html += `</table>`;
 
-    // Bottom Flight Time Details
+    // Bottom Flight Time Details table
     html += `<div style="margin-top:8px;font-weight:bold;font-size:9px;">Flight Time Details</div>`;
     html += `<table class="ft-table">
       <tr>
@@ -659,7 +664,7 @@
         <th style="width:10%;">DC</th>
         <th style="width:10%;">DO</th>
       </tr>`;
-    d.itin.forEach((l) => {
+    d.itin.forEach((l, i) => {
       const flightNo = esc(l.flightId);
       const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
       html += `<tr>
