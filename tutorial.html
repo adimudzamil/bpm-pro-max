@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Complete Guide & Troubleshooting - Passenger Meal & Tier Report</title>
+    <title>Complete Guide - Passenger Meal & Tier Report</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💺</text></svg>">
     <style>
         * {
@@ -158,147 +158,6 @@
             font-weight: bold;
         }
         
-        .common-problems {
-            background: linear-gradient(135deg, #fff5f5 0%, #fff0f0 100%);
-            border: 1px solid #fed7d7;
-            border-left: 4px solid #c53030;
-        }
-        
-        .common-problems h2 {
-            color: #c53030;
-        }
-        
-        .problem {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: white;
-            border-radius: 6px;
-            border-left: 4px solid #c53030;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-        
-        .problem:hover {
-            transform: translateX(5px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .problem strong {
-            color: #c53030;
-            display: block;
-            margin-bottom: 8px;
-            font-size: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .problem strong::after {
-            content: "▼";
-            font-size: 12px;
-            transition: transform 0.3s ease;
-        }
-        
-        .problem.active strong::after {
-            transform: rotate(180deg);
-        }
-        
-        .solution {
-            margin-top: 15px;
-            padding: 15px;
-            background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
-            border-radius: 6px;
-            border-left: 3px solid #38a169;
-            display: none;
-        }
-        
-        .solution strong {
-            color: #38a169;
-            font-size: 14px;
-        }
-        
-        .solution p {
-            margin-top: 5px;
-        }
-        
-        .problem.active .solution {
-            display: block;
-        }
-        
-        .quick-tips {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border: 1px solid #bee3f8;
-            border-left: 4px solid #0ea5e9;
-        }
-        
-        .quick-tips h2 {
-            color: #0ea5e9;
-        }
-        
-        .what-you-get {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border: 1px solid #bbf7d0;
-            border-left: 4px solid #16a34a;
-        }
-        
-        .what-you-get h2 {
-            color: #16a34a;
-        }
-        
-        .tip-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .tip-item {
-            padding: 15px;
-            background: white;
-            border-radius: 6px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .tip-item h4 {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            color: #334155;
-        }
-        
-        .tip-item p {
-            font-size: 14px;
-        }
-        
-        .video-guide {
-            text-align: center;
-            margin: 30px 0;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            border: 2px dashed #2563EB;
-        }
-        
-        .video-placeholder {
-            width: 100%;
-            max-width: 600px;
-            height: 200px;
-            background: linear-gradient(135deg, #1E3A8A, #2563EB);
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            margin: 20px auto;
-        }
-        
-        .video-placeholder i {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-        
         .keyboard-shortcut {
             display: inline-block;
             padding: 4px 8px;
@@ -310,27 +169,6 @@
             margin: 0 5px;
         }
         
-        .feature-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .feature-item {
-            padding: 15px;
-            background: white;
-            border-radius: 6px;
-            text-align: center;
-            border: 1px solid #E2E8F0;
-        }
-        
-        .feature-icon {
-            font-size: 24px;
-            margin-bottom: 10px;
-            display: block;
-        }
-        
         .note {
             padding: 15px;
             background: #FEF7CD;
@@ -340,108 +178,83 @@
             font-weight: 500;
         }
         
-        .note strong {
-            color: #1E3A8A;
+        .version-badge {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1e3a8a;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
         }
-        
-        /* Iframe-specific styles */
-        body.iframe-mode .container {
+
+        .warning-note {
             padding: 15px;
-            max-width: 100%;
+            background: #fef2f2;
+            border: 2px solid #f87171;
+            border-radius: 6px;
+            margin: 20px 0;
         }
-        
-        body.iframe-mode h1 {
-            font-size: 18px;
-            padding: 15px;
-            margin-bottom: 15px;
+
+        .warning-note strong {
+            color: #991b1b;
         }
-        
-        body.iframe-mode .back-button {
-            display: none;
-        }
-        
-        body.iframe-mode .section {
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        
-        body.iframe-mode .step {
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        
-        body.iframe-mode .step-number {
-            width: 35px;
-            height: 35px;
-            font-size: 18px;
-        }
-        
+
         @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-            
-            h1 {
-                font-size: 20px;
-                padding: 15px;
-            }
-            
-            .step {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .step-number {
-                width: 40px;
-                height: 40px;
-                font-size: 20px;
-            }
-            
-            .platform-guides {
-                grid-template-columns: 1fr;
-            }
-            
-            .tip-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .section {
-                padding: 20px;
-            }
-            
-            body.iframe-mode .step {
-                flex-direction: row;
-            }
+            .container { padding: 15px; }
+            h1 { font-size: 20px; padding: 15px; }
+            .step { flex-direction: column; gap: 15px; }
+            .step-number { width: 40px; height: 40px; font-size: 20px; }
+            .platform-guides { grid-template-columns: 1fr; }
+            .section { padding: 20px; }
         }
+        
+        /* Iframe specific styles */
+        body.iframe-mode .container { padding: 15px; max-width: 100%; }
+        body.iframe-mode h1 { font-size: 18px; padding: 15px; margin-bottom: 15px; }
+        body.iframe-mode .back-button { display: none; }
+        body.iframe-mode .step { flex-direction: row; }
+        body.iframe-mode .section { padding: 15px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
         <a href="index.html" class="back-button">← Back to Main Tool</a>
         
-        <h1>📚 Complete Guide & Troubleshooting</h1>
+        <h1>📘 Complete User Guide & Manual <span class="version-badge">Updated July 23, 2026</span></h1>
         
         <div class="section">
-            <h2>🚀 Quick Start Guide (4 Simple Steps)</h2>
-            
+            <h2>🚀 What is BPM-Pro?</h2>
+            <p>BPM-Pro is a powerful in-flight tool designed to quickly turn a BPM (Passenger Manifest) into a readable, printable, and interactive report. It helps cabin crew instantly identify special meals, Platinum/EMER tier passengers, and track in-flight meal orders.</p>
+            <p><strong>Note on Development:</strong> Right now, only <code>sc-737.html</code> (737 Business Class) supports the advanced Interactive Order/Edit/Color popup system. A330 and A350 popup charts are currently in development and will receive the same features in an upcoming update.</p>
+        </div>
+        
+        <!-- ==================== PART 1: GETTING STARTED ==================== -->
+        <div class="section">
+            <h2>📋 Part 1: Generating Your First Report</h2>
             <div class="step">
                 <div class="step-number">1</div>
                 <div class="step-content">
-                    <h4>🖱️ Copy the Passenger List</h4>
-                    <p><strong>On a Computer (PC/Mac):</strong></p>
+                    <h4>📱 Copy the Passenger Manifest</h4>
+                    <p><strong>On Windows/Mac (PC):</strong></p>
                     <ol>
-                        <li>Open BPM and go to your flight</li>
-                        <li>Click anywhere in the passenger list</li>
-                        <li>Press <span class="keyboard-shortcut">Ctrl+A</span> (Cmd+A on Mac) to select everything</li>
-                        <li>Press <span class="keyboard-shortcut">Ctrl+C</span> (Cmd+C on Mac) to copy</li>
+                        <li>Open BPM and go to your flight.</li>
+                        <li>Click anywhere in the passenger list.</li>
+                        <li>Press <span class="keyboard-shortcut">Ctrl+A</span> (or <span class="keyboard-shortcut">Cmd+A</span> on Mac) to select everything.</li>
+                        <li>Press <span class="keyboard-shortcut">Ctrl+C</span> (or <span class="keyboard-shortcut">Cmd+C</span>) to copy.</li>
                     </ol>
-                    
-                    <p><strong>On Your Phone:</strong></p>
+                    <p><strong>On Android Phones:</strong></p>
                     <ol>
-                        <li><strong>Android users:</strong> Install "XClipper" from Play Store first</li>
-                        <li>In BPM, tap and hold on the word "FLT NBR"</li>
-                        <li><strong>Iphone</strong>: Landscape mode, Drag the blue handles to select everything from "FLT NBR" down to "Showing X entries", Copy.</li>
-                        <li><strong>Android</strong>: Select all, Tap "Copy" or use XClipper's copy button</li>
+                        <li><strong>CRITICAL:</strong> Install the <strong>"XClipper"</strong> app from the Play Store first. Android has a copy limit that XClipper bypasses.</li>
+                        <li>Open BPM, tap and hold on the word "FLT NBR".</li>
+                        <li>Select all text using the handles, then use XClipper to copy.</li>
+                    </ol>
+                    <p><strong>On iPhone/iOS:</strong></p>
+                    <ol>
+                        <li>Open BPM in <strong>Landscape Mode</strong> (turn your phone sideways).</li>
+                        <li>Tap and hold on "FLT NBR". Drag the blue handles down to select everything down to "Showing X entries".</li>
+                        <li>Tap "Copy".</li>
                     </ol>
                 </div>
             </div>
@@ -449,12 +262,10 @@
             <div class="step">
                 <div class="step-number">2</div>
                 <div class="step-content">
-                    <h4>📋 Paste Here</h4>
+                    <h4>📋 Paste the Manifest</h4>
                     <ol>
-                        <li>Click the big white box that says "Paste passenger manifest here..."</li>
-                        <li><strong>On Computer:</strong> Press <span class="keyboard-shortcut">Ctrl+V</span> (Cmd+V on Mac)</li>
-                        <li><strong>On Phone:</strong> Tap and hold in the box, then tap "Paste"</li>
-                        <li>You should see passenger names, seats, and meal codes appear</li>
+                        <li>Back on BPM-Pro, click the main textbox that says "Paste passenger manifest here...".</li>
+                        <li>Press <span class="keyboard-shortcut">Ctrl+V</span> (or <span class="keyboard-shortcut">Cmd+V</span>) to paste. On phones, tap-and-hold and select "Paste".</li>
                     </ol>
                 </div>
             </div>
@@ -462,372 +273,172 @@
             <div class="step">
                 <div class="step-number">3</div>
                 <div class="step-content">
-                    <h4>🔧 Generate Report</h4>
+                    <h4>⚙️ Generate the Report</h4>
                     <ol>
-                        <li>Click the red <strong>"Generate Report"</strong> button</li>
-                        <li>OR press <span class="keyboard-shortcut">Ctrl+Enter</span> (on computer) for quick shortcut</li>
-                        <li>Wait 2 seconds - the report will appear below</li>
-                        <li>You'll see a ✅ success message when done</li>
-                    </ol>
-                </div>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">4</div>
-                <div class="step-content">
-                    <h4>🖨️ Print</h4>
-                    <ol>
-                        <li>Click the green <strong>"Print Report"</strong> button</li>
-                        <li>In the print window, check "All pages"</li>
-                        <li>Set "Scale" to "Fit to page" (important!)</li>
-                        <li>Click "Print"</li>
+                        <li>Click the blue <strong>"Generate Report"</strong> button.</li>
+                        <li>OR, press <span class="keyboard-shortcut">Ctrl+Enter</span> (or <span class="keyboard-shortcut">Cmd+Enter</span>) on your keyboard for instant generation.</li>
+                        <li>The tool will auto-detect your aircraft type and layout. The report will appear below.</li>
                     </ol>
                 </div>
             </div>
         </div>
-        
+
+        <!-- ==================== PART 2: MAIN INTERFACE ==================== -->
         <div class="section">
-            <h2>📱 Platform-Specific Guides</h2>
-            <div class="platform-guides">
-                <div class="platform-card">
-                    <h4><span class="platform-badge">ANDROID</span> Must use XClipper</h4>
-                    <p>Due to Android copy limit restrictions:</p>
-                    <ol>
-                        <li>Long press on "FLT NBR"</li>
-                        <li>Select all text by dragging handles</li>
-                        <li>Use "XCopy" from XClipper app</li>
-                        <li>Or drag to select all passenger data</li>
-                    </ol>
-                </div>
-                
-                <div class="platform-card">
-                    <h4><span class="platform-badge">iOS</span> Standard Selection</h4>
-                    <p>For iPhone/iPad users:</p>
-                    <ol>
-                        <li>Tap and hold on "FLT NBR"</li>
-                        <li>Drag selection handles to select from "FLT NBR" until "Showing X entries"</li>
-                        <li>Copy the selected text. Use landscape mode of it fails in potrait mode.</li>
-                    </ol>
-                </div>
-                
-                <div class="platform-card">
-                    <h4><span class="platform-badge">WINDOWS/MAC</span> Keyboard & Mouse</h4>
-                    <p>For desktop computers:</p>
-                    <ol>
-                        <li>Click before "FLT NBR"</li>
-                        <li>Press <span class="keyboard-shortcut">Ctrl+A</span> (Cmd+A) to select all</li>
-                        <li>Press <span class="keyboard-shortcut">Ctrl+C</span> (Cmd+C) to copy</li>
-                        <li>Paste in the textbox with <span class="keyboard-shortcut">Ctrl+V</span> (Cmd+V)</li>
-                    </ol>
-                </div>
-            </div>
+            <h2>🖥️ Part 2: The Main Interface (Advanced Settings)</h2>
+            <p>Below the text box, you'll find the <strong>Advanced Settings</strong> panel. Click the button to expand it. Here is what every button and slider does:</p>
+
+            <h3>✈️ Aircraft & Layout</h3>
+            <ul>
+                <li><strong>Aircraft Type:</strong> Select the specific plane (737NG, 737MAX, 737NR, A330-300, etc.) or choose "Auto-detect" to let the tool figure it out.</li>
+                <li><strong>Custom Configuration:</strong> If your aircraft isn't listed, you can manually create custom zones (e.g., "Zone A: Rows 1-10").</li>
+                <li><strong>Layout Style:</strong>
+                    <ul>
+                        <li><strong>Single:</strong> Standard column list.</li>
+                        <li><strong>Port/Starboard:</strong> Splits the list into left and right sides.</li>
+                        <li><strong>Seat Chart:</strong> A visual block grid of seats.</li>
+                        <li><strong>Seat Chart (Business):</strong> Opens a 737/A330 business class visual chart.</li>
+                        <li><strong>Dual Chart (737):</strong> <em>See specific guide below.</em></li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h3>🎨 Visual Controls</h3>
+            <ul>
+                <li><strong>Font Size:</strong> Controls the size of the main list (7px to 14px).</li>
+                <li><strong>Summary Text Size:</strong> Controls the size of the Summary boxes (9px to 14px).</li>
+                <li><strong>Table Width:</strong> Shrinks or stretches the report to fit your printer margins (50% to 150%).</li>
+                <li><strong>Seat Chart Font Size:</strong> Controls the text size specifically inside the graphical seat grid.</li>
+                <li><strong>Aft Perspective View:</strong> If checked, the seat chart reverses rows and columns (great for printing and flipping the paper to view from the back of the cabin).</li>
+                <li><strong>Show All Business Class:</strong> If unchecked, only Business Class passengers with special meals appear. Check this to show EVERY Business Class passenger.</li>
+            </ul>
+
+            <h3>🖨️ Print Layout Options</h3>
+            <ul>
+                <li><strong>Compact Print Mode:</strong> Saves 20-30% paper on large flights (100+ passengers).</li>
+                <li><strong>Landscape Orientation:</strong> Rotates the print to fit wide tables and large fonts.</li>
+                <li><strong>Page Break Between Zones:</strong> Starts every zone (e.g., B, C, D) on a new printed page.</li>
+                <li><strong>Avoid Orphan Rows:</strong> Keeps at least 2 rows together at page breaks.</li>
+                <li><strong>Show Unassigned in Print:</strong> Includes the list of passengers with no assigned seat in the printed copy.</li>
+                <li><strong>Print Scale & Margins:</strong> Customize the scale (50% to 150%) and set specific millimeter margins (top, bottom, left, right) for your printer.</li>
+            </ul>
         </div>
-        
-        <div class="section common-problems">
-            <h2>❓ Common Problems & Solutions</h2>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Nothing happens when I click Generate"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> Make sure you copied the ENTIRE passenger list from "FLT NBR" down to "Showing X entries". The tool needs the complete data to work.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"On Android, it says text is too long" or "failed to copy"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> You MUST install "XClipper" from Play Store. Android has a copy limit that XClipper fixes. This is the only way for Android to copy long manifests.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"The report is too small to read"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> Click "Advanced Settings" → Increase "Font Size" to 12px or 14px → Click "Print Report with Current Settings". ypu can also change the seat chart fonts using the seat chart font size slider.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Business class meals don't show"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> This is normal! Business class has blank lines so you can write in the standard meals (chicken/beef/fish). The tool only shows special meals automatically.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Only shows 1-2 passengers but I know there are more special meals"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> The tool only shows passengers with <strong>special meals</strong> or <strong>PLAT/EMER status</strong>. Regular passengers without special meals/status won't appear except for business class where you can choose the option to show all.business class passengers
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Can't copy from BPM on iPhone"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> On iPhone, tap and hold on "FLT NBR", then slowly drag the blue selection handles down to the bottom. Be patient and precise - it takes practice!
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Seat chart doesn't look right"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> Click "Advanced Settings" → Make sure the correct aircraft type is selected. For 737 choose "737NG", for A330 choose "A333", etc.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Print preview shows only 1 page but I have 200 passengers"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> In print preview, check if you're printing "All pages" not "Current page". The report creates multiple pages automatically. You can choose which page to print or not to print in the print preview.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"The report doesn't show infant meals (BBML)"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> BBML DOES show! It appears as "+BBML" below the parent's meal code in the list view. In seat chart, it shows as "MLCODE:BBML".
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"On PC, Ctrl+Enter doesn't work"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> Make sure you click inside the text box first, then press Ctrl+Enter. If using Mac, use Cmd+Enter.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Report shows empty seat numbers (01A, 02B, etc.)"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> This is a FEATURE, not a bug! In business class you can choose wether to show all passengers  or just passengers with special meals and plat/emer tier. In Economy, seats with no special meals or plat/emer tier will only show seat number.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Colors don't print on my printer"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> In print settings, make sure "Print background colors and images" is checked. Or use the "Aft Perspective View" which uses black text only.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Need to print for multiple flights"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> Clear the text box after each print (click "Clear" button), then paste the next flight's manifest and repeat.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Seat chart shows all seats as 'occupied'"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> Uncheck "Show All Business Class Passengers" in Advanced Settings. This setting shows ALL business passengers (even without special meals). Economy doesnt have this feature.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Can't download the offline version"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> Some phones block downloads. Try on a computer, or save the webpage directly from your browser menu (3 dots → Save page).
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Report missing seat row numbers or column headers when printing"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> Always check the margin options when printing due to different printers settings. always set minimum or custom to set your own margin in print preview before printing.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Want to see the view or persepctive of a crew in the cabin during service?"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> Check "Aft Perspective View" in Advanced Settings, then print.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Report is cutting off on the right side when printing"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> In print settings, change "Scale" to "Fit to page" or reduce "Table Width" in Advanced Settings to 90%.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"Font is too big and the report is too many pages"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> Use "Compact Print Mode" in Advanced Settings → Print Layout Options to reduce pages by 20-30%.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"The tool says 'No passengers found' but I pasted the manifest"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> You might have copied the wrong section. Make sure you copy from the actual passenger list, not the flight info header.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"I need to show regular business class passengers too"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> Check "Show All Business Class Passengers" in Advanced Settings. This will show ALL business class passengers, not just special meals.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"The page reloads and I lose my data"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> Use "Download Offline Version" button to save a local copy. Then you can use it without internet and your data won't be lost.
-                </div>
-            </div>
-            
-            <div class="problem" onclick="toggleSolution(this)">
-                <strong>"I accidentally changed settings and now it looks wrong"</strong>
-                <div class="solution">
-                    <strong>Fix:</strong> Click "Reset to Defaults" button in Advanced Settings to return to automatic settings.
-                </div>
-            </div>
-        </div>
-        
-        <div class="section quick-tips">
-            <h2>💡 Quick Tips for Best Results</h2>
-            <div class="tip-grid">
-                <div class="tip-item">
-                    <h4>✅ Keyboard Shortcut</h4>
-                    <p>After pasting, press <span class="keyboard-shortcut">Ctrl+Enter</span> (Cmd+Enter on Mac) for fastest results</p>
-                </div>
-                
-                <div class="tip-item">
-                    <h4>✅ Business Class</h4>
-                    <p>737 Business Class rows 1-3/4 have blank meal lines for writing standard meals</p>
-                </div>
-                
-                <div class="tip-item">
-                    <h4>✅ Widebody Aircraft</h4>
-                    <p>A330/A350 reports automatically split into Port/Starboard sides</p>
-                </div>
-                
-                <div class="tip-item">
-                    <h4>✅ Empty Seats</h4>
-                    <p>Empty seats show seat numbers - easier to spot no special requirement seats</p>
-                </div>
-                
-                <div class="tip-item">
-                    <h4>✅ Save Paper</h4>
-                    <p>Use "Compact Print Mode" for flights with 100+ passengers</p>
-                </div>
-                
-                <div class="tip-item">
-                    <h4>✅ Large Fonts</h4>
-                    <p>Use "Landscape Mode" when printing large fonts (12px+)</p>
-                </div>
-                
-                <div class="tip-item">
-                    <h4>✅ Offline Use</h4>
-                    <p>Download offline version once, use forever without internet</p>
-                </div>
-                
-                <div class="tip-item">
-                    <h4>✅ Share with Colleagues</h4>
-                    <p>Share downloaded file with colleagues who don't have internet access</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="section what-you-get">
-            <h2>📋 What You'll Get in Your Report</h2>
-            <div class="feature-list">
-                <div class="feature-item">
-                    <span class="feature-icon">✈️</span>
-                    Flight number, date, and aircraft type
-                </div>
-                
-                <div class="feature-item">
-                    <span class="feature-icon">📊</span>
-                    Total special meals & PLAT/EMER count
-                </div>
-                
-                <div class="feature-item">
-                    <span class="feature-icon">🗺️</span>
-                    Visual seating chart
-                </div>
-                
-                <div class="feature-item">
-                    <span class="feature-icon">🔢</span>
-                    Passengers with no special meals or plat/emer tier clearly marked
-                </div>
-                
-                <div class="feature-item">
-                    <span class="feature-icon">👔</span>
-                    Business class multi-line display
-                </div>
-                
-                <div class="feature-item">
-                    <span class="feature-icon">❤️</span>
-                    Red hearts for PLAT members
-                </div>
-                
-                <div class="feature-item">
-                    <span class="feature-icon">🔴</span>
-                    Red dots for EMER members
-                </div>
-                
-                <div class="feature-item">
-                    <span class="feature-icon">👶</span>
-                    Infant meals (BBML) clearly marked
-                </div>
-            </div>
-        </div>
-        
+
+        <!-- ==================== PART 3: THE REPORT VIEW ==================== -->
         <div class="section">
-            <h2>🆘 Still Need Help?</h2>
-            <p>If you're still having problems after reading this guide:</p>
-            
-            <div class="note">
-                <strong>Ask a colleague:</strong> Find someone who has used this tool before - they can show you in 5 minutes!
-            </div>
-            
-            <div class="note">
-                <strong>Contact the creator:</strong> Zayn Ikhlas (when he's 21) or any crew member who helped test this tool
-            </div>
-            
-            <div class="note">
-                <strong>Practice with a test flight:</strong> Try with a small flight first to get familiar with the process
-            </div>
+            <h2>📊 Part 3: Navigating the Generated Report</h2>
+            <ul>
+                <li><strong>Report Tabs:</strong> If you generate multiple flights, tabs will appear at the top of the report. Click them to switch between different flights without losing data.</li>
+                <li><strong>Summary Bar:</strong> A sticky bar at the top showing total counts for Special Codes, INF (infants), EXT (extension seatbelts), and REMARKS. Clicking a chip opens a modal to view the specific passengers in that category.</li>
+                <li><strong>Flight Info Bar:</strong> Click the blue "Flight Info" bar at the top to open the <strong>Seat Lookup</strong> modal. It features an on-screen keypad allowing you to quickly input a seat number (e.g., 3A) and instantly see the passenger's details or edit their remarks/special codes.</li>
+                <li><strong>Meal & Icons:</strong> In the list view, PLAT members have a <strong>❤️</strong> icon, EMER members have a <strong>🔴</strong> icon, and passengers celebrating a birthday have a <strong>🎂</strong> icon next to their meal.</li>
+            </ul>
         </div>
-        
-        <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #E2E8F0;">
-            <a href="index.html" class="back-button">← Back to Main Tool</a>
-            <p style="margin-top: 15px; font-size: 14px; color: #64748B;">Version 3.9 | Updated: Today</p>
+
+        <!-- ==================== PART 4: DUAL CHART MODE ==================== -->
+        <div class="section">
+            <h2>🔄 Part 4: Dual Chart Mode (737 Business Class)</h2>
+            <p>This is for generating both First Service and Second Service manifests on a single printed page.</p>
+            <ol>
+                <li>Toggle <strong>"Dual Chart Mode ON"</strong>.</li>
+                <li>Ensure your Layout is set to <strong>"Dual Service Chart - 737 Business Class"</strong>.</li>
+                <li>Paste your <strong>FIRST SERVICE</strong> manifest and click <strong>"Generate Report"</strong>.</li>
+                <li>A new popup window will open with the first chart. Wait for the "Chart ready" message.</li>
+                <li>Back in the main window, clear the text box. Paste your <strong>SECOND SERVICE</strong> manifest.</li>
+                <li>Click <strong>"Generate Report"</strong> again. It will send the second manifest to the existing popup.</li>
+                <li>Print the popup. Both services will be printed together on one page.</li>
+            </ol>
+        </div>
+
+        <!-- ==================== PART 5: SC-737 POPUP INTERACTIVE SYSTEM ==================== -->
+        <div class="section" style="border-left-color: #d97706;">
+            <h2>🎛️ Part 5: The 737 Interactive Seat Chart (Popup)</h2>
+            <div class="warning-note">
+                <strong>⚠️ Fleet Compatibility Note:</strong><br>
+                Right now, <strong>only <code>sc-737.html</code> (737 Business Class)</strong> features the advanced Color, Edit, and Order system described below. A330, A350, and other fleet seat charts are currently in development and will be updated to match these features in a future version. <em>(Updated: July 23, 2026)</em>
+            </div>
+            <p>When you generate a Seat Chart report for 737 Business Class, it opens in a new popup window. This popup has 4 powerful modes accessible via the top control panel:</p>
+
+            <h3>1. View Mode</h3>
+            <p><strong>Default mode.</strong> This is a static, read-only view of the passenger manifest in a visual seat grid. You see the passenger titles, surnames, tier badges (*PLAT* / *EMER*), and special meals.</p>
+
+            <h3>2. 🎨 Colours Mode</h3>
+            <p>Tap on any colored part of the seat grid to customize it perfectly for your flight.</p>
+            <ul>
+                <li><strong>Tap the Tier Badge:</strong> Opens a color picker to change the background and text color of that specific tier (e.g., PLAT, EMER).</li>
+                <li><strong>Tap the Meal Code:</strong> Changes the background color of a specific meal code (e.g., VGML, SPML).</li>
+                <li><strong>Tap the Seat Background:</strong> Changes the cell background color, border color, and empty seat placeholder color.</li>
+                <li><strong>Backup/Restore:</strong> Use the buttons in the control panel to save your color theme to a JSON file, or restore a saved theme.</li>
+            </ul>
+
+            <h3>3. ✏️ Edit Mode</h3>
+            <p>Tap any seat cell to edit the passenger's details.</p>
+            <ul>
+                <li>You can change their <strong>Title, Surname, First Name, Meal Code, Tier</strong>, and toggle <strong>Infant (INF)</strong> or <strong>Extension Seatbelt (EXT)</strong>.</li>
+                <li>You can also add <strong>Remarks</strong> and assign a <strong>Special Handling code</strong> (e.g., DEPO, MAAS, MEDA) or enter a custom code.</li>
+                <li><strong>Swap Seats:</strong> While in Edit mode, click the <strong>"Swap"</strong> button in the control bar. Tap seat A, then tap seat B to instantly swap their passenger data.</li>
+            </ul>
+
+            <h3>4. 🍽️ Order Mode (The New In-Flight Meal Tracker)</h3>
+            <p>This mode transforms the chart into an interactive serving tool. <strong>Pro-Tip: </strong> Use a stylus or your finger on a tablet for the best experience.</p>
+            
+            <h4>Setting up the Meal Menu:</h4>
+            <ul>
+                <li>Click the <strong>"🍽️ Meal Menu"</strong> button in the control bar.</li>
+                <li><strong>Service Name:</strong> You can now select preset service names (Breakfast, Brunch, Lunch, Dinner, All Day Dining, Supper, Refreshments, DAT) from a dropdown, or choose <strong>"Custom"</strong> to type your own name.</li>
+                <li><strong>Add Meal Choices:</strong> Click <strong>"+ Add meal choice"</strong>.
+                    <ul>
+                        <li><strong>Quick Presets:</strong> Click the Name input box. A popup appears with preset buttons: <em>Chicken, Beef, Fish, Seafood, Prawn, Vegetarian</em>. Tap one to instantly insert the name.</li>
+                        <li><strong>Numeric Keypad:</strong> Click the Quantity box. A full touchscreen numeric keypad pops up for fast, accurate quantity entry (0-9, Backspace, Done).</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h4>Taking Orders & Serving:</h4>
+            <p>Once the menu is set, tap a passenger's seat cell.</p>
+            <ul>
+                <li><strong>The Overlay:</strong> The seat cell fills with the chosen meal's background color. A massive, easy-to-read <strong>first letter</strong> of the meal (scaled with your font size) appears in the center.</li>
+                <li><strong>Remarks Input:</strong> A bold, clearly visible text box sits beneath the letter. You can type special notes (e.g., "Extra sauce") here. <strong>Clicking the input box does NOT trigger the "served" checkmark</strong> – it allows free typing.</li>
+                <li><strong>The Seat Number:</strong> The seat number stays in the top-left corner. <strong>Clicking the Seat Number</strong> toggles the passenger's status between <strong>Served (✅)</strong> and <strong>Not Served (First Letter)</strong>.</li>
+                <li><strong>The "Peek" Feature:</strong> If you need to double-check the passenger's name or original details, tap <strong>any empty background space</strong> inside the colored overlay. The overlay instantly disappears, revealing the full passenger info beneath. Tap the empty cell <strong>again</strong> to bring the serving overlay right back.</li>
+            </ul>
+        </div>
+
+        <!-- ==================== PART 6: TIPS & BEST PRACTICES ==================== -->
+        <div class="section" style="border-left-color: #16a34a;">
+            <h2>✨ Pro-Tips & Best Practices</h2>
+            <ul>
+                <li><strong>Keyboard Shortcut:</strong> Generate the report instantly using <span class="keyboard-shortcut">Ctrl+Enter</span> (or <span class="keyboard-shortcut">Cmd+Enter</span> on Mac) after pasting.</li>
+                <li><strong>Paper Saver:</strong> For flights with 100+ passengers, <strong>Compact Print Mode</strong> shrinks tables and removes extra spacing to save 20-30% paper.</li>
+                <li><strong>Missing Rows:</strong> If the seat grid looks incorrect, double-check your Aircraft selection in Advanced Settings. For example, if you have Row 4 Business passengers, select <strong>737NR</strong>.</li>
+                <li><strong>Offline Mode:</strong> Click <strong>"Download Offline Version"</strong> next to the main text box. This saves the entire tool as a standalone HTML file that works perfectly without internet.</li>
+                <li><strong>Persistent Themes:</strong> The colors you set in the 737 popup are automatically saved in your browser's <code>localStorage</code>. If you close and reopen the popup, your custom colors and font settings are restored.</li>
+            </ul>
+        </div>
+
+        <!-- ==================== PART 7: STILL STUCK? ==================== -->
+        <div class="section" style="border-left-color: #dc2626;">
+            <h2>❓ Still Stuck? Common Troubleshooting</h2>
+            <ul>
+                <li><strong>"Copy fails on Android":</strong> You must have <strong>XClipper</strong> installed. Android has a strict text limit without it.</li>
+                <li><strong>"Report shows blank business class seats":</strong> Business seats are deliberately left blank for you to write in standard meals (Chicken/Beef/Fish).</li>
+                <li><strong>"Print cuts off on the right":</strong> In your browser's print window, change "Scale" to <strong>"Fit to page"</strong>.</li>
+                <li><strong>"Colors disappear when printing":</strong> In your print settings, make sure <strong>"Print background colors and images"</strong> is checked.</li>
+                <li><strong>"I tapped the background and lost the overlay!":</strong> Don't worry! This is the <strong>Peek</strong> feature. Just tap the empty cell again, and your serving overlay (and typed remarks) will come right back.</li>
+            </ul>
+            <p>If you're still stuck, ask a colleague who has used this tool before, or reach out to Zayn Ikhlas (when he's 21!) for direct support.</p>
+            <a href="index.html" class="back-button" style="margin-top: 20px;">← Back to Main Tool</a>
         </div>
     </div>
 
     <script>
-        function toggleSolution(problemElement) {
-            problemElement.classList.toggle('active');
-        }
-        
         // Check if we're in an iframe
         if (window.self !== window.top) {
-            // We're in an iframe - apply iframe-mode styles
             document.body.classList.add('iframe-mode');
-            
-            // Hide the back button when in iframe
-            const backButton = document.querySelector('.back-button');
-            if (backButton) {
-                backButton.style.display = 'none';
-            }
-            
-            // Notify parent that we're loaded
+            const backButtons = document.querySelectorAll('.back-button');
+            backButtons.forEach(btn => btn.style.display = 'none');
             window.parent.postMessage('tutorialLoaded', '*');
         }
-        
-        // Auto-expand first few problems
-        document.addEventListener('DOMContentLoaded', function() {
-            const firstProblems = document.querySelectorAll('.problem:nth-child(-n+3)');
-            firstProblems.forEach(problem => {
-                problem.classList.add('active');
-            });
-        });
     </script>
 </body>
 </html>
