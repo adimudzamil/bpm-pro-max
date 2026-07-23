@@ -110,7 +110,7 @@
 <header>
   <h1>CCVR Autofill</h1>
   <p>iFlight Crew Trip Report <b>OR</b> PDF CrewTripReport → auto‑fill a printable Cabin Crew Voyage Report</p>
-  <p style="font-size:10px;color:#555;margin-top:4px;">build v13</p>
+  <p style="font-size:10px;color:#555;margin-top:4px;">build v14</p>
 </header>
 
 <div class="wrap">
@@ -208,7 +208,6 @@
   const POSITIONS_NARROW = ['P1','P2','P3','P4','A1','A2','SNY'];
   const POSITIONS_WIDE = ['ICC','LSB','LSC','LSD','AG','BG1','BG2','CG','DG','BC','BC1','CC','DC','DC2','SNY'];
   const RANK_PRIORITY = { 'IFS': 1, 'LS': 2, 'FS': 3, 'FSS': 4, 'SS': 5, 'CS': 6, 'AS': 7 };
-  // Door labels: number first, then letter (e.g., "2L")
   const DOORS_NARROW = ['1L','1R','2L','2R'];
   const DOORS_WIDE = ['1L','1R','2L','2R','3L','3R','4L','4R'];
 
@@ -313,6 +312,7 @@
       dutyStart: '',
     };
 
+    // 1. Extract date and rep time
     for(let l of lines){
       l = l.trim();
       const dateMatch = l.match(/(\d{2}-[A-Za-z]{3}-\d{4})/);
@@ -328,49 +328,143 @@
       }
     }
 
-    let flightLine = '';
-    for(let l of lines){
-      if(l.includes('MH') && l.match(/MH\d{3}/)){
-        flightLine = l;
-        break;
+    // 2. Extract flights (simplified – look for MHxxx patterns)
+    const flightRegex = /(MH\d{3})/g;
+    let flightMatches = [];
+    let m;
+    while((m = flightRegex.exec(raw)) !== null){
+      flightMatches.push(m[1]);
+    }
+    // Deduplicate
+    flightMatches = [...new Set(flightMatches)];
+
+    // For each flight, try to extract from/from/to, times, FT, reg from the raw text
+    // This is tricky – we'll use a simpler approach: try to find patterns like "KUL 09:50"
+    // but we'll rely on the parser to fill in blank fields and let user edit.
+    // We'll attempt to extract STD and STA from the line containing MH and times.
+    const flightDetails = [];
+    const linesJoined = raw.replace(/\s+/g, ' ');
+    for(let f of flightMatches){
+      // Find context around this flight
+      const idx = linesJoined.indexOf(f);
+      if(idx === -1) continue;
+      const context = linesJoined.substring(idx, idx + 300);
+      // Find times like 09:50 and 18:05
+      const times = context.match(/\d{2}:\d{2}/g);
+      let std='', sta='', ft='';
+      if(times && times.length >= 2){
+        std = times[0];
+        sta = times[1];
+        if(times.length >= 3) ft = times[2];
+      }
+      // Find A/C Reg like 333MTN or 9M-MTN
+      const regMatch = context.match(/([A-Z0-9]{2,}MTN)|([A-Z0-9]{2,}MVS)/);
+      const acReg = regMatch ? regMatch[0] : '';
+      // Find from/to codes (3-letter codes)
+      const codes = context.match(/\b[A-Z]{3}\b/g);
+      let from='', to='';
+      if(codes){
+        for(let code of codes){
+          if(code !== 'KUL' && code !== 'NRT' && code !== 'CGK' && code !== 'SIN' && code !== 'BKK' && code !== 'HKG'){
+            // skip common ones maybe
+          }
+          if(!from) from = code;
+          else if(!to && code !== from) to = code;
+        }
+      }
+      // If still no from/to, use defaults from the context – we'll leave blank.
+      flightDetails.push({ flightId: f, from: from || '', to: to || '', std: std || '', sta: sta || '', ft: ft || '', acReg: acReg || '' });
+    }
+
+    // If we didn't get any flights from regex, fallback to manual parsing
+    if(flightDetails.length === 0){
+      // Try to find lines with MH and times
+      const lines2 = raw.split('\n');
+      for(let l of lines2){
+        if(l.match(/MH\d{3}/)){
+          const parts = l.split(/\s+/);
+          let flightId = '';
+          let from='', to='', std='', sta='', ft='', acReg='';
+          for(let p of parts){
+            if(p.match(/MH\d{3}/)) flightId = p;
+            else if(p.match(/^\d{2}:\d{2}$/)){
+              if(!std) std = p;
+              else if(!sta) sta = p;
+              else if(!ft) ft = p;
+            }
+            else if(p.match(/^[A-Z]{3}$/) && p.length===3){
+              if(!from) from = p;
+              else if(!to && p!==from) to = p;
+            }
+            else if(p.match(/[A-Z0-9]{2,}MTN|MVS/)) acReg = p;
+          }
+          if(flightId) flightDetails.push({ flightId, from, to, std, sta, ft, acReg });
+        }
       }
     }
-    if(flightLine){
-      const flightsRaw = flightLine.split(/(MH\d{3})/).filter(s => s.trim());
-      let currentFlight = null;
-      for(let part of flightsRaw){
-        if(part.match(/^MH\d{3}/)){
-          if(currentFlight) result.flights.push(currentFlight);
-          currentFlight = { flightId: part.trim(), from: '', to: '', std: '', sta: '', ft: '', acReg: '' };
-        } else if(currentFlight){
-          const tokens = part.match(/[A-Z]{3}|\d{2}:\d{2}|[A-Z0-9]+/g);
-          if(tokens){
-            let from='', to='', std='', sta='', ft='', acReg='';
-            for(let t of tokens){
-              if(t.match(/^[A-Z]{3}$/) && !from) from = t;
-              else if(t.match(/^[A-Z]{3}$/) && from && !to) to = t;
-              else if(t.match(/^\d{2}:\d{2}$/) && !std) std = t;
-              else if(t.match(/^\d{2}:\d{2}$/) && std && !sta) sta = t;
-              else if(t.match(/^\d{2}:\d{2}$/) && sta && !ft) ft = t;
-              else if(t.match(/^[A-Z0-9]+$/) && !acReg && t.length>2) acReg = t;
-            }
-            currentFlight.from = from;
-            currentFlight.to = to;
-            currentFlight.std = std;
-            currentFlight.sta = sta;
-            currentFlight.ft = ft;
-            currentFlight.acReg = acReg;
+
+    result.flights = flightDetails;
+
+    // 3. Parse crew using robust method
+    const rankList = ['CAPT','FO','SO','IFS','LS','FS','FSS','SS','CS','AS'];
+    const allCrew = [];
+
+    // Helper to extract ID, rank, name from a string
+    function extractCrewFromLine(line){
+      const idMatch = line.match(/\b(\d{7})\b/);
+      if(!idMatch) return null;
+      const id = idMatch[1];
+      // Find rank
+      let foundRank = '';
+      let rankIndex = -1;
+      for(let r of rankList){
+        const idx = line.toUpperCase().indexOf(r);
+        if(idx !== -1){
+          // prefer the one with smallest index? but careful – might be after ID.
+          if(rankIndex === -1 || idx < rankIndex){
+            rankIndex = idx;
+            foundRank = r;
           }
         }
       }
-      if(currentFlight) result.flights.push(currentFlight);
+      if(!foundRank){
+        // fallback: look for rank after ID
+        for(let r of rankList){
+          if(line.toUpperCase().includes(r)){
+            foundRank = r;
+            break;
+          }
+        }
+      }
+      if(!foundRank){
+        // if no rank, treat as FS
+        foundRank = 'FS';
+      }
+      // Extract name: between ID and rank, or between rank and ID if ID after rank
+      let name = '';
+      const idPos = line.indexOf(id);
+      const rankPos = line.toUpperCase().indexOf(foundRank);
+      if(idPos < rankPos){
+        // ID before rank
+        const between = line.substring(idPos + id.length, rankPos).trim();
+        name = between;
+      } else if(rankPos < idPos){
+        // rank before ID
+        const between = line.substring(rankPos + foundRank.length, idPos).trim();
+        name = between;
+      } else {
+        // fallback: take everything except ID and rank
+        let rest = line.replace(id, '').replace(foundRank, '').replace(/OP/g, '').trim();
+        name = rest;
+      }
+      // Clean up name: remove extra spaces, remove "SIGNING ON/OFF", "KUL" etc.
+      name = name.replace(/\s+/g, ' ').trim();
+      // Remove common base codes if they appear at end
+      name = name.replace(/\b(KUL|SIN|CGK|NRT|BKK|HKG|SIGNING ON|SIGNING OFF|OP)\b/g, '').trim();
+      return { crewId: id, opRank: foundRank, crewName: name };
     }
 
-    const rankList = ['CAPT','FO','SO','IFS','LS','FS','FSS','SS','CS','AS'];
-    const rankRegex = new RegExp('(' + rankList.join('|') + ')', 'i');
-    const crewRegex = /(\d{7})(.*?)(CAPT|FO|SO|IFS|LS|FS|FSS|SS|CS|AS)/i;
-
-    const allCrew = [];
+    // Process each line
     let currentSection = '';
     for(let l of lines){
       const low = l.toLowerCase();
@@ -378,38 +472,16 @@
       if(low.includes('outbound')){ currentSection = 'outbound'; continue; }
       if(low.includes('crew on my pairing')){ currentSection = 'extra'; continue; }
       if(!currentSection) continue;
-      const match = l.match(crewRegex);
-      if(match){
-        const id = match[1];
-        let name = match[2].trim();
-        let rank = match[3].toUpperCase();
-        allCrew.push({ crewId: id, opRank: rank, crewName: name, section: currentSection });
-      } else {
-        const idMatch = l.match(/(\d{7})/);
-        if(idMatch){
-          const id = idMatch[1];
-          let foundRank = '';
-          let name = '';
-          for(let r of rankList){
-            if(l.toUpperCase().includes(r)){
-              const idx = l.toUpperCase().indexOf(r);
-              const before = l.substring(0, idx);
-              const namePart = before.replace(id, '').trim();
-              name = namePart;
-              foundRank = r;
-              break;
-            }
-          }
-          if(foundRank){
-            allCrew.push({ crewId: id, opRank: foundRank, crewName: name, section: currentSection });
-          } else {
-            const namePart = l.replace(id, '').trim();
-            allCrew.push({ crewId: id, opRank: 'FS', crewName: namePart, section: currentSection });
-          }
+      // If line has a 7-digit number, try to parse it
+      if(l.match(/\b\d{7}\b/)){
+        const crew = extractCrewFromLine(l);
+        if(crew){
+          allCrew.push(crew);
         }
       }
     }
 
+    // Deduplicate by crewId
     const seen = new Set();
     const uniqueCrew = [];
     for(let c of allCrew){
@@ -419,6 +491,7 @@
       }
     }
 
+    // Separate cockpit and cabin
     const cockpitRanks = ['CAPT','FO','SO'];
     for(let c of uniqueCrew){
       if(cockpitRanks.includes(c.opRank.toUpperCase())){
@@ -428,6 +501,7 @@
       }
     }
 
+    // Build itinerary
     const itin = result.flights.map(f => ({
       flightId: f.flightId || '',
       date: result.date || '',
@@ -445,6 +519,7 @@
       actLoc: ''
     }));
 
+    // Build crew list
     const crew = result.cockpit.concat(result.cabinCrew).map(c => ({
       opRank: c.opRank,
       posRank: c.opRank,
@@ -655,7 +730,7 @@
     });
     html += `</table>`;
 
-    // Airport name – blank by default, user can type
+    // Airport name – blank by default
     html += `<div style="font-size:9px;margin-top:2px;text-align:left;border:1px solid #333;border-top:none;padding:2px 4px;">
       <input value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;" placeholder="">
     </div>`;
@@ -751,7 +826,7 @@
     state.selectedPIC = null;
     state.fields = {};
     state.positions = {};
-    state.doors = {}; // door -> crewId mapping
+    state.doors = {};
     state.source = source || 'iflight';
     buildReport();
     reportCard.style.display = '';
