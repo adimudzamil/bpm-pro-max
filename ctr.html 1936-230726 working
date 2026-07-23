@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>CTR Autofill</title>
+<title>CCVR Autofill</title>
 <!-- pdf.js for PDF upload -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
@@ -50,8 +50,7 @@
   table.rtab td input.remarksTxt{text-align:left;border-bottom:1px dashed #999;}
   .pos-cell{cursor:pointer;font-weight:700;color:#1d4ed8;}
   .pos-cell.unset{color:#aaa;font-weight:400;font-style:italic;}
-  .door-cell{cursor:pointer;font-weight:600;color:#1d4ed8;}
-  .door-cell.unset{color:#aaa;font-weight:400;}
+  .door-cell{cursor:pointer;font-weight:600;color:#1d4ed8;display:inline-block;min-width:20px;}
   .pick{font-size:10px;color:#a33;margin-top:3px;}
   .pick select{font-size:10px;padding:2px;color:#111;background:#fff;}
 
@@ -101,7 +100,6 @@
     .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:5% !important;}
 
     .pos-cell.unset{color:transparent !important; font-size:0 !important;}
-    .door-cell.unset{color:transparent !important; font-size:0 !important;}
     .top-info input, .top-info input.rep{border-color:#999 !important; background:#fff !important;}
     .ft-table td input{border:none !important;}
   }
@@ -110,9 +108,9 @@
 <body>
 
 <header>
-  <h1>CTR Autofill by *2100551*</h1>
-  <p>iFlight Crew Trip Report <b>OR</b> PDF Crew Trip Report → auto‑fill a printable  Alternate version of Crew Trip Report</p>
-  <p style="font-size:10px;color:#555;margin-top:4px;">build v1.5</p>
+  <h1>CCVR Autofill</h1>
+  <p>iFlight Crew Trip Report <b>OR</b> PDF CrewTripReport → auto‑fill a printable Cabin Crew Voyage Report</p>
+  <p style="font-size:10px;color:#555;margin-top:4px;">build v15</p>
 </header>
 
 <div class="wrap">
@@ -134,7 +132,7 @@
 
   <!-- PDF parser with upload -->
   <div class="card noprint">
-    <h2>2. Paste PDF Crew Trip Report text or upload the PDF</h2>
+    <h2>2. Paste Crew Trip Report text or upload PDF</h2>
     <textarea id="pdfBox" placeholder="Copy text from the PDF CrewTripReport and paste here…"></textarea>
     <div class="btnrow">
       <button id="parsePdfBtn">Parse PDF Report</button>
@@ -628,7 +626,7 @@
         <td>${esc(c.opRank)}</td>
         <td style="text-align:left;">${esc(c.crewName)}</td>
         <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${pos ? esc(pos) : ''}</td>
-        <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${doorAssigned ? esc(doorAssigned) : '+'}</td>
+        <td><span class="door-cell" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${doorAssigned ? esc(doorAssigned) : ''}</span></td>
       </tr>`;
     });
     html += `</table>`;
