@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>CCVR Autofill</title>
-<!-- pdf.js from CDN (stable) -->
+<!-- pdf.js for PDF upload -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   :root{
@@ -17,7 +17,7 @@
   header{position:sticky;top:0;z-index:10;background:var(--panel);border-bottom:1px solid var(--border);padding:14px 16px;}
   header h1{font-size:17px;margin:0;}
   header p{margin:2px 0 0;color:var(--muted);font-size:12px;}
-  .wrap{padding:14px;max-width:900px;margin:0 auto;}
+  .wrap{padding:14px;max-width:1000px;margin:0 auto;}
   .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;}
   .card h2{font-size:14px;margin:0 0 10px;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;}
   textarea{width:100%;min-height:120px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-size:13px;font-family:monospace;resize:vertical;}
@@ -38,35 +38,33 @@
   .file-upload-wrapper{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
   .file-upload-wrapper input[type="file"]{color:var(--text);padding:4px;}
 
-  /* ---- Report (common) ---- */
+  /* ---- Report ---- */
   #report{background:#fff;color:#111;border-radius:6px;overflow:hidden;}
   #report .rpad{padding:10px;}
   .rtitle{text-align:center;border-bottom:1px solid #111;padding-bottom:4px;margin-bottom:8px;}
   .rtitle h2{margin:0;font-size:7pt;font-weight:700;letter-spacing:.03em;text-transform:uppercase;}
-  .rsection-title{font-size:10px;font-weight:700;text-transform:uppercase;margin:8px 0 3px;color:#333;display:flex;justify-content:space-between;align-items:center;}
-  table.rtab{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:6px;table-layout:auto;}
+  table.rtab{width:100%;border-collapse:collapse;font-size:9px;margin-bottom:4px;table-layout:fixed;}
   table.rtab th, table.rtab td{border:1px solid #333;padding:2px 3px;text-align:center;overflow:hidden;}
-  table.rtab th{background:#eee;font-weight:600;font-size:9px;}
-  table.rtab td input{border:none;width:100%;text-align:center;font-size:9.5px;background:transparent;font-family:inherit;min-width:0;padding:1px;}
-  .remarksRow input.remarksTxt{width:100%;border:none;border-bottom:1px dashed #999;font-size:9.5px;padding:2px 0;background:transparent;font-family:inherit;}
+  table.rtab th{background:#eee;font-weight:600;font-size:8.5px;}
+  table.rtab td input{border:none;width:100%;text-align:center;font-size:9px;background:transparent;font-family:inherit;min-width:0;padding:1px;}
+  table.rtab td input.remarksTxt{text-align:left;border-bottom:1px dashed #999;}
   .pos-cell{cursor:pointer;font-weight:700;color:#1d4ed8;}
   .pos-cell.unset{color:#aaa;font-weight:400;font-style:italic;}
   .pick{font-size:10px;color:#a33;margin-top:3px;}
   .pick select{font-size:10px;padding:2px;color:#111;background:#fff;}
 
-  /* ---- New PDF layout specific ---- */
-  .pdf-top-info{display:flex;flex-wrap:wrap;gap:10px;font-size:9px;margin-bottom:6px;align-items:center;}
-  .pdf-top-info .label{font-weight:bold;color:#444;}
-  .pdf-top-info input{width:80px;border:1px solid #333;border-radius:4px;padding:2px;font-size:9px;}
-  .pdf-top-info input.wide{width:120px;}
+  /* ---- Top info ---- */
+  .top-info{display:flex;flex-wrap:wrap;gap:12px;font-size:9px;margin-bottom:6px;align-items:center;font-weight:bold;}
+  .top-info .label{font-weight:bold;color:#444;}
+  .top-info input{border:1px solid #333;border-radius:4px;padding:2px 4px;font-size:9px;width:90px;}
+  .top-info input.small{width:60px;}
+  .top-info input.rep{font-weight:bold;width:130px;background:#f0f0f0;}
 
-  .pdf-airport{font-size:9px;text-align:left;padding:2px 4px;margin-top:2px;}
-  .pdf-airport input{width:100%;border:1px solid #333;border-radius:4px;padding:2px;font-size:9px;}
-
-  .pdf-bottom-fields{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;justify-content:space-between;}
-  .pdf-bottom-fields .fbox{display:flex;align-items:center;gap:4px;font-size:9px;}
-  .pdf-bottom-fields .fbox label{font-weight:bold;color:#444;}
-  .pdf-bottom-fields .fbox input{width:60px;border:1px solid #333;border-radius:4px;padding:2px;font-size:9px;}
+  /* ---- Bottom Flight Time Details ---- */
+  .ft-table{width:100%;border-collapse:collapse;font-size:8.5px;margin-top:4px;table-layout:fixed;}
+  .ft-table th{background:#eee;font-weight:600;font-size:8px;border:1px solid #333;padding:2px;}
+  .ft-table td{border:1px solid #333;padding:2px;text-align:center;height:1.6em;}
+  .ft-table td input{width:100%;border:none;background:transparent;font-size:8.5px;text-align:center;font-family:inherit;padding:1px;}
 
   /* ---- Position modal ---- */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
@@ -100,7 +98,8 @@
 
     .tap-indicator{display:none !important;}
     .pos-cell.unset{color:transparent !important; font-size:0 !important;}
-    .pdf-top-info input, .pdf-airport input, .pdf-bottom-fields input{border-color:#999 !important;}
+    .top-info input, .top-info input.rep{border-color:#999 !important; background:#fff !important;}
+    .ft-table td input{border:none !important;}
   }
 </style>
 </head>
@@ -109,7 +108,7 @@
 <header>
   <h1>CCVR Autofill</h1>
   <p>iFlight Crew Trip Report <b>OR</b> PDF CrewTripReport → auto‑fill a printable Cabin Crew Voyage Report</p>
-  <p style="font-size:10px;color:#555;margin-top:4px;">build v9</p>
+  <p style="font-size:10px;color:#555;margin-top:4px;">build v10</p>
 </header>
 
 <div class="wrap">
@@ -192,6 +191,7 @@
   const COCKPIT_RANKS = ['CAPT','FO','SO'];
   const POSITIONS_NARROW = ['P1','P2','P3','P4','A1','A2','SNY'];
   const POSITIONS_WIDE = ['ICC','LSB','LSC','LSD','AG','BG1','BG2','CG','DG','BC','BC1','CC','DC','DC2','SNY'];
+  const RANK_PRIORITY = { 'IFS': 1, 'LS': 2, 'FS': 3, 'FSS': 4, 'SS': 5, 'CS': 6, 'AS': 7 };
 
   // ===== Utilities =====
   function norm(s){ return (s===undefined||s===null) ? '' : String(s).trim(); }
@@ -215,6 +215,28 @@
     if(ls.length === 1) return { auto: ls[0], candidates: [] };
     if(ls.length > 1) return { auto: null, candidates: ls };
     return { auto: null, candidates: cabinCrew.slice() };
+  }
+  function getDayName(dateStr){
+    try{
+      const d = new Date(dateStr);
+      if(isNaN(d)) return '???';
+      return ['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()];
+    }catch(e){ return '???'; }
+  }
+  function sortCabinCrew(crew){
+    // sort by rank priority: IFS > LS > FS > others, then by staff number ascending for FS
+    return crew.slice().sort((a,b) => {
+      const rankA = a.opRank.toUpperCase();
+      const rankB = b.opRank.toUpperCase();
+      const priA = RANK_PRIORITY[rankA] || 99;
+      const priB = RANK_PRIORITY[rankB] || 99;
+      if(priA !== priB) return priA - priB;
+      // for FS, sort by ID ascending (smallest first, largest last)
+      if(rankA === 'FS' || rankA === 'FSS'){
+        return parseInt(a.crewId,10) - parseInt(b.crewId,10);
+      }
+      return 0;
+    });
   }
 
   // ===== iFlight parser =====
@@ -251,7 +273,15 @@
     const itin = itinRaw.rows.map(r => ({ flightId:r[0], date:r[1], from:r[2], dep:r[3], to:r[4], arr:r[5], ac:r[6], version:r[7], acReg:r[8], flightTime:r[9], groundTime:r[10], actStart:r[11], actEnd:r[12], actLoc:r[13] }));
     const crewRaw = extractRows(lines, CREW_HEADERS, CREW_HEADERS.length);
     const crew = crewRaw.rows.map(r => ({ opRank:r[0], posRank:r[1], crewId:r[2], crewName:r[3], wt:r[4], workPos:r[5], base:r[6], sdc:r[7], checkIn:r[8] })).filter(c => c.crewId);
-    return { duty, itin, crew, found: { duty: duty.length>0, itin: itin.length>0, crew: crew.length>0 } };
+    // duty start for REP
+    let dutyStart = duty.length ? duty[0].start : '';
+    let dutyDate = '';
+    if(dutyStart){
+      const parts = dutyStart.split(/\s+/);
+      if(parts.length>=2) dutyDate = parts[0] + ' ' + parts[1];
+      else dutyDate = dutyStart;
+    }
+    return { duty, itin, crew, found: { duty: duty.length>0, itin: itin.length>0, crew: crew.length>0 }, dutyStart: dutyStart, dutyDate: dutyDate };
   }
 
   // ===== PDF CrewTripReport parser (enhanced) =====
@@ -260,109 +290,139 @@
     const result = {
       date: '',
       acReg: '',
-      flights: [], // { flightId, from, to, std, sta, fh, acReg }
-      cockpit: [], // { crewId, opRank, crewName }
-      cabinCrew: [], // { crewId, opRank, crewName }
+      repTime: '',
+      flights: [],
+      cockpit: [],
+      cabinCrew: [],
+      dutyStart: '',
     };
 
-    // Extract date from lines like "19-Jul-2026"
-    const dateMatch = raw.match(/\d{2}-[A-Za-z]{3}-\d{4}/);
-    if(dateMatch) result.date = dateMatch[0];
-
-    // Extract A/C Reg from summary lines: e.g., "7M8MVS"
-    const acMatch = raw.match(/(7M8|A330|B737|A380|B777|9M-)/);
-    if(acMatch) result.acReg = acMatch[1];
-
-    // Parse flight summary lines - more robust regex
-    // Try to find lines containing MHxxx and time patterns
-    const flightRegex = /(MH\d+)[\s]*([A-Z]{3})[\s]*(\d{2}:\d{2})[\s]*([A-Z]{3})[\s]*(\d{2}:\d{2})[\s]*(\d{2}:\d{2})[\s]*([A-Z0-9]+)/g;
-    let match;
-    while((match = flightRegex.exec(raw)) !== null){
-      const flightId = match[1];
-      const from = match[2];
-      const std = match[3];
-      const to = match[4];
-      const sta = match[5];
-      const fh = match[6];
-      const acReg = match[7];
-      result.flights.push({ flightId, from, to, std, sta, fh, acReg });
-    }
-
-    // If above fails, try simpler: MHxxx followed by times
-    if(result.flights.length === 0){
-      const simpleRegex = /(MH\d+)[\s\S]*?(\d{2}:\d{2})[\s\S]*?(\d{2}:\d{2})[\s\S]*?(\d{2}:\d{2})[\s\S]*?([A-Z0-9]+)/g;
-      while((match = simpleRegex.exec(raw)) !== null){
-        const flightId = match[1];
-        const std = match[2];
-        const sta = match[3];
-        const fh = match[4];
-        const acReg = match[5];
-        // Try to get from/to from surrounding text
-        let from='', to='';
-        const ctx = raw.substring(match.index, match.index+300).split(/\s+/);
-        let airportCount=0;
-        for(let p of ctx){
-          if(p.length===3 && p.match(/[A-Z]{3}/) && !p.match(/MH\d+/)){
-            if(!from){ from=p; } else if(!to && p!==from){ to=p; break; }
-          }
+    // 1. Find duty start from the first line that looks like "05-Jul-202608:20MH070..."
+    // We'll extract date and rep time from the very first line.
+    for(let l of lines){
+      l = l.trim();
+      const dateMatch = l.match(/(\d{2}-[A-Za-z]{3}-\d{4})/);
+      if(dateMatch){
+        result.date = dateMatch[1];
+        // try to extract time after date (HH:MM)
+        const timeMatch = l.match(/\d{2}:\d{2}/);
+        if(timeMatch) result.repTime = timeMatch[0];
+        else {
+          // try to find 4-digit time without colon, e.g. "0820"
+          const tMatch = l.match(/\b(\d{2})(\d{2})\b/);
+          if(tMatch) result.repTime = tMatch[1] + ':' + tMatch[2];
         }
-        result.flights.push({ flightId, from, to, std, sta, fh, acReg });
+        break;
       }
     }
 
-    // Parse crew: look for lines containing staff ID (7 digits)
-    const crewRows = [];
-    const lines2 = raw.split('\n');
-    for(let l of lines2){
-      l = l.trim();
-      // If line has 7 digits and contains a name/rank pattern
-      if(l.match(/\d{7}/)){
-        // Try to extract ID, rank, name
-        const idMatch = l.match(/(\d{7})/);
-        if(idMatch){
-          const id = idMatch[1];
-          // Find rank among known ranks
-          const rankList = ['CAPT','FO','SO','FS','LSOP','IFS','LS'];
-          let foundRank = '';
-          let name = '';
-          for(let r of rankList){
-            if(l.toUpperCase().includes(r)){
-              // get everything after ID and before rank
-              const idx = l.indexOf(r);
-              const before = l.substring(0, idx);
-              const after = l.substring(idx + r.length);
-              // ID is at start, the rest before rank is name
-              const namePart = before.replace(id, '').trim();
-              name = namePart;
-              foundRank = r;
-              break;
+    // 2. Extract flights from the top line(s) — the line containing MHxxx
+    let flightLine = '';
+    for(let l of lines){
+      if(l.includes('MH') && l.match(/MH\d{3}/)){
+        flightLine = l;
+        break;
+      }
+    }
+    if(flightLine){
+      // Pattern: MH070LSOPKUL 09:50NRT 18:0527:4007:1509:15333MTN
+      // We'll extract all flights by splitting on MH
+      const flightsRaw = flightLine.split(/(MH\d{3})/).filter(s => s.trim());
+      let currentFlight = null;
+      for(let part of flightsRaw){
+        if(part.match(/^MH\d{3}/)){
+          if(currentFlight) result.flights.push(currentFlight);
+          currentFlight = { flightId: part.trim(), from: '', to: '', std: '', sta: '', ft: '', acReg: '' };
+        } else if(currentFlight){
+          // parse this part: e.g., "LSOPKUL 09:50NRT 18:0527:4007:1509:15333MTN"
+          const tokens = part.match(/[A-Z]{3}|\d{2}:\d{2}|[A-Z0-9]+/g);
+          if(tokens){
+            let idx=0;
+            // find first 3-letter code (from) and next (to)
+            let from='', to='';
+            let std='', sta='', ft='', acReg='';
+            for(let t of tokens){
+              if(t.match(/^[A-Z]{3}$/) && !from) from = t;
+              else if(t.match(/^[A-Z]{3}$/) && from && !to) to = t;
+              else if(t.match(/^\d{2}:\d{2}$/) && !std) std = t;
+              else if(t.match(/^\d{2}:\d{2}$/) && std && !sta) sta = t;
+              else if(t.match(/^\d{2}:\d{2}$/) && sta && !ft) ft = t;
+              else if(t.match(/^[A-Z0-9]+$/) && !acReg && t.length>2) acReg = t;
             }
+            currentFlight.from = from;
+            currentFlight.to = to;
+            currentFlight.std = std;
+            currentFlight.sta = sta;
+            currentFlight.ft = ft;
+            currentFlight.acReg = acReg;
           }
-          if(!foundRank){
-            // Fallback: if no rank, treat as cabin crew with rank 'FS'
-            const namePart = l.replace(id, '').trim();
-            name = namePart;
-            foundRank = 'FS';
-          }
-          crewRows.push({ id, name, rank: foundRank });
         }
+      }
+      if(currentFlight) result.flights.push(currentFlight);
+    }
+
+    // 3. Parse crew from Inbound, Outbound, and "Crew On My Pairing"
+    const allCrew = [];
+    const sections = ['inbound','outbound','crew on my pairing'];
+    let currentSection = '';
+    for(let l of lines){
+      const low = l.toLowerCase();
+      if(low.includes('inbound')){ currentSection = 'inbound'; continue; }
+      if(low.includes('outbound')){ currentSection = 'outbound'; continue; }
+      if(low.includes('crew on my pairing')){ currentSection = 'extra'; continue; }
+      if(!currentSection) continue;
+      // Look for lines with 7-digit ID
+      const idMatch = l.match(/(\d{7})/);
+      if(!idMatch) continue;
+      const id = idMatch[1];
+      // Find rank in the line
+      const rankList = ['CAPT','FO','SO','IFS','LS','FS','FSS','SS','CS','AS'];
+      let foundRank = '';
+      let name = '';
+      for(let r of rankList){
+        if(l.toUpperCase().includes(r)){
+          // Extract name: between ID and rank
+          const idx = l.toUpperCase().indexOf(r);
+          const before = l.substring(0, idx);
+          const namePart = before.replace(id, '').trim();
+          name = namePart;
+          foundRank = r;
+          break;
+        }
+      }
+      if(!foundRank){
+        // fallback: if no rank found, treat as FS
+        const namePart = l.replace(id, '').trim();
+        name = namePart;
+        foundRank = 'FS';
+      }
+      allCrew.push({ crewId: id, opRank: foundRank, crewName: name, section: currentSection });
+    }
+
+    // Deduplicate by crewId (keep first occurrence)
+    const seen = new Set();
+    const uniqueCrew = [];
+    for(let c of allCrew){
+      if(!seen.has(c.crewId)){
+        seen.add(c.crewId);
+        uniqueCrew.push(c);
       }
     }
 
     // Separate cockpit and cabin
     const cockpitRanks = ['CAPT','FO','SO'];
-    crewRows.forEach(c => {
-      if(cockpitRanks.includes(c.rank.toUpperCase())){
-        result.cockpit.push({ crewId: c.id, opRank: c.rank, crewName: c.name });
+    for(let c of uniqueCrew){
+      if(cockpitRanks.includes(c.opRank.toUpperCase())){
+        result.cockpit.push(c);
       } else {
-        result.cabinCrew.push({ crewId: c.id, opRank: c.rank || 'FS', crewName: c.name });
+        result.cabinCrew.push(c);
       }
-    });
+    }
 
-    // Build itinerary and crew list in the standard format
+    // Build itinerary from flights
     const itin = result.flights.map(f => ({
-      flightId: f.flightId,
-      date: result.date,
+      flightId: f.flightId || '',
+      date: result.date || '',
       from: f.from || '',
       dep: f.std || '',
       to: f.to || '',
@@ -370,13 +430,14 @@
       ac: '',
       version: '',
       acReg: f.acReg || result.acReg || '',
-      flightTime: f.fh || '',
+      flightTime: f.ft || '',
       groundTime: '',
       actStart: '',
       actEnd: '',
       actLoc: ''
     }));
 
+    // Build crew list
     const crew = result.cockpit.concat(result.cabinCrew).map(c => ({
       opRank: c.opRank,
       posRank: c.opRank,
@@ -389,13 +450,19 @@
       checkIn: ''
     }));
 
+    // Duty start: use date + repTime
+    let dutyStart = result.repTime ? (result.date + ' ' + result.repTime) : '';
+    let dutyDate = result.date || '';
+
     return {
       duty: [],
       itin: itin,
       crew: crew,
       found: { duty: false, itin: itin.length>0, crew: crew.length>0 },
       source: 'pdf',
-      pdfData: { date: result.date, acReg: result.acReg, flights: result.flights }
+      dutyStart: dutyStart,
+      dutyDate: dutyDate,
+      pdfData: { date: result.date, acReg: result.acReg, repTime: result.repTime }
     };
   }
 
@@ -454,15 +521,17 @@
 
   function buildReport(){
     const d = state;
-    const isPdf = (d.source === 'pdf');
     const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
     const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
     const fos = d.crew.filter(c => c.opRank.toUpperCase() === 'FO');
     const ac0 = d.itin.length ? d.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
 
+    // Sort cabin crew: IFS > LS > FS (ascending ID for FS)
+    const sortedCabin = sortCabinCrew(cabinCrew);
+
     // CIC
-    const cic = determineCrewInCharge(cabinCrew);
+    const cic = determineCrewInCharge(sortedCabin);
     let cicChosen = cic.auto;
     if(!cicChosen && cic.candidates.length){
       cicChosen = state.chosenCIC || cic.candidates[0];
@@ -476,194 +545,137 @@
       picChosen = captains[0];
     }
 
-    // REP time
-    const std0 = d.itin.length ? fval('std-0', timeOnly(d.itin[0].dep)) : '';
-    const repOffset = isNarrow ? 75 : 90;
-    const rep = std0 ? subtractMinutes(std0, repOffset) : '----';
-
-    // If PDF, use pdfData for date/acReg
-    let pdfDate = d.pdfData ? d.pdfData.date : '';
-    let pdfAcReg = d.pdfData ? d.pdfData.acReg : '';
-
-    // ---- Build HTML based on source ----
-    let html = '';
-
-    if(isPdf){
-      // ---- NEW PDF LAYOUT ----
-      html += `<div class="rpad">`;
-
-      // Top info: Date, A/C Reg, Bay, REP
-      html += `<div class="pdf-top-info">
-        <span><span class="label">DATE:</span> <input value="${esc(pdfDate || fval('pdfDate', ''))}" oninput="updateField('pdfDate', this.value)" style="width:100px;"></span>
-        <span><span class="label">A/C REG:</span> <input value="${esc(pdfAcReg || fval('pdfAcReg', ''))}" oninput="updateField('pdfAcReg', this.value)" style="width:80px;"></span>
-        <span><span class="label">BAY:</span> <input value="${esc(fval('bay', ''))}" oninput="updateField('bay', this.value)" style="width:60px;"></span>
-        <span><span class="label">REP TIME:</span> <input value="${esc(rep)}" style="width:60px;font-weight:bold;" readonly></span>
-      </div>`;
-
-      // Flight table
-      html += `<table class="rtab" style="font-size:9px;">
-        <tr><th>F.NO</th><th>SECTOR</th><th>STD</th><th>STA</th><th>ATD</th><th>ATA</th><th>FT</th><th>REMARKS</th></tr>`;
-      d.itin.forEach((l, i) => {
-        const ft = l.flightTime || fval('ft-'+i, '');
-        html += `<tr>
-          <td>${esc(l.flightId)}</td>
-          <td>${esc((l.from||'')+'/'+(l.to||''))}</td>
-          <td><input value="${esc(fval('std-'+i, timeOnly(l.dep)))}" oninput="updateField('std-${i}', this.value)"></td>
-          <td><input value="${esc(fval('sta-'+i, timeOnly(l.arr)))}" oninput="updateField('sta-${i}', this.value)"></td>
-          <td><input value="${esc(fval('atd-'+i, ''))}" placeholder="—" oninput="updateField('atd-${i}', this.value)"></td>
-          <td><input value="${esc(fval('ata-'+i, ''))}" placeholder="—" oninput="updateField('ata-${i}', this.value)"></td>
-          <td><input value="${esc(ft)}" oninput="updateField('ft-${i}', this.value)"></td>
-          <td><input class="remarksTxt" value="${esc(fval('remarks-'+i, ''))}" oninput="updateField('remarks-${i}', this.value)"></td>
-        </tr>`;
-      });
-      html += `</table>`;
-
-      // Airport name (editable)
-      html += `<div class="pdf-airport"><input placeholder="Airport name (write with pen)" value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)"></div>`;
-
-      // Captain & FO
-      html += `<table class="rtab" style="margin-top:4px;">
-        <tr><th style="width:20%;">Staff No</th><th style="width:10%;">Rank</th><th style="width:70%;">Name</th></tr>`;
-      if(captains.length){
-        captains.forEach(c => {
-          html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
-        });
+    // REP line: date + day + time from duty start
+    let repDisplay = '----';
+    if(d.dutyDate || d.pdfData?.date){
+      const dateStr = d.pdfData?.date || d.dutyDate || '';
+      const day = getDayName(dateStr);
+      const repTime = d.pdfData?.repTime || d.dutyStart?.split(/\s+/).pop() || '';
+      repDisplay = dateStr + ' (' + day + ') REP: ' + repTime;
+    } else if(d.dutyStart){
+      const parts = d.dutyStart.split(/\s+/);
+      if(parts.length>=2){
+        const dateStr = parts[0] + ' ' + (parts[1] || '');
+        const day = getDayName(dateStr);
+        const repTime = parts[parts.length-1] || '';
+        repDisplay = dateStr + ' (' + day + ') REP: ' + repTime;
       } else {
-        html += `<tr><td colspan="3">—</td></tr>`;
+        repDisplay = d.dutyStart;
       }
-      if(fos.length){
-        fos.forEach(c => {
-          html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
-        });
-      }
-      html += `</table>`;
+    }
 
-      // Cabin Crew table
-      html += `<div style="margin-top:6px;font-weight:bold;font-size:9px;">CABIN CREW (${cabinCrew.length})</div>`;
-      html += `<table class="rtab crew-table" style="font-size:9px;">
-        <tr><th>S/No</th><th>Rank</th><th style="text-align:left;">Name</th><th>Working Post</th><th>Door</th></tr>`;
-      cabinCrew.forEach(c => {
-        const pos = state.positions[c.crewId] || '';
-        const posDisplay = pos ? esc(pos) : `<span class="tap-indicator">tap</span>`;
-        html += `<tr>
-          <td>${esc(c.crewId)}</td>
-          <td>${esc(c.opRank)}</td>
-          <td style="text-align:left;">${esc(c.crewName)}</td>
-          <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${posDisplay}</td>
-          <td><input value="${esc(fval('door-'+c.crewId, ''))}" oninput="updateField('door-${c.crewId}', this.value)"></td>
-        </tr>`;
+    // ---- Build unified layout ----
+    let html = `<div class="rpad">`;
+
+    // Top info: DATE, A/C REG, BAY, REP
+    const pdfDate = d.pdfData?.date || '';
+    const pdfAcReg = d.pdfData?.acReg || '';
+    html += `<div class="top-info">
+      <span><span class="label">DATE:</span> <input value="${esc(pdfDate || fval('pdfDate', ''))}" oninput="updateField('pdfDate', this.value)" style="width:110px;"></span>
+      <span><span class="label">A/C REG:</span> <input value="${esc(pdfAcReg || fval('pdfAcReg', ''))}" oninput="updateField('pdfAcReg', this.value)" style="width:80px;"></span>
+      <span><span class="label">BAY:</span> <input value="${esc(fval('bay', ''))}" oninput="updateField('bay', this.value)" class="small"></span>
+      <span><span class="label">REP:</span> <input value="${esc(repDisplay)}" class="rep" readonly></span>
+    </div>`;
+
+    // Flight table - 10 columns: F.NO, STATION, STD, STA, FT, ATD, ATA, A/C TYPE, A/C REG, REMARKS
+    // Fixed columns: ~8% each for 9 cols = 72%, REMARKS gets 28%
+    html += `<table class="rtab" style="font-size:9px;">
+      <tr>
+        <th style="width:8%;">F.NO</th>
+        <th style="width:8%;">STATION</th>
+        <th style="width:8%;">STD</th>
+        <th style="width:8%;">STA</th>
+        <th style="width:8%;">FT</th>
+        <th style="width:8%;">ATD</th>
+        <th style="width:8%;">ATA</th>
+        <th style="width:8%;">A/C TYPE</th>
+        <th style="width:8%;">A/C REG</th>
+        <th style="width:28%;">REMARKS</th>
+      </tr>`;
+    d.itin.forEach((l, i) => {
+      const ft = l.flightTime || fval('ft-'+i, '');
+      html += `<tr>
+        <td>${esc(l.flightId)}</td>
+        <td>${esc((l.from||'')+'/'+(l.to||''))}</td>
+        <td><input value="${esc(fval('std-'+i, timeOnly(l.dep)))}" oninput="updateField('std-${i}', this.value)"></td>
+        <td><input value="${esc(fval('sta-'+i, timeOnly(l.arr)))}" oninput="updateField('sta-${i}', this.value)"></td>
+        <td><input value="${esc(ft)}" oninput="updateField('ft-${i}', this.value)"></td>
+        <td><input value="${esc(fval('atd-'+i, ''))}" oninput="updateField('atd-${i}', this.value)"></td>
+        <td><input value="${esc(fval('ata-'+i, ''))}" oninput="updateField('ata-${i}', this.value)"></td>
+        <td><input value="${esc(fval('ac-'+i, l.ac||''))}" oninput="updateField('ac-${i}', this.value)"></td>
+        <td><input value="${esc(fval('acreg-'+i, l.acReg||''))}" oninput="updateField('acreg-${i}', this.value)"></td>
+        <td><input class="remarksTxt" value="${esc(fval('remarks-'+i, ''))}" oninput="updateField('remarks-${i}', this.value)"></td>
+      </tr>`;
+    });
+    html += `</table>`;
+
+    // Airport name (editable)
+    html += `<div style="font-size:9px;margin-top:2px;text-align:left;border:1px solid #333;border-top:none;padding:2px 4px;">
+      <input placeholder="Airport name (write with pen)" value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;">
+    </div>`;
+
+    // Captain & FO
+    html += `<table class="rtab" style="margin-top:4px;width:60%;">
+      <tr><th style="width:25%;">Staff No</th><th style="width:15%;">Rank</th><th style="width:60%;">Name</th></tr>`;
+    if(captains.length){
+      captains.forEach(c => {
+        html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
       });
-      html += `</table>`;
-
-      // Bottom fields
-      html += `<div class="pdf-bottom-fields">
-        <div class="fbox"><label>BD</label><input value="${esc(fval('bd',''))}" oninput="updateField('bd', this.value)"></div>
-        <div class="fbox"><label>LAST PAX</label><input value="${esc(fval('lastpax',''))}" oninput="updateField('lastpax', this.value)"></div>
-        <div class="fbox"><label>CAT</label><input value="${esc(fval('cat',''))}" oninput="updateField('cat', this.value)"></div>
-        <div class="fbox"><label>AIC</label><input value="${esc(fval('aic',''))}" oninput="updateField('aic', this.value)"></div>
-        <div class="fbox"><label>CLC</label><input value="${esc(fval('clc',''))}" oninput="updateField('clc', this.value)"></div>
-        <div class="fbox"><label>1ST</label><input value="${esc(fval('first',''))}" oninput="updateField('first', this.value)"></div>
-        <div class="fbox"><label>LAST</label><input value="${esc(fval('last',''))}" oninput="updateField('last', this.value)"></div>
-        <div class="fbox"><label>DOOR</label><input value="${esc(fval('door',''))}" oninput="updateField('door', this.value)"></div>
-      </div>`;
-
-      html += `</div>`;
     } else {
-      // ---- OLD iFLIGHT LAYOUT (unchanged) ----
-      const cicPickerHtml = (cic.candidates.length) ? `<div class="pick noprint-inline">Multiple supervisory crew — choose: <select id="cicSelect">${cic.candidates.map(c => `<option value="${esc(c.crewId)}" ${cicChosen && cicChosen.crewId===c.crewId?'selected':''}>${esc(c.crewName)} (${esc(c.opRank)})</option>`).join('')}</select></div>` : '';
-      let captainHtml = '';
-      if(isNarrow){
-        if(captains.length === 0) captainHtml = '—';
-        else {
-          const pic = picChosen || captains[0];
-          captainHtml = esc(pic.crewName) + ' (' + esc(pic.crewId) + ')';
-          if(captains.length > 1) captainHtml += `<div class="pick noprint-inline"><select id="picSelect">${captains.map(c => `<option value="${esc(c.crewId)}" ${pic && pic.crewId===c.crewId?'selected':''}>${esc(c.crewName)} (${esc(c.crewId)})</option>`).join('')}</select></div>`;
-        }
-      } else {
-        captainHtml = (captains.length === 0) ? '—' : captains.map(c => esc(c.crewName)+' ('+esc(c.crewId)+')').join(', ');
-      }
-
-      // Leg rows
-      let legRows = '';
-      d.itin.forEach((l,i) => {
-        legRows += `<tr>
-          <td>${esc(l.flightId)}</td><td>${esc((l.from||'')+'/'+(l.to||''))}</td>
-          <td><input value="${esc(fval('std-'+i, timeOnly(l.dep)))}" oninput="updateField('std-${i}', this.value)"></td>
-          <td><input value="${esc(fval('sta-'+i, timeOnly(l.arr)))}" oninput="updateField('sta-${i}', this.value)"></td>
-          <td><input value="${esc(fval('atd-'+i, ''))}" placeholder="—" oninput="updateField('atd-${i}', this.value)"></td>
-          <td><input value="${esc(fval('ata-'+i, ''))}" placeholder="—" oninput="updateField('ata-${i}', this.value)"></td>
-          <td><input value="${esc(fval('ac-'+i, l.ac||''))}" oninput="updateField('ac-${i}', this.value)"></td>
-          <td><input value="${esc(fval('acreg-'+i, l.acReg||''))}" oninput="updateField('acreg-${i}', this.value)"></td>
-        </tr>
-        <tr class="remarksRow"><td colspan="8" style="text-align:left;">
-          <input class="remarksTxt" placeholder="Remarks" value="${esc(fval('remarks-'+i,''))}" oninput="updateField('remarks-${i}', this.value)">
-          <table class="rtab mini"><tr><th colspan="3">Meals</th><th colspan="5">Passenger Load</th></tr>
-          <tr><th>FC</th><th>CCC</th><th>EY</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
-          <tr><td><input value="${esc(fval('mfc-'+i,''))}" oninput="updateField('mfc-${i}', this.value)"></td>
-          <td><input value="${esc(fval('mccc-'+i,''))}" oninput="updateField('mccc-${i}', this.value)"></td>
-          <td><input value="${esc(fval('mey-'+i,''))}" oninput="updateField('mey-${i}', this.value)"></td>
-          <td><input value="${esc(fval('la-'+i,''))}" oninput="updateField('la-${i}', this.value)"></td>
-          <td><input value="${esc(fval('lb-'+i,''))}" oninput="updateField('lb-${i}', this.value)"></td>
-          <td><input value="${esc(fval('lc-'+i,''))}" oninput="updateField('lc-${i}', this.value)"></td>
-          <td><input value="${esc(fval('ld-'+i,''))}" oninput="updateField('ld-${i}', this.value)"></td>
-          <td><input value="${esc(fval('le-'+i,''))}" oninput="updateField('le-${i}', this.value)"></td></tr></table>
-        </td></tr>`;
-      });
-
-      // Crew rows
-      let crewRows = '';
-      cabinCrew.forEach(c => {
-        const isCIC = cicChosen && c.crewId === cicChosen.crewId;
-        const pos = state.positions[c.crewId] || '';
-        const posDisplay = pos ? esc(pos) : `<span class="tap-indicator">tap</span>`;
-        crewRows += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
-          <td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td>
-          <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${posDisplay}</td>
-          <td><input value="${esc(fval('door-'+c.crewId,''))}" oninput="updateField('door-${c.crewId}', this.value)"></td>
-        </tr>`;
-      });
-
-      // Flight Time Details (old)
-      let ftRows = '';
-      d.itin.forEach((l) => {
-        const flightNo = esc(l.flightId);
-        const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
-        ftRows += `<tr><td style="font-weight:bold;font-size:9px;">${flightNo}</td>${cats.map(() => `<td><span class="ft-box">&nbsp;</span></td>`).join('')}</tr>`;
-      });
-
-      html = `<div class="rpad">
-        <div class="rtitle"><h2>Cabin Crew Voyage Report</h2></div>
-        <div class="rsection-title"><span>Flight Info</span><span>REP ${esc(rep)}</span></div>
-        <table class="rtab"><tr><th>Flt No</th><th>Sector</th><th>STD</th><th>STA</th><th>ATD</th><th>ATA</th><th>A/C Type</th><th>A/C Reg</th></tr>${legRows}</table>
-        <table class="rtab"><tr><th>Captain</th><th>Crew In Charge</th></tr><tr><td>${captainHtml}</td><td>${cicChosen ? esc(cicChosen.crewName)+' ('+esc(cicChosen.crewId)+')' : '—'}${cicPickerHtml}</td></tr></table>
-        <div class="rsection-title"><span>Cabin Crew (${cabinCrew.length})</span></div>
-        <table class="rtab crew-table"><tr><th>S/No</th><th>Rank</th><th style="text-align:left;">Name</th><th>Position</th><th>Door</th></tr>${crewRows}</table>
-        <div class="rsection-title">Flight Time Details</div>
-        <table class="ft-table"><tr><th>Flt</th><th>LP</th><th>CB</th><th>CAT</th><th>AIC</th><th>BC</th><th>1P</th><th>BC</th><th>DC</th><th>DO</th></tr>${ftRows}</table>
-      </div>`;
+      html += `<tr><td colspan="3">—</td></tr>`;
     }
+    if(fos.length){
+      fos.forEach(c => {
+        html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
+      });
+    }
+    html += `</table>`;
 
+    // Cabin Crew table
+    html += `<div style="margin-top:6px;font-weight:bold;font-size:9px;">CABIN CREW (${sortedCabin.length})</div>`;
+    html += `<table class="rtab crew-table" style="font-size:9px;">
+      <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:62%;text-align:left;">Name</th><th style="width:10%;">Working Post</th><th style="width:10%;">Door</th></tr>`;
+    sortedCabin.forEach(c => {
+      const isCIC = cicChosen && c.crewId === cicChosen.crewId;
+      const pos = state.positions[c.crewId] || '';
+      const posDisplay = pos ? esc(pos) : `<span class="tap-indicator">tap</span>`;
+      html += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
+        <td>${esc(c.crewId)}</td>
+        <td>${esc(c.opRank)}</td>
+        <td style="text-align:left;">${esc(c.crewName)}</td>
+        <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${posDisplay}</td>
+        <td><input value="${esc(fval('door-'+c.crewId, ''))}" oninput="updateField('door-${c.crewId}', this.value)"></td>
+      </tr>`;
+    });
+    html += `</table>`;
+
+    // Bottom Flight Time Details table
+    html += `<div style="margin-top:8px;font-weight:bold;font-size:9px;">Flight Time Details</div>`;
+    html += `<table class="ft-table">
+      <tr>
+        <th style="width:10%;">Flt</th>
+        <th style="width:10%;">LP</th>
+        <th style="width:10%;">CB</th>
+        <th style="width:10%;">CAT</th>
+        <th style="width:10%;">AIC</th>
+        <th style="width:10%;">BC</th>
+        <th style="width:10%;">1P</th>
+        <th style="width:10%;">BC</th>
+        <th style="width:10%;">DC</th>
+        <th style="width:10%;">DO</th>
+      </tr>`;
+    d.itin.forEach((l, i) => {
+      const flightNo = esc(l.flightId);
+      const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
+      html += `<tr>
+        <td style="font-weight:bold;">${flightNo}</td>
+        ${cats.map(() => `<td><input value="" placeholder=""></td>`).join('')}
+      </tr>`;
+    });
+    html += `</table>`;
+
+    html += `</div>`;
     reportEl.innerHTML = html;
-
-    // Event listeners for dropdowns (only if not PDF)
-    if(!isPdf){
-      const cicSel = document.getElementById('cicSelect');
-      if(cicSel){
-        cicSel.addEventListener('change', (e) => {
-          const chosen = cic.candidates.find(c => c.crewId === e.target.value);
-          state.chosenCIC = chosen;
-          buildReport();
-        });
-      }
-      const picSel = document.getElementById('picSelect');
-      if(picSel){
-        picSel.addEventListener('change', (e) => {
-          const chosen = captains.find(c => c.crewId === e.target.value);
-          state.selectedPIC = chosen;
-          buildReport();
-        });
-      }
-    }
 
     // Position cell clicks
     reportEl.querySelectorAll('.pos-cell').forEach(el => {
@@ -776,7 +788,6 @@
     const reader = new FileReader();
     reader.onload = function(loadEvent){
       const arrayBuffer = loadEvent.target.result;
-      // Set worker source
       const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
       if(!pdfjsLib){
         pdfStatus.textContent = 'Error: pdf.js library not loaded.';
@@ -801,7 +812,6 @@
           fullText = texts.join('\n');
           pdfBox.value = fullText;
           pdfStatus.textContent = 'PDF text extracted. Auto‑parsing…';
-          // Auto-parse
           handlePdfParse(fullText);
         });
       }).catch(function(err){
