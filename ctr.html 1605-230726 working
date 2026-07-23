@@ -57,50 +57,24 @@
   .pick{font-size:10px;color:#a33;margin-top:3px;}
   .pick select{font-size:10px;padding:2px;color:#111;background:#fff;}
 
-  /* ---- Flight Time Details ---- */
-  .ft-table{width:100%;border-collapse:collapse;font-size:8.5px;margin-top:4px;}
-  .ft-table th{background:#eee;font-weight:600;font-size:8px;border:1px solid #333;padding:2px;}
-  .ft-table td{border:1px solid #333;padding:2px;text-align:center;}
-  .ft-box{display:inline-block;width:100%;min-height:1.2em;border:1px solid #aaa;background:#fafafa;padding:1px 0;font-size:8.5px;color:#333;}
-  .ft-box.faint{opacity:0.3;}
-
   /* ---- Position modal ---- */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
-  .modal-box{background:#fff;color:#111;border-radius:12px;padding:16px;width:100%;max-width:340px;}
+  .modal-box{background:#fff;color:#111;border-radius:12px;padding:16px;width:100%;max-width:320px;}
   .modal-title{font-size:14px;font-weight:700;margin-bottom:2px;}
   .modal-sub{font-size:12px;color:#555;margin-bottom:12px;}
-  .pos-grid{display:grid;gap:8px;margin-bottom:14px;}
-  .pos-grid.narrow{grid-template-columns:repeat(3,1fr);}
-  .pos-grid.wide{grid-template-columns:repeat(4,1fr);}
+  .pos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
   .pos-btn{padding:16px 4px;font-size:14px;font-weight:700;border-radius:10px;border:2px solid #ddd;background:#f7f7f7;color:#333;cursor:pointer;transition:transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;}
   .pos-btn:active{transform:scale(.94);}
   @keyframes posPulse{0%{transform:scale(1);}50%{transform:scale(1.18);}100%{transform:scale(1.06);}}
   .pos-btn.selected{background:var(--accent);border-color:var(--accent2);color:#fff;box-shadow:0 0 0 4px rgba(59,130,246,.25);animation:posPulse .35s ease;transform:scale(1.06);}
   .modal-box button.secondary{width:100%;}
 
-  /* ---- Print styles ---- */
   @media print{
     body{background:#fff;}
-    header, .card:not(.reportcard), .noprint, .noprint-inline{display:none !important;}
+    header, .card:not(.reportcard), .noprint{display:none !important;}
     .wrap{padding:0;max-width:none;}
     .reportcard{border:none;padding:0;margin:0;}
     #report{border-radius:0;}
-
-    /* Crew table widths */
-    .crew-table{table-layout:fixed;}
-    .crew-table th:nth-child(1), .crew-table td:nth-child(1){width:10%;}  /* staff no */
-    .crew-table th:nth-child(2), .crew-table td:nth-child(2){width:5%;}   /* rank */
-    .crew-table th:nth-child(3), .crew-table td:nth-child(3){width:75%;}  /* name */
-    .crew-table th:nth-child(4), .crew-table td:nth-child(4){width:5%;}   /* position */
-    .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:5%;}   /* door */
-
-    /* Hide "tap" text in position cells that are unset */
-    .pos-cell.unset{color:transparent !important;font-style:normal !important;}
-    .pos-cell.unset::before{content:"";}
-
-    /* Flight time details boxes: faint */
-    .ft-box.faint{opacity:0.3 !important;border-color:#999;}
-    .ft-box{background:#fff !important;}
   }
 </style>
 </head>
@@ -109,7 +83,7 @@
 <header>
   <h1>CCVR Autofill</h1>
   <p>Paste iFlight Crew Trip Report text → auto-fill a printable Cabin Crew Voyage Report</p>
-  <p style="font-size:10px;color:#555;margin-top:4px;">build v5</p>
+  <p style="font-size:10px;color:#555;margin-top:4px;">build v4</p>
 </header>
 
 <div class="wrap">
@@ -168,9 +142,7 @@
   const CREW_HEADERS = ["OP Rank","Postion Rank","Crew Id","Crew Name","WT","Work Pos.","Base","SDC","Check In"];
   const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary'];
   const COCKPIT_RANKS = ['CAPT','FO','SO'];
-
-  const POSITIONS_NARROW = ['P1','P2','P3','P4','A1','A2','SNY'];
-  const POSITIONS_WIDE = ['ICC','LSB','LSC','LSD','AG','BG1','BG2','CG','DG','BC','BC1','CC','DC','DC2','SNY'];
+  const POSITIONS_NARROWBODY = ['P1','P2','P3','P4','A1','A2','SNY'];
 
   function norm(s){ return (s===undefined||s===null) ? '' : String(s).trim(); }
 
@@ -179,6 +151,9 @@
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  // Source pastes have a blank filler line between each header cell (but NOT
+  // between data cells), so header search skips blanks while data extraction
+  // below keeps them (blanks there mean an empty column value).
   function findHeaderEnd(lines, seq){
     for(let start=0; start<lines.length; start++){
       let li = start;
@@ -277,6 +252,9 @@
   }
 
   // ---- Persistent state ----
+  // state.fields holds every manually-editable value, keyed by a stable
+  // string, so re-rendering the report (e.g. after picking a working
+  // position) never wipes out what's already been typed.
   let state = null;
 
   function fval(key, def){
@@ -290,16 +268,10 @@
   };
 
   window.openPositionModal = function(crewId, crewName){
-    const ac0 = state.itin.length ? state.itin[0].ac : '';
-    const isNarrow = isNarrowbody(ac0);
-    const posList = isNarrow ? POSITIONS_NARROW : POSITIONS_WIDE;
-    const gridClass = isNarrow ? 'narrow' : 'wide';
-
     state.modalCrew = crewId;
     modalCrewName.textContent = crewName;
-    posGrid.className = 'pos-grid ' + gridClass;
     posGrid.innerHTML = '';
-    posList.forEach(pos => {
+    POSITIONS_NARROWBODY.forEach(pos => {
       const btn = document.createElement('button');
       btn.className = 'pos-btn' + (state.positions[crewId] === pos ? ' selected' : '');
       btn.textContent = pos;
@@ -330,34 +302,20 @@
   function buildReport(){
     const d = state;
     const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
-    const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
-    const ac0 = d.itin.length ? d.itin[0].ac : '';
-    const isNarrow = isNarrowbody(ac0);
-
-    // CIC
+    const captain = d.crew.find(c => c.opRank.toUpperCase() === 'CAPT');
     const cic = determineCrewInCharge(cabinCrew);
+
     let cicChosen = cic.auto;
     if(!cicChosen && cic.candidates.length){
       cicChosen = state.chosenCIC || cic.candidates[0];
     }
 
-    // Captain / PIC
-    let picChosen = null;
-    if(isNarrow && captains.length > 1){
-      // multiple captains, use dropdown selection
-      picChosen = state.selectedPIC || captains[0];
-    } else if(captains.length === 1){
-      picChosen = captains[0];
-    } else {
-      picChosen = null;
-    }
-
-    // Flight Info + REP time
+    // Flight Info + REP time (based on first leg's STD & A/C type)
     const std0 = d.itin.length ? fval('std-0', timeOnly(d.itin[0].dep)) : '';
-    const repOffset = isNarrow ? 75 : 90;
+    const ac0 = d.itin.length ? fval('ac-0', d.itin[0].ac || '') : '';
+    const repOffset = isNarrowbody(ac0) ? 75 : 90;
     const rep = std0 ? subtractMinutes(std0, repOffset) : '----';
 
-    // Build leg rows
     let legRows = '';
     if(d.itin.length){
       d.itin.forEach((l,i) => {
@@ -393,18 +351,16 @@
       legRows = '<tr><td colspan="8" style="color:#888;">No itinerary rows detected — fill manually</td></tr>';
     }
 
-    // Crew rows
     let crewRows = '';
     if(cabinCrew.length){
       cabinCrew.forEach(c => {
         const isCIC = cicChosen && c.crewId === cicChosen.crewId;
         const pos = state.positions[c.crewId] || '';
-        const posDisplay = pos || (window.matchMedia('print').matches ? '' : 'tap');
         crewRows += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
           <td>${esc(c.crewId)}</td>
           <td>${esc(c.opRank)}</td>
           <td style="text-align:left;">${esc(c.crewName)}</td>
-          <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${posDisplay}</td>
+          <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${pos || 'tap'}</td>
           <td><input value="${esc(fval('door-'+c.crewId,''))}" oninput="updateField('door-${c.crewId}', this.value)"></td>
         </tr>`;
       });
@@ -412,7 +368,6 @@
       crewRows = '<tr><td colspan="5" style="color:#888;">No crew rows detected — fill manually</td></tr>';
     }
 
-    // CIC dropdown (non-print only)
     let cicPickerHtml = '';
     if(cic.candidates.length){
       cicPickerHtml = `<div class="pick noprint-inline">
@@ -423,50 +378,6 @@
       </div>`;
     }
 
-    // Captain cell content
-    let captainHtml = '';
-    if(isNarrow){
-      // narrowbody: show selected PIC (with dropdown if multiple)
-      if(captains.length === 0){
-        captainHtml = '—';
-      } else {
-        const pic = picChosen || captains[0];
-        captainHtml = esc(pic.crewName) + ' (' + esc(pic.crewId) + ')';
-        if(captains.length > 1){
-          // dropdown in non-print
-          captainHtml += `<div class="pick noprint-inline">
-            <select id="picSelect">
-              ${captains.map(c => `<option value="${esc(c.crewId)}" ${pic && pic.crewId===c.crewId?'selected':''}>${esc(c.crewName)} (${esc(c.crewId)})</option>`).join('')}
-            </select>
-          </div>`;
-        }
-      }
-    } else {
-      // widebody: list all captains (print and non-print)
-      if(captains.length === 0){
-        captainHtml = '—';
-      } else {
-        captainHtml = captains.map(c => esc(c.crewName) + ' (' + esc(c.crewId) + ')').join(', ');
-      }
-    }
-
-    // Flight Time Details
-    let ftRows = '';
-    if(d.itin.length){
-      d.itin.forEach((l, i) => {
-        const flightNo = esc(l.flightId);
-        // categories: LP, CB, CAT, AIC, BC, 1P, BC, DC, DO
-        const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
-        ftRows += `<tr>
-          <td style="font-weight:bold;font-size:9px;">${flightNo}</td>
-          ${cats.map(cat => `<td><span class="ft-box faint">&nbsp;</span></td>`).join('')}
-        </tr>`;
-      });
-    } else {
-      ftRows = `<tr><td colspan="10" style="color:#888;">No flights</td></tr>`;
-    }
-
-    // Assemble report
     reportEl.innerHTML = `
       <div class="rpad">
         <div class="rtitle"><h2>Cabin Crew Voyage Report</h2></div>
@@ -480,44 +391,32 @@
         <table class="rtab">
           <tr><th>Captain</th><th>Crew In Charge</th></tr>
           <tr>
-            <td>${captainHtml}</td>
+            <td>${captain ? esc(captain.crewName)+' ('+esc(captain.crewId)+')' : '—'}</td>
             <td>${cicChosen ? esc(cicChosen.crewName)+' ('+esc(cicChosen.crewId)+')' : '—'}${cicPickerHtml}</td>
           </tr>
         </table>
 
         <div class="rsection-title"><span>Cabin Crew (${cabinCrew.length})</span></div>
-        <table class="rtab crew-table">
+        <table class="rtab">
           <tr><th>S/No</th><th>Rank</th><th style="text-align:left;">Name</th><th>Position</th><th>Door</th></tr>
           ${crewRows}
         </table>
 
-        <div class="rsection-title">Flight Time Details</div>
-        <table class="ft-table">
-          <tr><th>Flt</th><th>LP</th><th>CB</th><th>CAT</th><th>AIC</th><th>BC</th><th>1P</th><th>BC</th><th>DC</th><th>DO</th></tr>
-          ${ftRows}
-        </table>
+        <div class="footrow">
+          <div class="fbox"><label>Boarding Time</label><input value="${esc(fval('boarding',''))}" oninput="updateField('boarding', this.value)"></div>
+        </div>
       </div>
     `;
 
-    // Event listeners
-    const cicSel = document.getElementById('cicSelect');
-    if(cicSel){
-      cicSel.addEventListener('change', (e) => {
+    const sel = document.getElementById('cicSelect');
+    if(sel){
+      sel.addEventListener('change', (e) => {
         const chosen = cic.candidates.find(c => c.crewId === e.target.value);
         state.chosenCIC = chosen;
         buildReport();
       });
     }
-    const picSel = document.getElementById('picSelect');
-    if(picSel){
-      picSel.addEventListener('change', (e) => {
-        const chosen = captains.find(c => c.crewId === e.target.value);
-        state.selectedPIC = chosen;
-        buildReport();
-      });
-    }
 
-    // Position cell click
     reportEl.querySelectorAll('.pos-cell').forEach(el => {
       el.addEventListener('click', () => {
         window.openPositionModal(el.getAttribute('data-crewid'), el.getAttribute('data-crewname'));
@@ -564,7 +463,6 @@
 
       state = parsed;
       state.chosenCIC = null;
-      state.selectedPIC = null;
       state.fields = {};
       state.positions = {};
       buildReport();
