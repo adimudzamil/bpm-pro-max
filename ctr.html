@@ -50,6 +50,7 @@
   table.rtab td input.remarksTxt{text-align:left;border-bottom:1px dashed #999;}
   .pos-cell{cursor:pointer;font-weight:700;color:#1d4ed8;}
   .pos-cell.unset{color:#aaa;font-weight:400;font-style:italic;}
+  .door-cell{cursor:pointer;font-weight:600;color:#1d4ed8;display:inline-block;min-width:20px;}
   .pick{font-size:10px;color:#a33;margin-top:3px;}
   .pick select{font-size:10px;padding:2px;color:#111;background:#fff;}
 
@@ -74,10 +75,12 @@
   .pos-grid{display:grid;gap:8px;margin-bottom:14px;}
   .pos-grid.narrow{grid-template-columns:repeat(3,1fr);}
   .pos-grid.wide{grid-template-columns:repeat(4,1fr);}
-  .pos-btn{padding:16px 4px;font-size:14px;font-weight:700;border-radius:10px;border:2px solid #ddd;background:#f7f7f7;color:#333;cursor:pointer;transition:transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;}
-  .pos-btn:active{transform:scale(.94);}
-  @keyframes posPulse{0%{transform:scale(1);}50%{transform:scale(1.18);}100%{transform:scale(1.06);}}
-  .pos-btn.selected{background:var(--accent);border-color:var(--accent2);color:#fff;box-shadow:0 0 0 4px rgba(59,130,246,.25);animation:posPulse .35s ease;transform:scale(1.06);}
+  .door-grid{display:grid;gap:8px;margin-bottom:14px;grid-template-columns:1fr 1fr;}
+  .door-btn{padding:12px 8px;font-size:14px;font-weight:600;border-radius:10px;border:2px solid #ddd;background:#f7f7f7;color:#333;cursor:pointer;transition:transform .18s ease, background .18s ease, border-color .18s ease;}
+  .door-btn:active{transform:scale(.94);}
+  .door-btn.assigned{background:#fff6cc;border-color:#f59e0b;}
+  .door-btn.selected{background:#dbeafe;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.3);}
+  .door-btn .check{color:#22c55e;font-weight:bold;margin-left:6px;}
   .modal-box button.secondary{width:100%;}
 
   /* ---- Print styles ---- */
@@ -96,7 +99,6 @@
     .crew-table th:nth-child(4), .crew-table td:nth-child(4){width:10% !important;}
     .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:5% !important;}
 
-    .tap-indicator{display:none !important;}
     .pos-cell.unset{color:transparent !important; font-size:0 !important;}
     .top-info input, .top-info input.rep{border-color:#999 !important; background:#fff !important;}
     .ft-table td input{border:none !important;}
@@ -108,7 +110,7 @@
 <header>
   <h1>CCVR Autofill</h1>
   <p>iFlight Crew Trip Report <b>OR</b> PDF CrewTripReport → auto‑fill a printable Cabin Crew Voyage Report</p>
-  <p style="font-size:10px;color:#555;margin-top:4px;">build v12</p>
+  <p style="font-size:10px;color:#555;margin-top:4px;">build v13</p>
 </header>
 
 <div class="wrap">
@@ -157,12 +159,23 @@
 
 </div>
 
+<!-- Position Modal -->
 <div class="modal-overlay" id="posModalOverlay">
   <div class="modal-box">
     <div class="modal-title">Working Position</div>
     <div class="modal-sub" id="modalCrewName"></div>
     <div class="pos-grid" id="posGrid"></div>
     <button class="secondary" id="modalCloseBtn">Close</button>
+  </div>
+</div>
+
+<!-- Door Modal -->
+<div class="modal-overlay" id="doorModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">Assign Door</div>
+    <div class="modal-sub" id="doorModalCrewName"></div>
+    <div class="door-grid" id="doorGrid"></div>
+    <button class="secondary" id="doorModalCloseBtn">Close</button>
   </div>
 </div>
 
@@ -182,6 +195,9 @@
   const posModalOverlay = document.getElementById('posModalOverlay');
   const posGrid = document.getElementById('posGrid');
   const modalCrewName = document.getElementById('modalCrewName');
+  const doorModalOverlay = document.getElementById('doorModalOverlay');
+  const doorGrid = document.getElementById('doorGrid');
+  const doorModalCrewName = document.getElementById('doorModalCrewName');
 
   // ===== Constants =====
   const DUTY_HEADERS = ["Start","End","Pairing Id","Duty Hours","Flying Hours","Rest Required","Rest Available"];
@@ -192,6 +208,9 @@
   const POSITIONS_NARROW = ['P1','P2','P3','P4','A1','A2','SNY'];
   const POSITIONS_WIDE = ['ICC','LSB','LSC','LSD','AG','BG1','BG2','CG','DG','BC','BC1','CC','DC','DC2','SNY'];
   const RANK_PRIORITY = { 'IFS': 1, 'LS': 2, 'FS': 3, 'FSS': 4, 'SS': 5, 'CS': 6, 'AS': 7 };
+  // Door labels: number first, then letter (e.g., "2L")
+  const DOORS_NARROW = ['1L','1R','2L','2R'];
+  const DOORS_WIDE = ['1L','1R','2L','2R','3L','3R','4L','4R'];
 
   // ===== Utilities =====
   function norm(s){ return (s===undefined||s===null) ? '' : String(s).trim(); }
@@ -294,7 +313,6 @@
       dutyStart: '',
     };
 
-    // 1. Extract date and rep time from first line with date
     for(let l of lines){
       l = l.trim();
       const dateMatch = l.match(/(\d{2}-[A-Za-z]{3}-\d{4})/);
@@ -310,7 +328,6 @@
       }
     }
 
-    // 2. Extract flights from the line containing MHxxx
     let flightLine = '';
     for(let l of lines){
       if(l.includes('MH') && l.match(/MH\d{3}/)){
@@ -349,11 +366,8 @@
       if(currentFlight) result.flights.push(currentFlight);
     }
 
-    // 3. Parse crew using robust regex
     const rankList = ['CAPT','FO','SO','IFS','LS','FS','FSS','SS','CS','AS'];
     const rankRegex = new RegExp('(' + rankList.join('|') + ')', 'i');
-    // Pattern: ID (7 digits) followed by name (any characters) then rank
-    // This will match both compact and spaced formats.
     const crewRegex = /(\d{7})(.*?)(CAPT|FO|SO|IFS|LS|FS|FSS|SS|CS|AS)/i;
 
     const allCrew = [];
@@ -364,21 +378,16 @@
       if(low.includes('outbound')){ currentSection = 'outbound'; continue; }
       if(low.includes('crew on my pairing')){ currentSection = 'extra'; continue; }
       if(!currentSection) continue;
-      // Try to match the crew line
       const match = l.match(crewRegex);
       if(match){
         const id = match[1];
         let name = match[2].trim();
         let rank = match[3].toUpperCase();
-        // Sometimes name might have extra stuff like "OP" or "KUL" – we can clean it
-        // but for now keep as is.
         allCrew.push({ crewId: id, opRank: rank, crewName: name, section: currentSection });
       } else {
-        // Fallback: try to find ID and rank separately
         const idMatch = l.match(/(\d{7})/);
         if(idMatch){
           const id = idMatch[1];
-          // Find rank in the line
           let foundRank = '';
           let name = '';
           for(let r of rankList){
@@ -394,7 +403,6 @@
           if(foundRank){
             allCrew.push({ crewId: id, opRank: foundRank, crewName: name, section: currentSection });
           } else {
-            // If still no rank, treat as FS (cabin) with the whole remaining as name
             const namePart = l.replace(id, '').trim();
             allCrew.push({ crewId: id, opRank: 'FS', crewName: namePart, section: currentSection });
           }
@@ -402,7 +410,6 @@
       }
     }
 
-    // Deduplicate by crewId
     const seen = new Set();
     const uniqueCrew = [];
     for(let c of allCrew){
@@ -412,7 +419,6 @@
       }
     }
 
-    // Separate cockpit and cabin
     const cockpitRanks = ['CAPT','FO','SO'];
     for(let c of uniqueCrew){
       if(cockpitRanks.includes(c.opRank.toUpperCase())){
@@ -422,7 +428,6 @@
       }
     }
 
-    // Build itinerary
     const itin = result.flights.map(f => ({
       flightId: f.flightId || '',
       date: result.date || '',
@@ -440,7 +445,6 @@
       actLoc: ''
     }));
 
-    // Build crew list
     const crew = result.cockpit.concat(result.cabinCrew).map(c => ({
       opRank: c.opRank,
       posRank: c.opRank,
@@ -478,6 +482,7 @@
 
   window.updateField = function(key, val){ state.fields[key] = val; };
 
+  // ---- Position modal ----
   window.openPositionModal = function(crewId, crewName){
     const ac0 = state.itin.length ? state.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
@@ -510,6 +515,52 @@
 
   document.getElementById('modalCloseBtn').addEventListener('click', () => { posModalOverlay.style.display = 'none'; });
   posModalOverlay.addEventListener('click', (e) => { if(e.target === posModalOverlay) posModalOverlay.style.display = 'none'; });
+
+  // ---- Door modal ----
+  window.openDoorModal = function(crewId, crewName){
+    const ac0 = state.itin.length ? state.itin[0].ac : '';
+    const isNarrow = isNarrowbody(ac0);
+    const doors = isNarrow ? DOORS_NARROW : DOORS_WIDE;
+    state.doorModalCrew = crewId;
+    doorModalCrewName.textContent = crewName;
+    doorGrid.innerHTML = '';
+    doors.forEach(door => {
+      const assignedCrew = state.doors[door] || null;
+      const isAssignedToCurrent = (assignedCrew === crewId);
+      const isAssignedToOther = (assignedCrew && assignedCrew !== crewId);
+      const btn = document.createElement('button');
+      btn.className = 'door-btn';
+      if(isAssignedToCurrent) btn.classList.add('selected');
+      if(isAssignedToOther) btn.classList.add('assigned');
+      let label = door;
+      if(isAssignedToCurrent || isAssignedToOther){
+        label += ' ✅';
+      }
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        if(isAssignedToCurrent){
+          state.doors[door] = null;
+        } else if(isAssignedToOther){
+          state.doors[door] = crewId;
+        } else {
+          for(let d in state.doors){
+            if(state.doors[d] === crewId){
+              state.doors[d] = null;
+              break;
+            }
+          }
+          state.doors[door] = crewId;
+        }
+        doorModalOverlay.style.display = 'none';
+        buildReport();
+      });
+      doorGrid.appendChild(btn);
+    });
+    doorModalOverlay.style.display = 'flex';
+  };
+
+  document.getElementById('doorModalCloseBtn').addEventListener('click', () => { doorModalOverlay.style.display = 'none'; });
+  doorModalOverlay.addEventListener('click', (e) => { if(e.target === doorModalOverlay) doorModalOverlay.style.display = 'none'; });
 
   function renderDebugTable(rows, cols){
     if(!rows.length) return '<p style="color:#888;font-size:11px;">none found</p>';
@@ -604,9 +655,9 @@
     });
     html += `</table>`;
 
-    // Airport name
+    // Airport name – blank by default, user can type
     html += `<div style="font-size:9px;margin-top:2px;text-align:left;border:1px solid #333;border-top:none;padding:2px 4px;">
-      <input placeholder="Airport name (write with pen)" value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;">
+      <input value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;" placeholder="">
     </div>`;
 
     // Captain & FO
@@ -633,13 +684,19 @@
     sortedCabin.forEach(c => {
       const isCIC = cicChosen && c.crewId === cicChosen.crewId;
       const pos = state.positions[c.crewId] || '';
-      const posDisplay = pos ? esc(pos) : `<span class="tap-indicator">tap</span>`;
+      let doorAssigned = '';
+      for(let d in state.doors){
+        if(state.doors[d] === c.crewId){
+          doorAssigned = d;
+          break;
+        }
+      }
       html += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
         <td>${esc(c.crewId)}</td>
         <td>${esc(c.opRank)}</td>
         <td style="text-align:left;">${esc(c.crewName)}</td>
-        <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${posDisplay}</td>
-        <td><input value="${esc(fval('door-'+c.crewId, ''))}" oninput="updateField('door-${c.crewId}', this.value)"></td>
+        <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${pos ? esc(pos) : ''}</td>
+        <td><span class="door-cell" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${doorAssigned ? esc(doorAssigned) : ''}</span></td>
       </tr>`;
     });
     html += `</table>`;
@@ -678,6 +735,13 @@
         window.openPositionModal(el.getAttribute('data-crewid'), el.getAttribute('data-crewname'));
       });
     });
+
+    // Door cell clicks
+    reportEl.querySelectorAll('.door-cell').forEach(el => {
+      el.addEventListener('click', () => {
+        window.openDoorModal(el.getAttribute('data-crewid'), el.getAttribute('data-crewname'));
+      });
+    });
   }
 
   // ===== Shared state setter =====
@@ -687,6 +751,7 @@
     state.selectedPIC = null;
     state.fields = {};
     state.positions = {};
+    state.doors = {}; // door -> crewId mapping
     state.source = source || 'iflight';
     buildReport();
     reportCard.style.display = '';
