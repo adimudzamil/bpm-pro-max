@@ -744,7 +744,15 @@
 
   /* ── PRINT STYLES – EXACTLY AS ORIGINAL BASE CODE ── */
   @media print {
-    body { background: #fff; }
+    body {
+      background: #fff;
+      padding: 0 !important; /* reset body padding */
+    }
+    /* Hide pseudo-elements */
+    body::before,
+    body::after {
+      display: none !important;
+    }
     header, .card:not(.reportcard), .noprint, .noprint-inline { display: none !important; }
     .wrap { padding: 0; max-width: none; }
     .reportcard { border: none; padding: 0; margin: 0; }
@@ -765,7 +773,6 @@
   }
 
   @media screen {
-    /* Keep report scrollable on screen without extra wrapper */
     .report-card {
       overflow: auto;
     }
