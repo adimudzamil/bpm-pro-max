@@ -754,26 +754,121 @@
     padding: 1px;
   }
 
-  /* ── Print styles (unchanged from base) ── */
+  /* ── Print styles ── */
   @media print {
     body { background: #fff; }
-    header, .card:not(.reportcard), .noprint, .noprint-inline { display: none !important; }
-    .wrap { padding: 0; max-width: none; }
-    .reportcard { border: none; padding: 0; margin: 0; }
-    #report { border-radius: 0; }
+    header, .card:not(.reportcard), .noprint, .noprint-inline,
+    .or-divider, .method-tag, .byline-badge, .badge-group,
+    .stats-row, .btnrow, .status, #statsContainer, #pdfStatus,
+    #status, #dbgWrap, #pdfDbgWrap, #toastMsg, footer,
+    .file-upload-wrapper, .modal-overlay, #emptyCard {
+      display: none !important;
+    }
 
-    .crew-table { table-layout: fixed !important; width: 100% !important; }
-    .crew-table th, .crew-table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .crew-table th:nth-child(1), .crew-table td:nth-child(1) { width: 10% !important; }
-    .crew-table th:nth-child(2), .crew-table td:nth-child(2) { width: 5% !important; }
-    .crew-table th:nth-child(3), .crew-table td:nth-child(3) { width: 70% !important; }
-    .crew-table th:nth-child(4), .crew-table td:nth-child(4) { width: 10% !important; }
-    .crew-table th:nth-child(5), .crew-table td:nth-child(5) { width: 5% !important; }
+    .container {
+      max-width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
 
-    .pos-cell.unset { color: transparent !important; font-size: 0 !important; }
-    .door-cell.unset { color: transparent !important; font-size: 0 !important; }
-    .top-info input, .top-info input.rep { border-color: #999 !important; background: #fff !important; }
-    .ft-table td input { border: none !important; }
+    .report-card {
+      background: none !important;
+      border: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    .report-card .report-inner {
+      border-radius: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      background: #fff !important;
+    }
+
+    #report {
+      border-radius: 0 !important;
+      font-size: 8.5px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: visible !important;
+    }
+
+    #report .rpad {
+      padding: 4px 6px !important;
+    }
+
+    .top-info input, .top-info input.rep {
+      border-color: #999 !important;
+      background: #fff !important;
+    }
+
+    .ft-table td input {
+      border: none !important;
+    }
+
+    table.rtab {
+      font-size: 8px !important;
+    }
+
+    table.rtab td input {
+      font-size: 8px !important;
+    }
+
+    table.rtab th {
+      font-size: 7.5px !important;
+    }
+
+    .crew-table th, .crew-table td {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .crew-table th:nth-child(1), .crew-table td:nth-child(1) {
+      width: 10% !important;
+    }
+    .crew-table th:nth-child(2), .crew-table td:nth-child(2) {
+      width: 5% !important;
+    }
+    .crew-table th:nth-child(3), .crew-table td:nth-child(3) {
+      width: 70% !important;
+    }
+    .crew-table th:nth-child(4), .crew-table td:nth-child(4) {
+      width: 10% !important;
+    }
+    .crew-table th:nth-child(5), .crew-table td:nth-child(5) {
+      width: 5% !important;
+    }
+
+    .pos-cell.unset {
+      color: transparent !important;
+      font-size: 0 !important;
+    }
+
+    .door-cell.unset {
+      color: transparent !important;
+      font-size: 0 !important;
+    }
+
+    .ft-cell-clickable:hover {
+      background: transparent !important;
+    }
+
+    .toast {
+      display: none !important;
+    }
+
+    /* Prevent extra page breaks */
+    .report-inner, #report, .rpad {
+      page-break-after: avoid;
+      page-break-inside: avoid;
+    }
+  }
+
+  @media screen {
+    .report-card .report-inner {
+      overflow: auto;
+    }
   }
 </style>
 </head>
