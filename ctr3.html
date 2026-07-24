@@ -3,438 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>CTR Autofill — Cyberpunk</title>
+    <title>CTR Autofill</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%93%98</text></svg>">
     <!-- pdf.js for PDF upload -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        /* ── Reset & Base ── */
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
         :root {
-            --bg: #0a0a0b;
-            --surface: #111113;
-            --surface2: #18181c;
-            --border: rgba(255, 255, 255, 0.07);
-            --border-bright: rgba(255, 255, 255, 0.15);
-            --text: #f0f0f0;
-            --text-muted: #666;
-            --text-dim: #444;
-            --accent: #ff6d00;
-            --accent-dim: rgba(255, 109, 0, 0.12);
-            --accent-glow: rgba(255, 109, 0, 0.25);
-            --accent-hover: #ff7f1a;
-            --red: #ff4757;
+            --bg: #0f1115;
+            --panel: #171a21;
+            --panel2: #1e2229;
+            --border: #2a2f3a;
+            --text: #e8eaed;
+            --muted: #8b93a3;
+            --accent: #3b82f6;
+            --accent2: #1d4ed8;
             --ok: #22c55e;
             --warn: #f59e0b;
             --danger: #ef4444;
-            --radius: 16px;
-            --radius-sm: 10px;
         }
-
-        html {
-            scroll-behavior: smooth;
+        * {
+            box-sizing: border-box;
         }
-
         body {
-            font-family: 'Syne', sans-serif;
+            margin: 0;
             background: var(--bg);
             color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-            padding-bottom: 40px;
+            font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            padding-bottom: 60px;
         }
-
-        /* Background grid */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            background-size: 60px 60px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* Radial glow at center */
-        body::after {
-            content: '';
-            position: fixed;
-            top: -20%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 700px;
-            height: 700px;
-            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .wrap {
-            position: relative;
-            z-index: 1;
-            max-width: 920px;
-            margin: 0 auto;
-            padding: 0 24px 40px;
-        }
-
-        /* ── Header ── */
         header {
-            padding: 40px 0 32px;
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 16px;
         }
-
-        .logo-block {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+        header h1 {
+            font-size: 17px;
+            margin: 0;
         }
-
-        .logo {
-            font-size: clamp(32px, 7vw, 48px);
-            font-weight: 800;
-            letter-spacing: -0.04em;
-            line-height: 1;
-            color: var(--text);
+        header p {
+            margin: 2px 0 0;
+            color: var(--muted);
+            font-size: 12px;
         }
-
-        .logo span {
-            color: var(--accent);
-            display: inline-block;
-            animation: blink 3s ease-in-out infinite;
+        .wrap {
+            padding: 14px;
+            max-width: 1000px;
+            margin: 0 auto;
         }
-
-        @keyframes blink {
-            0%,
-            90%,
-            100% {
-                opacity: 1;
-            }
-            95% {
-                opacity: 0;
-            }
-        }
-
-        .byline {
-            font-family: 'DM Mono', monospace;
-            font-size: 13px;
-            font-weight: 400;
-            letter-spacing: 0.05em;
-            color: #3a3a3a;
-            margin-top: 2px;
-        }
-
-        .tagline {
-            font-family: 'DM Mono', monospace;
-            font-size: 11px;
-            font-weight: 400;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-        }
-
-        .badge {
-            font-family: 'DM Mono', monospace;
-            font-size: 10px;
-            font-weight: 500;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--accent);
-            background: var(--accent-dim);
-            border: 1px solid rgba(255, 109, 0, 0.2);
-            padding: 6px 14px;
-            border-radius: 100px;
-            white-space: nowrap;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 4px;
-        }
-
-        .badge::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: var(--accent);
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%,
-            100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.5;
-                transform: scale(0.7);
-            }
-        }
-
-        /* ── Cards ── */
         .card {
-            background: var(--surface);
+            background: var(--panel);
             border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px 22px;
-            margin-bottom: 20px;
-            transition: border-color 0.25s;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 14px;
         }
-
-        .card:hover {
-            border-color: var(--border-bright);
-        }
-
         .card h2 {
-            font-size: 13px;
-            font-weight: 600;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
+            font-size: 14px;
+            margin: 0 0 10px;
             color: var(--accent);
-            margin: 0 0 12px 0;
-            font-family: 'DM Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: .04em;
         }
-
-        /* ── Textareas ── */
         textarea {
             width: 100%;
-            min-height: 110px;
-            background: var(--surface2);
+            min-height: 120px;
+            background: var(--panel2);
             border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
+            border-radius: 8px;
             color: var(--text);
-            padding: 12px 14px;
+            padding: 10px;
             font-size: 13px;
-            font-family: 'DM Mono', monospace;
+            font-family: monospace;
             resize: vertical;
-            transition: border-color 0.2s;
-            line-height: 1.5;
         }
-
-        textarea:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-dim);
-        }
-
-        /* ── Buttons ── */
         .btnrow {
             display: flex;
-            gap: 10px;
-            margin-top: 12px;
+            gap: 8px;
+            margin-top: 10px;
             flex-wrap: wrap;
             align-items: center;
         }
-
         button {
             background: var(--accent);
-            color: #0a0a0b;
+            color: #fff;
             border: none;
-            border-radius: var(--radius-sm);
-            padding: 11px 22px;
+            border-radius: 8px;
+            padding: 10px 16px;
             font-size: 14px;
-            font-weight: 700;
-            font-family: 'Syne', sans-serif;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
-            letter-spacing: -0.01em;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
         }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px var(--accent-glow);
-            background: var(--accent-hover);
-        }
-
-        button:active {
-            transform: translateY(0);
-            opacity: 0.85;
-        }
-
         button.secondary {
-            background: var(--surface2);
-            color: var(--text);
+            background: var(--panel2);
             border: 1px solid var(--border);
+            color: var(--text);
         }
-
-        button.secondary:hover {
-            border-color: var(--border-bright);
-            background: var(--surface);
-            box-shadow: none;
-            transform: translateY(-1px);
+        button:active {
+            opacity: .8;
         }
-
-        button.small {
-            padding: 6px 14px;
-            font-size: 12px;
-        }
-
-        /* ── Status ── */
         .status {
-            font-family: 'DM Mono', monospace;
             font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 10px;
+            color: var(--muted);
+            margin-top: 8px;
             white-space: pre-line;
-            line-height: 1.5;
         }
-
         .status.err {
             color: var(--danger);
         }
         .status.ok {
             color: var(--ok);
         }
-
-        /* ── Details / Debug ── */
         details {
-            margin-top: 10px;
+            margin-top: 8px;
         }
-
         summary {
             cursor: pointer;
-            color: var(--text-muted);
+            color: var(--muted);
             font-size: 12px;
-            font-family: 'DM Mono', monospace;
-            letter-spacing: 0.05em;
         }
-
-        summary:hover {
-            color: var(--text);
-        }
-
         table.dbg {
             width: 100%;
             border-collapse: collapse;
             font-size: 11px;
-            margin-top: 8px;
-            font-family: 'DM Mono', monospace;
+            margin-top: 6px;
         }
-
         table.dbg th,
         table.dbg td {
             border: 1px solid var(--border);
-            padding: 4px 8px;
+            padding: 4px 6px;
             text-align: left;
-            color: var(--text-muted);
         }
-
         table.dbg th {
-            background: var(--surface2);
-            color: var(--text);
-            font-weight: 500;
+            background: var(--panel2);
+            color: var(--muted);
         }
-
-        /* ── File upload wrapper ── */
+        select {
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 6px;
+            padding: 4px 6px;
+            font-size: 11px;
+        }
+        .emptyState {
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
+            padding: 30px 10px;
+        }
         .file-upload-wrapper {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
             align-items: center;
         }
-
-        .file-upload-wrapper label {
-            font-family: 'DM Mono', monospace;
-            font-size: 12px;
-            color: var(--text-muted);
-            cursor: pointer;
-        }
-
         .file-upload-wrapper input[type="file"] {
             color: var(--text);
             padding: 4px;
-            font-size: 12px;
-            font-family: 'DM Mono', monospace;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 6px 10px;
         }
 
-        .file-upload-wrapper input[type="file"]::-webkit-file-upload-button {
-            background: var(--accent);
-            color: #0a0a0b;
-            border: none;
-            border-radius: 6px;
-            padding: 4px 14px;
-            font-weight: 600;
-            font-size: 12px;
-            cursor: pointer;
-            font-family: 'Syne', sans-serif;
-        }
-
-        .file-upload-wrapper input[type="file"]::-webkit-file-upload-button:hover {
-            background: var(--accent-hover);
-        }
-
-        /* ── Empty state ── */
-        .emptyState {
-            color: var(--text-muted);
-            font-size: 13px;
-            text-align: center;
-            padding: 40px 16px;
-            font-family: 'DM Mono', monospace;
-            letter-spacing: 0.04em;
-        }
-
-        /* ── Report ── */
+        /* ---- Report ---- */
         #report {
             background: #fff;
             color: #111;
-            border-radius: var(--radius-sm);
+            border-radius: 6px;
             overflow: hidden;
-            border: 1px solid var(--border);
-            page-break-inside: avoid;
         }
-
         #report .rpad {
-            padding: 14px 16px;
+            padding: 10px;
         }
-
         .rtitle {
             text-align: center;
             border-bottom: 1px solid #111;
             padding-bottom: 4px;
             margin-bottom: 8px;
         }
-
         .rtitle h2 {
             margin: 0;
             font-size: 7pt;
             font-weight: 700;
-            letter-spacing: 0.03em;
+            letter-spacing: .03em;
             text-transform: uppercase;
-            color: #111;
-            font-family: 'Syne', sans-serif;
         }
-
         table.rtab {
             width: 100%;
             border-collapse: collapse;
             font-size: 9px;
             margin-bottom: 4px;
             table-layout: fixed;
-            page-break-inside: avoid;
         }
-
         table.rtab th,
         table.rtab td {
             border: 1px solid #333;
@@ -442,55 +203,63 @@
             text-align: center;
             overflow: hidden;
         }
-
         table.rtab th {
             background: #eee;
             font-weight: 600;
             font-size: 8.5px;
-            font-family: 'Syne', sans-serif;
         }
-
         table.rtab td input {
             border: none;
             width: 100%;
             text-align: center;
             font-size: 9px;
             background: transparent;
-            font-family: 'DM Mono', monospace;
+            font-family: inherit;
             min-width: 0;
             padding: 1px;
-            color: #111;
         }
-
         table.rtab td input.remarksTxt {
             text-align: left;
             border-bottom: 1px dashed #999;
         }
-
         .pos-cell {
             cursor: pointer;
             font-weight: 700;
             color: #1d4ed8;
         }
-
         .pos-cell.unset {
             color: #aaa;
             font-weight: 400;
             font-style: italic;
         }
-
+        .pos-cell.icc-locked {
+            color: #1d4ed8;
+            font-weight: 700;
+            cursor: default;
+            background: #e8f0fe;
+        }
         .door-cell {
             cursor: pointer;
             font-weight: 600;
             color: #1d4ed8;
         }
-
         .door-cell.unset {
             color: #aaa;
             font-weight: 400;
         }
+        .pick {
+            font-size: 10px;
+            color: #a33;
+            margin-top: 3px;
+        }
+        .pick select {
+            font-size: 10px;
+            padding: 2px;
+            color: #111;
+            background: #fff;
+        }
 
-        /* ── Top info ── */
+        /* ---- Top info ---- */
         .top-info {
             display: flex;
             flex-wrap: wrap;
@@ -500,229 +269,340 @@
             align-items: center;
             font-weight: bold;
         }
-
         .top-info .label {
             font-weight: bold;
             color: #444;
         }
-
         .top-info input {
             border: 1px solid #333;
             border-radius: 4px;
             padding: 2px 4px;
             font-size: 9px;
-            font-family: 'DM Mono', monospace;
             background: #fff;
             color: #111;
         }
-
         .top-info input.small {
-            width: 60px;
+            width: 70px;
         }
-
         .top-info input.rep {
             font-weight: bold;
-            width: 180px;
+            width: 210px;
             background: #f0f0f0;
             border-color: #555;
         }
+        .top-info input.bay {
+            width: 80px;
+        }
+        .top-info input.brief {
+            width: 80px;
+        }
 
-        /* ── Bottom Flight Time Details ── */
+        /* ---- Bottom Flight Time Details ---- */
         .ft-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 8.5px;
             margin-top: 4px;
             table-layout: fixed;
-            page-break-inside: avoid;
         }
-
         .ft-table th {
             background: #eee;
             font-weight: 600;
             font-size: 8px;
             border: 1px solid #333;
             padding: 2px;
-            font-family: 'Syne', sans-serif;
         }
-
         .ft-table td {
             border: 1px solid #333;
             padding: 2px;
             text-align: center;
             height: 1.6em;
         }
-
         .ft-table td input {
             width: 100%;
             border: none;
             background: transparent;
             font-size: 8.5px;
             text-align: center;
-            font-family: 'DM Mono', monospace;
+            font-family: inherit;
             padding: 1px;
-            color: #111;
         }
 
-        /* ── Position Modal ── */
+        /* ---- Position modal ---- */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(6px);
+            background: rgba(0, 0, 0, .55);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 100;
             padding: 20px;
         }
-
         .modal-box {
-            background: var(--surface);
-            border: 1px solid var(--border-bright);
-            border-radius: var(--radius);
-            padding: 24px;
+            background: #fff;
+            color: #111;
+            border-radius: 12px;
+            padding: 16px;
             width: 100%;
             max-width: 360px;
-            color: var(--text);
         }
-
         .modal-title {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 700;
-            letter-spacing: -0.02em;
             margin-bottom: 2px;
         }
-
         .modal-sub {
-            font-family: 'DM Mono', monospace;
             font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 16px;
+            color: #555;
+            margin-bottom: 12px;
         }
-
         .pos-grid {
             display: grid;
-            gap: 10px;
-            margin-bottom: 16px;
+            gap: 8px;
+            margin-bottom: 14px;
         }
-
         .pos-grid.narrow {
             grid-template-columns: repeat(3, 1fr);
         }
-
         .pos-grid.wide {
             grid-template-columns: repeat(4, 1fr);
+        }
+        .pos-btn {
+            padding: 12px 8px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            background: #f7f7f7;
+            color: #333;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease, border-color .18s ease;
+        }
+        .pos-btn:active {
+            transform: scale(.94);
+        }
+        .pos-btn.selected {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, .3);
+        }
+        .pos-btn.badge-sny {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .pos-btn.badge-alt-icc {
+            border-color: #1f2937;
+            background: #f3f4f6;
+        }
+        .modal-badge-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .modal-badge-row .half {
+            flex: 1;
+            padding: 10px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            background: #f7f7f7;
+            color: #333;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease, border-color .18s ease;
+            text-align: center;
+        }
+        .modal-badge-row .half:active {
+            transform: scale(.94);
+        }
+        .modal-badge-row .half.badge-active-sny {
+            background: #dbeafe;
+            border-color: #3b82f6;
+        }
+        .modal-badge-row .half.badge-active-alt-icc {
+            background: #e5e7eb;
+            border-color: #1f2937;
         }
 
         .door-grid {
             display: grid;
-            gap: 10px;
-            margin-bottom: 16px;
+            gap: 8px;
+            margin-bottom: 14px;
             grid-template-columns: 1fr 1fr;
         }
-
-        .pos-btn,
         .door-btn {
-            padding: 14px 8px;
+            padding: 12px 8px;
             font-size: 14px;
             font-weight: 600;
-            border-radius: var(--radius-sm);
-            border: 2px solid var(--border);
-            background: var(--surface2);
-            color: var(--text);
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            background: #f7f7f7;
+            color: #333;
             cursor: pointer;
-            transition: all 0.18s ease;
-            font-family: 'Syne', sans-serif;
+            transition: transform .18s ease, background .18s ease, border-color .18s ease;
         }
-
-        .pos-btn:active,
         .door-btn:active {
-            transform: scale(0.94);
+            transform: scale(.94);
         }
-
-        .pos-btn.selected,
-        .door-btn.selected {
-            border-color: var(--accent);
-            background: var(--accent-dim);
-            color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-
         .door-btn.assigned {
-            background: rgba(255, 109, 0, 0.08);
-            border-color: rgba(255, 109, 0, 0.3);
+            background: #fff6cc;
+            border-color: #f59e0b;
         }
-
+        .door-btn.selected {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, .3);
+        }
         .door-btn .check {
-            color: var(--ok);
+            color: #22c55e;
             font-weight: bold;
             margin-left: 6px;
         }
-
         .modal-box button.secondary {
             width: 100%;
-            justify-content: center;
         }
 
-        /* ── Print styles ── */
-        @page {
-            margin: 0.2in;
+        /* ---- ICC selection modal ---- */
+        .icc-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+        .icc-option {
+            padding: 12px 14px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            background: #f7f7f7;
+            color: #111;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease, border-color .18s ease;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+        }
+        .icc-option:active {
+            transform: scale(.97);
+        }
+        .icc-option:hover {
+            background: #eef2ff;
+            border-color: #3b82f6;
+        }
+        .icc-option .rank-tag {
+            font-size: 11px;
+            color: #666;
+            font-weight: 400;
         }
 
+        /* ---- Badge pills in name column ---- */
+        .name-with-badge {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+            width: 100%;
+        }
+        .name-with-badge .crew-name {
+            flex: 1;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .badge-pill {
+            display: inline-block;
+            font-size: 7px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-left: 2px;
+        }
+        .badge-pill.sny {
+            background: #3b82f6;
+            color: #fff;
+        }
+        .badge-pill.alt-icc {
+            background: #1f2937;
+            color: #fff;
+        }
+
+        /* ---- CCIC table ---- */
+        .ccic-table-wrap {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+            align-items: stretch;
+        }
+        .ccic-table-wrap .captain-wrap {
+            flex: 1 1 180px;
+            min-width: 140px;
+        }
+        .ccic-table-wrap .ccic-wrap {
+            flex: 1 1 180px;
+            min-width: 140px;
+        }
+        .ccic-wrap table.rtab {
+            margin-bottom: 0;
+        }
+        .ccic-wrap .ccic-row {
+            cursor: pointer;
+            transition: background .15s ease;
+        }
+        .ccic-wrap .ccic-row:hover {
+            background: #f0f4ff;
+        }
+        .ccic-wrap .ccic-row .label-bold {
+            font-weight: 700;
+        }
+        .ccic-wrap .ccic-row .empty-msg {
+            color: #aaa;
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        /* ---- Print styles ---- */
         @media print {
             body {
                 background: #fff;
-                margin: 0;
-                padding: 0;
             }
-
             header,
             .card:not(.reportcard),
             .noprint,
             .noprint-inline {
                 display: none !important;
             }
-
             .wrap {
                 padding: 0;
                 max-width: none;
-                margin: 0;
             }
-
             .reportcard {
                 border: none;
                 padding: 0;
                 margin: 0;
-                background: transparent;
-                page-break-inside: avoid;
             }
-
             #report {
                 border-radius: 0;
-                border: none;
-                overflow: visible;
-                height: auto;
-                page-break-inside: avoid;
             }
-
-            #report .rpad {
-                padding: 0.1in 0.05in;
-            }
-
             .crew-table {
                 table-layout: fixed !important;
                 width: 100% !important;
-                page-break-inside: avoid;
             }
-
             .crew-table th,
             .crew-table td {
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
-
             .crew-table th:nth-child(1),
             .crew-table td:nth-child(1) {
                 width: 10% !important;
@@ -743,103 +623,41 @@
             .crew-table td:nth-child(5) {
                 width: 5% !important;
             }
-
             .pos-cell.unset {
                 color: transparent !important;
                 font-size: 0 !important;
             }
-
             .door-cell.unset {
                 color: transparent !important;
                 font-size: 0 !important;
             }
-
             .top-info input,
             .top-info input.rep {
                 border-color: #999 !important;
                 background: #fff !important;
             }
-
             .ft-table td input {
                 border: none !important;
             }
-
-            /* Avoid page breaks inside tables */
-            table.rtab,
-            .ft-table,
-            .crew-table {
-                page-break-inside: avoid;
+            .ccic-wrap .ccic-row:hover {
+                background: transparent !important;
             }
-
-            tr {
-                page-break-inside: avoid;
+            .badge-pill.sny {
+                background: #3b82f6 !important;
+                color: #fff !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
             }
-        }
-
-        /* ── Scrollbar ── */
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-bright);
-            border-radius: 100px;
-        }
-
-        /* ── Responsive ── */
-        @media (max-width: 600px) {
-            header {
-                flex-direction: column;
-                align-items: flex-start;
+            .badge-pill.alt-icc {
+                background: #1f2937 !important;
+                color: #fff !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
             }
-
-            .wrap {
-                padding: 0 16px 40px;
-            }
-
-            .card {
-                padding: 16px;
-            }
-
-            .btnrow {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .btnrow .file-upload-wrapper {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .pos-grid.narrow {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            .pos-grid.wide {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            .door-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .top-info {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .top-info input.rep {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 420px) {
-            .pos-grid.narrow,
-            .pos-grid.wide {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .door-grid {
-                grid-template-columns: 1fr;
+            .pos-cell.icc-locked {
+                background: #e8f0fe !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
             }
         }
     </style>
@@ -847,12 +665,9 @@
 <body>
 
     <header>
-        <div class="logo-block">
-            <div class="logo">CTR<span>.</span></div>
-            <div class="byline">by 2100551</div>
-            <div class="tagline">Crew Trip Report · Autofill</div>
-        </div>
-        <div class="badge">iFlight · PDF</div>
+        <h1>CTR Autofill by *2100551*</h1>
+        <p>iFlight Crew Trip Report <b>OR</b> PDF Crew Trip Report → auto‑fill a printable alternate Crew Trip Report</p>
+        <p style="font-size:10px;color:#555;margin-top:4px;">build v2.0</p>
     </header>
 
     <div class="wrap">
@@ -862,7 +677,7 @@
             <h2>1. Paste iFlight trip report text</h2>
             <textarea id="pasteBox" placeholder="Select-all + copy from the iFlight Crew Trip Report page, then paste here…"></textarea>
             <div class="btnrow">
-                <button id="parseBtn">Parse &amp; Fill Report</button>
+                <button id="parseBtn">Parse & Fill Report</button>
                 <button class="secondary" id="clearBtn">Clear</button>
             </div>
             <div class="status" id="status"></div>
@@ -874,13 +689,13 @@
 
         <!-- PDF parser with upload -->
         <div class="card noprint">
-            <h2>2. Paste text from PDF Crew Trip Report or upload PDF</h2>
+            <h2>2. Paste text from PDF Crew Trip Report text or upload Crew Trip Report PDF</h2>
             <textarea id="pdfBox" placeholder="Copy text from the PDF CrewTripReport and paste here…"></textarea>
             <div class="btnrow">
                 <button id="parsePdfBtn">Parse PDF Report</button>
                 <button class="secondary" id="clearPdfBtn">Clear</button>
                 <div class="file-upload-wrapper">
-                    <label for="pdfFile">Upload PDF:</label>
+                    <label for="pdfFile" style="font-size:12px;color:var(--muted);">Upload PDF:</label>
                     <input type="file" id="pdfFile" accept=".pdf">
                 </div>
             </div>
@@ -893,14 +708,14 @@
 
         <!-- Report display -->
         <div class="card reportcard" id="reportCard" style="display:none;">
-            <div class="btnrow noprint" style="margin-bottom:12px;">
+            <div class="btnrow noprint" style="margin-bottom:10px;">
                 <button id="printBtn">Print / Save PDF</button>
             </div>
             <div id="report"></div>
         </div>
 
         <div class="card" id="emptyCard">
-            <div class="emptyState">No report generated yet.<br>Paste a trip report above and tap "Parse &amp; Fill Report" or "Parse PDF Report".</div>
+            <div class="emptyState">No report generated yet. Paste a trip report above and tap "Parse & Fill Report" or "Parse PDF Report".</div>
         </div>
 
     </div>
@@ -911,6 +726,10 @@
             <div class="modal-title">Working Position</div>
             <div class="modal-sub" id="modalCrewName"></div>
             <div class="pos-grid" id="posGrid"></div>
+            <div class="modal-badge-row">
+                <button class="half" id="badgeSnyBtn">⛑ SNY</button>
+                <button class="half" id="badgeAltIccBtn">ALT ICC</button>
+            </div>
             <button class="secondary" id="modalCloseBtn">Close</button>
         </div>
     </div>
@@ -922,6 +741,16 @@
             <div class="modal-sub" id="doorModalCrewName"></div>
             <div class="door-grid" id="doorGrid"></div>
             <button class="secondary" id="doorModalCloseBtn">Close</button>
+        </div>
+    </div>
+
+    <!-- ICC Selection Modal -->
+    <div class="modal-overlay" id="iccModalOverlay">
+        <div class="modal-box">
+            <div class="modal-title">Select ICC</div>
+            <div class="modal-sub" id="iccModalSub">Choose the In-Charge Cabin Crew</div>
+            <div class="icc-grid" id="iccGrid"></div>
+            <button class="secondary" id="iccModalCloseBtn">Cancel</button>
         </div>
     </div>
 
@@ -946,6 +775,11 @@
             const doorModalOverlay = document.getElementById('doorModalOverlay');
             const doorGrid = document.getElementById('doorGrid');
             const doorModalCrewName = document.getElementById('doorModalCrewName');
+            const badgeSnyBtn = document.getElementById('badgeSnyBtn');
+            const badgeAltIccBtn = document.getElementById('badgeAltIccBtn');
+            const iccModalOverlay = document.getElementById('iccModalOverlay');
+            const iccGrid = document.getElementById('iccGrid');
+            const iccModalSub = document.getElementById('iccModalSub');
 
             // ===== Constants =====
             const DUTY_HEADERS = ["Start", "End", "Pairing Id", "Duty Hours", "Flying Hours", "Rest Required",
@@ -962,8 +796,8 @@
             ];
             const COCKPIT_RANKS = ['CAPT', 'FO', 'SO'];
             const POSITIONS_NARROW = ['P1', 'P2', 'P3', 'P4', 'A1', 'A2', 'SNY'];
-            const POSITIONS_WIDE = ['ICC', 'LSB', 'LSC', 'LSD', 'AG', 'BG1', 'BG2', 'CG', 'DG', 'BC', 'BC1', 'CC', 'DC',
-                'DC2', 'SNY'
+            const POSITIONS_WIDE = ['ICC', 'IFS B', 'LSB', 'LSC', 'LSD', 'AG', 'BG1', 'BG2', 'CG', 'DG', 'BC', 'BC1', 'CC',
+                'DC', 'DC2', 'SNY'
             ];
             const RANK_PRIORITY = { 'IFS': 1, 'LS': 2, 'FS': 3, 'FSS': 4, 'SS': 5, 'CS': 6, 'AS': 7 };
             const DOORS_NARROW = ['1L', '1R', '2L', '2R'];
@@ -990,16 +824,6 @@
 
             function isNarrowbody(ac) { if (!ac) return false; const a = ac.trim().toUpperCase(); return a === '737' || a
                     .indexOf('73') === 0 || a.indexOf('7M') === 0; }
-
-            function determineCrewInCharge(cabinCrew) {
-                const ifs = cabinCrew.filter(c => c.opRank.toUpperCase() === 'IFS');
-                const ls = cabinCrew.filter(c => c.opRank.toUpperCase() === 'LS');
-                if (ifs.length === 1) return { auto: ifs[0], candidates: [] };
-                if (ifs.length > 1) return { auto: null, candidates: ifs };
-                if (ls.length === 1) return { auto: ls[0], candidates: [] };
-                if (ls.length > 1) return { auto: null, candidates: ls };
-                return { auto: null, candidates: cabinCrew.slice() };
-            }
 
             function getDayName(dateStr) {
                 try {
@@ -1133,8 +957,8 @@
                     let acReg = '';
                     if (acMatch) {
                         const rest = seg.slice(acMatch.index + acMatch[0].length);
-                        const tok = rest.trim().split(/\s+/).find(t => t && t !== 'DATE' && t !== 'TIME' && /^[A-Za-z0-9]{2,6}$/
-                            .test(t));
+                        const tok = rest.trim().split(/\s+/).find(t => t && t !== 'DATE' && t !== 'TIME' &&
+                            /^[A-Za-z0-9]{2,6}$/.test(t));
                         if (tok) acReg = tok;
                     }
                     const dep = depArrMatches[i * 2];
@@ -1180,9 +1004,11 @@
                 const crewMap = {};
                 const patA = new RegExp('(MH\\d{3,4})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z][A-Z .]*?)\\s+(\\d{7})\\s+([A-Z]{1,3})\\b',
                     'g');
-                const patB = new RegExp('(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z]{1,3})\\b',
+                const patB = new RegExp(
+                    '(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z]{1,3})\\b',
                     'g');
-                const patC = new RegExp('(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{1,3})\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\b',
+                const patC = new RegExp(
+                    '(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{1,3})\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\b',
                     'g');
                 [inboundSection, outboundSection].forEach(section => {
                     let m;
@@ -1190,12 +1016,10 @@
                         crewMap[m[5]] = { opRank: m[2], crewId: m[5], crewName: m[4].trim() };
                     }
                     while ((m = patB.exec(section)) !== null) {
-                        if (!crewMap[m[2]]) crewMap[m[2]] = { opRank: m[4], crewId: m[2], crewName: m[3]
-                            .trim() };
+                        if (!crewMap[m[2]]) crewMap[m[2]] = { opRank: m[4], crewId: m[2], crewName: m[3].trim() };
                     }
                     while ((m = patC.exec(section)) !== null) {
-                        if (!crewMap[m[2]]) crewMap[m[2]] = { opRank: m[4], crewId: m[2], crewName: m[3]
-                            .trim() };
+                        if (!crewMap[m[2]]) crewMap[m[2]] = { opRank: m[4], crewId: m[2], crewName: m[3].trim() };
                     }
                 });
 
@@ -1209,8 +1033,7 @@
                         crewMap[m[3]] = { opRank: m[2], crewId: m[3], crewName: m[4].trim() };
                     }
                     while ((m = pairB.exec(pairingSection)) !== null) {
-                        if (!crewMap[m[1]]) crewMap[m[1]] = { opRank: m[2], crewId: m[1], crewName: m[4]
-                            .trim() };
+                        if (!crewMap[m[1]]) crewMap[m[1]] = { opRank: m[2], crewId: m[1], crewName: m[4].trim() };
                     }
                 }
 
@@ -1251,8 +1074,9 @@
                 };
             }
 
-            // ===== Shared state & rendering =====
+            // ===== Shared state =====
             let state = null;
+            let modalCrewId = null;
 
             function fval(key, def) {
                 if (state.fields && state.fields.hasOwnProperty(key) && state.fields[key] !== '') return state.fields[
@@ -1262,36 +1086,212 @@
 
             window.updateField = function(key, val) { state.fields[key] = val; };
 
+            // ---- Badge toggles ----
+            function toggleBadge(crewId, badgeType) {
+                if (!state.badges) state.badges = {};
+                const current = state.badges[crewId];
+                if (current === badgeType) {
+                    delete state.badges[crewId];
+                } else {
+                    // Remove any other badge from this crew
+                    delete state.badges[crewId];
+                    state.badges[crewId] = badgeType;
+                }
+                // If toggling ALT ICC off, clear from ALT ICC row
+                if (badgeType === 'ALT_ICC' && state.badges[crewId] !== 'ALT_ICC') {
+                    // no-op, just update
+                }
+                // If toggling SNY, no extra action
+                posModalOverlay.style.display = 'none';
+                buildReport();
+            }
+
+            // ---- ICC logic ----
+            function getEligibleICC(crewList) {
+                const ifs = crewList.filter(c => c.opRank.toUpperCase() === 'IFS');
+                const ls = crewList.filter(c => c.opRank.toUpperCase() === 'LS');
+                if (ifs.length === 1) return { eligible: ifs, auto: ifs[0], mode: 'auto' };
+                if (ifs.length >= 2) return { eligible: ifs, auto: null, mode: 'select' };
+                if (ls.length === 1) return { eligible: ls, auto: ls[0], mode: 'auto' };
+                if (ls.length >= 2) return { eligible: ls, auto: null, mode: 'select' };
+                return { eligible: [], auto: null, mode: 'none' };
+            }
+
+            function getCurrentICC() {
+                if (!state) return null;
+                const cabin = state.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
+                const sorted = sortCabinCrew(cabin);
+                const info = getEligibleICC(sorted);
+                // If user manually chose an ICC, use that
+                if (state.icc && state.icc.manual) {
+                    const found = sorted.find(c => c.crewId === state.icc.crewId);
+                    if (found) return { crew: found, mode: 'manual' };
+                }
+                if (info.auto) {
+                    // Check if user manually overrode with a different choice
+                    if (state.icc && state.icc.crewId && state.icc.manual) {
+                        const found = sorted.find(c => c.crewId === state.icc.crewId);
+                        if (found) return { crew: found, mode: 'manual' };
+                    }
+                    return { crew: info.auto, mode: 'auto' };
+                }
+                if (info.eligible.length > 0) {
+                    // User selection needed
+                    if (state.icc && state.icc.crewId) {
+                        const found = sorted.find(c => c.crewId === state.icc.crewId);
+                        if (found && info.eligible.some(e => e.crewId === found.crewId)) {
+                            return { crew: found, mode: 'manual' };
+                        }
+                    }
+                    return { crew: null, mode: 'select', eligible: info.eligible };
+                }
+                return { crew: null, mode: 'none' };
+            }
+
+            function getAltIccCrew() {
+                if (!state || !state.badges) return null;
+                let found = null;
+                for (const id in state.badges) {
+                    if (state.badges[id] === 'ALT_ICC') {
+                        const crew = state.crew.find(c => c.crewId === id);
+                        if (crew) { found = crew; break; }
+                    }
+                }
+                return found;
+            }
+
             // ---- Position modal ----
             window.openPositionModal = function(crewId, crewName) {
+                modalCrewId = crewId;
                 const ac0 = state.itin.length ? state.itin[0].ac : '';
                 const isNarrow = isNarrowbody(ac0);
                 const posList = isNarrow ? POSITIONS_NARROW : POSITIONS_WIDE;
                 const gridClass = isNarrow ? 'narrow' : 'wide';
-                state.modalCrew = crewId;
-                modalCrewName.textContent = crewName;
+
+                // Check if this crew is ICC → locked
+                const iccInfo = getCurrentICC();
+                const isIcc = iccInfo && iccInfo.crew && iccInfo.crew.crewId === crewId;
+
+                modalCrewName.textContent = crewName + (isIcc ? ' (ICC — locked)' : '');
                 posGrid.className = 'pos-grid ' + gridClass;
                 posGrid.innerHTML = '';
-                posList.forEach(pos => {
-                    const btn = document.createElement('button');
-                    btn.className = 'pos-btn' + (state.positions[crewId] === pos ? ' selected' : '');
-                    btn.textContent = pos;
-                    btn.addEventListener('click', () => window.assignPosition(crewId, pos));
-                    posGrid.appendChild(btn);
-                });
+
+                if (isIcc) {
+                    const msg = document.createElement('div');
+                    msg.style.cssText =
+                        'grid-column:1/-1;padding:16px;background:#e8f0fe;border-radius:8px;text-align:center;font-weight:600;color:#1d4ed8;font-size:13px;';
+                    msg.textContent = 'ICC → position is locked to ICC';
+                    posGrid.appendChild(msg);
+                } else {
+                    posList.forEach(pos => {
+                        const btn = document.createElement('button');
+                        btn.className = 'pos-btn';
+                        const isAssigned = (state.positions[crewId] === pos);
+                        if (isAssigned) btn.classList.add('selected');
+                        // Check if position is taken by another non-SNY crew
+                        let takenBy = null;
+                        let takenByHasSny = false;
+                        for (const id in state.positions) {
+                            if (id !== crewId && state.positions[id] === pos && state.positions[id] !== '') {
+                                takenBy = id;
+                                // Check if that crew has SNY badge
+                                if (state.badges && state.badges[id] === 'SNY') {
+                                    takenByHasSny = true;
+                                }
+                                break;
+                            }
+                        }
+                        // If this crew has SNY badge, they can take any position
+                        const hasSny = state.badges && state.badges[crewId] === 'SNY';
+                        if (!hasSny && takenBy && !takenByHasSny) {
+                            btn.style.opacity = '0.4';
+                            btn.title = 'Taken by ' + takenBy;
+                        }
+                        btn.textContent = pos;
+                        btn.addEventListener('click', () => {
+                            if (isIcc) return;
+                            // If position is taken by someone without SNY, and this crew doesn't have SNY, block
+                            const hasSnyNow = state.badges && state.badges[crewId] === 'SNY';
+                            let blocked = false;
+                            if (!hasSnyNow) {
+                                for (const id in state.positions) {
+                                    if (id !== crewId && state.positions[id] === pos && state.positions[
+                                        id] !== '') {
+                                        const otherHasSny = state.badges && state.badges[id] ===
+                                        'SNY';
+                                        if (!otherHasSny) { blocked = true; break; }
+                                    }
+                                }
+                            }
+                            if (blocked) {
+                                // Flash feedback
+                                btn.style.borderColor = '#ef4444';
+                                btn.style.background = '#fee2e2';
+                                setTimeout(() => { btn.style.borderColor = '';
+                                    btn.style.background = ''; }, 400);
+                                return;
+                            }
+                            // Remove this position from others (unless they have SNY)
+                            for (const id in state.positions) {
+                                if (id !== crewId && state.positions[id] === pos) {
+                                    const otherHasSny = state.badges && state.badges[id] === 'SNY';
+                                    if (!otherHasSny) {
+                                        state.positions[id] = '';
+                                    }
+                                }
+                            }
+                            if (state.positions[crewId] === pos) {
+                                state.positions[crewId] = '';
+                            } else {
+                                state.positions[crewId] = pos;
+                            }
+                            posModalOverlay.style.display = 'none';
+                            buildReport();
+                        });
+                        posGrid.appendChild(btn);
+                    });
+                }
+
+                // Update badge buttons state
+                const hasSny = state.badges && state.badges[crewId] === 'SNY';
+                const hasAltIcc = state.badges && state.badges[crewId] === 'ALT_ICC';
+                badgeSnyBtn.textContent = hasSny ? '⛑ SNY ✓' : '⛑ SNY';
+                badgeSnyBtn.className = 'half' + (hasSny ? ' badge-active-sny' : '');
+                badgeAltIccBtn.textContent = hasAltIcc ? 'ALT ICC ✓' : 'ALT ICC';
+                badgeAltIccBtn.className = 'half' + (hasAltIcc ? ' badge-active-alt-icc' : '');
+
                 posModalOverlay.style.display = 'flex';
             };
 
-            window.assignPosition = function(crewId, pos) {
-                if (pos !== 'SNY') {
-                    Object.keys(state.positions).forEach(id => {
-                        if (id !== crewId && state.positions[id] === pos) state.positions[id] = '';
-                    });
+            // Badge button handlers
+            badgeSnyBtn.addEventListener('click', function() {
+                if (!modalCrewId) return;
+                // Check if this crew is ICC — if so, disallow SNY badge
+                const iccInfo = getCurrentICC();
+                if (iccInfo && iccInfo.crew && iccInfo.crew.crewId === modalCrewId) {
+                    // Flash feedback
+                    badgeSnyBtn.style.borderColor = '#ef4444';
+                    badgeSnyBtn.style.background = '#fee2e2';
+                    setTimeout(() => { badgeSnyBtn.style.borderColor = '';
+                        badgeSnyBtn.style.background = ''; }, 400);
+                    return;
                 }
-                state.positions[crewId] = pos;
-                posModalOverlay.style.display = 'none';
-                buildReport();
-            };
+                toggleBadge(modalCrewId, 'SNY');
+            });
+
+            badgeAltIccBtn.addEventListener('click', function() {
+                if (!modalCrewId) return;
+                // Check if this crew is ICC — if so, disallow ALT ICC badge
+                const iccInfo = getCurrentICC();
+                if (iccInfo && iccInfo.crew && iccInfo.crew.crewId === modalCrewId) {
+                    badgeAltIccBtn.style.borderColor = '#ef4444';
+                    badgeAltIccBtn.style.background = '#fee2e2';
+                    setTimeout(() => { badgeAltIccBtn.style.borderColor = '';
+                        badgeAltIccBtn.style.background = ''; }, 400);
+                    return;
+                }
+                toggleBadge(modalCrewId, 'ALT_ICC');
+            });
 
             document.getElementById('modalCloseBtn').addEventListener('click', () => { posModalOverlay.style.display =
                     'none'; });
@@ -1346,8 +1346,54 @@
             doorModalOverlay.addEventListener('click', (e) => { if (e.target === doorModalOverlay) doorModalOverlay
                     .style.display = 'none'; });
 
+            // ---- ICC modal ----
+            function openIccModal(eligible) {
+                iccGrid.innerHTML = '';
+                if (!eligible || eligible.length === 0) {
+                    iccModalSub.textContent = 'No eligible crew members.';
+                    iccGrid.innerHTML =
+                    '<div style="padding:16px;text-align:center;color:#888;">No candidates available.</div>';
+                    iccModalOverlay.style.display = 'flex';
+                    return;
+                }
+                const rankLabel = eligible[0].opRank.toUpperCase() === 'IFS' ? 'IFS' : 'LS';
+                iccModalSub.textContent = 'Select ' + rankLabel + ' to be In-Charge Cabin Crew (ICC)';
+                eligible.forEach(c => {
+                    const div = document.createElement('div');
+                    div.className = 'icc-option';
+                    div.innerHTML =
+                        '<span>' + esc(c.crewName) + '</span><span class="rank-tag">' + esc(c.opRank) +
+                        ' · ' + esc(c.crewId) + '</span>';
+                    div.addEventListener('click', () => {
+                        // Set this crew as ICC
+                        if (!state.icc) state.icc = {};
+                        state.icc.crewId = c.crewId;
+                        state.icc.manual = true;
+                        // Force their working position to ICC
+                        state.positions[c.crewId] = 'ICC';
+                        // Remove ICC from any other crew
+                        for (const id in state.positions) {
+                            if (id !== c.crewId && state.positions[id] === 'ICC') {
+                                state.positions[id] = '';
+                            }
+                        }
+                        iccModalOverlay.style.display = 'none';
+                        buildReport();
+                    });
+                    iccGrid.appendChild(div);
+                });
+                iccModalOverlay.style.display = 'flex';
+            }
+
+            document.getElementById('iccModalCloseBtn').addEventListener('click', () => { iccModalOverlay.style.display =
+                    'none'; });
+            iccModalOverlay.addEventListener('click', (e) => { if (e.target === iccModalOverlay) iccModalOverlay.style
+                    .display = 'none'; });
+
+            // ===== Build Report =====
             function buildReport() {
                 const d = state;
+                if (!d) return;
                 const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
                 const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
                 const fos = d.crew.filter(c => c.opRank.toUpperCase() === 'FO');
@@ -1356,25 +1402,32 @@
 
                 const sortedCabin = sortCabinCrew(cabinCrew);
 
-                const cic = determineCrewInCharge(sortedCabin);
-                let cicChosen = cic.auto;
-                if (!cicChosen && cic.candidates.length) {
-                    cicChosen = state.chosenCIC || cic.candidates[0];
+                // ---- ICC ----
+                const iccInfo = getCurrentICC();
+                let iccCrew = iccInfo && iccInfo.crew ? iccInfo.crew : null;
+                // If auto or manual, ensure their position is ICC
+                if (iccCrew) {
+                    d.positions[iccCrew.crewId] = 'ICC';
+                    // Remove ICC from others
+                    for (const id in d.positions) {
+                        if (id !== iccCrew.crewId && d.positions[id] === 'ICC') {
+                            d.positions[id] = '';
+                        }
+                    }
                 }
+                // If no ICC but eligible, show select prompt
+                const eligibleForIcc = iccInfo && iccInfo.mode === 'select' ? iccInfo.eligible : null;
 
-                let picChosen = null;
-                if (isNarrow && captains.length > 1) {
-                    picChosen = state.selectedPIC || captains[0];
-                } else if (captains.length === 1) {
-                    picChosen = captains[0];
-                }
+                // ---- ALT ICC ----
+                const altIccCrew = getAltIccCrew();
 
+                // ---- REP display ----
                 let repDisplay = '';
                 if (d.dutyDate || (d.pdfData && d.pdfData.date)) {
                     const dateStr = (d.pdfData && d.pdfData.date) || d.dutyDate || '';
                     const day = getDayName(dateStr);
-                    const repTime = (d.pdfData && d.pdfData.repTime) || (d.dutyStart ? d.dutyStart.split(/\s+/)
-                        .pop() : '') || '';
+                    const repTime = (d.pdfData && d.pdfData.repTime) || (d.dutyStart ? d.dutyStart.split(/\s+/).pop() :
+                        '') || '';
                     repDisplay = dateStr + ' (' + day + ') ' + repTime;
                 } else if (d.dutyStart) {
                     const parts = d.dutyStart.split(/\s+/);
@@ -1389,13 +1442,17 @@
                 }
                 if (!repDisplay) repDisplay = '----';
 
+                // ---- Build HTML ----
                 let html = `<div class="rpad">`;
 
+                // Top info: REP, BAY, BRIEFING ST
                 html += `<div class="top-info">
-              <span><span class="label">BAY:</span> <input value="${esc(fval('bay', ''))}" oninput="updateField('bay', this.value)" class="small"></span>
-              <span><input value="${esc(repDisplay)}" class="rep" readonly></span>
+              <span><span class="label">REP</span> <input value="${esc(fval('rep', repDisplay))}" oninput="updateField('rep', this.value)" class="rep"></span>
+              <span><span class="label">BAY</span> <input value="${esc(fval('bay', ''))}" oninput="updateField('bay', this.value)" class="bay" maxlength="8"></span>
+              <span><span class="label">BRIEFING ST</span> <input value="${esc(fval('briefingSt', ''))}" oninput="updateField('briefingSt', this.value)" class="brief" maxlength="6"></span>
             </div>`;
 
+                // Flight table
                 html += `<table class="rtab" style="font-size:9px;">
               <tr>
                 <th style="width:8%;">F.NO</th>
@@ -1426,12 +1483,18 @@
                 });
                 html += `</table>`;
 
+                // Airport name
                 html += `<div style="font-size:9px;margin-top:2px;text-align:left;border:1px solid #333;border-top:none;padding:2px 4px;">
               <input value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;" placeholder="">
             </div>`;
 
-                html += `<table class="rtab" style="margin-top:4px;width:60%;">
-              <tr><th style="width:25%;">Staff No</th><th style="width:15%;">Rank</th><th style="width:60%;">Name</th></tr>`;
+                // ---- Captain + CCIC side by side ----
+                html += `<div class="ccic-table-wrap">`;
+
+                // Captain & FO table
+                html += `<div class="captain-wrap">
+              <table class="rtab" style="margin-top:4px;width:100%;">
+                <tr><th style="width:25%;">Staff No</th><th style="width:15%;">Rank</th><th style="width:60%;">Name</th></tr>`;
                 if (captains.length) {
                     captains.forEach(c => {
                         html +=
@@ -1446,14 +1509,45 @@
                             `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
                     });
                 }
-                html += `</table>`;
+                html += `</table>
+            </div>`;
 
+                // CCIC table
+                html += `<div class="ccic-wrap">
+              <table class="rtab" style="margin-top:4px;width:100%;">
+                <tr><th style="width:30%;">Role</th><th style="width:70%;">Name / Staff</th></tr>
+                <tr class="ccic-row" id="iccRow" style="cursor:pointer;">
+                  <td class="label-bold">ICC</td>
+                  <td style="text-align:left;">`;
+                if (iccCrew) {
+                    html += `<strong>${esc(iccCrew.crewName)}</strong> <span style="color:#555;font-weight:400;">${esc(iccCrew.crewId)}</span>`;
+                } else if (eligibleForIcc && eligibleForIcc.length > 0) {
+                    html += `<span class="empty-msg" style="color:#3b82f6;">click to select</span>`;
+                } else {
+                    html += `<span class="empty-msg">—</span>`;
+                }
+                html += `</td></tr>
+                <tr class="ccic-row" id="altIccRow">
+                  <td class="label-bold">ALT ICC</td>
+                  <td style="text-align:left;">`;
+                if (altIccCrew) {
+                    html += `<strong>${esc(altIccCrew.crewName)}</strong> <span style="color:#555;font-weight:400;">${esc(altIccCrew.crewId)}</span>`;
+                } else {
+                    html += `<span class="empty-msg">—</span>`;
+                }
+                html += `</td></tr>
+              </table>
+            </div>`;
+
+                html += `</div>`;
+
+                // ---- Cabin Crew ----
                 html += `<div style="margin-top:6px;font-weight:bold;font-size:9px;">CABIN CREW (${sortedCabin.length})</div>`;
                 html += `<table class="rtab crew-table" style="font-size:9px;">
               <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:62%;text-align:left;">Name</th><th style="width:10%;">Working Post</th><th style="width:10%;">Door</th></tr>`;
                 sortedCabin.forEach(c => {
-                    const isCIC = cicChosen && c.crewId === cicChosen.crewId;
-                    const pos = state.positions[c.crewId] || '';
+                    const isIcc = iccCrew && c.crewId === iccCrew.crewId;
+                    const pos = isIcc ? 'ICC' : (state.positions[c.crewId] || '');
                     let doorAssigned = '';
                     for (let d in state.doors) {
                         if (state.doors[d] === c.crewId) {
@@ -1461,16 +1555,28 @@
                             break;
                         }
                     }
-                    html += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
+                    const hasSny = state.badges && state.badges[c.crewId] === 'SNY';
+                    const hasAltIccBadge = state.badges && state.badges[c.crewId] === 'ALT_ICC';
+                    // Build name with badge
+                    let nameHtml = `<span class="crew-name">${esc(c.crewName)}</span>`;
+                    if (hasSny) nameHtml += `<span class="badge-pill sny">SNY</span>`;
+                    if (hasAltIccBadge) nameHtml += `<span class="badge-pill alt-icc">alt icc</span>`;
+
+                    const posClass = isIcc ? 'pos-cell icc-locked' : (pos ? 'pos-cell' : 'pos-cell unset');
+                    const posDisplay = isIcc ? 'ICC' : (pos || '');
+                    const doorDisplay = doorAssigned || '+';
+
+                    html += `<tr${isIcc ? ' style="background:#e8f0fe;"' : ''}>
                 <td>${esc(c.crewId)}</td>
                 <td>${esc(c.opRank)}</td>
-                <td style="text-align:left;">${esc(c.crewName)}</td>
-                <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${pos ? esc(pos) : ''}</td>
-                <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${doorAssigned ? esc(doorAssigned) : '+'}</td>
+                <td style="text-align:left;"><span class="name-with-badge">${nameHtml}</span></td>
+                <td class="${posClass}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}"${isIcc ? ' style="cursor:default;"' : ''}>${esc(posDisplay)}</td>
+                <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${esc(doorDisplay)}</td>
               </tr>`;
                 });
                 html += `</table>`;
 
+                // ---- Flight Time Details ----
                 html += `<div style="margin-top:8px;font-weight:bold;font-size:9px;">Flight Time Details</div>`;
                 html += `<table class="ft-table">
               <tr>
@@ -1498,19 +1604,89 @@
                 html += `</div>`;
                 reportEl.innerHTML = html;
 
-                reportEl.querySelectorAll('.pos-cell').forEach(el => {
+                // ---- Position cell clicks ----
+                reportEl.querySelectorAll('.pos-cell:not(.icc-locked)').forEach(el => {
                     el.addEventListener('click', () => {
                         window.openPositionModal(el.getAttribute('data-crewid'), el.getAttribute(
                         'data-crewname'));
                     });
                 });
+                // ICC-locked cells: click opens ICC selection if eligible
+                reportEl.querySelectorAll('.pos-cell.icc-locked').forEach(el => {
+                    el.addEventListener('click', () => {
+                        // Open ICC selection modal if there are eligible candidates
+                        const cabin = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) ===
+                            -1);
+                        const sorted = sortCabinCrew(cabin);
+                        const info = getEligibleICC(sorted);
+                        if (info.mode === 'select' && info.eligible.length > 0) {
+                            openIccModal(info.eligible);
+                        } else if (info.mode === 'auto' && info.auto) {
+                            // Already auto-assigned, but user can still click to select a different one if there are multiple
+                            // Check if there are multiple of the same rank
+                            const rank = info.auto.opRank.toUpperCase();
+                            const sameRank = sorted.filter(c => c.opRank.toUpperCase() === rank);
+                            if (sameRank.length >= 2) {
+                                openIccModal(sameRank);
+                            } else {
+                                // Single auto, no selection needed
+                                // But we can show a message
+                                const sub = document.getElementById('iccModalSub');
+                                sub.textContent = 'Only one ' + rank + ' — automatically ICC.';
+                                iccGrid.innerHTML =
+                                    `<div style="padding:16px;text-align:center;color:#888;">${esc(info.auto.crewName)} (${esc(info.auto.crewId)}) is the ICC.</div>`;
+                                iccModalOverlay.style.display = 'flex';
+                            }
+                        } else {
+                            // No eligible
+                            const sub = document.getElementById('iccModalSub');
+                            sub.textContent = 'No eligible crew for ICC.';
+                            iccGrid.innerHTML =
+                                '<div style="padding:16px;text-align:center;color:#888;">No IFS or LS crew found.</div>';
+                            iccModalOverlay.style.display = 'flex';
+                        }
+                    });
+                });
 
+                // ---- Door cell clicks ----
                 reportEl.querySelectorAll('.door-cell').forEach(el => {
                     el.addEventListener('click', () => {
                         window.openDoorModal(el.getAttribute('data-crewid'), el.getAttribute(
                         'data-crewname'));
                     });
                 });
+
+                // ---- ICC row click ----
+                const iccRow = document.getElementById('iccRow');
+                if (iccRow) {
+                    iccRow.addEventListener('click', () => {
+                        const cabin = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) ===
+                            -1);
+                        const sorted = sortCabinCrew(cabin);
+                        const info = getEligibleICC(sorted);
+                        if (info.mode === 'select' && info.eligible.length > 0) {
+                            openIccModal(info.eligible);
+                        } else if (info.mode === 'auto' && info.auto) {
+                            const rank = info.auto.opRank.toUpperCase();
+                            const sameRank = sorted.filter(c => c.opRank.toUpperCase() === rank);
+                            if (sameRank.length >= 2) {
+                                openIccModal(sameRank);
+                            } else {
+                                const sub = document.getElementById('iccModalSub');
+                                sub.textContent = 'Only one ' + rank + ' — automatically ICC.';
+                                iccGrid.innerHTML =
+                                    `<div style="padding:16px;text-align:center;color:#888;">${esc(info.auto.crewName)} (${esc(info.auto.crewId)}) is the ICC.</div>`;
+                                iccModalOverlay.style.display = 'flex';
+                            }
+                        } else {
+                            const sub = document.getElementById('iccModalSub');
+                            sub.textContent = 'No eligible crew for ICC.';
+                            iccGrid.innerHTML =
+                                '<div style="padding:16px;text-align:center;color:#888;">No IFS or LS crew found.</div>';
+                            iccModalOverlay.style.display = 'flex';
+                        }
+                    });
+                }
             }
 
             // ===== Shared state setter =====
@@ -1521,34 +1697,52 @@
                 state.fields = {};
                 state.positions = {};
                 state.doors = {};
+                state.badges = {};
+                state.icc = {};
                 state.source = source || 'iflight';
+
+                // Auto-assign ICC if only one eligible
+                const cabin = state.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
+                const sorted = sortCabinCrew(cabin);
+                const info = getEligibleICC(sorted);
+                if (info.auto && info.mode === 'auto') {
+                    state.icc.crewId = info.auto.crewId;
+                    state.icc.manual = false;
+                    state.positions[info.auto.crewId] = 'ICC';
+                } else if (info.mode === 'select' && info.eligible.length > 0) {
+                    // No auto, user will select later
+                    state.icc.crewId = null;
+                    state.icc.manual = false;
+                } else {
+                    state.icc.crewId = null;
+                    state.icc.manual = false;
+                }
+
                 buildReport();
                 reportCard.style.display = '';
                 emptyCard.style.display = 'none';
+
                 if (source === 'iflight') {
                     dbgContent.innerHTML =
-                        '<p style="font-size:11px;color:#888;">Duty Details</p>' + renderDebugTable(parsed.duty, [
-                            'start', 'end', 'pairingId', 'dutyHours', 'flyingHours', 'restRequired',
-                            'restAvailable'
-                        ]) +
-                        '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, [
-                            'flightId', 'date', 'from', 'dep', 'to', 'arr', 'ac', 'version', 'acReg',
-                            'flightTime'
-                        ]) +
-                        '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, [
-                            'opRank', 'posRank', 'crewId', 'crewName', 'base', 'sdc', 'checkIn'
-                        ]);
+                        '<p style="font-size:11px;color:#888;">Duty Details</p>' + renderDebugTable(parsed.duty,
+                            ['start', 'end', 'pairingId', 'dutyHours', 'flyingHours', 'restRequired',
+                                'restAvailable'
+                            ]) +
+                        '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin,
+                            ['flightId', 'date', 'from', 'dep', 'to', 'arr', 'ac', 'version', 'acReg',
+                                'flightTime'
+                            ]) +
+                        '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew,
+                            ['opRank', 'posRank', 'crewId', 'crewName', 'base', 'sdc', 'checkIn']);
                     dbgWrap.style.display = '';
                     pdfDbgWrap.style.display = 'none';
                 } else {
                     dbgWrap.style.display = 'none';
                     pdfDbgContent.innerHTML =
-                        '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, [
-                            'flightId', 'date', 'from', 'dep', 'to', 'arr', 'ac', 'acReg', 'flightTime'
-                        ]) +
-                        '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, [
-                            'opRank', 'crewId', 'crewName'
-                        ]);
+                        '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin,
+                            ['flightId', 'date', 'from', 'dep', 'to', 'arr', 'ac', 'acReg', 'flightTime']) +
+                        '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew,
+                            ['opRank', 'crewId', 'crewName']);
                     pdfDbgWrap.style.display = '';
                 }
             }
@@ -1559,7 +1753,8 @@
                 statusEl.className = 'status';
                 try {
                     const raw = pasteBox.value;
-                    if (!raw.trim()) { statusEl.textContent = 'Paste the trip report text first.';
+                    if (!raw.trim()) { statusEl.textContent =
+                        'Paste the trip report text first.';
                         statusEl.className = 'status err'; return; }
                     const parsed = parseTripText(raw);
                     if (!parsed.found.itin && !parsed.found.crew) {
@@ -1660,7 +1855,7 @@
                             return Promise.all(pagePromises.map(function(page) {
                                 return page.getTextContent().then(function(textContent) {
                                     const strings = textContent.items.map(item => item
-                                    .str);
+                                        .str);
                                     return strings.join(' ');
                                 });
                             }));
