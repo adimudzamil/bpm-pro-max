@@ -705,8 +705,8 @@
     font-size: 9.5px;
     background: #fff;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    min-width: 60px;
     transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
   }
 
   .top-info .clickable-input:hover {
@@ -714,19 +714,24 @@
     box-shadow: 0 0 0 2px var(--accent-glow);
   }
 
-  .top-info input.small { width: 60px; }
-  .top-info input.rep {
-    font-weight: 600;
-    width: 180px;
-    background: #f0f0f0;
-    border-color: #555;
-    cursor: default;
+  .top-info .clickable-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-glow);
   }
 
-  .top-info .clickable-input.briefing {
-    min-width: 50px;
-    width: 60px;
+  .top-info .clickable-input.bay-input { width: 80px; }
+  .top-info .clickable-input.rep-input {
+    width: 180px;
+    background: #f0f0f0;
+    cursor: default;
+    font-weight: 600;
+    border-color: #555;
   }
+  .top-info .clickable-input.rep-input:hover {
+    box-shadow: none;
+    border-color: #555;
+  }
+  .top-info .clickable-input.briefing-input { width: 60px; }
 
   /* ── Flight Time Details Table ── */
   .ft-table {
@@ -923,7 +928,7 @@
   </div>
 </div>
 
-<!-- ===== NUMBER KEYPAD MODAL (reused for BAY numbers & Briefing Station) ===== -->
+<!-- ===== NUMBER KEYPAD MODAL (reused for BAY numbers, Briefing Station, and Flight Time) ===== -->
 <div class="modal-overlay" id="numberKeypadModalOverlay">
   <div class="modal-box dark">
     <div class="modal-title" id="numberKeypadTitle">Enter Number</div>
@@ -993,7 +998,7 @@
   // ===== Keypad state =====
   let keypadBuffer = '';
   let keypadTarget = null;
-  let keypadMode = 'bay'; // 'bay' or 'briefing'
+  let keypadMode = 'bay'; // 'bay', 'briefing', or 'time'
   let selectedBayLetter = '';
 
   // ===== Constants =====
@@ -1077,18 +1082,33 @@
   }
 
   function updateNumberKeypadDisplay() {
-    const formatted = formatNumber(keypadBuffer);
-    numberKeypadDisplay.textContent = formatted || '0';
+    if (keypadMode === 'time') {
+      const buffer = keypadBuffer;
+      let formatted = buffer;
+      if (buffer.length === 1) formatted = '0' + buffer + ':00';
+      else if (buffer.length === 2) formatted = buffer + ':00';
+      else if (buffer.length === 3) formatted = '0' + buffer[0] + ':' + buffer.substring(1);
+      else if (buffer.length >= 4) formatted = buffer.substring(0, 2) + ':' + buffer.substring(2, 4);
+      else formatted = buffer || '00:00';
+      numberKeypadDisplay.textContent = formatted;
+    } else {
+      numberKeypadDisplay.textContent = keypadBuffer || '0';
+    }
   }
 
   function openNumberKeypad(targetElement, mode, currentValue) {
     keypadTarget = targetElement;
     keypadMode = mode;
 
-    if (mode === 'bay') {
+    if (mode === 'time') {
+      numberKeypadTitle.textContent = '⌨️ Enter Time';
+      numberKeypadSub.textContent = 'Tap numbers to enter HH:MM';
+      const digits = (currentValue || '').replace(/:/g, '');
+      keypadBuffer = digits.length <= 4 ? digits : digits.substring(0, 4);
+    } else if (mode === 'bay') {
       numberKeypadTitle.textContent = 'Enter Bay Number';
       numberKeypadSub.textContent = 'Tap numbers after letter selection';
-      const digits = (currentValue || '').replace(/[A-Z]/g, ''); // remove any letters
+      const digits = (currentValue || '').replace(/[A-Z]/g, '');
       keypadBuffer = digits || '';
     } else if (mode === 'briefing') {
       numberKeypadTitle.textContent = 'Briefing Station';
@@ -1103,7 +1123,15 @@
   function closeNumberKeypad(save = false) {
     if (save && keypadTarget) {
       let finalValue = keypadBuffer;
-      if (keypadMode === 'bay' && selectedBayLetter) {
+      if (keypadMode === 'time') {
+        const buffer = keypadBuffer;
+        if (buffer.length === 0) finalValue = '';
+        else if (buffer.length === 1) finalValue = '0' + buffer + ':00';
+        else if (buffer.length === 2) finalValue = buffer + ':00';
+        else if (buffer.length === 3) finalValue = '0' + buffer[0] + ':' + buffer.substring(1);
+        else if (buffer.length >= 4) finalValue = buffer.substring(0, 2) + ':' + buffer.substring(2, 4);
+        else finalValue = buffer;
+      } else if (keypadMode === 'bay' && selectedBayLetter) {
         finalValue = selectedBayLetter + finalValue;
       }
       if (finalValue) {
@@ -1114,8 +1142,9 @@
         keypadTarget.value = '';
         keypadTarget.dispatchEvent(new Event('input', { bubbles: true }));
       }
-      // Reset letter selection after saving
-      selectedBayLetter = '';
+      if (keypadMode === 'bay') {
+        selectedBayLetter = '';
+      }
     }
     numberKeypadModalOverlay.style.display = 'none';
     keypadTarget = null;
@@ -1132,7 +1161,13 @@
       closeNumberKeypad(true);
       return;
     } else if (key >= '0' && key <= '9') {
-      keypadBuffer += key;
+      if (keypadMode === 'time') {
+        if (keypadBuffer.length < 4) {
+          keypadBuffer += key;
+        }
+      } else {
+        keypadBuffer += key;
+      }
     }
     updateNumberKeypadDisplay();
   }
@@ -1146,7 +1181,6 @@
   function selectBayLetter(letter) {
     selectedBayLetter = letter;
     bayLetterModalOverlay.style.display = 'none';
-    // Open number keypad for bay numbers
     const currentValue = keypadTarget ? keypadTarget.value.replace(/[A-Z]/g, '') : '';
     openNumberKeypad(keypadTarget, 'bay', currentValue);
   }
@@ -1537,15 +1571,15 @@
     html += `<div class="top-info">
       <span>
         <span class="label">BAY:</span>
-        <input class="clickable-input bay-input" id="bayInput" value="${esc(bayVal)}" placeholder="—" readonly>
+        <input class="clickable-input bay-input" id="bayInput" value="${esc(bayVal)}" placeholder="" readonly>
       </span>
       <span>
         <span class="label">REP:</span>
-        <input class="rep" value="${esc(repDisplay)}" readonly>
+        <input class="clickable-input rep-input" id="repInput" value="${esc(repDisplay)}" readonly>
       </span>
       <span>
         <span class="label">BRIEFING STATION:</span>
-        <input class="clickable-input briefing-input" id="briefingInput" value="${esc(briefingVal)}" placeholder="—" readonly>
+        <input class="clickable-input briefing-input" id="briefingInput" value="${esc(briefingVal)}" placeholder="" readonly>
       </span>
     </div>`;
 
@@ -1664,7 +1698,6 @@
     if (bayInput) {
       bayInput.addEventListener('click', function(e) {
         e.stopPropagation();
-        // Store the current value's letter if present
         const currentVal = this.value;
         const letterMatch = currentVal.match(/^([A-Z])/);
         if (letterMatch) {
@@ -1734,106 +1767,6 @@
     statCabin.textContent = sortedCabin.length;
     statsContainer.style.display = 'flex';
   }
-
-  // ===== Override openNumberKeypad for time mode =====
-  const originalOpenNumberKeypad = openNumberKeypad;
-  openNumberKeypad = function(targetElement, mode, currentValue) {
-    keypadTarget = targetElement;
-    keypadMode = mode;
-
-    if (mode === 'time') {
-      numberKeypadTitle.textContent = '⌨️ Enter Time';
-      numberKeypadSub.textContent = 'Tap numbers to enter HH:MM';
-      const digits = (currentValue || '').replace(/:/g, '');
-      keypadBuffer = digits.length <= 4 ? digits : digits.substring(0, 4);
-    } else if (mode === 'bay') {
-      numberKeypadTitle.textContent = 'Enter Bay Number';
-      numberKeypadSub.textContent = 'Tap numbers after letter selection';
-      const digits = (currentValue || '').replace(/[A-Z]/g, '');
-      keypadBuffer = digits || '';
-    } else if (mode === 'briefing') {
-      numberKeypadTitle.textContent = 'Briefing Station';
-      numberKeypadSub.textContent = 'Tap numbers to enter station';
-      keypadBuffer = currentValue || '';
-    }
-
-    updateNumberKeypadDisplay();
-    numberKeypadModalOverlay.style.display = 'flex';
-  };
-
-  // ===== Override numberKeypadPress for time formatting =====
-  const originalNumberKeypadPress = numberKeypadPress;
-  numberKeypadPress = function(key) {
-    if (key === 'clear') {
-      keypadBuffer = keypadBuffer.slice(0, -1);
-    } else if (key === 'cancel') {
-      closeNumberKeypad(false);
-      return;
-    } else if (key === 'save') {
-      closeNumberKeypad(true);
-      return;
-    } else if (key >= '0' && key <= '9') {
-      if (keypadMode === 'time') {
-        if (keypadBuffer.length < 4) {
-          keypadBuffer += key;
-        }
-      } else {
-        keypadBuffer += key;
-      }
-    }
-    updateNumberKeypadDisplay();
-  };
-
-  // ===== Override updateNumberKeypadDisplay for time formatting =====
-  const originalUpdateDisplay = updateNumberKeypadDisplay;
-  updateNumberKeypadDisplay = function() {
-    if (keypadMode === 'time') {
-      const buffer = keypadBuffer;
-      let formatted = buffer;
-      if (buffer.length === 1) formatted = '0' + buffer + ':00';
-      else if (buffer.length === 2) formatted = buffer + ':00';
-      else if (buffer.length === 3) formatted = '0' + buffer[0] + ':' + buffer.substring(1);
-      else if (buffer.length >= 4) formatted = buffer.substring(0, 2) + ':' + buffer.substring(2, 4);
-      else formatted = buffer || '00:00';
-      numberKeypadDisplay.textContent = formatted;
-    } else {
-      numberKeypadDisplay.textContent = keypadBuffer || '0';
-    }
-  };
-
-  // ===== Override closeNumberKeypad for time formatting =====
-  const originalCloseKeypad = closeNumberKeypad;
-  closeNumberKeypad = function(save = false) {
-    if (save && keypadTarget) {
-      let finalValue = keypadBuffer;
-      if (keypadMode === 'time') {
-        // Format as HH:MM
-        const buffer = keypadBuffer;
-        if (buffer.length === 0) finalValue = '';
-        else if (buffer.length === 1) finalValue = '0' + buffer + ':00';
-        else if (buffer.length === 2) finalValue = buffer + ':00';
-        else if (buffer.length === 3) finalValue = '0' + buffer[0] + ':' + buffer.substring(1);
-        else if (buffer.length >= 4) finalValue = buffer.substring(0, 2) + ':' + buffer.substring(2, 4);
-        else finalValue = buffer;
-      } else if (keypadMode === 'bay' && selectedBayLetter) {
-        finalValue = selectedBayLetter + finalValue;
-      }
-      if (finalValue) {
-        keypadTarget.value = finalValue;
-        keypadTarget.dispatchEvent(new Event('input', { bubbles: true }));
-        keypadTarget.dispatchEvent(new Event('change', { bubbles: true }));
-      } else {
-        keypadTarget.value = '';
-        keypadTarget.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-      if (keypadMode === 'bay') {
-        selectedBayLetter = '';
-      }
-    }
-    numberKeypadModalOverlay.style.display = 'none';
-    keypadTarget = null;
-    keypadBuffer = '';
-  };
 
   // ===== Shared state setter =====
   function setStateAndRender(parsed, source){
