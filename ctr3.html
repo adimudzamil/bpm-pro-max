@@ -939,8 +939,19 @@
 
     .container { max-width: 100%; padding: 0 !important; margin: 0 !important; }
     .report-card { background: none; border: none; padding: 0 !important; margin: 0 !important; }
-    .report-card .report-inner { border-radius: 0; padding: 0 !important; overflow: visible; margin: 0 !important; }
-    #report { border-radius: 0; font-size: 8.5px; margin: 0; padding: 0; }
+    .report-card .report-inner {
+      border-radius: 0;
+      padding: 0 !important;
+      overflow: visible !important;
+      margin: 0 !important;
+    }
+    #report {
+      border-radius: 0;
+      font-size: 8.5px;
+      margin: 0;
+      padding: 0;
+      overflow: visible !important;
+    }
     #report .rpad { padding: 4px 6px; }
 
     .top-info input, .top-info input.rep { border-color: #999 !important; background: #fff !important; }
@@ -1186,8 +1197,8 @@
   let selectedBayLetter = '';
 
   // ===== ICC & Alt ICC state =====
-  let iccChosenCrew = null; // { crewId, crewName, opRank }
-  let altIccCrewId = null;   // crewId of alternate ICC
+  let iccChosenCrew = null;
+  let altIccCrewId = null;
 
   // ===== Constants =====
   const DUTY_HEADERS = ["Start","End","Pairing Id","Duty Hours","Flying Hours","Rest Required","Rest Available"];
@@ -1470,11 +1481,7 @@
   }
 
   // ===== PDF CrewTripReport parser =====
-  // Pattern-based extraction (the superior approach from the working code)
   function parseCrewTripReport(raw){
-    // Collapse everything to single-spaced text, and separate text from a
-    // following ID or date when the PDF's wrapped cell text gets glued
-    // together with no space (e.g. "...MARIA2102462", "...MAD23-Jul-2026").
     let text = raw.replace(/\r?\n/g,' ')
       .replace(/([A-Za-z])(\d{7})\b/g,'$1 $2')
       .replace(/([A-Za-z])(\d{2}-[A-Za-z]{3}-\d{4})/g,'$1 $2')
@@ -1492,7 +1499,6 @@
     const outboundSection = idxOutbound >= 0 ? text.substring(idxOutbound, idxCrewPairing >= 0 ? idxCrewPairing : text.length) : '';
     const pairingSection = idxCrewPairing >= 0 ? text.substring(idxCrewPairing, idxReportGen >= 0 ? idxReportGen : text.length) : '';
 
-    // ---- Flight legs from the top summary table ----
     const dateIdx = headerSection.search(/\bDate\b/i);
     const tableSection = dateIdx >= 0 ? headerSection.substring(dateIdx) : headerSection;
 
@@ -1520,7 +1526,6 @@
       }
       const dep = depArrMatches[i*2];
       const arr = depArrMatches[i*2+1];
-      // FH (flight hours -> our FT field): second-to-last time token between Arr and aircraft type
       let fh = '';
       if(arr){
         const segStart = arr.index + arr[0].length;
@@ -1532,7 +1537,6 @@
         if(times.length >= 2) fh = times[times.length - 2];
       }
 
-      // Map ACS to readable type
       let acType = ac;
       const acMap = {
         '359': 'A350-900',
@@ -1559,7 +1563,6 @@
       });
     }
 
-    // Fallback: if no legs found at all, at least pick up flight numbers
     if(!itin.length){
       const seen = new Set();
       (tableSection.match(/MH\d{3,4}/g) || []).forEach(f => {
@@ -1567,7 +1570,6 @@
       });
     }
 
-    // ---- Crew: Inbound & Outbound rows ----
     const crewMap = {};
     const patA = new RegExp('(MH\\d{3,4})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z][A-Z .]*?)\\s+(\\d{7})\\s+([A-Z]{1,3})\\b', 'g');
     const patB = new RegExp('(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z]{1,3})\\b', 'g');
@@ -1585,7 +1587,6 @@
       }
     });
 
-    // ---- Crew On My Pairing ----
     const pairA = new RegExp('([A-Z]{3})\\s+(' + RANKS + ')\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)(?=\\s+[A-Z]{3}\\s+(?:' + RANKS + ')\\s+\\d{7}|\\s+\\d{7}\\s+(?:' + RANKS + ')\\s+[A-Z]{3}|$)', 'g');
     const pairB = new RegExp('(\\d{7})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+([A-Z][A-Z .]*?)(?=\\s+\\d{7}|\\s+[A-Z]{3}\\s+(?:' + RANKS + ')\\s+\\d{7}|$)', 'g');
     {
@@ -1598,7 +1599,6 @@
       }
     }
 
-    // ---- Report owner strap line ----
     const ownerMatch = headerSection.match(/([A-Z][A-Z .]+?)\s*\|\s*(\d{7})\s*\|\s*([A-Z]+)\s*\|\s*([A-Z]{3})\s*\|\s*(CAPT|FO|SO|IFS|LS|FSS|FS|SS|CS|AS)\b/);
     if(ownerMatch){
       crewMap[ownerMatch[2]] = { opRank: ownerMatch[5], crewId: ownerMatch[2], crewName: ownerMatch[1].trim() };
@@ -1830,14 +1830,12 @@
 
     let html = `<div class="rpad">`;
 
-    // Top info
     html += `<div class="top-info">
       <span><span class="label">BAY:</span><input class="clickable-input bay-input" id="bayInput" value="${esc(bayVal)}" placeholder="" readonly></span>
       <span><span class="label">REP:</span><input class="clickable-input rep-input" id="repInput" value="${esc(repDisplay)}" readonly></span>
       <span><span class="label">BRIEFING STATION:</span><input class="clickable-input briefing-input" id="briefingInput" value="${esc(briefingVal)}" placeholder="" readonly></span>
     </div>`;
 
-    // Flight table
     html += `<table class="rtab">
       <tr>
         <th class="col-flight">F.NO</th>
@@ -1868,7 +1866,6 @@
     });
     html += `</table>`;
 
-    // Airport name
     html += `<div style="font-size:9px;margin-top:2px;text-align:left;border:1px solid #333;border-top:none;padding:2px 4px;">
       <input value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;font-family:inherit;" placeholder="">
     </div>`;
