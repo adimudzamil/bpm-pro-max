@@ -82,7 +82,13 @@
     flex-wrap: wrap;
   }
 
-  .logo-area .logo {
+  .logo-area {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .logo {
     font-size: clamp(40px, 9vw, 60px);
     font-weight: 800;
     letter-spacing: -0.04em;
@@ -92,18 +98,26 @@
   .logo span { color: var(--accent); display: inline-block; animation: flicker 3s infinite; }
   @keyframes flicker { 0%,100% { opacity:1; } 95% { opacity:0.3; } }
 
-  .byline {
+  .byline-badge {
+    display: inline-block;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    color: var(--accent);
     font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    letter-spacing: 0.1em;
-    color: #555;
-    margin-top: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    padding: 4px 14px;
+    border-radius: 100px;
+    margin-top: 2px;
+    width: fit-content;
   }
 
   .badge-group {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
+    padding-top: 8px;
   }
 
   .badge {
@@ -124,59 +138,16 @@
     color: var(--accent);
   }
 
-  /* ── Method badges ── */
-  .method-badge {
-    display: inline-block;
-    background: var(--accent);
-    color: #0a0a0b;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    padding: 3px 10px;
-    border-radius: 100px;
-    text-transform: uppercase;
-    margin-left: 8px;
-  }
-
-  /* ── OR Divider ── */
-  .or-divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: -12px 0 -12px 0;
-    position: relative;
-    z-index: 3;
-  }
-
-  .or-circle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: #0a0a0b;
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    box-shadow: 0 0 20px var(--accent-glow);
-    border: 2px solid var(--surface);
-    flex-shrink: 0;
-    user-select: none;
-  }
-
   /* ── Cards / Drop Zones ── */
   .card {
+    position: relative;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 20px;
     margin-bottom: 24px;
     transition: border-color 0.2s;
+    padding-top: 28px;
   }
 
   .card:hover { border-color: var(--border-bright); }
@@ -210,6 +181,55 @@
     font-size: 11px;
     color: var(--text-muted);
     letter-spacing: 0.08em;
+  }
+
+  /* ── Method Tags ── */
+  .method-tag {
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: var(--accent);
+    color: #0a0a0b;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 2px 14px;
+    border-radius: 100px;
+    border: 2px solid var(--surface);
+    text-transform: uppercase;
+    z-index: 4;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  /* ── OR Divider ── */
+  .or-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: -14px 0 -14px 0;
+    position: relative;
+    z-index: 3;
+  }
+
+  .or-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #0a0a0b;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    box-shadow: 0 0 20px var(--accent-glow);
+    border: 2px solid var(--surface);
+    flex-shrink: 0;
+    user-select: none;
   }
 
   textarea {
@@ -745,10 +765,9 @@
   <header class="noprint">
     <div class="logo-area">
       <div class="logo">CTR<span>.</span></div>
-      <div class="byline">by 2100551 · crew report tool</div>
+      <div class="byline-badge">✨ by 2100551</div>
     </div>
     <div class="badge-group">
-      <div class="badge accent">✈️ Crew Report</div>
       <div class="badge">📄 PDF Parser</div>
       <div class="badge">🔒 Offline</div>
     </div>
@@ -756,10 +775,10 @@
 
   <!-- ===== iFlight Parser Card ===== -->
   <div class="card noprint">
+    <span class="method-tag">METHOD 1</span>
     <div class="card-header">
       <div class="card-header-left">
         <div class="card-title"><span class="icon">📋</span> 1. Paste iFlight text</div>
-        <span class="method-badge">Method 1</span>
       </div>
       <span class="card-sub">select-all + copy</span>
     </div>
@@ -782,10 +801,10 @@
 
   <!-- ===== PDF Parser Card ===== -->
   <div class="card noprint">
+    <span class="method-tag">METHOD 2</span>
     <div class="card-header">
       <div class="card-header-left">
         <div class="card-title"><span class="icon">📄</span> 2. Upload or paste PDF text</div>
-        <span class="method-badge">Method 2</span>
       </div>
       <span class="card-sub">CrewTripReport export</span>
     </div>
