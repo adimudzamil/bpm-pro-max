@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>CTR Autofill</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%93%98</text></svg>">
-<!-- pdf.js for PDF upload -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -757,6 +756,7 @@
   /* ── Print styles ── */
   @media print {
     body { background: #fff; }
+    /* Hide everything except the report card */
     header, .card:not(.reportcard), .noprint, .noprint-inline,
     .or-divider, .method-tag, .byline-badge, .badge-group,
     .stats-row, .btnrow, .status, #statsContainer, #pdfStatus,
@@ -783,6 +783,7 @@
       padding: 0 !important;
       margin: 0 !important;
       background: #fff !important;
+      overflow: visible !important;
     }
 
     #report {
@@ -858,8 +859,8 @@
       display: none !important;
     }
 
-    /* Prevent extra page breaks */
-    .report-inner, #report, .rpad {
+    /* Remove any extra space */
+    .rpad, .report-inner, #report {
       page-break-after: avoid;
       page-break-inside: avoid;
     }
