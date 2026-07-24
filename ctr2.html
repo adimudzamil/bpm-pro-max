@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>CTR Autofill</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>">
-<!-- pdf.js for PDF upload -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -68,7 +67,7 @@
   .container {
     position: relative;
     z-index: 2;
-    max-width: 920px;
+    max-width: 960px;
     margin: 0 auto;
     padding: 0 24px 60px;
   }
@@ -83,7 +82,13 @@
     flex-wrap: wrap;
   }
 
-  .logo-area .logo {
+  .logo-area {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .logo {
     font-size: clamp(40px, 9vw, 60px);
     font-weight: 800;
     letter-spacing: -0.04em;
@@ -93,18 +98,26 @@
   .logo span { color: var(--accent); display: inline-block; animation: flicker 3s infinite; }
   @keyframes flicker { 0%,100% { opacity:1; } 95% { opacity:0.3; } }
 
-  .byline {
+  .byline-badge {
+    display: inline-block;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    color: var(--accent);
     font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    letter-spacing: 0.1em;
-    color: #555;
-    margin-top: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    padding: 4px 14px;
+    border-radius: 100px;
+    margin-top: 2px;
+    width: fit-content;
   }
 
   .badge-group {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
+    padding-top: 8px;
   }
 
   .badge {
@@ -127,12 +140,14 @@
 
   /* ── Cards / Drop Zones ── */
   .card {
+    position: relative;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 20px;
     margin-bottom: 24px;
     transition: border-color 0.2s;
+    padding-top: 28px;
   }
 
   .card:hover { border-color: var(--border-bright); }
@@ -140,8 +155,14 @@
   .card-header {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     margin-bottom: 14px;
+  }
+
+  .card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .card-title {
@@ -160,6 +181,55 @@
     font-size: 11px;
     color: var(--text-muted);
     letter-spacing: 0.08em;
+  }
+
+  /* ── Method Tags ── */
+  .method-tag {
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: var(--accent);
+    color: #0a0a0b;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 2px 14px;
+    border-radius: 100px;
+    border: 2px solid var(--surface);
+    text-transform: uppercase;
+    z-index: 4;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  /* ── OR Divider ── */
+  .or-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: -14px 0 -14px 0;
+    position: relative;
+    z-index: 3;
+  }
+
+  .or-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #0a0a0b;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    box-shadow: 0 0 20px var(--accent-glow);
+    border: 2px solid var(--surface);
+    flex-shrink: 0;
+    user-select: none;
   }
 
   textarea {
@@ -186,6 +256,7 @@
     gap: 10px;
     flex-wrap: wrap;
     margin-top: 14px;
+    align-items: center;
   }
 
   .primary-btn {
@@ -221,17 +292,66 @@
 
   .secondary-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+  /* ── Custom File Upload ── */
   .file-upload-wrapper {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
   }
 
+  .file-upload-wrapper label {
+    position: relative;
+    display: inline-block;
+    background: var(--accent);
+    color: #0a0a0b;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 8px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 0 0 0 rgba(255,111,0,0);
+    animation: filePulse 2.5s infinite ease-in-out;
+    border: none;
+    letter-spacing: 0.02em;
+  }
+
+  .file-upload-wrapper label:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    animation-play-state: paused;
+  }
+
+  .file-upload-wrapper label:active {
+    transform: scale(0.96);
+  }
+
+  @keyframes filePulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,111,0,0.3); }
+    50% { box-shadow: 0 0 20px 6px rgba(255,111,0,0.15); }
+    100% { box-shadow: 0 0 0 0 rgba(255,111,0,0); }
+  }
+
   .file-upload-wrapper input[type="file"] {
-    color: var(--text);
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+  }
+
+  .file-upload-wrapper .file-status {
     font-family: 'DM Mono', monospace;
     font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  .file-upload-wrapper .file-status.has-file {
+    color: var(--accent);
   }
 
   .report-card {
@@ -245,8 +365,9 @@
   .report-card .report-inner {
     background: #ffffff;
     border-radius: var(--radius-sm);
-    overflow: hidden;
+    overflow: auto;
     padding: 8px;
+    max-width: 100%;
   }
 
   .stats-row {
@@ -288,6 +409,7 @@
   .status.err { color: var(--red); }
   .status.ok { color: var(--green); }
 
+  /* ── Modals ── */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -310,6 +432,12 @@
     box-shadow: 0 20px 60px rgba(0,0,0,0.8);
   }
 
+  .modal-box.dark {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-bright);
+  }
+
   .modal-title {
     font-size: 18px;
     font-weight: 700;
@@ -323,6 +451,8 @@
     margin-bottom: 16px;
   }
 
+  .modal-box.dark .modal-sub { color: var(--text-muted); }
+
   .pos-grid {
     display: grid;
     gap: 10px;
@@ -331,7 +461,7 @@
   .pos-grid.narrow { grid-template-columns: repeat(3, 1fr); }
   .pos-grid.wide { grid-template-columns: repeat(4, 1fr); }
 
-  .pos-btn, .door-btn {
+  .pos-btn, .door-btn, .letter-btn {
     padding: 14px 8px;
     font-size: 15px;
     font-weight: 700;
@@ -343,12 +473,18 @@
     transition: all 0.15s;
   }
 
-  .pos-btn:active, .door-btn:active { transform: scale(0.95); }
+  .pos-btn:active, .door-btn:active, .letter-btn:active { transform: scale(0.95); }
   .pos-btn.selected {
     background: var(--accent);
     border-color: var(--accent);
     color: #fff;
     box-shadow: 0 0 0 4px var(--accent-glow);
+  }
+
+  .letter-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
   }
 
   .door-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
@@ -357,6 +493,107 @@
 
   .modal-box .secondary-btn { width: 100%; margin-top: 6px; }
 
+  /* ── Letter Grid for BAY ── */
+  .letter-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  /* ── Keypad Modal ── */
+  .keypad-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    text-align: center;
+    padding: 16px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    color: var(--accent);
+    min-height: 70px;
+    letter-spacing: 4px;
+  }
+
+  .keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .keypad-btn {
+    padding: 14px;
+    font-size: 20px;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Mono', monospace;
+    user-select: none;
+  }
+
+  .keypad-btn:active { transform: scale(0.92); background: var(--surface); }
+  .keypad-btn.accent {
+    background: var(--accent);
+    color: #0a0a0b;
+    border-color: var(--accent);
+  }
+  .keypad-btn.accent:active { background: var(--accent-hover); }
+  .keypad-btn.danger {
+    background: var(--red);
+    color: #fff;
+    border-color: var(--red);
+  }
+  .keypad-btn.danger:active { opacity: 0.7; }
+  .keypad-btn.wide { grid-column: span 3; }
+
+  .keypad-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .keypad-actions .keypad-btn { padding: 12px; font-size: 16px; }
+
+  .keypad-btn .sub {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-muted);
+    display: block;
+  }
+
+  .modal-box.dark .keypad-btn .sub { color: #666; }
+
+  /* ── Flight Time Details clickable cells ── */
+  .ft-cell-clickable {
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: 4px;
+  }
+
+  .ft-cell-clickable:hover { background: rgba(255,111,0,0.08); }
+
+  .ft-cell-clickable input {
+    cursor: pointer;
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 8.5px;
+    text-align: center;
+    font-family: inherit;
+    padding: 4px 2px;
+  }
+
+  .ft-cell-clickable input:focus { outline: none; }
+
+  /* ── Toast ── */
   .toast {
     position: fixed;
     bottom: 28px;
@@ -394,17 +631,211 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #2c2c2c; border-radius: 6px; }
 
+  /* ── Inline report styles ── */
+  #report {
+    background: #fff;
+    color: #111;
+    border-radius: 6px;
+    overflow: auto;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 10px;
+  }
+
+  #report .rpad { padding: 8px 10px; }
+
+  .rtitle {
+    text-align: center;
+    border-bottom: 1px solid #111;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+  }
+
+  .rtitle h2 {
+    margin: 0;
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+
+  /* ── Flight Table ── */
+  table.rtab {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5px;
+    margin-bottom: 3px;
+    table-layout: fixed;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+
+  table.rtab th,
+  table.rtab td {
+    border: 1px solid #333;
+    padding: 2px 4px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+
+  table.rtab th {
+    background: #eee;
+    font-weight: 600;
+    font-size: 8.5px;
+    padding: 2px 3px;
+  }
+
+  table.rtab td input {
+    border: none;
+    width: 100%;
+    text-align: center;
+    font-size: 9px;
+    background: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    min-width: 0;
+    padding: 1px 0;
+    outline: none;
+  }
+
+  table.rtab td input.remarksTxt {
+    text-align: left;
+    border-bottom: 1px dashed #999;
+    font-size: 9px;
+  }
+
+  /* ── Column widths ── */
+  .rtab .col-flight { width: 9%; }
+  .rtab .col-station { width: 10%; }
+  .rtab .col-time { width: 7%; }
+  .rtab .col-ft { width: 7%; }
+  .rtab .col-atd { width: 7%; }
+  .rtab .col-ata { width: 7%; }
+  .rtab .col-ac-type { width: 10%; }
+  .rtab .col-ac-reg { width: 8%; }
+  .rtab .col-remarks { width: 28%; }
+
+  .pos-cell {
+    cursor: pointer;
+    font-weight: 700;
+    color: #1d4ed8;
+  }
+  .pos-cell.unset { color: #aaa; font-weight: 400; font-style: italic; }
+
+  .door-cell {
+    cursor: pointer;
+    font-weight: 600;
+    color: #1d4ed8;
+  }
+  .door-cell.unset { color: #aaa; font-weight: 400; }
+
+  /* ── Top info ── */
+  .top-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 9.5px;
+    margin-bottom: 6px;
+    align-items: center;
+    font-weight: 600;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+
+  .top-info .label {
+    font-weight: 600;
+    color: #444;
+    margin-right: 2px;
+  }
+
+  .top-info .clickable-input {
+    cursor: pointer;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 9.5px;
+    background: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  .top-info .clickable-input:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+  }
+
+  .top-info .clickable-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+  }
+
+  .top-info .clickable-input.bay-input { width: 80px; }
+  .top-info .clickable-input.rep-input {
+    width: 180px;
+    background: #f0f0f0;
+    cursor: default;
+    font-weight: 600;
+    border-color: #555;
+  }
+  .top-info .clickable-input.rep-input:hover {
+    box-shadow: none;
+    border-color: #555;
+  }
+  .top-info .clickable-input.briefing-input { width: 60px; }
+
+  /* ── Flight Time Details Table ── */
+  .ft-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5px;
+    margin-top: 4px;
+    table-layout: fixed;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+
+  .ft-table th {
+    background: #eee;
+    font-weight: 600;
+    font-size: 8px;
+    border: 1px solid #333;
+    padding: 2px;
+  }
+
+  .ft-table td {
+    border: 1px solid #333;
+    padding: 2px;
+    text-align: center;
+    height: 1.6em;
+    font-size: 8.5px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+
+  .ft-table td input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 8.5px;
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    padding: 1px;
+  }
+
   /* ── Print styles ── */
   @media print {
     body { background: #fff; }
     header, .card:not(.reportcard), .noprint, .noprint-inline { display: none !important; }
-    .report-card { background: none; border: none; padding: 0; }
-    .report-card .report-inner { border-radius: 0; padding: 0; }
+    .report-card { background: none; border: none; padding: 0; margin: 0; }
+    .report-card .report-inner { border-radius: 0; padding: 0; overflow: visible; margin: 0; }
     .stats-row, .btnrow, .status, .badge-group { display: none !important; }
-    .container { max-width: 100%; padding: 0; }
-    #report { border-radius: 0; }
+    .container { max-width: 100%; padding: 0; margin: 0; }
+    #report { border-radius: 0; font-size: 8.5px; margin: 0; padding: 0; }
+    #report .rpad { padding: 4px 6px; }
     .top-info input, .top-info input.rep { border-color: #999 !important; background: #fff !important; }
     .ft-table td input { border: none !important; }
+    table.rtab { font-size: 8px; }
+    table.rtab td input { font-size: 8px; }
+    table.rtab th { font-size: 7.5px; }
     .crew-table th, .crew-table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .crew-table th:nth-child(1), .crew-table td:nth-child(1){width:10% !important;}
     .crew-table th:nth-child(2), .crew-table td:nth-child(2){width:5% !important;}
@@ -413,32 +844,12 @@
     .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:5% !important;}
     .pos-cell.unset { color: transparent !important; font-size: 0 !important; }
     .door-cell.unset { color: transparent !important; font-size: 0 !important; }
-    .tap-indicator { display: none !important; }
+    .ft-cell-clickable:hover { background: transparent !important; }
+    .toast { display: none !important; }
+    /* Prevent blank second page */
+    .report-inner, #report, .rpad { page-break-after: avoid; }
+    .rpad { page-break-inside: avoid; }
   }
-
-  /* Inline report styles (kept from original) */
-  #report { background: #fff; color: #111; border-radius: 6px; overflow: hidden; }
-  #report .rpad { padding: 10px; }
-  .rtitle { text-align: center; border-bottom: 1px solid #111; padding-bottom: 4px; margin-bottom: 8px; }
-  .rtitle h2 { margin:0; font-size:7pt; font-weight:700; letter-spacing:.03em; text-transform:uppercase; }
-  table.rtab { width:100%; border-collapse:collapse; font-size:9px; margin-bottom:4px; table-layout:fixed; }
-  table.rtab th, table.rtab td { border:1px solid #333; padding:2px 3px; text-align:center; overflow:hidden; }
-  table.rtab th { background:#eee; font-weight:600; font-size:8.5px; }
-  table.rtab td input { border:none; width:100%; text-align:center; font-size:9px; background:transparent; font-family:inherit; min-width:0; padding:1px; }
-  table.rtab td input.remarksTxt { text-align:left; border-bottom:1px dashed #999; }
-  .pos-cell { cursor:pointer; font-weight:700; color:#1d4ed8; }
-  .pos-cell.unset { color:#aaa; font-weight:400; font-style:italic; }
-  .door-cell { cursor:pointer; font-weight:600; color:#1d4ed8; }
-  .door-cell.unset { color:#aaa; font-weight:400; }
-  .top-info { display:flex; flex-wrap:wrap; gap:12px; font-size:9px; margin-bottom:6px; align-items:center; font-weight:bold; }
-  .top-info .label { font-weight:bold; color:#444; }
-  .top-info input { border:1px solid #333; border-radius:4px; padding:2px 4px; font-size:9px; background:#fff; }
-  .top-info input.small { width:60px; }
-  .top-info input.rep { font-weight:bold; width:180px; background:#f0f0f0; border-color:#555; }
-  .ft-table { width:100%; border-collapse:collapse; font-size:8.5px; margin-top:4px; table-layout:fixed; }
-  .ft-table th { background:#eee; font-weight:600; font-size:8px; border:1px solid #333; padding:2px; }
-  .ft-table td { border:1px solid #333; padding:2px; text-align:center; height:1.6em; }
-  .ft-table td input { width:100%; border:none; background:transparent; font-size:8.5px; text-align:center; font-family:inherit; padding:1px; }
 </style>
 </head>
 <body>
@@ -449,10 +860,9 @@
   <header class="noprint">
     <div class="logo-area">
       <div class="logo">CTR<span>.</span></div>
-      <div class="byline">by 2100551 · crew report tool</div>
+      <div class="byline-badge">✨ by 2100551</div>
     </div>
     <div class="badge-group">
-      <div class="badge accent">✈️ Crew Report</div>
       <div class="badge">📄 PDF Parser</div>
       <div class="badge">🔒 Offline</div>
     </div>
@@ -460,8 +870,11 @@
 
   <!-- ===== iFlight Parser Card ===== -->
   <div class="card noprint">
+    <span class="method-tag">METHOD 1</span>
     <div class="card-header">
-      <div class="card-title"><span class="icon">📋</span> 1. Paste iFlight text</div>
+      <div class="card-header-left">
+        <div class="card-title"><span class="icon">📋</span> 1. Paste iFlight text</div>
+      </div>
       <span class="card-sub">select-all + copy</span>
     </div>
     <textarea id="pasteBox" placeholder="Paste the iFlight Crew Trip Report here…"></textarea>
@@ -476,10 +889,18 @@
     </details>
   </div>
 
+  <!-- ===== OR DIVIDER ===== -->
+  <div class="or-divider noprint">
+    <div class="or-circle">or</div>
+  </div>
+
   <!-- ===== PDF Parser Card ===== -->
   <div class="card noprint">
+    <span class="method-tag">METHOD 2</span>
     <div class="card-header">
-      <div class="card-title"><span class="icon">📄</span> 2. Upload or paste PDF text</div>
+      <div class="card-header-left">
+        <div class="card-title"><span class="icon">📄</span> 2. Upload or paste PDF text</div>
+      </div>
       <span class="card-sub">CrewTripReport export</span>
     </div>
     <textarea id="pdfBox" placeholder="Paste text from the PDF CrewTripReport here, or upload a PDF…"></textarea>
@@ -487,8 +908,9 @@
       <button class="primary-btn" id="parsePdfBtn">⚡ Parse PDF Report</button>
       <button class="secondary-btn" id="clearPdfBtn">Clear</button>
       <div class="file-upload-wrapper">
-        <label for="pdfFile" style="font-size:12px; color:var(--text-muted);">Upload PDF:</label>
+        <label for="pdfFile" class="file-upload-btn">📎 Choose File</label>
         <input type="file" id="pdfFile" accept=".pdf">
+        <span class="file-status" id="fileStatus">No file chosen</span>
       </div>
     </div>
     <div class="status" id="pdfStatus"></div>
@@ -509,6 +931,7 @@
   <div class="report-card" id="reportCard" style="display:none;">
     <div class="btnrow noprint" style="margin-bottom:10px;">
       <button class="primary-btn" id="printBtn">🖨️ Print / Save PDF</button>
+      <button class="primary-btn" id="expandBtn" style="background: var(--surface2); color: var(--text); border: 1px solid var(--border); animation: none; box-shadow: none;">⛶ Expand</button>
     </div>
     <div class="report-inner">
       <div id="report"></div>
@@ -518,7 +941,7 @@
   <!-- ===== Empty state ===== -->
   <div class="card noprint" id="emptyCard">
     <div class="card-header">
-      <div class="card-title" style="color:var(--text-muted); font-weight:400;">📭 No report generated yet</div>
+      <div class="card-title" style="color:var(--text-muted); font-weight:400;">❌ No report generated yet</div>
     </div>
     <div style="font-family:'DM Mono',monospace; font-size:13px; color:var(--text-dim);">
       Paste a trip report above and tap <span style="color:var(--accent);">Parse & Fill Report</span> or <span style="color:var(--accent);">Parse PDF Report</span>.
@@ -547,8 +970,51 @@
   </div>
 </div>
 
-<!-- ===== TOAST ===== -->
-<div id="toastMsg" class="toast"></div>
+<!-- ===== BAY LETTER MODAL ===== -->
+<div class="modal-overlay" id="bayLetterModalOverlay">
+  <div class="modal-box dark">
+    <div class="modal-title">Select Bay Letter</div>
+    <div class="modal-sub">Choose the letter for the bay</div>
+    <div class="letter-grid">
+      <button class="letter-btn" data-letter="A">A</button>
+      <button class="letter-btn" data-letter="B">B</button>
+      <button class="letter-btn" data-letter="C">C</button>
+      <button class="letter-btn" data-letter="G">G</button>
+      <button class="letter-btn" data-letter="H">H</button>
+    </div>
+    <button class="secondary-btn" id="bayLetterCancelBtn">Cancel</button>
+  </div>
+</div>
+
+<!-- ===== NUMBER KEYPAD MODAL (reused for BAY numbers, Briefing Station, and Flight Time) ===== -->
+<div class="modal-overlay" id="numberKeypadModalOverlay">
+  <div class="modal-box dark">
+    <div class="modal-title" id="numberKeypadTitle">Enter Number</div>
+    <div class="modal-sub" id="numberKeypadSub">Tap numbers to enter</div>
+    <div class="keypad-display" id="numberKeypadDisplay">0</div>
+    <div class="keypad-grid">
+      <button class="keypad-btn" data-key="1">1</button>
+      <button class="keypad-btn" data-key="2">2</button>
+      <button class="keypad-btn" data-key="3">3</button>
+      <button class="keypad-btn" data-key="4">4</button>
+      <button class="keypad-btn" data-key="5">5</button>
+      <button class="keypad-btn" data-key="6">6</button>
+      <button class="keypad-btn" data-key="7">7</button>
+      <button class="keypad-btn" data-key="8">8</button>
+      <button class="keypad-btn" data-key="9">9</button>
+      <button class="keypad-btn danger" data-key="clear">⌫</button>
+      <button class="keypad-btn" data-key="0">0</button>
+      <button class="keypad-btn accent" data-key="save">✓</button>
+    </div>
+    <div class="keypad-actions">
+      <button class="keypad-btn" data-key="cancel" style="grid-column:span 1;">Cancel</button>
+      <button class="keypad-btn accent" data-key="save" style="grid-column:span 1;">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST (hidden in print) ===== -->
+<div id="toastMsg" class="toast noprint"></div>
 
 <!-- ===== FOOTER (hidden in print) ===== -->
 <footer class="noprint">
@@ -566,6 +1032,7 @@
   const pdfBox = document.getElementById('pdfBox');
   const pdfStatus = document.getElementById('pdfStatus');
   const pdfFile = document.getElementById('pdfFile');
+  const fileStatus = document.getElementById('fileStatus');
   const pdfDbgWrap = document.getElementById('pdfDbgWrap');
   const pdfDbgContent = document.getElementById('pdfDbgContent');
   const reportCard = document.getElementById('reportCard');
@@ -577,10 +1044,22 @@
   const doorModalOverlay = document.getElementById('doorModalOverlay');
   const doorGrid = document.getElementById('doorGrid');
   const doorModalCrewName = document.getElementById('doorModalCrewName');
+  const bayLetterModalOverlay = document.getElementById('bayLetterModalOverlay');
+  const numberKeypadModalOverlay = document.getElementById('numberKeypadModalOverlay');
+  const numberKeypadDisplay = document.getElementById('numberKeypadDisplay');
+  const numberKeypadTitle = document.getElementById('numberKeypadTitle');
+  const numberKeypadSub = document.getElementById('numberKeypadSub');
   const statsContainer = document.getElementById('statsContainer');
   const statFlights = document.getElementById('statFlights');
   const statCrew = document.getElementById('statCrew');
   const statCabin = document.getElementById('statCabin');
+  const expandBtn = document.getElementById('expandBtn');
+
+  // ===== Keypad state =====
+  let keypadBuffer = '';
+  let keypadTarget = null;
+  let keypadMode = 'bay'; // 'bay', 'briefing', or 'time'
+  let selectedBayLetter = '';
 
   // ===== Constants =====
   const DUTY_HEADERS = ["Start","End","Pairing Id","Duty Hours","Flying Hours","Rest Required","Rest Available"];
@@ -589,7 +1068,7 @@
   const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary'];
   const COCKPIT_RANKS = ['CAPT','FO','SO'];
   const POSITIONS_NARROW = ['P1','P2','P3','P4','A1','A2','SNY'];
-  const POSITIONS_WIDE = ['ICC','LSB','LSC','LSD','AG','BG1','BG2','CG','DG','BC','BC1','CC','DC','DC2','SNY'];
+  const POSITIONS_WIDE = ['ICC', 'IFS B', 'LSB', 'LSC', 'LSD', 'AG', 'BG1', 'BG2', 'CG', 'DG', 'BC', 'BC1', 'CC', 'DC', 'DC2', 'SNY'];
   const RANK_PRIORITY = { 'IFS': 1, 'LS': 2, 'FS': 3, 'FSS': 4, 'SS': 5, 'CS': 6, 'AS': 7 };
   const DOORS_NARROW = ['1L','1R','2L','2R'];
   const DOORS_WIDE = ['1L','1R','2L','2R','3L','3R','4L','4R'];
@@ -657,6 +1136,167 @@
     toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
   }
 
+  // ===== Number Keypad functions =====
+  function formatNumber(buffer) {
+    return buffer || '';
+  }
+
+  function updateNumberKeypadDisplay() {
+    if (keypadMode === 'time') {
+      const buffer = keypadBuffer;
+      let formatted = buffer;
+      if (buffer.length === 1) formatted = '0' + buffer + ':00';
+      else if (buffer.length === 2) formatted = buffer + ':00';
+      else if (buffer.length === 3) formatted = '0' + buffer[0] + ':' + buffer.substring(1);
+      else if (buffer.length >= 4) formatted = buffer.substring(0, 2) + ':' + buffer.substring(2, 4);
+      else formatted = buffer || '00:00';
+      numberKeypadDisplay.textContent = formatted;
+    } else {
+      numberKeypadDisplay.textContent = keypadBuffer || '0';
+    }
+  }
+
+  function openNumberKeypad(targetElement, mode, currentValue) {
+    keypadTarget = targetElement;
+    keypadMode = mode;
+
+    if (mode === 'time') {
+      numberKeypadTitle.textContent = '⌨️ Enter Time';
+      numberKeypadSub.textContent = 'Tap numbers to enter HH:MM';
+      const digits = (currentValue || '').replace(/:/g, '');
+      keypadBuffer = digits.length <= 4 ? digits : digits.substring(0, 4);
+    } else if (mode === 'bay') {
+      numberKeypadTitle.textContent = 'Enter Bay Number';
+      numberKeypadSub.textContent = 'Tap numbers after letter selection';
+      const digits = (currentValue || '').replace(/[A-Z]/g, '');
+      keypadBuffer = digits || '';
+    } else if (mode === 'briefing') {
+      numberKeypadTitle.textContent = 'Briefing Station';
+      numberKeypadSub.textContent = 'Tap numbers to enter station';
+      keypadBuffer = currentValue || '';
+    }
+
+    updateNumberKeypadDisplay();
+    numberKeypadModalOverlay.style.display = 'flex';
+  }
+
+  function closeNumberKeypad(save = false) {
+    if (save && keypadTarget) {
+      let finalValue = keypadBuffer;
+      if (keypadMode === 'time') {
+        const buffer = keypadBuffer;
+        if (buffer.length === 0) finalValue = '';
+        else if (buffer.length === 1) finalValue = '0' + buffer + ':00';
+        else if (buffer.length === 2) finalValue = buffer + ':00';
+        else if (buffer.length === 3) finalValue = '0' + buffer[0] + ':' + buffer.substring(1);
+        else if (buffer.length >= 4) finalValue = buffer.substring(0, 2) + ':' + buffer.substring(2, 4);
+        else finalValue = buffer;
+      } else if (keypadMode === 'bay' && selectedBayLetter) {
+        finalValue = selectedBayLetter + finalValue;
+      }
+      if (finalValue) {
+        keypadTarget.value = finalValue;
+        keypadTarget.dispatchEvent(new Event('input', { bubbles: true }));
+        keypadTarget.dispatchEvent(new Event('change', { bubbles: true }));
+      } else {
+        keypadTarget.value = '';
+        keypadTarget.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      if (keypadMode === 'bay') {
+        selectedBayLetter = '';
+      }
+    }
+    numberKeypadModalOverlay.style.display = 'none';
+    keypadTarget = null;
+    keypadBuffer = '';
+  }
+
+  function numberKeypadPress(key) {
+    if (key === 'clear') {
+      keypadBuffer = keypadBuffer.slice(0, -1);
+    } else if (key === 'cancel') {
+      closeNumberKeypad(false);
+      return;
+    } else if (key === 'save') {
+      closeNumberKeypad(true);
+      return;
+    } else if (key >= '0' && key <= '9') {
+      if (keypadMode === 'time') {
+        if (keypadBuffer.length < 4) {
+          keypadBuffer += key;
+        }
+      } else {
+        keypadBuffer += key;
+      }
+    }
+    updateNumberKeypadDisplay();
+  }
+
+  // ===== BAY Letter Modal =====
+  function openBayLetterModal(inputElement) {
+    keypadTarget = inputElement;
+    bayLetterModalOverlay.style.display = 'flex';
+  }
+
+  function selectBayLetter(letter) {
+    selectedBayLetter = letter;
+    bayLetterModalOverlay.style.display = 'none';
+    const currentValue = keypadTarget ? keypadTarget.value.replace(/[A-Z]/g, '') : '';
+    openNumberKeypad(keypadTarget, 'bay', currentValue);
+  }
+
+  // ===== Number Keypad event listeners =====
+  document.querySelectorAll('.keypad-btn[data-key]').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      numberKeypadPress(this.dataset.key);
+    });
+  });
+
+  numberKeypadModalOverlay.addEventListener('click', function(e) {
+    if (e.target === this) closeNumberKeypad(false);
+  });
+
+  // Bay letter buttons
+  document.querySelectorAll('.letter-btn[data-letter]').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      selectBayLetter(this.dataset.letter);
+    });
+  });
+
+  document.getElementById('bayLetterCancelBtn').addEventListener('click', function() {
+    bayLetterModalOverlay.style.display = 'none';
+    keypadTarget = null;
+  });
+
+  bayLetterModalOverlay.addEventListener('click', function(e) {
+    if (e.target === this) {
+      bayLetterModalOverlay.style.display = 'none';
+      keypadTarget = null;
+    }
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (numberKeypadModalOverlay.style.display !== 'flex') return;
+    if (e.key >= '0' && e.key <= '9') { numberKeypadPress(e.key); e.preventDefault(); }
+    else if (e.key === 'Backspace') { numberKeypadPress('clear'); e.preventDefault(); }
+    else if (e.key === 'Enter') { numberKeypadPress('save'); e.preventDefault(); }
+    else if (e.key === 'Escape') { numberKeypadPress('cancel'); e.preventDefault(); }
+  });
+
+  // ===== File input status update =====
+  pdfFile.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      fileStatus.textContent = file.name;
+      fileStatus.className = 'file-status has-file';
+    } else {
+      fileStatus.textContent = 'No file chosen';
+      fileStatus.className = 'file-status';
+    }
+  });
+
   // ===== iFlight parser =====
   function findHeaderEnd(lines, seq){
     for(let start=0; start<lines.length; start++){
@@ -701,10 +1341,12 @@
     return { duty, itin, crew, found: { duty: duty.length>0, itin: itin.length>0, crew: crew.length>0 }, dutyStart: dutyStart, dutyDate: dutyDate };
   }
 
-  // ===== PDF CrewTripReport parser (robust) =====
+  // ===== PDF CrewTripReport parser =====
   function parseCrewTripReport(raw){
-    // Collapse to single-spaced text
-    let text = raw.replace(/\r?\n/g,' ').replace(/\s+/g,' ').trim();
+    let text = raw.replace(/\r?\n/g,' ')
+      .replace(/([A-Za-z])(\d{7})\b/g,'$1 $2')
+      .replace(/([A-Za-z])(\d{2}-[A-Za-z]{3}-\d{4})/g,'$1 $2')
+      .replace(/\s+/g,' ').trim();
 
     const RANKS = 'CAPT|FO|SO|IFS|LS|FSS|FS|SS|CS|AS';
 
@@ -718,166 +1360,80 @@
     const outboundSection = idxOutbound >= 0 ? text.substring(idxOutbound, idxCrewPairing >= 0 ? idxCrewPairing : text.length) : '';
     const pairingSection = idxCrewPairing >= 0 ? text.substring(idxCrewPairing, idxReportGen >= 0 ? idxReportGen : text.length) : '';
 
-    // ---- Extract date and report time ----
-    let dutyDate = '';
-    let repTime = '';
-    const dateRepMatch = headerSection.match(/(\d{2}-[A-Za-z]{3}-\d{4})\s+(\d{2}:\d{2})/);
-    if(dateRepMatch){
-      dutyDate = dateRepMatch[1];
-      repTime = dateRepMatch[2];
-    } else {
-      // fallback: look for date anywhere
-      const dateMatch = headerSection.match(/(\d{2}-[A-Za-z]{3}-\d{4})/);
-      if(dateMatch) dutyDate = dateMatch[1];
-      const timeMatch = headerSection.match(/\b(\d{2}:\d{2})\b/);
-      if(timeMatch) repTime = timeMatch[1];
-    }
+    const dateIdx = headerSection.search(/\bDate\b/i);
+    const tableSection = dateIdx >= 0 ? headerSection.substring(dateIdx) : headerSection;
 
-    // ---- Parse flight legs from header section using token-based approach ----
-    const itin = [];
-
-    // Find all MHxxx flight numbers in the header section
-    const flightRegex = /(MH\d{3,4})/g;
+    const flightRegex = /MH\d{3,4}/g;
     let match;
-    const flightPositions = [];
-    while((match = flightRegex.exec(headerSection)) !== null){
-      flightPositions.push({ flight: match[1], index: match.index });
+    const flightMatches = [];
+    while((match = flightRegex.exec(tableSection)) !== null){
+      flightMatches.push({ flight: match[0], index: match.index });
     }
+    const flightNos = flightMatches.map(f => f.flight);
 
-    // For each flight, extract the surrounding tokens
-    for(let fp of flightPositions){
-      const start = fp.index;
-      // Find the end of this flight's data (before the next MH or before Inbound/Outbound)
-      let end = headerSection.length;
-      for(let next of flightPositions){
-        if(next.index > start && next.index < end) end = next.index;
-      }
-      // Also stop at "Inbound" or "Outbound"
-      const inboundIdx = headerSection.toLowerCase().indexOf('inbound', start);
-      if(inboundIdx > start && inboundIdx < end) end = inboundIdx;
-      const outboundIdx = headerSection.toLowerCase().indexOf('outbound', start);
-      if(outboundIdx > start && outboundIdx < end) end = outboundIdx;
+    const dates = tableSection.match(/\d{2}-[A-Za-z]{3}-\d{4}/g) || [];
+    const depArrMatches = [...tableSection.matchAll(/\b([A-Z]{3})\b\s+(\d{2}:\d{2}(?:\(\+1\))?)/g)];
 
-      const chunk = headerSection.substring(start, end);
-      // Split into tokens
-      const tokens = chunk.split(/\s+/).filter(t => t.length > 0);
+    const masked = tableSection
+      .replace(/\d{2}-[A-Za-z]{3}-\d{4}/g, 'DATE')
+      .replace(/\d{2}:\d{2}(?:\(\+1\))?/g, 'TIME')
+      .replace(/MH\d{3,4}/g, 'FLIGHTNO');
+    const segments = masked.split('FLIGHTNO').slice(1);
 
-      // Now parse tokens to extract fields
-      let flightId = tokens[0] || '';
-      let from = '', to = '', std = '', sta = '', ft = '', acType = '', acReg = '';
-      let foundFrom = false, foundTo = false;
+    const itin = [];
+    for(let i=0; i<flightNos.length; i++){
+      const start = flightMatches[i].index;
+      const end = (i+1 < flightMatches.length) ? flightMatches[i+1].index : tableSection.length;
+      const rowStr = tableSection.substring(start, end);
 
-      // Collect all time tokens for this flight
-      const timeTokens = tokens.filter(t => t.match(/^\d{2}:\d{2}(?:\(\+1\))?$/));
-
-      // Determine which time token is which based on count
-      // Format: DATE REP FLIGHT RANK WT FROM STD TO STA GT DEBRIEF FT DH SDC ACS ACTYPE REG
-      // So: STD = timeTokens[0], STA = timeTokens[1], FT = timeTokens[4] (skip GT and DEBRIEF)
-      if(timeTokens.length >= 5){
-        std = timeTokens[0];
-        sta = timeTokens[1];
-        ft = timeTokens[4];
-      } else if(timeTokens.length >= 3){
-        // fallback for shorter format
-        std = timeTokens[0];
-        sta = timeTokens[1];
-        ft = timeTokens[2] || '';
-      } else {
-        // Use regex fallback
-        const timeRegex = /\b(\d{2}:\d{2}(?:\(\+1\))?)\b/g;
-        const times = [];
-        let tm;
-        while((tm = timeRegex.exec(chunk)) !== null){
-          times.push(tm[1]);
-        }
-        if(times.length >= 5){
-          std = times[0];
-          sta = times[1];
-          ft = times[4];
-        } else if(times.length >= 3){
-          std = times[0];
-          sta = times[1];
-          ft = times[2] || '';
-        } else if(times.length >= 2){
-          std = times[0];
-          sta = times[1];
-        }
+      const flightIdx = rowStr.indexOf(flightNos[i]);
+      const afterFlight = rowStr.substring(flightIdx + flightNos[i].length);
+      const timesAfter = afterFlight.match(/\d{2}:\d{2}(?:\(\+1\))?/g) || [];
+      let fh = '';
+      if(timesAfter.length >= 3){
+        fh = timesAfter[2];
       }
 
-      // Extract airport codes (3-letter codes, skipping known rank/WT)
-      const airportTokens = tokens.filter(t => {
-        const upper = t.toUpperCase();
-        return t.match(/^[A-Z]{3}$/) && !['CAPT','FO','SO','IFS','LS','FSS','FS','SS','CS','AS','SNY','ICLS','OP','WT'].includes(upper);
-      });
+      const seg = segments[i] || '';
+      const acMatch = seg.match(/\b(\d{3,4})\b/);
+      const ac = acMatch ? acMatch[1] : '';
+      let acReg = '';
+      if(acMatch){
+        const rest = seg.slice(acMatch.index + acMatch[0].length);
+        const tok = rest.trim().split(/\s+/).find(t => t && t !== 'DATE' && t !== 'TIME' && /^[A-Za-z0-9]{2,6}$/.test(t));
+        if(tok) acReg = tok;
+      }
+      const dep = depArrMatches[i*2];
+      const arr = depArrMatches[i*2+1];
 
-      // The first two airport codes are typically FROM and TO
-      if(airportTokens.length >= 2){
-        from = airportTokens[0];
-        to = airportTokens[1];
+      let acType = ac;
+      const acMap = {
+        '359': 'A350-900',
+        '350': 'A350-900H',
+        '339': 'A330-900',
+        '333': 'A330-300',
+        '332': 'A330-200',
+        '738': '737-800NR',
+        '73H': '737-800R',
+        '7M8': '737-800MAX'
+      };
+      acType = acMap[acType] || acType;
+
+      if(acReg && !acReg.startsWith('9M-')){
+        acReg = '9M-' + acReg;
       }
 
-      // Extract aircraft type (ACS code) – tokens starting with 3 or 73/7M
-      const acTypeToken = tokens.find(t => t.match(/^(3\d{2}|73[0-9H]|7M[0-9])$/));
-      if(acTypeToken) acType = acTypeToken;
-
-      // Extract registration – usually the last token, or look for 9M- pattern
-      let regToken = tokens.find(t => t.startsWith('9M-'));
-      if(!regToken){
-        // If no 9M- prefix, try the last token if it looks like a reg (2-4 letters/numbers)
-        const last = tokens[tokens.length-1];
-        if(last && last.match(/^[A-Z0-9]{2,4}$/) && !last.match(/^\d+$/)){
-          regToken = last;
-        }
-      }
-      if(regToken){
-        acReg = regToken.startsWith('9M-') ? regToken : '9M-' + regToken;
-      }
-
-      // If we still don't have from/to, try regex
-      if(!from || !to){
-        const airportRegex = /\b([A-Z]{3})\b/g;
-        const airports = [];
-        let am;
-        while((am = airportRegex.exec(chunk)) !== null){
-          const code = am[1];
-          if(!['CAPT','FO','SO','IFS','LS','FSS','FS','SS','CS','AS','SNY','ICLS','OP','WT'].includes(code.toUpperCase())){
-            airports.push(code);
-          }
-        }
-        if(airports.length >= 2){
-          if(!from) from = airports[0];
-          if(!to) to = airports[1];
-        }
-      }
-
-      // Clean up and map aircraft type
-      let acTypeDisplay = acType;
-      if(acTypeDisplay){
-        const acMap = {
-          '359': 'A350-900',
-          '350': 'A350-900H',
-          '339': 'A330-900',
-          '333': 'A330-300',
-          '332': 'A330-200',
-          '738': '737-800NR',
-          '73H': '737-800R',
-          '7M8': '737-800MAX'
-        };
-        acTypeDisplay = acMap[acTypeDisplay] || acTypeDisplay;
-      }
-
-      // Build the itinerary item
       itin.push({
-        flightId: flightId,
-        date: dutyDate,
-        from: from || '',
-        dep: std || '',
-        to: to || '',
-        arr: sta || '',
-        ac: acTypeDisplay || '',
+        flightId: flightNos[i] || '',
+        date: dates[i] || '',
+        from: dep ? dep[1] : '',
+        dep: dep ? dep[2] : '',
+        to: arr ? arr[1] : '',
+        arr: arr ? arr[2] : '',
+        ac: acType,
         version: '',
-        acReg: acReg || '',
-        flightTime: ft || '',
+        acReg: acReg,
+        flightTime: fh,
         groundTime: '',
         actStart: '',
         actEnd: '',
@@ -885,36 +1441,40 @@
       });
     }
 
-    // If no flights were parsed, try the old regex as fallback
-    if(itin.length === 0){
-      const rowRe = /([A-Z]{3})\s+(\d{2}:\d{2})\s+(?:(\d{1,3}:\d{2})\s+)?(MH\d{3,4})\s+([A-Z]{2,4})\s+([A-Z]{1,3})\s+([A-Z]{3})\s+(\d{2}:\d{2}(?:\(\+1\))?)\s+(\d{2}:\d{2}(?:\(\+1\))?)\s+(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2,4})\s+(\d{2}-[A-Za-z]{3}-\d{4})\s+(\d{2}:\d{2})\s+([A-Za-z0-9]{2,6})/g;
-      let rm;
-      while((rm = rowRe.exec(headerSection)) !== null){
-        itin.push({
-          flightId: rm[4], date: rm[13], from: rm[1], dep: rm[2], to: rm[7], arr: rm[8],
-          ac: rm[12], version:'', acReg: rm[15], flightTime:'', groundTime: rm[3]||'',
-          actStart:'', actEnd:'', actLoc:''
-        });
-      }
+    if(!itin.length){
+      const seen = new Set();
+      (tableSection.match(/MH\d{3,4}/g) || []).forEach(f => {
+        if(!seen.has(f)){ seen.add(f); itin.push({ flightId:f, date:'', from:'', dep:'', to:'', arr:'', ac:'', version:'', acReg:'', flightTime:'', groundTime:'', actStart:'', actEnd:'', actLoc:'' }); }
+      });
     }
 
-    // ---- Crew extraction (same as before) ----
     const crewMap = {};
+    const patA = new RegExp('(MH\\d{3,4})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z][A-Z .]*?)\\s+(\\d{7})\\s+([A-Z]{1,3})\\b', 'g');
+    const patB = new RegExp('(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z]{1,3})\\b', 'g');
+    const patC = new RegExp('(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{1,3})\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\b', 'g');
+    [inboundSection, outboundSection].forEach(section => {
+      let m;
+      while((m = patA.exec(section)) !== null){
+        crewMap[m[5]] = { opRank: m[2], crewId: m[5], crewName: m[4].trim() };
+      }
+      while((m = patB.exec(section)) !== null){
+        if(!crewMap[m[2]]) crewMap[m[2]] = { opRank: m[4], crewId: m[2], crewName: m[3].trim() };
+      }
+      while((m = patC.exec(section)) !== null){
+        if(!crewMap[m[2]]) crewMap[m[2]] = { opRank: m[4], crewId: m[2], crewName: m[3].trim() };
+      }
+    });
 
-    const inRe = new RegExp('(MH\\d{3,4})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING ON\\s+([A-Z][A-Z .]*?)\\s+(\\d{7})\\s+([A-Z]{1,3})\\b', 'g');
-    let m;
-    while((m = inRe.exec(inboundSection)) !== null){
-      crewMap[m[5]] = { opRank: m[2], crewId: m[5], crewName: m[4].trim() };
-    }
-
-    const outRe = new RegExp('(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING OFF\\s+([A-Z]{1,3})\\b', 'g');
-    while((m = outRe.exec(outboundSection)) !== null){
-      if(!crewMap[m[2]]) crewMap[m[2]] = { opRank: m[4], crewId: m[2], crewName: m[3].trim() };
-    }
-
-    const pairRe = new RegExp('([A-Z]{3})\\s+(' + RANKS + ')\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)(?=\\s+[A-Z]{3}\\s+(?:' + RANKS + ')\\s+\\d{7}|$)', 'g');
-    while((m = pairRe.exec(pairingSection)) !== null){
-      crewMap[m[3]] = { opRank: m[2], crewId: m[3], crewName: m[4].trim() };
+    const pairA = new RegExp('([A-Z]{3})\\s+(' + RANKS + ')\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)(?=\\s+[A-Z]{3}\\s+(?:' + RANKS + ')\\s+\\d{7}|\\s+\\d{7}\\s+(?:' + RANKS + ')\\s+[A-Z]{3}|$)', 'g');
+    const pairB = new RegExp('(\\d{7})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+([A-Z][A-Z .]*?)(?=\\s+\\d{7}|\\s+[A-Z]{3}\\s+(?:' + RANKS + ')\\s+\\d{7}|$)', 'g');
+    {
+      let m;
+      while((m = pairA.exec(pairingSection)) !== null){
+        crewMap[m[3]] = { opRank: m[2], crewId: m[3], crewName: m[4].trim() };
+      }
+      while((m = pairB.exec(pairingSection)) !== null){
+        if(!crewMap[m[1]]) crewMap[m[1]] = { opRank: m[2], crewId: m[1], crewName: m[4].trim() };
+      }
     }
 
     const ownerMatch = headerSection.match(/([A-Z][A-Z .]+?)\s*\|\s*(\d{7})\s*\|\s*([A-Z]+)\s*\|\s*([A-Z]{3})\s*\|\s*(CAPT|FO|SO|IFS|LS|FSS|FS|SS|CS|AS)\b/);
@@ -927,6 +1487,9 @@
       wt:'', workPos:'', base:'', sdc:'', checkIn:''
     }));
 
+    const dutyDate = itin.length ? itin[0].date : '';
+    const dutyStartTimeMatch = headerSection.match(/(\d{2}-[A-Za-z]{3}-\d{4})\s+(\d{2}:\d{2})/);
+    const repTime = dutyStartTimeMatch ? dutyStartTimeMatch[2] : (itin.length ? itin[0].dep : '');
     const dutyStart = dutyDate ? (dutyDate + ' ' + repTime) : '';
 
     return {
@@ -1028,7 +1591,6 @@
   document.getElementById('doorModalCloseBtn').addEventListener('click', () => { doorModalOverlay.style.display = 'none'; });
   doorModalOverlay.addEventListener('click', (e) => { if(e.target === doorModalOverlay) doorModalOverlay.style.display = 'none'; });
 
-  // ---- Build report ----
   function buildReport(){
     const d = state;
     const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
@@ -1052,7 +1614,6 @@
       picChosen = captains[0];
     }
 
-    // REP display
     let repDisplay = '';
     if(d.dutyDate || (d.pdfData && d.pdfData.date)){
       const dateStr = (d.pdfData && d.pdfData.date) || d.dutyDate || '';
@@ -1072,27 +1633,41 @@
     }
     if(!repDisplay) repDisplay = '----';
 
+    // Get bay and briefing station values from state
+    const bayVal = fval('bay', '');
+    const briefingVal = fval('briefing', '');
+
     let html = `<div class="rpad">`;
 
-    // Top info: BAY and REP
+    // Top info: BAY, REP, BRIEFING STATION
     html += `<div class="top-info">
-      <span><span class="label">BAY:</span> <input value="${esc(fval('bay', ''))}" oninput="updateField('bay', this.value)" class="small"></span>
-      <span><input value="${esc(repDisplay)}" class="rep" readonly></span>
+      <span>
+        <span class="label">BAY:</span>
+        <input class="clickable-input bay-input" id="bayInput" value="${esc(bayVal)}" placeholder="" readonly>
+      </span>
+      <span>
+        <span class="label">REP:</span>
+        <input class="clickable-input rep-input" id="repInput" value="${esc(repDisplay)}" readonly>
+      </span>
+      <span>
+        <span class="label">BRIEFING STATION:</span>
+        <input class="clickable-input briefing-input" id="briefingInput" value="${esc(briefingVal)}" placeholder="" readonly>
+      </span>
     </div>`;
 
     // Flight table
-    html += `<table class="rtab" style="font-size:9px;">
+    html += `<table class="rtab">
       <tr>
-        <th style="width:8%;">F.NO</th>
-        <th style="width:8%;">STATION</th>
-        <th style="width:8%;">STD</th>
-        <th style="width:8%;">STA</th>
-        <th style="width:8%;">FT</th>
-        <th style="width:8%;">ATD</th>
-        <th style="width:8%;">ATA</th>
-        <th style="width:8%;">A/C TYPE</th>
-        <th style="width:8%;">A/C REG</th>
-        <th style="width:28%;">REMARKS</th>
+        <th class="col-flight">F.NO</th>
+        <th class="col-station">STATION</th>
+        <th class="col-time">STD</th>
+        <th class="col-time">STA</th>
+        <th class="col-ft">FT</th>
+        <th class="col-atd">ATD</th>
+        <th class="col-ata">ATA</th>
+        <th class="col-ac-type">A/C TYPE</th>
+        <th class="col-ac-reg">A/C REG</th>
+        <th class="col-remarks">REMARKS</th>
       </tr>`;
     d.itin.forEach((l, i) => {
       const ft = l.flightTime || fval('ft-'+i, '');
@@ -1113,7 +1688,7 @@
 
     // Airport name – blank
     html += `<div style="font-size:9px;margin-top:2px;text-align:left;border:1px solid #333;border-top:none;padding:2px 4px;">
-      <input value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;" placeholder="">
+      <input value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;font-family:inherit;" placeholder="">
     </div>`;
 
     // Captain & FO
@@ -1134,7 +1709,7 @@
     html += `</table>`;
 
     // Cabin Crew
-    html += `<div style="margin-top:6px;font-weight:bold;font-size:9px;">CABIN CREW (${sortedCabin.length})</div>`;
+    html += `<div style="margin-top:6px;font-weight:bold;font-size:9.5px;">CABIN CREW (${sortedCabin.length})</div>`;
     html += `<table class="rtab crew-table" style="font-size:9px;">
       <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:62%;text-align:left;">Name</th><th style="width:10%;">Working Post</th><th style="width:10%;">Door</th></tr>`;
     sortedCabin.forEach(c => {
@@ -1158,7 +1733,7 @@
     html += `</table>`;
 
     // Bottom Flight Time Details
-    html += `<div style="margin-top:8px;font-weight:bold;font-size:9px;">Flight Time Details</div>`;
+    html += `<div style="margin-top:8px;font-weight:bold;font-size:9.5px;">Flight Time Details</div>`;
     html += `<table class="ft-table">
       <tr>
         <th style="width:10%;">Flt</th>
@@ -1172,18 +1747,77 @@
         <th style="width:10%;">DC</th>
         <th style="width:10%;">DO</th>
       </tr>`;
-    d.itin.forEach((l) => {
+    d.itin.forEach((l, rowIndex) => {
       const flightNo = esc(l.flightId);
       const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
-      html += `<tr>
-        <td style="font-weight:bold;">${flightNo}</td>
-        ${cats.map(() => `<td><input value="" placeholder=""></td>`).join('')}
-      </tr>`;
+      html += `<tr>`;
+      html += `<td style="font-weight:bold;font-size:9px;">${flightNo}</td>`;
+      cats.forEach((cat, colIndex) => {
+        const key = 'ft-' + rowIndex + '-' + colIndex;
+        const val = fval(key, '');
+        html += `<td class="ft-cell-clickable"><input class="ft-input" type="text" data-key="${key}" value="${esc(val)}" placeholder="" readonly></td>`;
+      });
+      html += `</tr>`;
     });
     html += `</table>`;
 
     html += `</div>`;
     reportEl.innerHTML = html;
+
+    // ---- Attach keypad event listeners ----
+    // BAY input – opens letter modal
+    const bayInput = document.getElementById('bayInput');
+    if (bayInput) {
+      bayInput.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const currentVal = this.value;
+        const letterMatch = currentVal.match(/^([A-Z])/);
+        if (letterMatch) {
+          selectedBayLetter = letterMatch[1];
+        } else {
+          selectedBayLetter = '';
+        }
+        openBayLetterModal(this);
+      });
+    }
+
+    // BRIEFING STATION input – opens number keypad directly
+    const briefingInput = document.getElementById('briefingInput');
+    if (briefingInput) {
+      briefingInput.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openNumberKeypad(this, 'briefing', this.value);
+      });
+    }
+
+    // ---- Attach keypad event listeners to Flight Time cells ----
+    reportEl.querySelectorAll('.ft-cell-clickable').forEach(cell => {
+      const input = cell.querySelector('.ft-input');
+      if (input) {
+        cell.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const currentValue = input.value;
+          openNumberKeypad(input, 'time', currentValue);
+        });
+        input.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const currentValue = input.value;
+          openNumberKeypad(input, 'time', currentValue);
+        });
+        input.addEventListener('input', function() {
+          const key = this.dataset.key;
+          if (key) {
+            state.fields[key] = this.value;
+          }
+        });
+        input.addEventListener('change', function() {
+          const key = this.dataset.key;
+          if (key) {
+            state.fields[key] = this.value;
+          }
+        });
+      }
+    });
 
     // Position cell clicks
     reportEl.querySelectorAll('.pos-cell').forEach(el => {
@@ -1205,6 +1839,445 @@
     statCabin.textContent = sortedCabin.length;
     statsContainer.style.display = 'flex';
   }
+
+  // ===== Expand report in new window =====
+  function openExpandedReport() {
+    if (!state || !reportEl.innerHTML.trim()) {
+      showToast('Generate a report first', 'error');
+      return;
+    }
+
+    // Get the current report HTML
+    const reportHtml = reportEl.innerHTML;
+    const styles = document.querySelector('style').innerHTML;
+
+    // Create the new window
+    const win = window.open('', '_blank', 'width=1000,height=900,scrollbars=yes,resizable=yes');
+    if (!win) {
+      showToast('Popup blocked. Please allow popups for this site.', 'error');
+      return;
+    }
+
+    // Write the expanded report with larger fonts and interactive elements
+    win.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>CTR Report – Expanded View</title>
+<style>
+  /* Copy all styles from main page */
+  ${styles}
+
+  /* Override for larger, more accessible view */
+  body {
+    background: #0a0a0b;
+    padding: 20px;
+    font-size: 18px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  #report { font-size: 16px; }
+  #report .rpad { padding: 16px; }
+  #report table.rtab { font-size: 14px; }
+  #report table.rtab th { font-size: 12px; padding: 6px 8px; }
+  #report table.rtab td { padding: 8px 6px; }
+  #report table.rtab td input { font-size: 14px; padding: 4px 2px; }
+  #report .top-info { font-size: 14px; gap: 16px; }
+  #report .top-info input { font-size: 14px; padding: 4px 6px; }
+  #report .top-info .clickable-input.bay-input { width: 100px; }
+  #report .top-info .clickable-input.rep-input { width: 200px; }
+  #report .top-info .clickable-input.briefing-input { width: 80px; }
+  #report .crew-table { font-size: 13px; }
+  #report .crew-table th, #report .crew-table td { padding: 6px 8px; }
+  #report .ft-table { font-size: 13px; }
+  #report .ft-table th, #report .ft-table td { padding: 6px 8px; }
+  #report .ft-table td input { font-size: 13px; }
+  #report .pos-cell { font-size: 14px; }
+  #report .door-cell { font-size: 14px; }
+  .rtitle h2 { font-size: 14pt; }
+  .top-info .label { font-size: 14px; }
+  .btnrow { margin-top: 16px; }
+  .file-upload-wrapper label { font-size: 16px; padding: 10px 28px; }
+  .modal-overlay { z-index: 200; }
+  .modal-box { max-width: 450px; }
+  .pos-btn, .door-btn, .letter-btn { font-size: 18px; padding: 16px 10px; }
+  .keypad-btn { font-size: 24px; padding: 18px; }
+  .keypad-display { font-size: 36px; min-height: 80px; }
+  .stat-chip { padding: 14px 22px; }
+  .stat-number { font-size: 30px; }
+
+  /* Hide main page elements that don't belong */
+  header, .card:not(.reportcard), .or-divider, .stats-row, .badge-group, footer {
+    display: none !important;
+  }
+  .report-card { background: var(--surface); border: 1px solid var(--border); padding: 20px; margin: 0; }
+  .report-card .report-inner { padding: 12px; }
+
+  /* Print button in expanded view */
+  .expanded-print-btn {
+    background: var(--accent);
+    color: #0a0a0b;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 50px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 0 0 0 rgba(255,111,0,0);
+    animation: filePulse 2.5s infinite ease-in-out;
+    letter-spacing: 0.02em;
+    margin-bottom: 16px;
+  }
+  .expanded-print-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    animation-play-state: paused;
+  }
+  .expanded-print-btn:active { transform: scale(0.96); }
+  @keyframes filePulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,111,0,0.3); }
+    50% { box-shadow: 0 0 20px 6px rgba(255,111,0,0.15); }
+    100% { box-shadow: 0 0 0 0 rgba(255,111,0,0); }
+  }
+
+  /* Toast in expanded view */
+  .toast { bottom: 40px; font-size: 16px; padding: 16px 28px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="report-card">
+    <div class="btnrow noprint" style="margin-bottom:10px;">
+      <button class="expanded-print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+    </div>
+    <div class="report-inner">
+      <div id="report">${reportHtml}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Recreate modals in the new window -->
+${document.querySelector('.modal-overlay#posModalOverlay').outerHTML}
+${document.querySelector('.modal-overlay#doorModalOverlay').outerHTML}
+${document.querySelector('.modal-overlay#bayLetterModalOverlay').outerHTML}
+${document.querySelector('.modal-overlay#numberKeypadModalOverlay').outerHTML}
+<div id="toastMsg" class="toast"></div>
+
+<script>
+  // Copy all necessary JavaScript state and functions
+  // We need to re-initialize keypad functionality and modal handlers
+  const state = ${JSON.stringify(state)};
+  const fields = ${JSON.stringify(state.fields)};
+  const positions = ${JSON.stringify(state.positions)};
+  const doors = ${JSON.stringify(state.doors)};
+  const chosenCIC = ${JSON.stringify(state.chosenCIC)};
+  const selectedPIC = ${JSON.stringify(state.selectedPIC)};
+
+  // Recreate keypad functions
+  let keypadBuffer = '';
+  let keypadTarget = null;
+  let keypadMode = 'bay';
+  let selectedBayLetter = '';
+
+  function formatNumber(buffer) { return buffer || ''; }
+
+  function updateNumberKeypadDisplay() {
+    const display = document.getElementById('numberKeypadDisplay');
+    if (!display) return;
+    if (keypadMode === 'time') {
+      const buffer = keypadBuffer;
+      let formatted = buffer;
+      if (buffer.length === 1) formatted = '0' + buffer + ':00';
+      else if (buffer.length === 2) formatted = buffer + ':00';
+      else if (buffer.length === 3) formatted = '0' + buffer[0] + ':' + buffer.substring(1);
+      else if (buffer.length >= 4) formatted = buffer.substring(0, 2) + ':' + buffer.substring(2, 4);
+      else formatted = buffer || '00:00';
+      display.textContent = formatted;
+    } else {
+      display.textContent = keypadBuffer || '0';
+    }
+  }
+
+  function openNumberKeypad(targetElement, mode, currentValue) {
+    keypadTarget = targetElement;
+    keypadMode = mode;
+    const title = document.getElementById('numberKeypadTitle');
+    const sub = document.getElementById('numberKeypadSub');
+    if (mode === 'time') {
+      if (title) title.textContent = '⌨️ Enter Time';
+      if (sub) sub.textContent = 'Tap numbers to enter HH:MM';
+      const digits = (currentValue || '').replace(/:/g, '');
+      keypadBuffer = digits.length <= 4 ? digits : digits.substring(0, 4);
+    } else if (mode === 'bay') {
+      if (title) title.textContent = 'Enter Bay Number';
+      if (sub) sub.textContent = 'Tap numbers after letter selection';
+      const digits = (currentValue || '').replace(/[A-Z]/g, '');
+      keypadBuffer = digits || '';
+    } else if (mode === 'briefing') {
+      if (title) title.textContent = 'Briefing Station';
+      if (sub) sub.textContent = 'Tap numbers to enter station';
+      keypadBuffer = currentValue || '';
+    }
+    updateNumberKeypadDisplay();
+    const overlay = document.getElementById('numberKeypadModalOverlay');
+    if (overlay) overlay.style.display = 'flex';
+  }
+
+  function closeNumberKeypad(save = false) {
+    if (save && keypadTarget) {
+      let finalValue = keypadBuffer;
+      if (keypadMode === 'time') {
+        const buffer = keypadBuffer;
+        if (buffer.length === 0) finalValue = '';
+        else if (buffer.length === 1) finalValue = '0' + buffer + ':00';
+        else if (buffer.length === 2) finalValue = buffer + ':00';
+        else if (buffer.length === 3) finalValue = '0' + buffer[0] + ':' + buffer.substring(1);
+        else if (buffer.length >= 4) finalValue = buffer.substring(0, 2) + ':' + buffer.substring(2, 4);
+        else finalValue = buffer;
+      } else if (keypadMode === 'bay' && selectedBayLetter) {
+        finalValue = selectedBayLetter + finalValue;
+      }
+      if (finalValue) {
+        keypadTarget.value = finalValue;
+        keypadTarget.dispatchEvent(new Event('input', { bubbles: true }));
+        keypadTarget.dispatchEvent(new Event('change', { bubbles: true }));
+      } else {
+        keypadTarget.value = '';
+        keypadTarget.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      if (keypadMode === 'bay') selectedBayLetter = '';
+    }
+    const overlay = document.getElementById('numberKeypadModalOverlay');
+    if (overlay) overlay.style.display = 'none';
+    keypadTarget = null;
+    keypadBuffer = '';
+  }
+
+  function numberKeypadPress(key) {
+    if (key === 'clear') {
+      keypadBuffer = keypadBuffer.slice(0, -1);
+    } else if (key === 'cancel') {
+      closeNumberKeypad(false);
+      return;
+    } else if (key === 'save') {
+      closeNumberKeypad(true);
+      return;
+    } else if (key >= '0' && key <= '9') {
+      if (keypadMode === 'time') {
+        if (keypadBuffer.length < 4) keypadBuffer += key;
+      } else {
+        keypadBuffer += key;
+      }
+    }
+    updateNumberKeypadDisplay();
+  }
+
+  // Attach keypad events
+  document.querySelectorAll('.keypad-btn[data-key]').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      numberKeypadPress(this.dataset.key);
+    });
+  });
+
+  document.getElementById('numberKeypadModalOverlay')?.addEventListener('click', function(e) {
+    if (e.target === this) closeNumberKeypad(false);
+  });
+
+  // Bay letter modal
+  function openBayLetterModal(inputElement) {
+    keypadTarget = inputElement;
+    document.getElementById('bayLetterModalOverlay').style.display = 'flex';
+  }
+
+  function selectBayLetter(letter) {
+    selectedBayLetter = letter;
+    document.getElementById('bayLetterModalOverlay').style.display = 'none';
+    const currentValue = keypadTarget ? keypadTarget.value.replace(/[A-Z]/g, '') : '';
+    openNumberKeypad(keypadTarget, 'bay', currentValue);
+  }
+
+  document.querySelectorAll('.letter-btn[data-letter]').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      selectBayLetter(this.dataset.letter);
+    });
+  });
+
+  document.getElementById('bayLetterCancelBtn')?.addEventListener('click', function() {
+    document.getElementById('bayLetterModalOverlay').style.display = 'none';
+    keypadTarget = null;
+  });
+
+  document.getElementById('bayLetterModalOverlay')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.style.display = 'none';
+      keypadTarget = null;
+    }
+  });
+
+  // Toast function for expanded view
+  function showToast(msg, type='default') {
+    const toast = document.getElementById('toastMsg');
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.className = 'toast ' + type + ' show';
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // Reattach click handlers for pos-cell and door-cell in expanded view
+  document.querySelectorAll('.pos-cell').forEach(el => {
+    el.addEventListener('click', function() {
+      const crewId = this.getAttribute('data-crewid');
+      const crewName = this.getAttribute('data-crewname');
+      // Open position modal (reuse logic from main)
+      const ac0 = state.itin.length ? state.itin[0].ac : '';
+      const isNarrow = ac0 === '737' || ac0.indexOf('73') === 0 || ac0.indexOf('7M') === 0;
+      const posList = isNarrow ? ['P1','P2','P3','P4','A1','A2','SNY'] : ['ICC','IFS B','LSB','LSC','LSD','AG','BG1','BG2','CG','DG','BC','BC1','CC','DC','DC2','SNY'];
+      const gridClass = isNarrow ? 'narrow' : 'wide';
+      document.getElementById('modalCrewName').textContent = crewName;
+      const grid = document.getElementById('posGrid');
+      grid.className = 'pos-grid ' + gridClass;
+      grid.innerHTML = '';
+      posList.forEach(pos => {
+        const btn = document.createElement('button');
+        btn.className = 'pos-btn' + (positions[crewId] === pos ? ' selected' : '');
+        btn.textContent = pos;
+        btn.addEventListener('click', function() {
+          if (pos !== 'SNY') {
+            Object.keys(positions).forEach(id => {
+              if (id !== crewId && positions[id] === pos) positions[id] = '';
+            });
+          }
+          positions[crewId] = pos;
+          document.getElementById('posModalOverlay').style.display = 'none';
+          // Update the cell text
+          const cell = document.querySelector('.pos-cell[data-crewid="' + crewId + '"]');
+          if (cell) {
+            cell.textContent = pos;
+            cell.className = 'pos-cell';
+          }
+        });
+        grid.appendChild(btn);
+      });
+      document.getElementById('posModalOverlay').style.display = 'flex';
+    });
+  });
+
+  document.querySelectorAll('.door-cell').forEach(el => {
+    el.addEventListener('click', function() {
+      const crewId = this.getAttribute('data-crewid');
+      const crewName = this.getAttribute('data-crewname');
+      const ac0 = state.itin.length ? state.itin[0].ac : '';
+      const isNarrow = ac0 === '737' || ac0.indexOf('73') === 0 || ac0.indexOf('7M') === 0;
+      const doors = isNarrow ? ['1L','1R','2L','2R'] : ['1L','1R','2L','2R','3L','3R','4L','4R'];
+      document.getElementById('doorModalCrewName').textContent = crewName;
+      const grid = document.getElementById('doorGrid');
+      grid.innerHTML = '';
+      doors.forEach(door => {
+        const assignedCrew = doors[door] || null;
+        const isAssignedToCurrent = (assignedCrew === crewId);
+        const isAssignedToOther = (assignedCrew && assignedCrew !== crewId);
+        const btn = document.createElement('button');
+        btn.className = 'door-btn';
+        if (isAssignedToCurrent) btn.classList.add('selected');
+        if (isAssignedToOther) btn.classList.add('assigned');
+        let label = door;
+        if (isAssignedToCurrent || isAssignedToOther) label += ' ✅';
+        btn.textContent = label;
+        btn.addEventListener('click', function() {
+          if (isAssignedToCurrent) {
+            doors[door] = null;
+          } else if (isAssignedToOther) {
+            doors[door] = crewId;
+          } else {
+            for (let d in doors) {
+              if (doors[d] === crewId) { doors[d] = null; break; }
+            }
+            doors[door] = crewId;
+          }
+          document.getElementById('doorModalOverlay').style.display = 'none';
+          // Update the cell text
+          let assigned = '';
+          for (let d in doors) {
+            if (doors[d] === crewId) { assigned = d; break; }
+          }
+          const cell = document.querySelector('.door-cell[data-crewid="' + crewId + '"]');
+          if (cell) {
+            cell.textContent = assigned ? assigned : '+';
+            cell.className = 'door-cell' + (assigned ? '' : ' unset');
+          }
+        });
+        grid.appendChild(btn);
+      });
+      document.getElementById('doorModalOverlay').style.display = 'flex';
+    });
+  });
+
+  // Close modal buttons
+  document.getElementById('modalCloseBtn')?.addEventListener('click', function() {
+    document.getElementById('posModalOverlay').style.display = 'none';
+  });
+  document.getElementById('doorModalCloseBtn')?.addEventListener('click', function() {
+    document.getElementById('doorModalOverlay').style.display = 'none';
+  });
+
+  // Clicking outside modals closes them
+  document.getElementById('posModalOverlay')?.addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+  });
+  document.getElementById('doorModalOverlay')?.addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+  });
+
+  // Reattach Flight Time cells (keypad for ft-input)
+  document.querySelectorAll('.ft-cell-clickable').forEach(cell => {
+    const input = cell.querySelector('.ft-input');
+    if (input) {
+      cell.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openNumberKeypad(input, 'time', input.value);
+      });
+      input.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openNumberKeypad(input, 'time', input.value);
+      });
+    }
+  });
+
+  // Reattach BAY and BRIEFING STATION inputs
+  document.getElementById('bayInput')?.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const currentVal = this.value;
+    const letterMatch = currentVal.match(/^([A-Z])/);
+    if (letterMatch) selectedBayLetter = letterMatch[1];
+    else selectedBayLetter = '';
+    openBayLetterModal(this);
+  });
+
+  document.getElementById('briefingInput')?.addEventListener('click', function(e) {
+    e.stopPropagation();
+    openNumberKeypad(this, 'briefing', this.value);
+  });
+
+  // Update field function (for saving state)
+  window.updateField = function(key, val) {
+    state.fields[key] = val;
+  };
+
+  console.log('Expanded report loaded with interactive cells.');
+</script>
+</body>
+</html>
+    `);
+    win.document.close();
+  }
+
+  expandBtn.addEventListener('click', openExpandedReport);
 
   // ===== Shared state setter =====
   function setStateAndRender(parsed, source){
@@ -1228,7 +2301,7 @@
     } else {
       dbgWrap.style.display = 'none';
       pdfDbgContent.innerHTML =
-        '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, ['flightId','date','from','dep','to','arr','ac','acReg']) +
+        '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, ['flightId','date','from','dep','to','arr','ac','acReg','flightTime']) +
         '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, ['opRank','crewId','crewName']);
       pdfDbgWrap.style.display = 'block';
     }
@@ -1310,6 +2383,8 @@
     pdfStatus.className = 'status';
     pdfDbgWrap.style.display = 'none';
     pdfFile.value = '';
+    fileStatus.textContent = 'No file chosen';
+    fileStatus.className = 'file-status';
     showToast('PDF cleared', 'default');
   });
 
