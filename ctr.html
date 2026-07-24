@@ -793,6 +793,7 @@
     .pos-cell.unset { color: transparent !important; font-size: 0 !important; }
     .door-cell.unset { color: transparent !important; font-size: 0 !important; }
     .ft-cell-clickable:hover { background: transparent !important; }
+    .toast { display: none !important; }
   }
 </style>
 </head>
@@ -955,8 +956,8 @@
   </div>
 </div>
 
-<!-- ===== TOAST ===== -->
-<div id="toastMsg" class="toast"></div>
+<!-- ===== TOAST (hidden in print) ===== -->
+<div id="toastMsg" class="toast noprint"></div>
 
 <!-- ===== FOOTER (hidden in print) ===== -->
 <footer class="noprint">
