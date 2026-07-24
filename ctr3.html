@@ -314,13 +314,6 @@
     margin-bottom: 24px;
   }
 
-  .report-card .report-inner {
-    background: #ffffff;
-    border-radius: var(--radius-sm);
-    padding: 8px;
-    max-width: 100%;
-  }
-
   .stats-row {
     display: flex;
     gap: 12px;
@@ -772,7 +765,8 @@
   }
 
   @media screen {
-    .report-card .report-inner {
+    /* Keep report scrollable on screen without extra wrapper */
+    .report-card {
       overflow: auto;
     }
   }
@@ -857,9 +851,7 @@
     <div class="btnrow noprint" style="margin-bottom:10px;">
       <button class="primary-btn" id="printBtn">🖨️ Print / Save PDF</button>
     </div>
-    <div class="report-inner">
-      <div id="report"></div>
-    </div>
+    <div id="report"></div>
   </div>
 
   <!-- ===== Empty state ===== -->
