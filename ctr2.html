@@ -846,7 +846,6 @@
     .door-cell.unset { color: transparent !important; font-size: 0 !important; }
     .ft-cell-clickable:hover { background: transparent !important; }
     .toast { display: none !important; }
-    /* Prevent blank second page */
     .report-inner, #report, .rpad { page-break-after: avoid; }
     .rpad { page-break-inside: avoid; }
   }
@@ -1840,42 +1839,341 @@
     statsContainer.style.display = 'flex';
   }
 
-  // ===== Expand report in new window =====
+  // ===== Expand report in new window (robust version) =====
   function openExpandedReport() {
     if (!state || !reportEl.innerHTML.trim()) {
       showToast('Generate a report first', 'error');
       return;
     }
 
-    // Get the current report HTML
+    // Get current report HTML and styles
     const reportHtml = reportEl.innerHTML;
     const styles = document.querySelector('style').innerHTML;
 
-    // Create the new window
-    const win = window.open('', '_blank', 'width=1000,height=900,scrollbars=yes,resizable=yes');
-    if (!win) {
-      showToast('Popup blocked. Please allow popups for this site.', 'error');
-      return;
-    }
+    // Get the state data as JSON
+    const stateJson = JSON.stringify(state);
+    const fieldsJson = JSON.stringify(state.fields);
+    const positionsJson = JSON.stringify(state.positions);
+    const doorsJson = JSON.stringify(state.doors);
+    const chosenCICJson = JSON.stringify(state.chosenCIC);
+    const selectedPICJson = JSON.stringify(state.selectedPIC);
 
-    // Write the expanded report with larger fonts and interactive elements
-    win.document.write(`
-<!DOCTYPE html>
+    // Build the script content carefully without template literal issues
+    const scriptContent = `
+      // Expanded report script
+      var state = ${stateJson};
+      var fields = ${fieldsJson};
+      var positions = ${positionsJson};
+      var doors = ${doorsJson};
+      var chosenCIC = ${chosenCICJson};
+      var selectedPIC = ${selectedPICJson};
+
+      // Copy keypad functions from parent
+      var keypadBuffer = '';
+      var keypadTarget = null;
+      var keypadMode = 'bay';
+      var selectedBayLetter = '';
+
+      function formatNumber(buffer) { return buffer || ''; }
+
+      function updateNumberKeypadDisplay() {
+        var display = document.getElementById('numberKeypadDisplay');
+        if (!display) return;
+        if (keypadMode === 'time') {
+          var buffer = keypadBuffer;
+          var formatted = buffer;
+          if (buffer.length === 1) formatted = '0' + buffer + ':00';
+          else if (buffer.length === 2) formatted = buffer + ':00';
+          else if (buffer.length === 3) formatted = '0' + buffer[0] + ':' + buffer.substring(1);
+          else if (buffer.length >= 4) formatted = buffer.substring(0, 2) + ':' + buffer.substring(2, 4);
+          else formatted = buffer || '00:00';
+          display.textContent = formatted;
+        } else {
+          display.textContent = keypadBuffer || '0';
+        }
+      }
+
+      function openNumberKeypad(targetElement, mode, currentValue) {
+        keypadTarget = targetElement;
+        keypadMode = mode;
+        var title = document.getElementById('numberKeypadTitle');
+        var sub = document.getElementById('numberKeypadSub');
+        if (mode === 'time') {
+          if (title) title.textContent = '⌨️ Enter Time';
+          if (sub) sub.textContent = 'Tap numbers to enter HH:MM';
+          var digits = (currentValue || '').replace(/:/g, '');
+          keypadBuffer = digits.length <= 4 ? digits : digits.substring(0, 4);
+        } else if (mode === 'bay') {
+          if (title) title.textContent = 'Enter Bay Number';
+          if (sub) sub.textContent = 'Tap numbers after letter selection';
+          var d = (currentValue || '').replace(/[A-Z]/g, '');
+          keypadBuffer = d || '';
+        } else if (mode === 'briefing') {
+          if (title) title.textContent = 'Briefing Station';
+          if (sub) sub.textContent = 'Tap numbers to enter station';
+          keypadBuffer = currentValue || '';
+        }
+        updateNumberKeypadDisplay();
+        var overlay = document.getElementById('numberKeypadModalOverlay');
+        if (overlay) overlay.style.display = 'flex';
+      }
+
+      function closeNumberKeypad(save) {
+        if (save === undefined) save = false;
+        if (save && keypadTarget) {
+          var finalValue = keypadBuffer;
+          if (keypadMode === 'time') {
+            var buffer = keypadBuffer;
+            if (buffer.length === 0) finalValue = '';
+            else if (buffer.length === 1) finalValue = '0' + buffer + ':00';
+            else if (buffer.length === 2) finalValue = buffer + ':00';
+            else if (buffer.length === 3) finalValue = '0' + buffer[0] + ':' + buffer.substring(1);
+            else if (buffer.length >= 4) finalValue = buffer.substring(0, 2) + ':' + buffer.substring(2, 4);
+            else finalValue = buffer;
+          } else if (keypadMode === 'bay' && selectedBayLetter) {
+            finalValue = selectedBayLetter + finalValue;
+          }
+          if (finalValue) {
+            keypadTarget.value = finalValue;
+            keypadTarget.dispatchEvent(new Event('input', { bubbles: true }));
+            keypadTarget.dispatchEvent(new Event('change', { bubbles: true }));
+          } else {
+            keypadTarget.value = '';
+            keypadTarget.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          if (keypadMode === 'bay') selectedBayLetter = '';
+        }
+        var overlay = document.getElementById('numberKeypadModalOverlay');
+        if (overlay) overlay.style.display = 'none';
+        keypadTarget = null;
+        keypadBuffer = '';
+      }
+
+      function numberKeypadPress(key) {
+        if (key === 'clear') {
+          keypadBuffer = keypadBuffer.slice(0, -1);
+        } else if (key === 'cancel') {
+          closeNumberKeypad(false);
+          return;
+        } else if (key === 'save') {
+          closeNumberKeypad(true);
+          return;
+        } else if (key >= '0' && key <= '9') {
+          if (keypadMode === 'time') {
+            if (keypadBuffer.length < 4) keypadBuffer += key;
+          } else {
+            keypadBuffer += key;
+          }
+        }
+        updateNumberKeypadDisplay();
+      }
+
+      // Attach keypad events
+      document.querySelectorAll('.keypad-btn[data-key]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          numberKeypadPress(this.dataset.key);
+        });
+      });
+
+      document.getElementById('numberKeypadModalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeNumberKeypad(false);
+      });
+
+      // Bay letter modal
+      function openBayLetterModal(inputElement) {
+        keypadTarget = inputElement;
+        document.getElementById('bayLetterModalOverlay').style.display = 'flex';
+      }
+
+      function selectBayLetter(letter) {
+        selectedBayLetter = letter;
+        document.getElementById('bayLetterModalOverlay').style.display = 'none';
+        var currentValue = keypadTarget ? keypadTarget.value.replace(/[A-Z]/g, '') : '';
+        openNumberKeypad(keypadTarget, 'bay', currentValue);
+      }
+
+      document.querySelectorAll('.letter-btn[data-letter]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          selectBayLetter(this.dataset.letter);
+        });
+      });
+
+      document.getElementById('bayLetterCancelBtn').addEventListener('click', function() {
+        document.getElementById('bayLetterModalOverlay').style.display = 'none';
+        keypadTarget = null;
+      });
+
+      document.getElementById('bayLetterModalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.style.display = 'none';
+          keypadTarget = null;
+        }
+      });
+
+      // Toast
+      function showToast(msg, type) {
+        if (type === undefined) type = 'default';
+        var toast = document.getElementById('toastMsg');
+        if (!toast) return;
+        toast.textContent = msg;
+        toast.className = 'toast ' + type + ' show';
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(function() { toast.classList.remove('show'); }, 3000);
+      }
+
+      // Reattach click handlers for pos-cell and door-cell
+      document.querySelectorAll('.pos-cell').forEach(function(el) {
+        el.addEventListener('click', function() {
+          var crewId = this.getAttribute('data-crewid');
+          var crewName = this.getAttribute('data-crewname');
+          var ac0 = state.itin.length ? state.itin[0].ac : '';
+          var isNarrow = ac0 === '737' || ac0.indexOf('73') === 0 || ac0.indexOf('7M') === 0;
+          var posList = isNarrow ? ['P1','P2','P3','P4','A1','A2','SNY'] : ['ICC','IFS B','LSB','LSC','LSD','AG','BG1','BG2','CG','DG','BC','BC1','CC','DC','DC2','SNY'];
+          var gridClass = isNarrow ? 'narrow' : 'wide';
+          document.getElementById('modalCrewName').textContent = crewName;
+          var grid = document.getElementById('posGrid');
+          grid.className = 'pos-grid ' + gridClass;
+          grid.innerHTML = '';
+          posList.forEach(function(pos) {
+            var btn = document.createElement('button');
+            btn.className = 'pos-btn' + (positions[crewId] === pos ? ' selected' : '');
+            btn.textContent = pos;
+            btn.addEventListener('click', function() {
+              if (pos !== 'SNY') {
+                Object.keys(positions).forEach(function(id) {
+                  if (id !== crewId && positions[id] === pos) positions[id] = '';
+                });
+              }
+              positions[crewId] = pos;
+              document.getElementById('posModalOverlay').style.display = 'none';
+              var cell = document.querySelector('.pos-cell[data-crewid="' + crewId + '"]');
+              if (cell) {
+                cell.textContent = pos;
+                cell.className = 'pos-cell';
+              }
+            });
+            grid.appendChild(btn);
+          });
+          document.getElementById('posModalOverlay').style.display = 'flex';
+        });
+      });
+
+      document.querySelectorAll('.door-cell').forEach(function(el) {
+        el.addEventListener('click', function() {
+          var crewId = this.getAttribute('data-crewid');
+          var crewName = this.getAttribute('data-crewname');
+          var ac0 = state.itin.length ? state.itin[0].ac : '';
+          var isNarrow = ac0 === '737' || ac0.indexOf('73') === 0 || ac0.indexOf('7M') === 0;
+          var doors = isNarrow ? ['1L','1R','2L','2R'] : ['1L','1R','2L','2R','3L','3R','4L','4R'];
+          document.getElementById('doorModalCrewName').textContent = crewName;
+          var grid = document.getElementById('doorGrid');
+          grid.innerHTML = '';
+          doors.forEach(function(door) {
+            var assignedCrew = doors[door] || null;
+            var isAssignedToCurrent = (assignedCrew === crewId);
+            var isAssignedToOther = (assignedCrew && assignedCrew !== crewId);
+            var btn = document.createElement('button');
+            btn.className = 'door-btn';
+            if (isAssignedToCurrent) btn.classList.add('selected');
+            if (isAssignedToOther) btn.classList.add('assigned');
+            var label = door;
+            if (isAssignedToCurrent || isAssignedToOther) label += ' ✅';
+            btn.textContent = label;
+            btn.addEventListener('click', function() {
+              if (isAssignedToCurrent) {
+                doors[door] = null;
+              } else if (isAssignedToOther) {
+                doors[door] = crewId;
+              } else {
+                for (var d in doors) {
+                  if (doors[d] === crewId) { doors[d] = null; break; }
+                }
+                doors[door] = crewId;
+              }
+              document.getElementById('doorModalOverlay').style.display = 'none';
+              var assigned = '';
+              for (var d in doors) {
+                if (doors[d] === crewId) { assigned = d; break; }
+              }
+              var cell = document.querySelector('.door-cell[data-crewid="' + crewId + '"]');
+              if (cell) {
+                cell.textContent = assigned ? assigned : '+';
+                cell.className = 'door-cell' + (assigned ? '' : ' unset');
+              }
+            });
+            grid.appendChild(btn);
+          });
+          document.getElementById('doorModalOverlay').style.display = 'flex';
+        });
+      });
+
+      // Close modal buttons
+      document.getElementById('modalCloseBtn').addEventListener('click', function() {
+        document.getElementById('posModalOverlay').style.display = 'none';
+      });
+      document.getElementById('doorModalCloseBtn').addEventListener('click', function() {
+        document.getElementById('doorModalOverlay').style.display = 'none';
+      });
+
+      // Click outside modals
+      document.getElementById('posModalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) this.style.display = 'none';
+      });
+      document.getElementById('doorModalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) this.style.display = 'none';
+      });
+
+      // Reattach Flight Time cells
+      document.querySelectorAll('.ft-cell-clickable').forEach(function(cell) {
+        var input = cell.querySelector('.ft-input');
+        if (input) {
+          cell.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openNumberKeypad(input, 'time', input.value);
+          });
+          input.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openNumberKeypad(input, 'time', input.value);
+          });
+        }
+      });
+
+      // Reattach BAY and BRIEFING STATION
+      document.getElementById('bayInput').addEventListener('click', function(e) {
+        e.stopPropagation();
+        var currentVal = this.value;
+        var letterMatch = currentVal.match(/^([A-Z])/);
+        if (letterMatch) selectedBayLetter = letterMatch[1];
+        else selectedBayLetter = '';
+        openBayLetterModal(this);
+      });
+
+      document.getElementById('briefingInput').addEventListener('click', function(e) {
+        e.stopPropagation();
+        openNumberKeypad(this, 'briefing', this.value);
+      });
+
+      // Update field function
+      window.updateField = function(key, val) {
+        state.fields[key] = val;
+      };
+
+      console.log('Expanded report loaded successfully.');
+    `;
+
+    // Build the HTML for the new window
+    const winHtml = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>CTR Report – Expanded View</title>
 <style>
-  /* Copy all styles from main page */
   ${styles}
-
-  /* Override for larger, more accessible view */
-  body {
-    background: #0a0a0b;
-    padding: 20px;
-    font-size: 18px;
-  }
+  /* Expanded view overrides */
+  body { background: #0a0a0b; padding: 20px; font-size: 18px; }
   .container { max-width: 1100px; margin: 0 auto; }
   #report { font-size: 16px; }
   #report .rpad { padding: 16px; }
@@ -1906,15 +2204,9 @@
   .keypad-display { font-size: 36px; min-height: 80px; }
   .stat-chip { padding: 14px 22px; }
   .stat-number { font-size: 30px; }
-
-  /* Hide main page elements that don't belong */
-  header, .card:not(.reportcard), .or-divider, .stats-row, .badge-group, footer {
-    display: none !important;
-  }
+  header, .card:not(.reportcard), .or-divider, .stats-row, .badge-group, footer { display: none !important; }
   .report-card { background: var(--surface); border: 1px solid var(--border); padding: 20px; margin: 0; }
   .report-card .report-inner { padding: 12px; }
-
-  /* Print button in expanded view */
   .expanded-print-btn {
     background: var(--accent);
     color: #0a0a0b;
@@ -1942,8 +2234,6 @@
     50% { box-shadow: 0 0 20px 6px rgba(255,111,0,0.15); }
     100% { box-shadow: 0 0 0 0 rgba(255,111,0,0); }
   }
-
-  /* Toast in expanded view */
   .toast { bottom: 40px; font-size: 16px; padding: 16px 28px; }
 </style>
 </head>
@@ -1959,321 +2249,26 @@
   </div>
 </div>
 
-<!-- Recreate modals in the new window -->
-${document.querySelector('.modal-overlay#posModalOverlay').outerHTML}
-${document.querySelector('.modal-overlay#doorModalOverlay').outerHTML}
-${document.querySelector('.modal-overlay#bayLetterModalOverlay').outerHTML}
-${document.querySelector('.modal-overlay#numberKeypadModalOverlay').outerHTML}
+<!-- Modals -->
+${document.getElementById('posModalOverlay').outerHTML}
+${document.getElementById('doorModalOverlay').outerHTML}
+${document.getElementById('bayLetterModalOverlay').outerHTML}
+${document.getElementById('numberKeypadModalOverlay').outerHTML}
 <div id="toastMsg" class="toast"></div>
 
 <script>
-  // Copy all necessary JavaScript state and functions
-  // We need to re-initialize keypad functionality and modal handlers
-  const state = ${JSON.stringify(state)};
-  const fields = ${JSON.stringify(state.fields)};
-  const positions = ${JSON.stringify(state.positions)};
-  const doors = ${JSON.stringify(state.doors)};
-  const chosenCIC = ${JSON.stringify(state.chosenCIC)};
-  const selectedPIC = ${JSON.stringify(state.selectedPIC)};
-
-  // Recreate keypad functions
-  let keypadBuffer = '';
-  let keypadTarget = null;
-  let keypadMode = 'bay';
-  let selectedBayLetter = '';
-
-  function formatNumber(buffer) { return buffer || ''; }
-
-  function updateNumberKeypadDisplay() {
-    const display = document.getElementById('numberKeypadDisplay');
-    if (!display) return;
-    if (keypadMode === 'time') {
-      const buffer = keypadBuffer;
-      let formatted = buffer;
-      if (buffer.length === 1) formatted = '0' + buffer + ':00';
-      else if (buffer.length === 2) formatted = buffer + ':00';
-      else if (buffer.length === 3) formatted = '0' + buffer[0] + ':' + buffer.substring(1);
-      else if (buffer.length >= 4) formatted = buffer.substring(0, 2) + ':' + buffer.substring(2, 4);
-      else formatted = buffer || '00:00';
-      display.textContent = formatted;
-    } else {
-      display.textContent = keypadBuffer || '0';
-    }
-  }
-
-  function openNumberKeypad(targetElement, mode, currentValue) {
-    keypadTarget = targetElement;
-    keypadMode = mode;
-    const title = document.getElementById('numberKeypadTitle');
-    const sub = document.getElementById('numberKeypadSub');
-    if (mode === 'time') {
-      if (title) title.textContent = '⌨️ Enter Time';
-      if (sub) sub.textContent = 'Tap numbers to enter HH:MM';
-      const digits = (currentValue || '').replace(/:/g, '');
-      keypadBuffer = digits.length <= 4 ? digits : digits.substring(0, 4);
-    } else if (mode === 'bay') {
-      if (title) title.textContent = 'Enter Bay Number';
-      if (sub) sub.textContent = 'Tap numbers after letter selection';
-      const digits = (currentValue || '').replace(/[A-Z]/g, '');
-      keypadBuffer = digits || '';
-    } else if (mode === 'briefing') {
-      if (title) title.textContent = 'Briefing Station';
-      if (sub) sub.textContent = 'Tap numbers to enter station';
-      keypadBuffer = currentValue || '';
-    }
-    updateNumberKeypadDisplay();
-    const overlay = document.getElementById('numberKeypadModalOverlay');
-    if (overlay) overlay.style.display = 'flex';
-  }
-
-  function closeNumberKeypad(save = false) {
-    if (save && keypadTarget) {
-      let finalValue = keypadBuffer;
-      if (keypadMode === 'time') {
-        const buffer = keypadBuffer;
-        if (buffer.length === 0) finalValue = '';
-        else if (buffer.length === 1) finalValue = '0' + buffer + ':00';
-        else if (buffer.length === 2) finalValue = buffer + ':00';
-        else if (buffer.length === 3) finalValue = '0' + buffer[0] + ':' + buffer.substring(1);
-        else if (buffer.length >= 4) finalValue = buffer.substring(0, 2) + ':' + buffer.substring(2, 4);
-        else finalValue = buffer;
-      } else if (keypadMode === 'bay' && selectedBayLetter) {
-        finalValue = selectedBayLetter + finalValue;
-      }
-      if (finalValue) {
-        keypadTarget.value = finalValue;
-        keypadTarget.dispatchEvent(new Event('input', { bubbles: true }));
-        keypadTarget.dispatchEvent(new Event('change', { bubbles: true }));
-      } else {
-        keypadTarget.value = '';
-        keypadTarget.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-      if (keypadMode === 'bay') selectedBayLetter = '';
-    }
-    const overlay = document.getElementById('numberKeypadModalOverlay');
-    if (overlay) overlay.style.display = 'none';
-    keypadTarget = null;
-    keypadBuffer = '';
-  }
-
-  function numberKeypadPress(key) {
-    if (key === 'clear') {
-      keypadBuffer = keypadBuffer.slice(0, -1);
-    } else if (key === 'cancel') {
-      closeNumberKeypad(false);
-      return;
-    } else if (key === 'save') {
-      closeNumberKeypad(true);
-      return;
-    } else if (key >= '0' && key <= '9') {
-      if (keypadMode === 'time') {
-        if (keypadBuffer.length < 4) keypadBuffer += key;
-      } else {
-        keypadBuffer += key;
-      }
-    }
-    updateNumberKeypadDisplay();
-  }
-
-  // Attach keypad events
-  document.querySelectorAll('.keypad-btn[data-key]').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      numberKeypadPress(this.dataset.key);
-    });
-  });
-
-  document.getElementById('numberKeypadModalOverlay')?.addEventListener('click', function(e) {
-    if (e.target === this) closeNumberKeypad(false);
-  });
-
-  // Bay letter modal
-  function openBayLetterModal(inputElement) {
-    keypadTarget = inputElement;
-    document.getElementById('bayLetterModalOverlay').style.display = 'flex';
-  }
-
-  function selectBayLetter(letter) {
-    selectedBayLetter = letter;
-    document.getElementById('bayLetterModalOverlay').style.display = 'none';
-    const currentValue = keypadTarget ? keypadTarget.value.replace(/[A-Z]/g, '') : '';
-    openNumberKeypad(keypadTarget, 'bay', currentValue);
-  }
-
-  document.querySelectorAll('.letter-btn[data-letter]').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      selectBayLetter(this.dataset.letter);
-    });
-  });
-
-  document.getElementById('bayLetterCancelBtn')?.addEventListener('click', function() {
-    document.getElementById('bayLetterModalOverlay').style.display = 'none';
-    keypadTarget = null;
-  });
-
-  document.getElementById('bayLetterModalOverlay')?.addEventListener('click', function(e) {
-    if (e.target === this) {
-      this.style.display = 'none';
-      keypadTarget = null;
-    }
-  });
-
-  // Toast function for expanded view
-  function showToast(msg, type='default') {
-    const toast = document.getElementById('toastMsg');
-    if (!toast) return;
-    toast.textContent = msg;
-    toast.className = 'toast ' + type + ' show';
-    clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
-  }
-
-  // Reattach click handlers for pos-cell and door-cell in expanded view
-  document.querySelectorAll('.pos-cell').forEach(el => {
-    el.addEventListener('click', function() {
-      const crewId = this.getAttribute('data-crewid');
-      const crewName = this.getAttribute('data-crewname');
-      // Open position modal (reuse logic from main)
-      const ac0 = state.itin.length ? state.itin[0].ac : '';
-      const isNarrow = ac0 === '737' || ac0.indexOf('73') === 0 || ac0.indexOf('7M') === 0;
-      const posList = isNarrow ? ['P1','P2','P3','P4','A1','A2','SNY'] : ['ICC','IFS B','LSB','LSC','LSD','AG','BG1','BG2','CG','DG','BC','BC1','CC','DC','DC2','SNY'];
-      const gridClass = isNarrow ? 'narrow' : 'wide';
-      document.getElementById('modalCrewName').textContent = crewName;
-      const grid = document.getElementById('posGrid');
-      grid.className = 'pos-grid ' + gridClass;
-      grid.innerHTML = '';
-      posList.forEach(pos => {
-        const btn = document.createElement('button');
-        btn.className = 'pos-btn' + (positions[crewId] === pos ? ' selected' : '');
-        btn.textContent = pos;
-        btn.addEventListener('click', function() {
-          if (pos !== 'SNY') {
-            Object.keys(positions).forEach(id => {
-              if (id !== crewId && positions[id] === pos) positions[id] = '';
-            });
-          }
-          positions[crewId] = pos;
-          document.getElementById('posModalOverlay').style.display = 'none';
-          // Update the cell text
-          const cell = document.querySelector('.pos-cell[data-crewid="' + crewId + '"]');
-          if (cell) {
-            cell.textContent = pos;
-            cell.className = 'pos-cell';
-          }
-        });
-        grid.appendChild(btn);
-      });
-      document.getElementById('posModalOverlay').style.display = 'flex';
-    });
-  });
-
-  document.querySelectorAll('.door-cell').forEach(el => {
-    el.addEventListener('click', function() {
-      const crewId = this.getAttribute('data-crewid');
-      const crewName = this.getAttribute('data-crewname');
-      const ac0 = state.itin.length ? state.itin[0].ac : '';
-      const isNarrow = ac0 === '737' || ac0.indexOf('73') === 0 || ac0.indexOf('7M') === 0;
-      const doors = isNarrow ? ['1L','1R','2L','2R'] : ['1L','1R','2L','2R','3L','3R','4L','4R'];
-      document.getElementById('doorModalCrewName').textContent = crewName;
-      const grid = document.getElementById('doorGrid');
-      grid.innerHTML = '';
-      doors.forEach(door => {
-        const assignedCrew = doors[door] || null;
-        const isAssignedToCurrent = (assignedCrew === crewId);
-        const isAssignedToOther = (assignedCrew && assignedCrew !== crewId);
-        const btn = document.createElement('button');
-        btn.className = 'door-btn';
-        if (isAssignedToCurrent) btn.classList.add('selected');
-        if (isAssignedToOther) btn.classList.add('assigned');
-        let label = door;
-        if (isAssignedToCurrent || isAssignedToOther) label += ' ✅';
-        btn.textContent = label;
-        btn.addEventListener('click', function() {
-          if (isAssignedToCurrent) {
-            doors[door] = null;
-          } else if (isAssignedToOther) {
-            doors[door] = crewId;
-          } else {
-            for (let d in doors) {
-              if (doors[d] === crewId) { doors[d] = null; break; }
-            }
-            doors[door] = crewId;
-          }
-          document.getElementById('doorModalOverlay').style.display = 'none';
-          // Update the cell text
-          let assigned = '';
-          for (let d in doors) {
-            if (doors[d] === crewId) { assigned = d; break; }
-          }
-          const cell = document.querySelector('.door-cell[data-crewid="' + crewId + '"]');
-          if (cell) {
-            cell.textContent = assigned ? assigned : '+';
-            cell.className = 'door-cell' + (assigned ? '' : ' unset');
-          }
-        });
-        grid.appendChild(btn);
-      });
-      document.getElementById('doorModalOverlay').style.display = 'flex';
-    });
-  });
-
-  // Close modal buttons
-  document.getElementById('modalCloseBtn')?.addEventListener('click', function() {
-    document.getElementById('posModalOverlay').style.display = 'none';
-  });
-  document.getElementById('doorModalCloseBtn')?.addEventListener('click', function() {
-    document.getElementById('doorModalOverlay').style.display = 'none';
-  });
-
-  // Clicking outside modals closes them
-  document.getElementById('posModalOverlay')?.addEventListener('click', function(e) {
-    if (e.target === this) this.style.display = 'none';
-  });
-  document.getElementById('doorModalOverlay')?.addEventListener('click', function(e) {
-    if (e.target === this) this.style.display = 'none';
-  });
-
-  // Reattach Flight Time cells (keypad for ft-input)
-  document.querySelectorAll('.ft-cell-clickable').forEach(cell => {
-    const input = cell.querySelector('.ft-input');
-    if (input) {
-      cell.addEventListener('click', function(e) {
-        e.stopPropagation();
-        openNumberKeypad(input, 'time', input.value);
-      });
-      input.addEventListener('click', function(e) {
-        e.stopPropagation();
-        openNumberKeypad(input, 'time', input.value);
-      });
-    }
-  });
-
-  // Reattach BAY and BRIEFING STATION inputs
-  document.getElementById('bayInput')?.addEventListener('click', function(e) {
-    e.stopPropagation();
-    const currentVal = this.value;
-    const letterMatch = currentVal.match(/^([A-Z])/);
-    if (letterMatch) selectedBayLetter = letterMatch[1];
-    else selectedBayLetter = '';
-    openBayLetterModal(this);
-  });
-
-  document.getElementById('briefingInput')?.addEventListener('click', function(e) {
-    e.stopPropagation();
-    openNumberKeypad(this, 'briefing', this.value);
-  });
-
-  // Update field function (for saving state)
-  window.updateField = function(key, val) {
-    state.fields[key] = val;
-  };
-
-  console.log('Expanded report loaded with interactive cells.');
+${scriptContent}
 </script>
 </body>
-</html>
-    `);
+</html>`;
+
+    // Open the new window
+    const win = window.open('', '_blank', 'width=1000,height=900,scrollbars=yes,resizable=yes');
+    if (!win) {
+      showToast('Popup blocked. Please allow popups for this site.', 'error');
+      return;
+    }
+    win.document.write(winHtml);
     win.document.close();
   }
 
