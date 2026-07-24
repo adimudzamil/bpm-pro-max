@@ -461,19 +461,6 @@
   .pos-grid.narrow { grid-template-columns: repeat(3, 1fr); }
   .pos-grid.wide { grid-template-columns: repeat(4, 1fr); }
 
-  .pos-grid.wide .pos-btn.alt-icc {
-    grid-column: span 2;
-    background: var(--accent-dim);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .pos-grid.wide .pos-btn.alt-icc:hover {
-    background: var(--accent);
-    color: #0a0a0b;
-    border-color: var(--accent);
-  }
-
   .pos-btn, .door-btn, .letter-btn {
     padding: 14px 8px;
     font-size: 15px;
@@ -729,6 +716,39 @@
     color: #fff;
   }
 
+  /* ── Alternate ICC toggle button in modal ── */
+  .alt-icc-toggle-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 2px solid #ddd;
+    background: #f7f7f7;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .alt-icc-toggle-btn.active {
+    background: #222;
+    border-color: #222;
+    color: #fff;
+  }
+  .alt-icc-toggle-btn.active::after {
+    content: ' ✓';
+  }
+  .alt-icc-toggle-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .alt-icc-toggle-btn.active:hover {
+    background: #444;
+    border-color: #444;
+    color: #fff;
+  }
+
   /* ── Flight Table ── */
   table.rtab {
     width: 100%;
@@ -802,15 +822,17 @@
 
   .alt-icc-badge {
     display: inline-block;
-    background: var(--accent);
-    color: #0a0a0b;
-    font-size: 8px;
+    background: #111;
+    color: #fff;
+    font-size: 7.5px;
     font-weight: 700;
     padding: 1px 8px;
     border-radius: 100px;
     margin-left: 6px;
     font-family: 'DM Mono', monospace;
     letter-spacing: 0.04em;
+    border: 1px solid #333;
+    vertical-align: middle;
   }
 
   /* ── Top info ── */
@@ -931,7 +953,7 @@
     .toast { display: none !important; }
     .report-inner, #report, .rpad { page-break-after: avoid; }
     .rpad { page-break-inside: avoid; }
-    .alt-icc-badge { display: inline-block !important; }
+    .alt-icc-badge { display: inline-block !important; background: #111 !important; color: #fff !important; }
     .captain-icc-table td { padding: 2px 4px; }
   }
 </style>
@@ -1039,7 +1061,9 @@
     <div class="modal-title">Working Position</div>
     <div class="modal-sub" id="modalCrewName"></div>
     <div class="pos-grid" id="posGrid"></div>
-    <button class="secondary-btn" id="modalCloseBtn">Close</button>
+    <!-- Alternate ICC toggle button -->
+    <button class="alt-icc-toggle-btn" id="altIccToggleBtn">Set as Alternate ICC</button>
+    <button class="secondary-btn" id="modalCloseBtn" style="margin-top:8px;">Close</button>
   </div>
 </div>
 
@@ -1134,6 +1158,7 @@
   const posModalOverlay = document.getElementById('posModalOverlay');
   const posGrid = document.getElementById('posGrid');
   const modalCrewName = document.getElementById('modalCrewName');
+  const altIccToggleBtn = document.getElementById('altIccToggleBtn');
   const iccModalOverlay = document.getElementById('iccModalOverlay');
   const iccGrid = document.getElementById('iccGrid');
   const iccModalSub = document.getElementById('iccModalSub');
@@ -1156,9 +1181,9 @@
   let keypadMode = 'bay'; // 'bay', 'briefing', or 'time'
   let selectedBayLetter = '';
 
-  // ===== ICC state =====
+  // ===== ICC & Alt ICC state =====
   let iccChosenCrew = null; // { crewId, crewName, opRank }
-  let altIccChosenCrew = null; // { crewId, crewName, opRank }
+  let altIccCrewId = null;   // crewId of alternate ICC
 
   // ===== Constants =====
   const DUTY_HEADERS = ["Start","End","Pairing Id","Duty Hours","Flying Hours","Rest Required","Rest Available"];
@@ -1611,17 +1636,16 @@
   window.updateField = function(key, val){ state.fields[key] = val; };
 
   // ---- Position modal ----
+  let currentModalCrewId = null; // crewId of the person whose position modal is open
   window.openPositionModal = function(crewId, crewName){
     const ac0 = state.itin.length ? state.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
-    const posList = isNarrow ? POSITIONS_NARROW : [...POSITIONS_WIDE];
+    const posList = isNarrow ? POSITIONS_NARROW : POSITIONS_WIDE;
     const gridClass = isNarrow ? 'narrow' : 'wide';
-    state.modalCrew = crewId;
+    currentModalCrewId = crewId;
     modalCrewName.textContent = crewName;
     posGrid.className = 'pos-grid ' + gridClass;
     posGrid.innerHTML = '';
-
-    // Add regular positions
     posList.forEach(pos => {
       const btn = document.createElement('button');
       btn.className = 'pos-btn' + (state.positions[crewId] === pos ? ' selected' : '');
@@ -1630,50 +1654,23 @@
       posGrid.appendChild(btn);
     });
 
-    // Add "Alternate ICC" button (only for widebody, spans 2 columns)
-    if (!isNarrow) {
-      const altBtn = document.createElement('button');
-      altBtn.className = 'pos-btn alt-icc';
-      altBtn.textContent = 'Alternate ICC';
-      altBtn.addEventListener('click', function() {
-        // Check if this crew is already ICC
-        if (state.positions[crewId] === 'ICC') {
-          showToast('ICC cannot be Alternate ICC', 'error');
-          return;
-        }
-        // If someone else has Alternate ICC, remove it
-        for (let id in state.positions) {
-          if (state.positions[id] === 'Alternate ICC') {
-            state.positions[id] = '';
-          }
-        }
-        state.positions[crewId] = 'Alternate ICC';
-        posModalOverlay.style.display = 'none';
-        buildReport();
-      });
-      posGrid.appendChild(altBtn);
-    }
+    // Update Alternate ICC toggle button state
+    const isAltIcc = (altIccCrewId === crewId);
+    altIccToggleBtn.textContent = isAltIcc ? 'Remove Alternate ICC' : 'Set as Alternate ICC';
+    altIccToggleBtn.className = 'alt-icc-toggle-btn' + (isAltIcc ? ' active' : '');
 
     posModalOverlay.style.display = 'flex';
   };
 
   window.assignPosition = function(crewId, pos){
-    // If assigning ICC, remove any existing ICC and also remove Alternate ICC from this crew
+    // If assigning ICC, remove any existing ICC
     if (pos === 'ICC') {
       for (let id in state.positions) {
         if (state.positions[id] === 'ICC') state.positions[id] = '';
-        if (id === crewId && state.positions[id] === 'Alternate ICC') state.positions[id] = '';
       }
     }
-    // If assigning Alternate ICC, remove any other Alternate ICC and also remove ICC from this crew
-    if (pos === 'Alternate ICC') {
-      for (let id in state.positions) {
-        if (state.positions[id] === 'Alternate ICC') state.positions[id] = '';
-        if (id === crewId && state.positions[id] === 'ICC') state.positions[id] = '';
-      }
-    }
-    // Handle SNY (no conflict)
-    if (pos !== 'SNY' && pos !== 'Alternate ICC' && pos !== 'ICC') {
+    // Handle SNY
+    if (pos !== 'SNY' && pos !== 'ICC') {
       Object.keys(state.positions).forEach(id => {
         if (id !== crewId && state.positions[id] === pos) state.positions[id] = '';
       });
@@ -1682,6 +1679,20 @@
     posModalOverlay.style.display = 'none';
     buildReport();
   };
+
+  // Alternate ICC toggle button
+  altIccToggleBtn.addEventListener('click', function() {
+    if (!currentModalCrewId) return;
+    if (altIccCrewId === currentModalCrewId) {
+      // Remove
+      altIccCrewId = null;
+    } else {
+      // Set – if someone else has it, remove from them
+      altIccCrewId = currentModalCrewId;
+    }
+    posModalOverlay.style.display = 'none';
+    buildReport();
+  });
 
   document.getElementById('modalCloseBtn').addEventListener('click', () => { posModalOverlay.style.display = 'none'; });
   posModalOverlay.addEventListener('click', (e) => { if(e.target === posModalOverlay) posModalOverlay.style.display = 'none'; });
@@ -1779,7 +1790,6 @@
 
     // Determine ICC based on positions and rules
     let iccDisplay = null;
-    let altIccDisplay = null;
 
     // Check if any crew has "ICC" position
     let iccPositionCrew = null;
@@ -1788,18 +1798,6 @@
         const crew = sortedCabin.find(c => c.crewId === id);
         if (crew) {
           iccPositionCrew = crew;
-          break;
-        }
-      }
-    }
-
-    // Check if any crew has "Alternate ICC" position
-    let altIccPositionCrew = null;
-    for (let id in state.positions) {
-      if (state.positions[id] === 'Alternate ICC') {
-        const crew = sortedCabin.find(c => c.crewId === id);
-        if (crew) {
-          altIccPositionCrew = crew;
           break;
         }
       }
@@ -1820,8 +1818,15 @@
     }
 
     // Determine Alternate ICC
-    if (altIccPositionCrew) {
-      altIccDisplay = altIccPositionCrew;
+    let altIccDisplay = null;
+    if (altIccCrewId) {
+      const crew = sortedCabin.find(c => c.crewId === altIccCrewId);
+      if (crew) {
+        altIccDisplay = crew;
+      } else {
+        // if crew not found (e.g., removed from list), clear
+        altIccCrewId = null;
+      }
     }
 
     // ---- REP display ----
@@ -1958,7 +1963,7 @@
       }
       let nameDisplay = esc(c.crewName);
       if (isAltIcc) {
-        nameDisplay += ' <span class="alt-icc-badge">Alt ICC</span>';
+        nameDisplay += ' <span class="alt-icc-badge">alt ICC</span>';
       }
       html += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
         <td>${esc(c.crewId)}</td>
@@ -2097,7 +2102,7 @@
     state.doors = {};
     state.source = source || 'iflight';
     iccChosenCrew = null;
-    altIccChosenCrew = null;
+    altIccCrewId = null;
     buildReport();
     reportCard.style.display = 'block';
     emptyCard.style.display = 'none';
