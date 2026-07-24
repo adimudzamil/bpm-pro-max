@@ -104,7 +104,7 @@
 <header>
   <h1>CTR Autofill by *2100551*</h1>
   <p>iFlight Crew Trip Report <b>OR</b> PDF Crew Trip Report → auto‑fill a printable alternate Crew Trip Report</p>
-  <p style="font-size:10px;color:#555;margin-top:4px;">build v2.0</p>
+  <p style="font-size:10px;color:#555;margin-top:4px;">build v2.1</p>
 </header>
 
 <div class="wrap">
@@ -303,7 +303,7 @@
     return { duty, itin, crew, found: { duty: duty.length>0, itin: itin.length>0, crew: crew.length>0 }, dutyStart: dutyStart, dutyDate: dutyDate };
   }
 
-  // ===== PDF CrewTripReport parser (YOUR working parser + FH fix) =====
+  // ===== PDF CrewTripReport parser (pattern-based) =====
   function parseCrewTripReport(raw){
     // Collapse and fix glued text
     let text = raw.replace(/\r?\n/g,' ')
@@ -352,6 +352,19 @@
     // Build itinerary
     const itin = [];
     for(let i=0; i<flightNos.length; i++){
+      const start = flightMatches[i].index;
+      const end = (i+1 < flightMatches.length) ? flightMatches[i+1].index : tableSection.length;
+      const rowStr = tableSection.substring(start, end);
+
+      // ---- FH extraction: 3rd time token after the flight number ----
+      const flightIdx = rowStr.indexOf(flightNos[i]);
+      const afterFlight = rowStr.substring(flightIdx + flightNos[i].length);
+      const timesAfter = afterFlight.match(/\d{2}:\d{2}(?:\(\+1\))?/g) || [];
+      let fh = '';
+      if(timesAfter.length >= 3){
+        fh = timesAfter[2]; // 3rd time token (index 2)
+      }
+
       const seg = segments[i] || '';
       const acMatch = seg.match(/\b(\d{3,4})\b/);
       const ac = acMatch ? acMatch[1] : '';
@@ -363,16 +376,6 @@
       }
       const dep = depArrMatches[i*2];
       const arr = depArrMatches[i*2+1];
-
-      // ---- CORRECT FH EXTRACTION: second-to-last time token in the row ----
-      const start = flightMatches[i].index;
-      const end = (i+1 < flightMatches.length) ? flightMatches[i+1].index : tableSection.length;
-      const rowStr = tableSection.substring(start, end);
-      const times = rowStr.match(/\d{2}:\d{2}(?:\(\+1\))?/g) || [];
-      let fh = '';
-      if(times.length >= 2){
-        fh = times[times.length - 2]; // second-to-last time token
-      }
 
       // Map ACS to readable type
       let acType = ac;
