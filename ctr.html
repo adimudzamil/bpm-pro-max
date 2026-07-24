@@ -115,33 +115,39 @@
   .ccic-wrap .ccic-row .label-bold{font-weight:700;}
   .ccic-wrap .ccic-row .empty-msg{color:#3b82f6;font-style:italic;}
 
-  /* Flight Details toggle */
-  .flight-details-wrapper{margin-top:8px;}
-  .flight-details-header{display:flex;justify-content:space-between;align-items:center;}
-  .flight-details-header .title{font-weight:bold;font-size:9px;}
-  .toggle-flight-btn{background:none;border:1px solid #333;border-radius:4px;padding:0 6px;font-size:12px;cursor:pointer;color:#333;line-height:1.6;}
-  .flight-details-wrapper.collapsed .flight-details-content{display:none;}
   @media print{
-    .flight-details-wrapper.collapsed{display:none !important;}
-    .ccic-row .empty-msg{display:none !important;}
-    table.rtab td input.remarksTxt{border-bottom:none !important;}
-    .pos-cell, .pos-cell.icc-locked, .door-cell{color:#000 !important;}
-    .ccic-row .empty-msg{color:#000 !important;}
-    .crew-table{table-layout:fixed !important;width:100% !important;}
-    .crew-table th, .crew-table td{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    body{background:#fff;}
+    header, .card:not(.reportcard), .noprint, .noprint-inline{display:none !important;}
+    .wrap{padding:0;max-width:none;}
+    .reportcard{border:none;padding:0;margin:0;}
+    #report{border-radius:0;}
+
+    /* Hide placeholder texts and dashed borders in print */
+    .ccic-row .empty-msg { display: none !important; }
+    table.rtab td input.remarksTxt { border-bottom: none !important; }
+
+    /* Ensure blue text becomes black for B&W printing */
+    .pos-cell, .pos-cell.icc-locked, .door-cell {
+      color: #000 !important;
+    }
+    .ccic-row .empty-msg { color: #000 !important; }
+
+    .crew-table{table-layout:fixed !important; width:100% !important;}
+    .crew-table th, .crew-table td{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
     .crew-table th:nth-child(1), .crew-table td:nth-child(1){width:10% !important;}
     .crew-table th:nth-child(2), .crew-table td:nth-child(2){width:5% !important;}
     .crew-table th:nth-child(3), .crew-table td:nth-child(3){width:70% !important;}
     .crew-table th:nth-child(4), .crew-table td:nth-child(4){width:10% !important;}
     .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:5% !important;}
-    .pos-cell.unset{color:transparent !important;font-size:0 !important;}
-    .door-cell.unset{color:transparent !important;font-size:0 !important;}
-    .top-info input, .top-info input.rep{border-color:#999 !important;background:#fff !important;}
+
+    .pos-cell.unset{color:transparent !important; font-size:0 !important;}
+    .door-cell.unset{color:transparent !important; font-size:0 !important;}
+    .top-info input, .top-info input.rep{border-color:#999 !important; background:#fff !important;}
     .ft-table td input{border:none !important;}
     .ccic-wrap .ccic-row:hover{background:transparent !important;}
-    .badge-pill.sny{background:#3b82f6 !important;color:#fff !important;print-color-adjust:exact;-webkit-print-color-adjust:exact;}
-    .badge-pill.alt-icc{background:#1f2937 !important;color:#fff !important;print-color-adjust:exact;-webkit-print-color-adjust:exact;}
-    .pos-cell.icc-locked{background:#e8f0fe !important;print-color-adjust:exact;-webkit-print-color-adjust:exact;}
+    .badge-pill.sny{background:#3b82f6 !important; color:#fff !important; print-color-adjust:exact; -webkit-print-color-adjust:exact;}
+    .badge-pill.alt-icc{background:#1f2937 !important; color:#fff !important; print-color-adjust:exact; -webkit-print-color-adjust:exact;}
+    .pos-cell.icc-locked{background:#e8f0fe !important; print-color-adjust:exact; -webkit-print-color-adjust:exact;}
   }
 </style>
 </head>
@@ -932,57 +938,32 @@
     });
     html += `</table>`;
 
-    // ---- Flight Time Details with toggle ----
-    const showFlight = state.showFlightDetails !== false;
-    const wrapperClass = 'flight-details-wrapper' + (showFlight ? '' : ' collapsed');
-    let flightContent = '';
-    if (showFlight) {
-      flightContent = `<div class="flight-details-content">
-        <div style="margin-top:8px;font-weight:bold;font-size:9px;">Flight Time Details</div>
-        <table class="ft-table">
-          <tr>
-            <th style="width:10%;">Flt</th>
-            <th style="width:10%;">LP</th>
-            <th style="width:10%;">CB</th>
-            <th style="width:10%;">CAT</th>
-            <th style="width:10%;">AIC</th>
-            <th style="width:10%;">BC</th>
-            <th style="width:10%;">1P</th>
-            <th style="width:10%;">BC</th>
-            <th style="width:10%;">DC</th>
-            <th style="width:10%;">DO</th>
-          </tr>`;
-      d.itin.forEach((l) => {
-        const flightNo = esc(l.flightId);
-        const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
-        flightContent += `<tr>
-          <td style="font-weight:bold;">${flightNo}</td>
-          ${cats.map(() => `<td><input value="" placeholder=""></td>`).join('')}
-        </tr>`;
-      });
-      flightContent += `</table></div>`;
-    }
-    html += `<div class="${wrapperClass}">
-      <div class="flight-details-header">
-        <span class="title"></span>
-        <button class="toggle-flight-btn">${showFlight ? '🔼' : '🔽'}</button>
-      </div>
-      ${flightContent}
-    </div>`;
+    html += `<div style="margin-top:8px;font-weight:bold;font-size:9px;">Flight Time Details</div>`;
+    html += `<table class="ft-table">
+      <tr>
+        <th style="width:10%;">Flt</th>
+        <th style="width:10%;">LP</th>
+        <th style="width:10%;">CB</th>
+        <th style="width:10%;">CAT</th>
+        <th style="width:10%;">AIC</th>
+        <th style="width:10%;">BC</th>
+        <th style="width:10%;">1P</th>
+        <th style="width:10%;">BC</th>
+        <th style="width:10%;">DC</th>
+        <th style="width:10%;">DO</th>
+      </tr>`;
+    d.itin.forEach((l) => {
+      const flightNo = esc(l.flightId);
+      const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
+      html += `<tr>
+        <td style="font-weight:bold;">${flightNo}</td>
+        ${cats.map(() => `<td><input value="" placeholder=""></td>`).join('')}
+      </tr>`;
+    });
+    html += `</table>`;
 
     html += `</div>`;
     reportEl.innerHTML = html;
-
-    // ---- Event listeners ----
-    // Toggle button for Flight Details
-    const toggleBtn = reportEl.querySelector('.toggle-flight-btn');
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        state.showFlightDetails = !state.showFlightDetails;
-        buildReport();
-      });
-    }
 
     reportEl.querySelectorAll('.pos-cell:not(.icc-locked)').forEach(el => {
       el.addEventListener('click', () => {
@@ -1061,7 +1042,6 @@
     state.doors = {};
     state.badges = {};
     state.icc = {};
-    state.showFlightDetails = true; // default expanded
     state.source = source || 'iflight';
 
     const cabin = state.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
