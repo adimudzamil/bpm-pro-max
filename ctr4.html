@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CTR Autofill</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%93%98</text></svg>">
+<!-- pdf.js for PDF upload -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e2229; --border:#2a2f3a;
+    --text:#e8eaed; --muted:#8b93a3; --accent:#3b82f6; --accent2:#1d4ed8;
+    --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding-bottom:60px;}
+  header{position:sticky;top:0;z-index:10;background:var(--panel);border-bottom:1px solid var(--border);padding:14px 16px;}
+  header h1{font-size:17px;margin:0;}
+  header p{margin:2px 0 0;color:var(--muted);font-size:12px;}
+  .wrap{padding:14px;max-width:1000px;margin:0 auto;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;}
+  .card h2{font-size:14px;margin:0 0 10px;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;}
+  textarea{width:100%;min-height:120px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-size:13px;font-family:monospace;resize:vertical;}
+  .btnrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;}
+  button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;}
+  button.secondary{background:var(--panel2);border:1px solid var(--border);color:var(--text);}
+  button:active{opacity:.8;}
+  .status{font-size:12px;color:var(--muted);margin-top:8px;white-space:pre-line;}
+  .status.err{color:var(--danger);}
+  .status.ok{color:var(--ok);}
+  details{margin-top:8px;}
+  summary{cursor:pointer;color:var(--muted);font-size:12px;}
+  table.dbg{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px;}
+  table.dbg th,table.dbg td{border:1px solid var(--border);padding:4px 6px;text-align:left;}
+  table.dbg th{background:var(--panel2);color:var(--muted);}
+  select{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 6px;font-size:11px;}
+  .emptyState{color:var(--muted);font-size:13px;text-align:center;padding:30px 10px;}
+  .file-upload-wrapper{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .file-upload-wrapper input[type="file"]{color:var(--text);padding:4px;}
+
+  /* ---- Report ---- */
+  #report{background:#fff;color:#111;border-radius:6px;overflow:hidden;}
+  #report .rpad{padding:10px;}
+  .rtitle{text-align:center;border-bottom:1px solid #111;padding-bottom:4px;margin-bottom:8px;}
+  .rtitle h2{margin:0;font-size:7pt;font-weight:700;letter-spacing:.03em;text-transform:uppercase;}
+  table.rtab{width:100%;border-collapse:collapse;font-size:9px;margin-bottom:4px;table-layout:fixed;}
+  table.rtab th, table.rtab td{border:1px solid #333;padding:2px 3px;text-align:center;overflow:hidden;}
+  table.rtab th{background:#eee;font-weight:600;font-size:8.5px;}
+  table.rtab td input{border:none;width:100%;text-align:center;font-size:9px;background:transparent;font-family:inherit;min-width:0;padding:1px;}
+  table.rtab td input.remarksTxt{text-align:left;border-bottom:1px dashed #999;}
+  .pos-cell{cursor:pointer;font-weight:700;color:#1d4ed8;}
+  .pos-cell.unset{color:#aaa;font-weight:400;font-style:italic;}
+  .door-cell{cursor:pointer;font-weight:600;color:#1d4ed8;}
+  .door-cell.unset{color:#aaa;font-weight:400;}
+  .pick{font-size:10px;color:#a33;margin-top:3px;}
+  .pick select{font-size:10px;padding:2px;color:#111;background:#fff;}
+
+  /* ---- Top info ---- */
+  .top-info{display:flex;flex-wrap:wrap;gap:12px;font-size:9px;margin-bottom:6px;align-items:center;font-weight:bold;}
+  .top-info .label{font-weight:bold;color:#444;}
+  .top-info input{border:1px solid #333;border-radius:4px;padding:2px 4px;font-size:9px;}
+  .top-info input.small{width:60px;}
+  .top-info input.rep{font-weight:bold;width:180px;background:#f0f0f0;border-color:#555;}
+
+  /* ---- Bottom Flight Time Details ---- */
+  .ft-table{width:100%;border-collapse:collapse;font-size:8.5px;margin-top:4px;table-layout:fixed;}
+  .ft-table th{background:#eee;font-weight:600;font-size:8px;border:1px solid #333;padding:2px;}
+  .ft-table td{border:1px solid #333;padding:2px;text-align:center;height:1.6em;}
+  .ft-table td input{width:100%;border:none;background:transparent;font-size:8.5px;text-align:center;font-family:inherit;padding:1px;}
+
+  /* ---- Position modal ---- */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+  .modal-box{background:#fff;color:#111;border-radius:12px;padding:16px;width:100%;max-width:340px;}
+  .modal-title{font-size:14px;font-weight:700;margin-bottom:2px;}
+  .modal-sub{font-size:12px;color:#555;margin-bottom:12px;}
+  .pos-grid{display:grid;gap:8px;margin-bottom:14px;}
+  .pos-grid.narrow{grid-template-columns:repeat(3,1fr);}
+  .pos-grid.wide{grid-template-columns:repeat(4,1fr);}
+  .door-grid{display:grid;gap:8px;margin-bottom:14px;grid-template-columns:1fr 1fr;}
+  .door-btn{padding:12px 8px;font-size:14px;font-weight:600;border-radius:10px;border:2px solid #ddd;background:#f7f7f7;color:#333;cursor:pointer;transition:transform .18s ease, background .18s ease, border-color .18s ease;}
+  .door-btn:active{transform:scale(.94);}
+  .door-btn.assigned{background:#fff6cc;border-color:#f59e0b;}
+  .door-btn.selected{background:#dbeafe;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.3);}
+  .door-btn .check{color:#22c55e;font-weight:bold;margin-left:6px;}
+  .modal-box button.secondary{width:100%;}
+
+  /* ---- Print styles ---- */
+  @media print{
+    body{background:#fff;}
+    header, .card:not(.reportcard), .noprint, .noprint-inline{display:none !important;}
+    .wrap{padding:0;max-width:none;}
+    .reportcard{border:none;padding:0;margin:0;}
+    #report{border-radius:0;}
+
+    .crew-table{table-layout:fixed !important; width:100% !important;}
+    .crew-table th, .crew-table td{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    .crew-table th:nth-child(1), .crew-table td:nth-child(1){width:10% !important;}
+    .crew-table th:nth-child(2), .crew-table td:nth-child(2){width:5% !important;}
+    .crew-table th:nth-child(3), .crew-table td:nth-child(3){width:70% !important;}
+    .crew-table th:nth-child(4), .crew-table td:nth-child(4){width:10% !important;}
+    .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:5% !important;}
+
+    .pos-cell.unset{color:transparent !important; font-size:0 !important;}
+    .door-cell.unset{color:transparent !important; font-size:0 !important;}
+    .top-info input, .top-info input.rep{border-color:#999 !important; background:#fff !important;}
+    .ft-table td input{border:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>CTR Autofill by *2100551*</h1>
+  <p>iFlight Crew Trip Report <b>OR</b> PDF Crew Trip Report → auto‑fill a printable alternate Crew Trip Report</p>
+  <p style="font-size:10px;color:#555;margin-top:4px;">build v1.6</p>
+</header>
+
+<div class="wrap">
+
+  <!-- iFlight parser -->
+  <div class="card noprint">
+    <h2>1. Paste iFlight trip report text</h2>
+    <textarea id="pasteBox" placeholder="Select-all + copy from the iFlight Crew Trip Report page, then paste here…"></textarea>
+    <div class="btnrow">
+      <button id="parseBtn">Parse & Fill Report</button>
+      <button class="secondary" id="clearBtn">Clear</button>
+    </div>
+    <div class="status" id="status"></div>
+    <details id="dbgWrap" style="display:none;">
+      <summary>Parsed data (debug)</summary>
+      <div id="dbgContent"></div>
+    </details>
+  </div>
+
+  <!-- PDF parser with upload -->
+  <div class="card noprint">
+    <h2>2. Paste text from PDF Crew Trip Report text or upload Crew Trip Report PDF</h2>
+    <textarea id="pdfBox" placeholder="Copy text from the PDF CrewTripReport and paste here…"></textarea>
+    <div class="btnrow">
+      <button id="parsePdfBtn">Parse PDF Report</button>
+      <button class="secondary" id="clearPdfBtn">Clear</button>
+      <div class="file-upload-wrapper">
+        <label for="pdfFile" style="font-size:12px;color:var(--muted);">Upload PDF:</label>
+        <input type="file" id="pdfFile" accept=".pdf">
+      </div>
+    </div>
+    <div class="status" id="pdfStatus"></div>
+    <details id="pdfDbgWrap" style="display:none;">
+      <summary>Parsed data (debug)</summary>
+      <div id="pdfDbgContent"></div>
+    </details>
+  </div>
+
+  <!-- Report display -->
+  <div class="card reportcard" id="reportCard" style="display:none;">
+    <div class="btnrow noprint" style="margin-bottom:10px;">
+      <button id="printBtn">Print / Save PDF</button>
+    </div>
+    <div id="report"></div>
+  </div>
+
+  <div class="card" id="emptyCard">
+    <div class="emptyState">No report generated yet. Paste a trip report above and tap "Parse & Fill Report" or "Parse PDF Report".</div>
+  </div>
+
+</div>
+
+<!-- Position Modal -->
+<div class="modal-overlay" id="posModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">Working Position</div>
+    <div class="modal-sub" id="modalCrewName"></div>
+    <div class="pos-grid" id="posGrid"></div>
+    <button class="secondary" id="modalCloseBtn">Close</button>
+  </div>
+</div>
+
+<!-- Door Modal -->
+<div class="modal-overlay" id="doorModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">Assign Door</div>
+    <div class="modal-sub" id="doorModalCrewName"></div>
+    <div class="door-grid" id="doorGrid"></div>
+    <button class="secondary" id="doorModalCloseBtn">Close</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ===== DOM refs =====
+  const pasteBox = document.getElementById('pasteBox');
+  const statusEl = document.getElementById('status');
+  const dbgWrap = document.getElementById('dbgWrap');
+  const dbgContent = document.getElementById('dbgContent');
+  const pdfBox = document.getElementById('pdfBox');
+  const pdfStatus = document.getElementById('pdfStatus');
+  const pdfFile = document.getElementById('pdfFile');
+  const pdfDbgWrap = document.getElementById('pdfDbgWrap');
+  const pdfDbgContent = document.getElementById('pdfDbgContent');
+  const reportCard = document.getElementById('reportCard');
+  const emptyCard = document.getElementById('emptyCard');
+  const reportEl = document.getElementById('report');
+  const posModalOverlay = document.getElementById('posModalOverlay');
+  const posGrid = document.getElementById('posGrid');
+  const modalCrewName = document.getElementById('modalCrewName');
+  const doorModalOverlay = document.getElementById('doorModalOverlay');
+  const doorGrid = document.getElementById('doorGrid');
+  const doorModalCrewName = document.getElementById('doorModalCrewName');
+
+  // ===== Constants =====
+  const DUTY_HEADERS = ["Start","End","Pairing Id","Duty Hours","Flying Hours","Rest Required","Rest Available"];
+  const ITIN_HEADERS = ["Flight/Acy Id","Date","From","Dep.","To","Arr.","A/C","Version","A/C Reg","Flight Time","Ground Time","Activity Start","Activity End","Activity Location"];
+  const CREW_HEADERS = ["OP Rank","Postion Rank","Crew Id","Crew Name","WT","Work Pos.","Base","SDC","Check In"];
+  const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary'];
+  const COCKPIT_RANKS = ['CAPT','FO','SO'];
+  const POSITIONS_NARROW = ['P1','P2','P3','P4','A1','A2','SNY'];
+  const POSITIONS_WIDE = ['ICC','LSB','LSC','LSD','AG','BG1','BG2','CG','DG','BC','BC1','CC','DC','DC2','SNY'];
+  const RANK_PRIORITY = { 'IFS': 1, 'LS': 2, 'FS': 3, 'FSS': 4, 'SS': 5, 'CS': 6, 'AS': 7 };
+  const DOORS_NARROW = ['1L','1R','2L','2R'];
+  const DOORS_WIDE = ['1L','1R','2L','2R','3L','3R','4L','4R'];
+
+  // ===== Utilities =====
+  function norm(s){ return (s===undefined||s===null) ? '' : String(s).trim(); }
+  function esc(s){ return String(s===undefined||s===null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function timeOnly(dt){ if(!dt) return ''; const parts = dt.trim().split(/\s+/); return parts.length>1 ? parts[parts.length-1] : dt; }
+  function subtractMinutes(hhmm, mins){
+    const m = (hhmm||'').match(/^(\d{1,2}):(\d{2})$/);
+    if(!m) return '';
+    let total = parseInt(m[1],10)*60 + parseInt(m[2],10) - mins;
+    total = ((total % 1440) + 1440) % 1440;
+    const hh = String(Math.floor(total/60)).padStart(2,'0');
+    const mm = String(total%60).padStart(2,'0');
+    return hh + mm;
+  }
+  function isNarrowbody(ac){ if(!ac) return false; const a = ac.trim().toUpperCase(); return a === '737' || a.indexOf('73') === 0 || a.indexOf('7M') === 0; }
+  function determineCrewInCharge(cabinCrew){
+    const ifs = cabinCrew.filter(c => c.opRank.toUpperCase() === 'IFS');
+    const ls = cabinCrew.filter(c => c.opRank.toUpperCase() === 'LS');
+    if(ifs.length === 1) return { auto: ifs[0], candidates: [] };
+    if(ifs.length > 1) return { auto: null, candidates: ifs };
+    if(ls.length === 1) return { auto: ls[0], candidates: [] };
+    if(ls.length > 1) return { auto: null, candidates: ls };
+    return { auto: null, candidates: cabinCrew.slice() };
+  }
+  function getDayName(dateStr){
+    try{
+      const d = new Date(dateStr);
+      if(isNaN(d)) return '???';
+      return ['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()];
+    }catch(e){ return '???'; }
+  }
+  function sortCabinCrew(crew){
+    return crew.slice().sort((a,b) => {
+      const rankA = a.opRank.toUpperCase();
+      const rankB = b.opRank.toUpperCase();
+      const priA = RANK_PRIORITY[rankA] || 99;
+      const priB = RANK_PRIORITY[rankB] || 99;
+      if(priA !== priB) return priA - priB;
+      if(rankA === 'FS' || rankA === 'FSS'){
+        return parseInt(a.crewId,10) - parseInt(b.crewId,10);
+      }
+      return 0;
+    });
+  }
+  function renderDebugTable(rows, cols){
+    if(!rows.length) return '<p style="color:#888;font-size:11px;">none found</p>';
+    let html = '<table class="dbg"><tr>' + cols.map(c=>'<th>'+c+'</th>').join('') + '</tr>';
+    rows.forEach(row=>{
+      html += '<tr>' + cols.map(c=> '<td>'+(row[c]!==undefined?row[c]:'')+'</td>').join('') + '</tr>';
+    });
+    html += '</table>';
+    return html;
+  }
+
+  // ===== iFlight parser =====
+  function findHeaderEnd(lines, seq){
+    for(let start=0; start<lines.length; start++){
+      let li = start, ok = true;
+      for(let s=0; s<seq.length; s++){
+        while(li < lines.length && norm(lines[li]) === '') li++;
+        if(li >= lines.length || norm(lines[li]).toLowerCase() !== seq[s].toLowerCase()){ ok = false; break; }
+        li++;
+      }
+      if(ok) return li;
+    }
+    return -1;
+  }
+  function extractRows(lines, headerSeq, cols){
+    const idxAfterHeader = findHeaderEnd(lines, headerSeq);
+    if(idxAfterHeader === -1) return { rows: [], found:false };
+    let idx = idxAfterHeader;
+    const rows = [];
+    while(idx + cols <= lines.length){
+      const firstCell = norm(lines[idx]).toLowerCase();
+      if(firstCell === 'results per page' || firstCell.startsWith('page ') || STOP_TITLES.indexOf(firstCell) !== -1) break;
+      const chunk = lines.slice(idx, idx+cols).map(norm);
+      rows.push(chunk);
+      idx += cols;
+    }
+    return { rows, found:true };
+  }
+  function parseTripText(raw){
+    const lines = raw.split(/\r?\n/);
+    const duty = extractRows(lines, DUTY_HEADERS, DUTY_HEADERS.length).rows.map(r => ({ start:r[0], end:r[1], pairingId:r[2], dutyHours:r[3], flyingHours:r[4], restRequired:r[5], restAvailable:r[6] }));
+    const itinRaw = extractRows(lines, ITIN_HEADERS, ITIN_HEADERS.length);
+    const itin = itinRaw.rows.map(r => ({ flightId:r[0], date:r[1], from:r[2], dep:r[3], to:r[4], arr:r[5], ac:r[6], version:r[7], acReg:r[8], flightTime:r[9], groundTime:r[10], actStart:r[11], actEnd:r[12], actLoc:r[13] }));
+    const crewRaw = extractRows(lines, CREW_HEADERS, CREW_HEADERS.length);
+    const crew = crewRaw.rows.map(r => ({ opRank:r[0], posRank:r[1], crewId:r[2], crewName:r[3], wt:r[4], workPos:r[5], base:r[6], sdc:r[7], checkIn:r[8] })).filter(c => c.crewId);
+    let dutyStart = duty.length ? duty[0].start : '';
+    let dutyDate = '';
+    if(dutyStart){
+      const parts = dutyStart.split(/\s+/);
+      if(parts.length>=2) dutyDate = parts[0] + ' ' + parts[1];
+      else dutyDate = dutyStart;
+    }
+    return { duty, itin, crew, found: { duty: duty.length>0, itin: itin.length>0, crew: crew.length>0 }, dutyStart: dutyStart, dutyDate: dutyDate };
+  }
+
+  // ===== PDF CrewTripReport parser =====
+  // NOTE: pdf.js text extraction (see the upload handler below) joins every
+  // item on a page with a single space and does not preserve line breaks, so
+  // a whole page of the PDF arrives as ONE line. Worse, different report
+  // exports have been observed to lay the SAME table's fields out in
+  // different token orders — sometimes even mixing two different row
+  // orderings within one section of the same PDF (a row wraps to two lines
+  // in the PDF and the text stream reorders around it). So this parser does
+  // not assume any fixed order: each field type (flight numbers, dates,
+  // dep/arr pairs, aircraft type, crew rows) is found independently via
+  // pattern matching and reassembled by position, and multiple row patterns
+  // are tried for crew rows so a mixed-order section still parses cleanly.
+  function parseCrewTripReport(raw){
+    // Collapse everything to single-spaced text, and separate text from a
+    // following ID or date when the PDF's wrapped cell text gets glued
+    // together with no space (e.g. "...MARIA2102462", "...MAD23-Jul-2026").
+    let text = raw.replace(/\r?\n/g,' ')
+      .replace(/([A-Za-z])(\d{7})\b/g,'$1 $2')
+      .replace(/([A-Za-z])(\d{2}-[A-Za-z]{3}-\d{4})/g,'$1 $2')
+      .replace(/\s+/g,' ').trim();
+
+    const RANKS = 'CAPT|FO|SO|IFS|LS|FSS|FS|SS|CS|AS';
+
+    const idxInbound = text.search(/\bInbound\b/i);
+    const idxOutbound = text.search(/\bOutbound\b/i);
+    const idxCrewPairing = text.search(/Crew On My Pairing/i);
+    const idxReportGen = text.search(/Report generated by/i);
+
+    const headerSection = text.substring(0, idxInbound >= 0 ? idxInbound : text.length);
+    const inboundSection = idxInbound >= 0 ? text.substring(idxInbound, idxOutbound >= 0 ? idxOutbound : text.length) : '';
+    const outboundSection = idxOutbound >= 0 ? text.substring(idxOutbound, idxCrewPairing >= 0 ? idxCrewPairing : text.length) : '';
+    const pairingSection = idxCrewPairing >= 0 ? text.substring(idxCrewPairing, idxReportGen >= 0 ? idxReportGen : text.length) : '';
+
+    // ---- Flight legs from the top summary table ----
+    // Field types are extracted independently (order-agnostic) and zipped
+    // back together by row position, rather than matching one fixed-order
+    // row pattern:
+    //  - flight numbers & dates: global matches, taken in row order
+    //  - dep/arr: "AIRPORT HH:MM" only occurs for dep & arr (report/debrief
+    //    times have no adjacent airport code), taken two at a time
+    //  - aircraft type / rego: dates/times/flight-numbers are masked out,
+    //    the remaining text is split into one segment per row (by flight
+    //    number), and within each segment the first bare 3-4 digit number
+    //    is the aircraft type, with the next real token after it taken as
+    //    the registration
+    //  - FH (flight hours): the 5th time token in the row (0-indexed 4) is FH
+    const dateIdx = headerSection.search(/\bDate\b/i);
+    const tableSection = dateIdx >= 0 ? headerSection.substring(dateIdx) : headerSection;
+
+    // Find all flight numbers and their positions
+    const flightRegex = /MH\d{3,4}/g;
+    let match;
+    const flightMatches = [];
+    while((match = flightRegex.exec(tableSection)) !== null){
+      flightMatches.push({ flight: match[0], index: match.index });
+    }
+    const flightNos = flightMatches.map(f => f.flight);
+
+    // Extract dates (in order)
+    const dates = tableSection.match(/\d{2}-[A-Za-z]{3}-\d{4}/g) || [];
+
+    // Extract dep/arr pairs (AIRPORT HH:MM)
+    const depArrMatches = [...tableSection.matchAll(/\b([A-Z]{3})\b\s+(\d{2}:\d{2}(?:\(\+1\))?)/g)];
+
+    // Extract aircraft type and registration using masking
+    const masked = tableSection
+      .replace(/\d{2}-[A-Za-z]{3}-\d{4}/g, 'DATE')
+      .replace(/\d{2}:\d{2}(?:\(\+1\))?/g, 'TIME')
+      .replace(/MH\d{3,4}/g, 'FLIGHTNO');
+    const segments = masked.split('FLIGHTNO').slice(1);
+
+    // Build itinerary
+    const itin = [];
+    for(let i=0; i<flightNos.length; i++){
+      // Get the row substring for this flight (from its start to the next flight start or end)
+      const start = flightMatches[i].index;
+      const end = (i+1 < flightMatches.length) ? flightMatches[i+1].index : tableSection.length;
+      const rowStr = tableSection.substring(start, end);
+
+      // Extract FH: the 5th time token in the row (0-indexed 4)
+      const times = rowStr.match(/\d{2}:\d{2}(?:\(\+1\))?/g) || [];
+      const fh = times.length >= 5 ? times[4] : '';
+
+      const seg = segments[i] || '';
+      const acMatch = seg.match(/\b(\d{3,4})\b/);
+      const ac = acMatch ? acMatch[1] : '';
+      let acReg = '';
+      if(acMatch){
+        const rest = seg.slice(acMatch.index + acMatch[0].length);
+        const tok = rest.trim().split(/\s+/).find(t => t && t !== 'DATE' && t !== 'TIME' && /^[A-Za-z0-9]{2,6}$/.test(t));
+        if(tok) acReg = tok;
+      }
+      const dep = depArrMatches[i*2];
+      const arr = depArrMatches[i*2+1];
+      itin.push({
+        flightId: flightNos[i] || '', date: dates[i] || '',
+        from: dep ? dep[1] : '', dep: dep ? dep[2] : '',
+        to: arr ? arr[1] : '', arr: arr ? arr[2] : '',
+        ac, version:'', acReg, flightTime: fh, groundTime:'',
+        actStart:'', actEnd:'', actLoc:''
+      });
+    }
+    // Fallback: if no legs found at all, at least pick up flight numbers so
+    // the itinerary isn't empty.
+    if(!itin.length){
+      const seen = new Set();
+      (tableSection.match(/MH\d{3,4}/g) || []).forEach(f => {
+        if(!seen.has(f)){ seen.add(f); itin.push({ flightId:f, date:'', from:'', dep:'', to:'', arr:'', ac:'', version:'', acReg:'', flightTime:'', groundTime:'', actStart:'', actEnd:'', actLoc:'' }); }
+      });
+    }
+
+    // ---- Crew: Inbound & Outbound rows ----
+    // Multiple row layouts have been observed, sometimes mixed within the
+    // same section, so all patterns are tried against both sections:
+    //   A) FLIGHT RANK BASE "SIGNING ON/OFF" NAME ID WT
+    //   B) FLIGHT ID NAME RANK BASE "SIGNING ON/OFF" WT
+    //   C) FLIGHT ID NAME RANK WT BASE "SIGNING ON/OFF"  (WT before base)
+    const crewMap = {};
+    const patA = new RegExp('(MH\\d{3,4})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z][A-Z .]*?)\\s+(\\d{7})\\s+([A-Z]{1,3})\\b', 'g');
+    const patB = new RegExp('(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z]{1,3})\\b', 'g');
+    const patC = new RegExp('(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{1,3})\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\b', 'g');
+    [inboundSection, outboundSection].forEach(section => {
+      let m;
+      while((m = patA.exec(section)) !== null){
+        crewMap[m[5]] = { opRank: m[2], crewId: m[5], crewName: m[4].trim() };
+      }
+      while((m = patB.exec(section)) !== null){
+        if(!crewMap[m[2]]) crewMap[m[2]] = { opRank: m[4], crewId: m[2], crewName: m[3].trim() };
+      }
+      while((m = patC.exec(section)) !== null){
+        if(!crewMap[m[2]]) crewMap[m[2]] = { opRank: m[4], crewId: m[2], crewName: m[3].trim() };
+      }
+    });
+
+    // ---- Crew On My Pairing ----
+    // Two layouts observed:  A) BASE RANK ID NAME   B) ID RANK BASE NAME
+    const pairA = new RegExp('([A-Z]{3})\\s+(' + RANKS + ')\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)(?=\\s+[A-Z]{3}\\s+(?:' + RANKS + ')\\s+\\d{7}|\\s+\\d{7}\\s+(?:' + RANKS + ')\\s+[A-Z]{3}|$)', 'g');
+    const pairB = new RegExp('(\\d{7})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+([A-Z][A-Z .]*?)(?=\\s+\\d{7}|\\s+[A-Z]{3}\\s+(?:' + RANKS + ')\\s+\\d{7}|$)', 'g');
+    {
+      let m;
+      while((m = pairA.exec(pairingSection)) !== null){
+        crewMap[m[3]] = { opRank: m[2], crewId: m[3], crewName: m[4].trim() };
+      }
+      while((m = pairB.exec(pairingSection)) !== null){
+        if(!crewMap[m[1]]) crewMap[m[1]] = { opRank: m[2], crewId: m[1], crewName: m[4].trim() };
+      }
+    }
+
+    // ---- Report owner strap line: "NAME | ID | TYPE | BASE | RANK" ----
+    const ownerMatch = headerSection.match(/([A-Z][A-Z .]+?)\s*\|\s*(\d{7})\s*\|\s*([A-Z]+)\s*\|\s*([A-Z]{3})\s*\|\s*(CAPT|FO|SO|IFS|LS|FSS|FS|SS|CS|AS)\b/);
+    if(ownerMatch){
+      crewMap[ownerMatch[2]] = { opRank: ownerMatch[5], crewId: ownerMatch[2], crewName: ownerMatch[1].trim() };
+    }
+
+    const crew = Object.keys(crewMap).map(id => ({
+      opRank: crewMap[id].opRank, posRank: crewMap[id].opRank, crewId: id, crewName: crewMap[id].crewName,
+      wt:'', workPos:'', base:'', sdc:'', checkIn:''
+    }));
+
+    const dutyDate = itin.length ? itin[0].date : '';
+    const dutyStartTimeMatch = headerSection.match(/(\d{2}-[A-Za-z]{3}-\d{4})\s+(\d{2}:\d{2})/);
+    const repTime = dutyStartTimeMatch ? dutyStartTimeMatch[2] : (itin.length ? itin[0].dep : '');
+    const dutyStart = dutyDate ? (dutyDate + ' ' + repTime) : '';
+
+    return {
+      duty: [], itin, crew,
+      found: { duty:false, itin: itin.length>0, crew: crew.length>0 },
+      source: 'pdf',
+      dutyStart, dutyDate,
+      pdfData: { date: dutyDate, acReg: itin.length ? itin[0].acReg : '', repTime }
+    };
+  }
+
+  // ===== Shared state & rendering =====
+  let state = null;
+
+  function fval(key, def){
+    if(state.fields && state.fields.hasOwnProperty(key) && state.fields[key] !== '') return state.fields[key];
+    return def || '';
+  }
+
+  window.updateField = function(key, val){ state.fields[key] = val; };
+
+  // ---- Position modal ----
+  window.openPositionModal = function(crewId, crewName){
+    const ac0 = state.itin.length ? state.itin[0].ac : '';
+    const isNarrow = isNarrowbody(ac0);
+    const posList = isNarrow ? POSITIONS_NARROW : POSITIONS_WIDE;
+    const gridClass = isNarrow ? 'narrow' : 'wide';
+    state.modalCrew = crewId;
+    modalCrewName.textContent = crewName;
+    posGrid.className = 'pos-grid ' + gridClass;
+    posGrid.innerHTML = '';
+    posList.forEach(pos => {
+      const btn = document.createElement('button');
+      btn.className = 'pos-btn' + (state.positions[crewId] === pos ? ' selected' : '');
+      btn.textContent = pos;
+      btn.addEventListener('click', () => window.assignPosition(crewId, pos));
+      posGrid.appendChild(btn);
+    });
+    posModalOverlay.style.display = 'flex';
+  };
+
+  window.assignPosition = function(crewId, pos){
+    if(pos !== 'SNY'){
+      Object.keys(state.positions).forEach(id => {
+        if(id !== crewId && state.positions[id] === pos) state.positions[id] = '';
+      });
+    }
+    state.positions[crewId] = pos;
+    posModalOverlay.style.display = 'none';
+    buildReport();
+  };
+
+  document.getElementById('modalCloseBtn').addEventListener('click', () => { posModalOverlay.style.display = 'none'; });
+  posModalOverlay.addEventListener('click', (e) => { if(e.target === posModalOverlay) posModalOverlay.style.display = 'none'; });
+
+  // ---- Door modal ----
+  window.openDoorModal = function(crewId, crewName){
+    const ac0 = state.itin.length ? state.itin[0].ac : '';
+    const isNarrow = isNarrowbody(ac0);
+    const doors = isNarrow ? DOORS_NARROW : DOORS_WIDE;
+    state.doorModalCrew = crewId;
+    doorModalCrewName.textContent = crewName;
+    doorGrid.innerHTML = '';
+    doors.forEach(door => {
+      const assignedCrew = state.doors[door] || null;
+      const isAssignedToCurrent = (assignedCrew === crewId);
+      const isAssignedToOther = (assignedCrew && assignedCrew !== crewId);
+      const btn = document.createElement('button');
+      btn.className = 'door-btn';
+      if(isAssignedToCurrent) btn.classList.add('selected');
+      if(isAssignedToOther) btn.classList.add('assigned');
+      let label = door;
+      if(isAssignedToCurrent || isAssignedToOther){
+        label += ' ✅';
+      }
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        if(isAssignedToCurrent){
+          state.doors[door] = null;
+        } else if(isAssignedToOther){
+          state.doors[door] = crewId;
+        } else {
+          for(let d in state.doors){
+            if(state.doors[d] === crewId){
+              state.doors[d] = null;
+              break;
+            }
+          }
+          state.doors[door] = crewId;
+        }
+        doorModalOverlay.style.display = 'none';
+        buildReport();
+      });
+      doorGrid.appendChild(btn);
+    });
+    doorModalOverlay.style.display = 'flex';
+  };
+
+  document.getElementById('doorModalCloseBtn').addEventListener('click', () => { doorModalOverlay.style.display = 'none'; });
+  doorModalOverlay.addEventListener('click', (e) => { if(e.target === doorModalOverlay) doorModalOverlay.style.display = 'none'; });
+
+  function buildReport(){
+    const d = state;
+    const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
+    const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
+    const fos = d.crew.filter(c => c.opRank.toUpperCase() === 'FO');
+    const ac0 = d.itin.length ? d.itin[0].ac : '';
+    const isNarrow = isNarrowbody(ac0);
+
+    const sortedCabin = sortCabinCrew(cabinCrew);
+
+    const cic = determineCrewInCharge(sortedCabin);
+    let cicChosen = cic.auto;
+    if(!cicChosen && cic.candidates.length){
+      cicChosen = state.chosenCIC || cic.candidates[0];
+    }
+
+    let picChosen = null;
+    if(isNarrow && captains.length > 1){
+      picChosen = state.selectedPIC || captains[0];
+    } else if(captains.length === 1){
+      picChosen = captains[0];
+    }
+
+    // REP display
+    let repDisplay = '';
+    if(d.dutyDate || (d.pdfData && d.pdfData.date)){
+      const dateStr = (d.pdfData && d.pdfData.date) || d.dutyDate || '';
+      const day = getDayName(dateStr);
+      const repTime = (d.pdfData && d.pdfData.repTime) || (d.dutyStart ? d.dutyStart.split(/\s+/).pop() : '') || '';
+      repDisplay = dateStr + ' (' + day + ') ' + repTime;
+    } else if(d.dutyStart){
+      const parts = d.dutyStart.split(/\s+/);
+      if(parts.length>=2){
+        const dateStr = parts[0] + ' ' + (parts[1] || '');
+        const day = getDayName(dateStr);
+        const repTime = parts[parts.length-1] || '';
+        repDisplay = dateStr + ' (' + day + ') ' + repTime;
+      } else {
+        repDisplay = d.dutyStart;
+      }
+    }
+    if(!repDisplay) repDisplay = '----';
+
+    // ---- Build unified layout ----
+    let html = `<div class="rpad">`;
+
+    // Top info: only BAY and REP
+    html += `<div class="top-info">
+      <span><span class="label">BAY:</span> <input value="${esc(fval('bay', ''))}" oninput="updateField('bay', this.value)" class="small"></span>
+      <span><input value="${esc(repDisplay)}" class="rep" readonly></span>
+    </div>`;
+
+    // Flight table
+    html += `<table class="rtab" style="font-size:9px;">
+      <tr>
+        <th style="width:8%;">F.NO</th>
+        <th style="width:8%;">STATION</th>
+        <th style="width:8%;">STD</th>
+        <th style="width:8%;">STA</th>
+        <th style="width:8%;">FT</th>
+        <th style="width:8%;">ATD</th>
+        <th style="width:8%;">ATA</th>
+        <th style="width:8%;">A/C TYPE</th>
+        <th style="width:8%;">A/C REG</th>
+        <th style="width:28%;">REMARKS</th>
+      </tr>`;
+    d.itin.forEach((l, i) => {
+      const ft = l.flightTime || fval('ft-'+i, '');
+      html += `<tr>
+        <td>${esc(l.flightId)}</td>
+        <td>${esc((l.from||'')+'/'+(l.to||''))}</td>
+        <td><input value="${esc(fval('std-'+i, timeOnly(l.dep)))}" oninput="updateField('std-${i}', this.value)"></td>
+        <td><input value="${esc(fval('sta-'+i, timeOnly(l.arr)))}" oninput="updateField('sta-${i}', this.value)"></td>
+        <td><input value="${esc(ft)}" oninput="updateField('ft-${i}', this.value)"></td>
+        <td><input value="${esc(fval('atd-'+i, ''))}" oninput="updateField('atd-${i}', this.value)"></td>
+        <td><input value="${esc(fval('ata-'+i, ''))}" oninput="updateField('ata-${i}', this.value)"></td>
+        <td><input value="${esc(fval('ac-'+i, l.ac||''))}" oninput="updateField('ac-${i}', this.value)"></td>
+        <td><input value="${esc(fval('acreg-'+i, l.acReg||''))}" oninput="updateField('acreg-${i}', this.value)"></td>
+        <td><input class="remarksTxt" value="${esc(fval('remarks-'+i, ''))}" oninput="updateField('remarks-${i}', this.value)"></td>
+      </tr>`;
+    });
+    html += `</table>`;
+
+    // Airport name – blank by default
+    html += `<div style="font-size:9px;margin-top:2px;text-align:left;border:1px solid #333;border-top:none;padding:2px 4px;">
+      <input value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;" placeholder="">
+    </div>`;
+
+    // Captain & FO
+    html += `<table class="rtab" style="margin-top:4px;width:60%;">
+      <tr><th style="width:25%;">Staff No</th><th style="width:15%;">Rank</th><th style="width:60%;">Name</th></tr>`;
+    if(captains.length){
+      captains.forEach(c => {
+        html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
+      });
+    } else {
+      html += `<tr><td colspan="3">—</td></tr>`;
+    }
+    if(fos.length){
+      fos.forEach(c => {
+        html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
+      });
+    }
+    html += `</table>`;
+
+    // Cabin Crew
+    html += `<div style="margin-top:6px;font-weight:bold;font-size:9px;">CABIN CREW (${sortedCabin.length})</div>`;
+    html += `<table class="rtab crew-table" style="font-size:9px;">
+      <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:62%;text-align:left;">Name</th><th style="width:10%;">Working Post</th><th style="width:10%;">Door</th></tr>`;
+    sortedCabin.forEach(c => {
+      const isCIC = cicChosen && c.crewId === cicChosen.crewId;
+      const pos = state.positions[c.crewId] || '';
+      let doorAssigned = '';
+      for(let d in state.doors){
+        if(state.doors[d] === c.crewId){
+          doorAssigned = d;
+          break;
+        }
+      }
+      html += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
+        <td>${esc(c.crewId)}</td>
+        <td>${esc(c.opRank)}</td>
+        <td style="text-align:left;">${esc(c.crewName)}</td>
+        <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${pos ? esc(pos) : ''}</td>
+        <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${doorAssigned ? esc(doorAssigned) : '+'}</td>
+      </tr>`;
+    });
+    html += `</table>`;
+
+    // Bottom Flight Time Details
+    html += `<div style="margin-top:8px;font-weight:bold;font-size:9px;">Flight Time Details</div>`;
+    html += `<table class="ft-table">
+      <tr>
+        <th style="width:10%;">Flt</th>
+        <th style="width:10%;">LP</th>
+        <th style="width:10%;">CB</th>
+        <th style="width:10%;">CAT</th>
+        <th style="width:10%;">AIC</th>
+        <th style="width:10%;">BC</th>
+        <th style="width:10%;">1P</th>
+        <th style="width:10%;">BC</th>
+        <th style="width:10%;">DC</th>
+        <th style="width:10%;">DO</th>
+      </tr>`;
+    d.itin.forEach((l) => {
+      const flightNo = esc(l.flightId);
+      const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
+      html += `<tr>
+        <td style="font-weight:bold;">${flightNo}</td>
+        ${cats.map(() => `<td><input value="" placeholder=""></td>`).join('')}
+      </tr>`;
+    });
+    html += `</table>`;
+
+    html += `</div>`;
+    reportEl.innerHTML = html;
+
+    // Position cell clicks
+    reportEl.querySelectorAll('.pos-cell').forEach(el => {
+      el.addEventListener('click', () => {
+        window.openPositionModal(el.getAttribute('data-crewid'), el.getAttribute('data-crewname'));
+      });
+    });
+
+    // Door cell clicks
+    reportEl.querySelectorAll('.door-cell').forEach(el => {
+      el.addEventListener('click', () => {
+        window.openDoorModal(el.getAttribute('data-crewid'), el.getAttribute('data-crewname'));
+      });
+    });
+  }
+
+  // ===== Shared state setter =====
+  function setStateAndRender(parsed, source){
+    state = parsed;
+    state.chosenCIC = null;
+    state.selectedPIC = null;
+    state.fields = {};
+    state.positions = {};
+    state.doors = {};
+    state.source = source || 'iflight';
+    buildReport();
+    reportCard.style.display = '';
+    emptyCard.style.display = 'none';
+    if(source === 'iflight'){
+      dbgContent.innerHTML =
+        '<p style="font-size:11px;color:#888;">Duty Details</p>' + renderDebugTable(parsed.duty, ['start','end','pairingId','dutyHours','flyingHours','restRequired','restAvailable']) +
+        '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, ['flightId','date','from','dep','to','arr','ac','version','acReg','flightTime']) +
+        '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, ['opRank','posRank','crewId','crewName','base','sdc','checkIn']);
+      dbgWrap.style.display = '';
+      pdfDbgWrap.style.display = 'none';
+    } else {
+      dbgWrap.style.display = 'none';
+      pdfDbgContent.innerHTML =
+        '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, ['flightId','date','from','dep','to','arr','ac','acReg','flightTime']) +
+        '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, ['opRank','crewId','crewName']);
+      pdfDbgWrap.style.display = '';
+    }
+  }
+
+  // ===== iFlight parse handler =====
+  document.getElementById('parseBtn').addEventListener('click', function(){
+    statusEl.textContent = 'Parsing…';
+    statusEl.className = 'status';
+    try{
+      const raw = pasteBox.value;
+      if(!raw.trim()){ statusEl.textContent = 'Paste the trip report text first.'; statusEl.className = 'status err'; return; }
+      const parsed = parseTripText(raw);
+      if(!parsed.found.itin && !parsed.found.crew){
+        statusEl.textContent = 'Could not find Itinerary Details or Crew List sections. Make sure you copied the full page (select-all), including the table headers.';
+        statusEl.className = 'status err';
+        dbgWrap.style.display = 'none';
+        reportCard.style.display = 'none';
+        emptyCard.style.display = '';
+        return;
+      }
+      const missing = [];
+      if(!parsed.found.duty) missing.push('Duty Details');
+      if(!parsed.found.itin) missing.push('Itinerary Details');
+      if(!parsed.found.crew) missing.push('Crew List');
+      statusEl.className = missing.length ? 'status err' : 'status ok';
+      statusEl.textContent = missing.length ? 'Parsed with missing sections: '+missing.join(', ')+'. Those parts left blank.' : 'Parsed OK — '+parsed.duty.length+' duty period(s), '+parsed.itin.length+' leg(s), '+parsed.crew.length+' crew.';
+      setStateAndRender(parsed, 'iflight');
+    } catch(err){
+      statusEl.textContent = 'Error: '+ (err.message||err);
+      statusEl.className = 'status err';
+      console.error(err);
+    }
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', function(){
+    pasteBox.value = '';
+    statusEl.textContent = '';
+    statusEl.className = 'status';
+    dbgWrap.style.display = 'none';
+    reportCard.style.display = 'none';
+    emptyCard.style.display = '';
+  });
+
+  // ===== PDF parse handler =====
+  function handlePdfParse(text){
+    pdfStatus.textContent = 'Parsing PDF…';
+    pdfStatus.className = 'status';
+    try{
+      if(!text.trim()){ pdfStatus.textContent = 'No text to parse.'; pdfStatus.className = 'status err'; return; }
+      const parsed = parseCrewTripReport(text);
+      if(!parsed.found.crew){
+        pdfStatus.textContent = 'Could not parse crew data. Make sure you copied the full table rows from the PDF.';
+        pdfStatus.className = 'status err';
+        return;
+      }
+      pdfStatus.className = 'status ok';
+      pdfStatus.textContent = 'Parsed OK — '+parsed.itin.length+' leg(s), '+parsed.crew.length+' crew members.';
+      setStateAndRender(parsed, 'pdf');
+    } catch(err){
+      pdfStatus.textContent = 'Error: '+ (err.message||err);
+      pdfStatus.className = 'status err';
+      console.error(err);
+    }
+  }
+
+  document.getElementById('parsePdfBtn').addEventListener('click', function(){
+    handlePdfParse(pdfBox.value);
+  });
+
+  document.getElementById('clearPdfBtn').addEventListener('click', function(){
+    pdfBox.value = '';
+    pdfStatus.textContent = '';
+    pdfStatus.className = 'status';
+    pdfFile.value = '';
+  });
+
+  // ===== PDF file upload with pdf.js =====
+  pdfFile.addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    pdfStatus.textContent = 'Reading PDF…';
+    pdfStatus.className = 'status';
+    const reader = new FileReader();
+    reader.onload = function(loadEvent){
+      const arrayBuffer = loadEvent.target.result;
+      const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+      if(!pdfjsLib){
+        pdfStatus.textContent = 'Error: pdf.js library not loaded.';
+        pdfStatus.className = 'status err';
+        return;
+      }
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      pdfjsLib.getDocument({data: arrayBuffer}).promise.then(function(pdf){
+        let fullText = '';
+        const pages = [];
+        for(let i=1; i<=pdf.numPages; i++){
+          pages.push(pdf.getPage(i));
+        }
+        return Promise.all(pages).then(function(pagePromises){
+          return Promise.all(pagePromises.map(function(page){
+            return page.getTextContent().then(function(textContent){
+              const strings = textContent.items.map(item => item.str);
+              return strings.join(' ');
+            });
+          }));
+        }).then(function(texts){
+          fullText = texts.join('\n');
+          pdfBox.value = fullText;
+          pdfStatus.textContent = 'PDF text extracted. Auto‑parsing…';
+          handlePdfParse(fullText);
+        });
+      }).catch(function(err){
+        pdfStatus.textContent = 'Error reading PDF: ' + err.message;
+        pdfStatus.className = 'status err';
+        console.error(err);
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  // ===== Print =====
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+})();
+</script>
+</body>
+</html>
