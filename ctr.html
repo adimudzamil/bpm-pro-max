@@ -256,6 +256,7 @@
     gap: 10px;
     flex-wrap: wrap;
     margin-top: 14px;
+    align-items: center;
   }
 
   .primary-btn {
@@ -291,17 +292,66 @@
 
   .secondary-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+  /* ── Custom File Upload ── */
   .file-upload-wrapper {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
   }
 
+  .file-upload-wrapper label {
+    position: relative;
+    display: inline-block;
+    background: var(--accent);
+    color: #0a0a0b;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 8px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 0 0 0 rgba(255,111,0,0);
+    animation: filePulse 2.5s infinite ease-in-out;
+    border: none;
+    letter-spacing: 0.02em;
+  }
+
+  .file-upload-wrapper label:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    animation-play-state: paused;
+  }
+
+  .file-upload-wrapper label:active {
+    transform: scale(0.96);
+  }
+
+  @keyframes filePulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,111,0,0.3); }
+    50% { box-shadow: 0 0 20px 6px rgba(255,111,0,0.15); }
+    100% { box-shadow: 0 0 0 0 rgba(255,111,0,0); }
+  }
+
   .file-upload-wrapper input[type="file"] {
-    color: var(--text);
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+  }
+
+  .file-upload-wrapper .file-status {
     font-family: 'DM Mono', monospace;
     font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  .file-upload-wrapper .file-status.has-file {
+    color: var(--accent);
   }
 
   .report-card {
@@ -853,8 +903,9 @@
       <button class="primary-btn" id="parsePdfBtn">⚡ Parse PDF Report</button>
       <button class="secondary-btn" id="clearPdfBtn">Clear</button>
       <div class="file-upload-wrapper">
-        <label for="pdfFile" style="font-size:12px; color:var(--text-muted);">Upload PDF:</label>
+        <label for="pdfFile" class="file-upload-btn">📎 Choose File</label>
         <input type="file" id="pdfFile" accept=".pdf">
+        <span class="file-status" id="fileStatus">No file chosen</span>
       </div>
     </div>
     <div class="status" id="pdfStatus"></div>
@@ -975,6 +1026,7 @@
   const pdfBox = document.getElementById('pdfBox');
   const pdfStatus = document.getElementById('pdfStatus');
   const pdfFile = document.getElementById('pdfFile');
+  const fileStatus = document.getElementById('fileStatus');
   const pdfDbgWrap = document.getElementById('pdfDbgWrap');
   const pdfDbgContent = document.getElementById('pdfDbgContent');
   const reportCard = document.getElementById('reportCard');
@@ -1224,6 +1276,18 @@
     else if (e.key === 'Backspace') { numberKeypadPress('clear'); e.preventDefault(); }
     else if (e.key === 'Enter') { numberKeypadPress('save'); e.preventDefault(); }
     else if (e.key === 'Escape') { numberKeypadPress('cancel'); e.preventDefault(); }
+  });
+
+  // ===== File input status update =====
+  pdfFile.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      fileStatus.textContent = file.name;
+      fileStatus.className = 'file-status has-file';
+    } else {
+      fileStatus.textContent = 'No file chosen';
+      fileStatus.className = 'file-status';
+    }
   });
 
   // ===== iFlight parser =====
@@ -1873,6 +1937,8 @@
     pdfStatus.className = 'status';
     pdfDbgWrap.style.display = 'none';
     pdfFile.value = '';
+    fileStatus.textContent = 'No file chosen';
+    fileStatus.className = 'file-status';
     showToast('PDF cleared', 'default');
   });
 
