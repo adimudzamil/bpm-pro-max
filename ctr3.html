@@ -402,6 +402,7 @@
             border-radius: var(--radius-sm);
             overflow: hidden;
             border: 1px solid var(--border);
+            page-break-inside: avoid;
         }
 
         #report .rpad {
@@ -431,6 +432,7 @@
             font-size: 9px;
             margin-bottom: 4px;
             table-layout: fixed;
+            page-break-inside: avoid;
         }
 
         table.rtab th,
@@ -532,6 +534,7 @@
             font-size: 8.5px;
             margin-top: 4px;
             table-layout: fixed;
+            page-break-inside: avoid;
         }
 
         .ft-table th {
@@ -662,10 +665,16 @@
             justify-content: center;
         }
 
-        /* ── Print ── */
+        /* ── Print styles ── */
+        @page {
+            margin: 0.2in;
+        }
+
         @media print {
             body {
                 background: #fff;
+                margin: 0;
+                padding: 0;
             }
 
             header,
@@ -678,6 +687,7 @@
             .wrap {
                 padding: 0;
                 max-width: none;
+                margin: 0;
             }
 
             .reportcard {
@@ -685,16 +695,25 @@
                 padding: 0;
                 margin: 0;
                 background: transparent;
+                page-break-inside: avoid;
             }
 
             #report {
                 border-radius: 0;
                 border: none;
+                overflow: visible;
+                height: auto;
+                page-break-inside: avoid;
+            }
+
+            #report .rpad {
+                padding: 0.1in 0.05in;
             }
 
             .crew-table {
                 table-layout: fixed !important;
                 width: 100% !important;
+                page-break-inside: avoid;
             }
 
             .crew-table th,
@@ -743,6 +762,17 @@
 
             .ft-table td input {
                 border: none !important;
+            }
+
+            /* Avoid page breaks inside tables */
+            table.rtab,
+            .ft-table,
+            .crew-table {
+                page-break-inside: avoid;
+            }
+
+            tr {
+                page-break-inside: avoid;
             }
         }
 
