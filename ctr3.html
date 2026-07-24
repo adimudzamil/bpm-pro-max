@@ -64,7 +64,7 @@
     opacity: 0.3;
   }
 
-  .container {
+  .wrap {
     position: relative;
     z-index: 2;
     max-width: 960px;
@@ -138,7 +138,7 @@
     color: var(--accent);
   }
 
-  /* ── Cards / Drop Zones ── */
+  /* ── Cards ── */
   .card {
     position: relative;
     background: var(--surface);
@@ -582,7 +582,7 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #2c2c2c; border-radius: 6px; }
 
-  /* ── Inline report styles (unchanged from base) ── */
+  /* ── Inline report styles (EXACTLY as base code) ── */
   #report {
     background: #fff;
     color: #111;
@@ -610,7 +610,6 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
   }
 
-  /* ── Flight Table ── */
   table.rtab {
     width: 100%;
     border-collapse: collapse;
@@ -656,7 +655,6 @@
     font-size: 9px;
   }
 
-  /* ── Column widths ── */
   .rtab .col-flight { width: 9%; }
   .rtab .col-station { width: 10%; }
   .rtab .col-time { width: 7%; }
@@ -681,7 +679,6 @@
   }
   .door-cell.unset { color: #aaa; font-weight: 400; }
 
-  /* ── Top info ── */
   .top-info {
     display: flex;
     flex-wrap: wrap;
@@ -716,7 +713,6 @@
     border-color: #555;
   }
 
-  /* ── Flight Time Details Table ── */
   .ft-table {
     width: 100%;
     border-collapse: collapse;
@@ -753,117 +749,26 @@
     padding: 1px;
   }
 
-  /* ── Print styles ── */
+  /* ── PRINT STYLES – EXACTLY AS ORIGINAL BASE CODE ── */
   @media print {
     body { background: #fff; }
-    /* Hide everything except the report card */
-    header, .card:not(.reportcard), .noprint, .noprint-inline,
-    .or-divider, .method-tag, .byline-badge, .badge-group,
-    .stats-row, .btnrow, .status, #statsContainer, #pdfStatus,
-    #status, #dbgWrap, #pdfDbgWrap, #toastMsg, footer,
-    .file-upload-wrapper, .modal-overlay, #emptyCard {
-      display: none !important;
-    }
+    header, .card:not(.reportcard), .noprint, .noprint-inline { display: none !important; }
+    .wrap { padding: 0; max-width: none; }
+    .reportcard { border: none; padding: 0; margin: 0; }
+    #report { border-radius: 0; }
 
-    .container {
-      max-width: 100% !important;
-      padding: 0 !important;
-      margin: 0 !important;
-    }
+    .crew-table { table-layout: fixed !important; width: 100% !important; }
+    .crew-table th, .crew-table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .crew-table th:nth-child(1), .crew-table td:nth-child(1) { width: 10% !important; }
+    .crew-table th:nth-child(2), .crew-table td:nth-child(2) { width: 5% !important; }
+    .crew-table th:nth-child(3), .crew-table td:nth-child(3) { width: 70% !important; }
+    .crew-table th:nth-child(4), .crew-table td:nth-child(4) { width: 10% !important; }
+    .crew-table th:nth-child(5), .crew-table td:nth-child(5) { width: 5% !important; }
 
-    .report-card {
-      background: none !important;
-      border: none !important;
-      padding: 0 !important;
-      margin: 0 !important;
-    }
-
-    .report-card .report-inner {
-      border-radius: 0 !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      background: #fff !important;
-      overflow: visible !important;
-    }
-
-    #report {
-      border-radius: 0 !important;
-      font-size: 8.5px !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      overflow: visible !important;
-    }
-
-    #report .rpad {
-      padding: 4px 6px !important;
-    }
-
-    .top-info input, .top-info input.rep {
-      border-color: #999 !important;
-      background: #fff !important;
-    }
-
-    .ft-table td input {
-      border: none !important;
-    }
-
-    table.rtab {
-      font-size: 8px !important;
-    }
-
-    table.rtab td input {
-      font-size: 8px !important;
-    }
-
-    table.rtab th {
-      font-size: 7.5px !important;
-    }
-
-    .crew-table th, .crew-table td {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .crew-table th:nth-child(1), .crew-table td:nth-child(1) {
-      width: 10% !important;
-    }
-    .crew-table th:nth-child(2), .crew-table td:nth-child(2) {
-      width: 5% !important;
-    }
-    .crew-table th:nth-child(3), .crew-table td:nth-child(3) {
-      width: 70% !important;
-    }
-    .crew-table th:nth-child(4), .crew-table td:nth-child(4) {
-      width: 10% !important;
-    }
-    .crew-table th:nth-child(5), .crew-table td:nth-child(5) {
-      width: 5% !important;
-    }
-
-    .pos-cell.unset {
-      color: transparent !important;
-      font-size: 0 !important;
-    }
-
-    .door-cell.unset {
-      color: transparent !important;
-      font-size: 0 !important;
-    }
-
-    .ft-cell-clickable:hover {
-      background: transparent !important;
-    }
-
-    .toast {
-      display: none !important;
-    }
-
-    /* Remove any extra space */
-    .rpad, .report-inner, #report {
-      page-break-after: avoid;
-      page-break-inside: avoid;
-    }
+    .pos-cell.unset { color: transparent !important; font-size: 0 !important; }
+    .door-cell.unset { color: transparent !important; font-size: 0 !important; }
+    .top-info input, .top-info input.rep { border-color: #999 !important; background: #fff !important; }
+    .ft-table td input { border: none !important; }
   }
 
   @media screen {
@@ -875,7 +780,7 @@
 </head>
 <body>
 
-<div class="container">
+<div class="wrap">
 
   <!-- ===== HEADER (hidden in print) ===== -->
   <header class="noprint">
@@ -989,16 +894,17 @@
   </div>
 </div>
 
-<!-- ===== TOAST (hidden in print) ===== -->
+<!-- ===== TOAST ===== -->
 <div id="toastMsg" class="toast noprint"></div>
 
-<!-- ===== FOOTER (hidden in print) ===== -->
+<!-- ===== FOOTER ===== -->
 <footer class="noprint">
   🔒 All processing is local — your data never leaves your device.<br>
   <span style="color:var(--accent);">CTR</span> · 2100551
 </footer>
 
 <script>
+// ===== FULL JAVASCRIPT – EXACTLY AS BASE CODE =====
 (function(){
   // ===== DOM refs =====
   const pasteBox = document.getElementById('pasteBox');
@@ -1019,10 +925,6 @@
   const doorModalOverlay = document.getElementById('doorModalOverlay');
   const doorGrid = document.getElementById('doorGrid');
   const doorModalCrewName = document.getElementById('doorModalCrewName');
-  const statsContainer = document.getElementById('statsContainer');
-  const statFlights = document.getElementById('statFlights');
-  const statCrew = document.getElementById('statCrew');
-  const statCabin = document.getElementById('statCabin');
 
   // ===== Constants =====
   const DUTY_HEADERS = ["Start","End","Pairing Id","Duty Hours","Flying Hours","Rest Required","Rest Available"];
@@ -1267,7 +1169,6 @@
 
   window.updateField = function(key, val){ state.fields[key] = val; };
 
-  // ---- Position modal ----
   window.openPositionModal = function(crewId, crewName){
     const ac0 = state.itin.length ? state.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
@@ -1301,7 +1202,6 @@
   document.getElementById('modalCloseBtn').addEventListener('click', () => { posModalOverlay.style.display = 'none'; });
   posModalOverlay.addEventListener('click', (e) => { if(e.target === posModalOverlay) posModalOverlay.style.display = 'none'; });
 
-  // ---- Door modal ----
   window.openDoorModal = function(crewId, crewName){
     const ac0 = state.itin.length ? state.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
@@ -1370,7 +1270,6 @@
       picChosen = captains[0];
     }
 
-    // REP display
     let repDisplay = '';
     if(d.dutyDate || (d.pdfData && d.pdfData.date)){
       const dateStr = (d.pdfData && d.pdfData.date) || d.dutyDate || '';
@@ -1390,16 +1289,13 @@
     }
     if(!repDisplay) repDisplay = '----';
 
-    // ---- Build unified layout ----
     let html = `<div class="rpad">`;
 
-    // Top info: only BAY and REP
     html += `<div class="top-info">
       <span><span class="label">BAY:</span> <input value="${esc(fval('bay', ''))}" oninput="updateField('bay', this.value)" class="small"></span>
       <span><input value="${esc(repDisplay)}" class="rep" readonly></span>
     </div>`;
 
-    // Flight table
     html += `<table class="rtab" style="font-size:9px;">
       <tr>
         <th class="col-flight">F.NO</th>
@@ -1430,12 +1326,10 @@
     });
     html += `</table>`;
 
-    // Airport name – blank by default
     html += `<div style="font-size:9px;margin-top:2px;text-align:left;border:1px solid #333;border-top:none;padding:2px 4px;">
       <input value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;font-family:inherit;" placeholder="">
     </div>`;
 
-    // Captain & FO
     html += `<table class="rtab" style="margin-top:4px;width:60%;">
       <tr><th style="width:25%;">Staff No</th><th style="width:15%;">Rank</th><th style="width:60%;">Name</th></tr>`;
     if(captains.length){
@@ -1452,7 +1346,6 @@
     }
     html += `</table>`;
 
-    // Cabin Crew
     html += `<div style="margin-top:6px;font-weight:bold;font-size:9.5px;">CABIN CREW (${sortedCabin.length})</div>`;
     html += `<table class="rtab crew-table" style="font-size:9px;">
       <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:62%;text-align:left;">Name</th><th style="width:10%;">Working Post</th><th style="width:10%;">Door</th></tr>`;
@@ -1476,7 +1369,6 @@
     });
     html += `</table>`;
 
-    // Bottom Flight Time Details
     html += `<div style="margin-top:8px;font-weight:bold;font-size:9.5px;">Flight Time Details</div>`;
     html += `<table class="ft-table">
       <tr>
@@ -1504,14 +1396,12 @@
     html += `</div>`;
     reportEl.innerHTML = html;
 
-    // Position cell clicks
     reportEl.querySelectorAll('.pos-cell').forEach(el => {
       el.addEventListener('click', () => {
         window.openPositionModal(el.getAttribute('data-crewid'), el.getAttribute('data-crewname'));
       });
     });
 
-    // Door cell clicks
     reportEl.querySelectorAll('.door-cell').forEach(el => {
       el.addEventListener('click', () => {
         window.openDoorModal(el.getAttribute('data-crewid'), el.getAttribute('data-crewname'));
