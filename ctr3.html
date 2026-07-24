@@ -365,9 +365,9 @@
   .report-card .report-inner {
     background: #ffffff;
     border-radius: var(--radius-sm);
-    overflow: auto;
     padding: 8px;
     max-width: 100%;
+    /* overflow removed to prevent print issues */
   }
 
   .stats-row {
@@ -636,7 +636,6 @@
     background: #fff;
     color: #111;
     border-radius: 6px;
-    overflow: auto;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
     font-size: 10px;
   }
@@ -665,7 +664,6 @@
     border-collapse: collapse;
     font-size: 9px;
     margin-top: 4px;
-    table-layout: fixed;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
   }
   .captain-icc-table td {
@@ -755,7 +753,6 @@
     border-collapse: collapse;
     font-size: 9.5px;
     margin-bottom: 3px;
-    table-layout: fixed;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
   }
 
@@ -942,15 +939,14 @@
     .report-card .report-inner {
       border-radius: 0;
       padding: 0 !important;
-      overflow: visible !important;
       margin: 0 !important;
+      /* no overflow property */
     }
     #report {
       border-radius: 0;
       font-size: 8.5px;
       margin: 0;
       padding: 0;
-      overflow: visible !important;
     }
     #report .rpad { padding: 4px 6px; }
 
@@ -971,6 +967,13 @@
     .toast { display: none !important; }
     .alt-icc-badge { display: inline-block !important; background: #111 !important; color: #fff !important; }
     .captain-icc-table td { padding: 2px 4px; }
+  }
+
+  /* Screen-specific overflow for report preview */
+  @media screen {
+    .report-card .report-inner {
+      overflow: auto;
+    }
   }
 </style>
 </head>
