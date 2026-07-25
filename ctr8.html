@@ -1855,6 +1855,9 @@
 
   // ===== Build Report =====
   function buildReport(){
+    // --- FIX: declare iccCandidates at the top to avoid ReferenceError ---
+    let iccCandidates = [];
+
     const d = state;
     const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
     const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
@@ -1901,6 +1904,13 @@
       } else {
         altIccCrewId = null;
       }
+    }
+
+    // Determine ICC candidates for clicking
+    if (ifsCrew.length > 1) {
+      iccCandidates = ifsCrew;
+    } else if (ifsCrew.length === 0 && lsCrew.length > 1) {
+      iccCandidates = lsCrew;
     }
 
     // ---- REP display ----
