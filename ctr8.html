@@ -724,8 +724,7 @@
   .alt-icc-toggle-btn, .sny-toggle-btn {
     width: 100%;
     padding: 10px;
-    margin-top: 6px;
-    margin-bottom: 10px; /* consistent gap with grid */
+    margin-top: 8px;
     font-size: 14px;
     font-weight: 600;
     border-radius: var(--radius-sm);
@@ -827,7 +826,7 @@
   .rtab .col-atd { width: 7%; }
   .rtab .col-ata { width: 7%; }
   .rtab .col-ac-reg { width: 10%; }
-  .rtab .col-remarks { width: 36%; } /* widened */
+  .rtab .col-remarks { width: 36%; }
 
   .pos-cell {
     cursor: pointer;
@@ -843,8 +842,11 @@
   }
   .door-cell.unset { color: #aaa; font-weight: 400; }
 
-  .alt-icc-badge, .sny-badge {
+  /* ── Badges: Alt ICC & SNY ── */
+  .alt-icc-badge {
     display: inline-block;
+    background: #111;
+    color: #fff;
     font-size: 7.5px;
     font-weight: 700;
     padding: 1px 8px;
@@ -854,16 +856,25 @@
     letter-spacing: 0.04em;
     border: 1px solid #333;
     vertical-align: middle;
-    float: right; /* align right */
-    margin-right: 0;
+    float: right;
+    margin-right: 2px;
   }
-  .alt-icc-badge {
-    background: #111;
-    color: #fff;
-  }
+
   .sny-badge {
-    background: #000;
-    color: #fff;
+    display: inline-block;
+    background-color: #000 !important;
+    color: #fff !important;
+    font-size: 7.5px;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 100px;
+    margin-left: 6px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.04em;
+    border: 1px solid #333;
+    vertical-align: middle;
+    float: right;
+    margin-right: 2px;
   }
 
   /* ── Top info ── */
@@ -972,19 +983,29 @@
     table.rtab { font-size: 8px; }
     table.rtab td input { font-size: 8px; }
     table.rtab th { font-size: 7.5px; }
+
+    /* Original column widths restored */
     .crew-table th, .crew-table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .crew-table th:nth-child(1), .crew-table td:nth-child(1){width:10% !important;}
     .crew-table th:nth-child(2), .crew-table td:nth-child(2){width:8% !important;}
     .crew-table th:nth-child(3), .crew-table td:nth-child(3){width:62% !important;}
     .crew-table th:nth-child(4), .crew-table td:nth-child(4){width:10% !important;}
     .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:10% !important;}
+
     .pos-cell.unset { color: transparent !important; font-size: 0 !important; }
     .door-cell.unset { color: transparent !important; font-size: 0 !important; }
     .ft-cell-clickable:hover { background: transparent !important; }
     .toast { display: none !important; }
     .report-inner, #report, .rpad { page-break-after: avoid; }
     .rpad { page-break-inside: avoid; }
-    .alt-icc-badge, .sny-badge { display: inline-block !important; background: #111 !important; color: #fff !important; float: right !important; }
+
+    .alt-icc-badge, .sny-badge {
+      display: inline-block !important;
+      background: #000 !important;
+      color: #fff !important;
+      float: right !important;
+      margin-right: 2px !important;
+    }
     .pilot-table td, .icc-table td { padding: 2px 4px; }
   }
 
@@ -2025,7 +2046,7 @@
     </tr>`;
     html += `</table>`;
 
-    // Cabin Crew
+    // Cabin Crew — restored to original column widths
     html += `<div style="margin-top:6px;font-weight:bold;font-size:9.5px;">CABIN CREW (${sortedCabin.length})</div>`;
     html += `<table class="rtab crew-table" style="font-size:9px;">
       <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:62%;text-align:left;">Name</th><th style="width:10%;">Working Post</th><th style="width:10%;">Door</th></tr>`;
@@ -2040,15 +2061,12 @@
           break;
         }
       }
-      // SNY badge
       const isSny = snyStatus[c.crewId] || false;
-      // Staff number, rank, name editable
       const staffId = fval('crew-id-'+c.crewId, c.crewId);
       const rank = fval('crew-rank-'+c.crewId, c.opRank);
       const name = fval('crew-name-'+c.crewId, c.crewName);
 
-      let nameDisplay = `<input class="editable-crew" type="text" value="${esc(name)}" oninput="updateField('crew-name-${c.crewId}', this.value)" style="width:90%;border:none;background:transparent;font-size:9px;font-family:inherit;">`;
-      // Add badges (alt ICC, SNY) with float right
+      let nameDisplay = `<input class="editable-crew" type="text" value="${esc(name)}" oninput="updateField('crew-name-${c.crewId}', this.value)" style="width:70%;border:none;background:transparent;font-size:9px;font-family:inherit;">`;
       if (isAltIcc) {
         nameDisplay += ` <span class="alt-icc-badge">alt ICC</span>`;
       }
@@ -2066,17 +2084,16 @@
     });
     html += `</table>`;
 
-    // Bottom Flight Time Details with editable headers
+    // Flight Time Details with editable headers
     html += `<div style="margin-top:8px;font-weight:bold;font-size:9.5px;">Flight Time Details</div>`;
     html += `<table class="ft-table">`;
-    // Header row with editable inputs
     const headerLabels = ['LP','CB','CAT','AIC','BC','1P','BC','DC','LPO'];
     html += `<tr>`;
     html += `<th style="width:10%;">Flt</th>`;
     headerLabels.forEach((label, idx) => {
       const key = 'ft-header-'+idx;
       const val = fval(key, label);
-      html += `<th style="width:10%;padding:0;"><input class="ft-header-input" type="text" value="${esc(val)}" oninput="updateField('${key}', this.value)" style="width:100%;border:none;background:transparent;font-size:8px;font-weight:600;text-align:center;font-family:inherit;"></th>
+      html += `<th style="width:10%;padding:0;"><input class="ft-header-input" type="text" value="${esc(val)}" oninput="updateField('${key}', this.value)" style="width:100%;border:none;background:transparent;font-size:8px;font-weight:600;text-align:center;font-family:inherit;"></th>`;
     });
     html += `</tr>`;
     d.itin.forEach((l, rowIndex) => {
@@ -2191,7 +2208,7 @@
     state.source = source || 'iflight';
     iccChosenCrew = null;
     altIccCrewId = null;
-    snyStatus = {}; // reset
+    snyStatus = {};
     buildReport();
     reportCard.style.display = 'block';
     emptyCard.style.display = 'none';
