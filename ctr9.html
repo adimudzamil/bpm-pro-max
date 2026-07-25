@@ -2004,14 +2004,22 @@
       const rank = fval('crew-rank-'+c.crewId, c.opRank);
       const name = fval('crew-name-'+c.crewId, c.crewName);
 
-      let nameDisplay = `<input class="editable-crew" type="text" value="${esc(name)}" oninput="updateField('crew-name-${c.crewId}', this.value)" style="width:90%;border:none;background:transparent;font-size:9px;font-family:inherit;">`;
-      // Add badges (alt ICC, SNY) with float right
-      if (isAltIcc) {
-        nameDisplay += ` <span class="alt-icc-badge">alt ICC</span>`;
-      }
-      if (isSny) {
-        nameDisplay += ` <span class="sny-badge">SNY</span>`;
-      }
+      // Wrap everything in a flex container to keep them on the same line
+let nameDisplay = `<div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">`;
+
+// Reduced input width to 70% to make explicit room for the badges
+nameDisplay += `<input class="editable-crew" type="text" value="${esc(name)}" oninput="updateField('crew-name-${c.crewId}', this.value)" style="width:70%; border:none; background:transparent; font-size:9px; font-family:inherit;">`;
+
+// Container for badges to keep them grouped together on the right side
+nameDisplay += `<div style="display: flex; gap: 4px; flex-shrink: 0;">`;
+if (isAltIcc) {
+  nameDisplay += `<span class="alt-icc-badge" style="font-size:9px;">alt ICC</span>`;
+}
+if (isSny) {
+  nameDisplay += `<span class="sny-badge" style="font-size:9px;">SNY</span>`;
+}
+nameDisplay += `</div></div>`;
+
 
       html += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
         <td><input class="editable-crew" type="text" value="${esc(staffId)}" oninput="updateField('crew-id-${c.crewId}', this.value)" style="width:100%;border:none;background:transparent;font-size:9px;font-family:inherit;text-align:center;"></td>
