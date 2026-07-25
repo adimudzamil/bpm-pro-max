@@ -39,31 +39,6 @@
     padding-bottom: 40px;
   }
 
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-    background-size: 48px 48px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  body::after {
-    content: '';
-    position: fixed;
-    top: -20%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.3;
-  }
-
   .container {
     position: relative;
     z-index: 2;
@@ -202,35 +177,7 @@
     box-shadow: 0 0 20px var(--accent-glow);
   }
 
-  /* ── OR Divider ── */
-  .or-divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: -14px 0 -14px 0;
-    position: relative;
-    z-index: 3;
-  }
-
-  .or-circle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: #0a0a0b;
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    box-shadow: 0 0 20px var(--accent-glow);
-    border: 2px solid var(--surface);
-    flex-shrink: 0;
-    user-select: none;
-  }
+  /* ── OR Divider removed ── */
 
   textarea {
     width: 100%;
@@ -926,7 +873,7 @@
     padding: 1px;
   }
 
-  /* ── PRINT STYLES – fixed to avoid forced second page ── */
+  /* ── Print styles ── */
   @media print {
     body { background: #fff; }
     header, .card:not(.reportcard), .noprint, .noprint-inline { display: none !important; }
@@ -936,13 +883,6 @@
     .container { max-width: 100%; padding: 0; margin: 0; }
     #report { border-radius: 0; font-size: 8.5px; margin: 0; padding: 0; }
     #report .rpad { padding: 4px 6px; }
-
-    /* ── Allow natural page breaks ── */
-    .report-inner, #report, .rpad {
-      page-break-after: auto !important;
-      page-break-inside: auto !important;
-    }
-
     .top-info input, .top-info input.rep { border-color: #999 !important; background: #fff !important; }
     .ft-table td input { border: none !important; }
     table.rtab { font-size: 8px; }
@@ -958,7 +898,8 @@
     .door-cell.unset { color: transparent !important; font-size: 0 !important; }
     .ft-cell-clickable:hover { background: transparent !important; }
     .toast { display: none !important; }
-    .rpad { page-break-inside: auto !important; }
+    .report-inner, #report, .rpad { page-break-after: avoid; }
+    .rpad { page-break-inside: avoid; }
     .alt-icc-badge { display: inline-block !important; background: #111 !important; color: #fff !important; }
     .captain-icc-table td { padding: 2px 4px; }
   }
@@ -1002,10 +943,7 @@
     </details>
   </div>
 
-  <!-- ===== OR DIVIDER ===== -->
-  <div class="or-divider noprint">
-    <div class="or-circle">or</div>
-  </div>
+  <!-- ===== OR DIVIDER REMOVED ===== -->
 
   <!-- ===== PDF Parser Card ===== -->
   <div class="card noprint">
@@ -1197,7 +1135,7 @@
   const ITIN_HEADERS = ["Flight/Acy Id","Date","From","Dep.","To","Arr.","A/C","Version","A/C Reg","Flight Time","Ground Time","Activity Start","Activity End","Activity Location"];
   const CREW_HEADERS = ["OP Rank","Postion Rank","Crew Id","Crew Name","WT","Work Pos.","Base","SDC","Check In"];
   const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary'];
-  const COCKPIT_RANKS = ['CAPT','FO','SO','CDT'];
+  const COCKPIT_RANKS = ['CAPT','FO','SO'];
   const POSITIONS_NARROW = ['ICC', 'P1','P2','P3','P4','A1','A2','SNY'];
   const POSITIONS_WIDE = ['ICC', 'IFS B', 'LSB', 'LSC', 'LSD', 'AG', 'BG1', 'BG2', 'CG', 'DG', 'BC', 'BC1', 'CC', 'DC', 'DC2', 'SNY'];
   const RANK_PRIORITY = { 'IFS': 1, 'LS': 2, 'FS': 3, 'FSS': 4, 'SS': 5, 'CS': 6, 'AS': 7 };
@@ -1479,7 +1417,7 @@
       .replace(/([A-Za-z])(\d{2}-[A-Za-z]{3}-\d{4})/g,'$1 $2')
       .replace(/\s+/g,' ').trim();
 
-    const RANKS = 'CAPT|FO|SO|CDT|IFS|LS|FSS|FS|SS|CS|AS';
+    const RANKS = 'CAPT|FO|SO|IFS|LS|FSS|FS|SS|CS|AS';
 
     const idxInbound = text.search(/\bInbound\b/i);
     const idxOutbound = text.search(/\bOutbound\b/i);
@@ -1772,7 +1710,6 @@
     const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
     const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
     const fos = d.crew.filter(c => c.opRank.toUpperCase() === 'FO');
-    const cdts = d.crew.filter(c => c.opRank.toUpperCase() === 'CDT');
     const ac0 = d.itin.length ? d.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
 
@@ -1916,14 +1853,12 @@
     // Captain & FO names
     const captainNames = captains.length ? captains.map(c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName)).join('<br>') : '—';
     const foNames = fos.length ? fos.map(c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName)).join('<br>') : '—';
-    const cdtNames = cdts.length ? cdts.map(c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName)).join('<br>') : '—';
 
     html += `<table class="captain-icc-table">
       <tr>
         <td class="left-col">
           <div><span class="label">Captain:</span><br>${captainNames}</div>
           ${fos.length ? `<div style="margin-top:2px;"><span class="label">FO:</span><br>${foNames}</div>` : ''}
-          ${cdts.length ? `<div style="margin-top:2px;"><span class="label">CDT:</span><br>${cdtNames}</div>` : ''}
         </td>
         <td class="right-col">
           <div>
@@ -1984,11 +1919,11 @@
         <th style="width:10%;">1P</th>
         <th style="width:10%;">BC</th>
         <th style="width:10%;">DC</th>
-        <th style="width:10%;">LPO</th>
+        <th style="width:10%;">DO</th>
       </tr>`;
     d.itin.forEach((l, rowIndex) => {
       const flightNo = esc(l.flightId);
-      const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','LPO'];
+      const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
       html += `<tr>`;
       html += `<td style="font-weight:bold;font-size:9px;">${flightNo}</td>`;
       cats.forEach((cat, colIndex) => {
