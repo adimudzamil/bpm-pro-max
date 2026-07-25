@@ -955,6 +955,19 @@
     .rpad { page-break-inside: avoid; }
     .alt-icc-badge { display: inline-block !important; background: #111 !important; color: #fff !important; }
     .captain-icc-table td { padding: 2px 4px; }
+
+    /* ── ADDED: Force one page & hide overflow ── */
+    html, body, .container, .report-card, .report-inner {
+      overflow: hidden !important;
+      max-height: 100vh !important;
+      height: 100vh !important;
+    }
+    .report-inner {
+      max-height: 100vh !important;
+      overflow: hidden !important;
+      page-break-after: avoid !important;
+      page-break-inside: avoid !important;
+    }
   }
 </style>
 </head>
@@ -971,6 +984,7 @@
     <div class="badge-group">
       <div class="badge">📄 PDF Parser</div>
       <div class="badge">🔒 Offline</div>
+      <div class="badge accent">v2.0</div>
     </div>
   </header>
 
@@ -1190,8 +1204,8 @@
   const ITIN_HEADERS = ["Flight/Acy Id","Date","From","Dep.","To","Arr.","A/C","Version","A/C Reg","Flight Time","Ground Time","Activity Start","Activity End","Activity Location"];
   const CREW_HEADERS = ["OP Rank","Postion Rank","Crew Id","Crew Name","WT","Work Pos.","Base","SDC","Check In"];
   const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary'];
-  const COCKPIT_RANKS = ['CAPT','FO','SO'];
-  const POSITIONS_NARROW = ['P1','P2','P3','P4','A1','A2','SNY'];
+  const COCKPIT_RANKS = ['CAPT','FO','SO','CDT'];
+  const POSITIONS_NARROW = ['ICC', 'P1','P2','P3','P4','A1','A2','SNY'];
   const POSITIONS_WIDE = ['ICC', 'IFS B', 'LSB', 'LSC', 'LSD', 'AG', 'BG1', 'BG2', 'CG', 'DG', 'BC', 'BC1', 'CC', 'DC', 'DC2', 'SNY'];
   const RANK_PRIORITY = { 'IFS': 1, 'LS': 2, 'FS': 3, 'FSS': 4, 'SS': 5, 'CS': 6, 'AS': 7 };
   const DOORS_NARROW = ['1L','1R','2L','2R'];
@@ -1472,7 +1486,7 @@
       .replace(/([A-Za-z])(\d{2}-[A-Za-z]{3}-\d{4})/g,'$1 $2')
       .replace(/\s+/g,' ').trim();
 
-    const RANKS = 'CAPT|FO|SO|IFS|LS|FSS|FS|SS|CS|AS';
+    const RANKS = 'CAPT|FO|SO|CDT|IFS|LS|FSS|FS|SS|CS|AS';
 
     const idxInbound = text.search(/\bInbound\b/i);
     const idxOutbound = text.search(/\bOutbound\b/i);
@@ -1506,18 +1520,6 @@
 
     const itin = [];
     for(let i=0; i<flightNos.length; i++){
-      const start = flightMatches[i].index;
-      const end = (i+1 < flightMatches.length) ? flightMatches[i+1].index : tableSection.length;
-      const rowStr = tableSection.substring(start, end);
-
-      const flightIdx = rowStr.indexOf(flightNos[i]);
-      const afterFlight = rowStr.substring(flightIdx + flightNos[i].length);
-      const timesAfter = afterFlight.match(/\d{2}:\d{2}(?:\(\+1\))?/g) || [];
-      let fh = '';
-      if(timesAfter.length >= 3){
-        fh = timesAfter[2];
-      }
-
       const seg = segments[i] || '';
       const acMatch = seg.match(/\b(\d{3,4})\b/);
       const ac = acMatch ? acMatch[1] : '';
@@ -1530,21 +1532,19 @@
       const dep = depArrMatches[i*2];
       const arr = depArrMatches[i*2+1];
 
-      let acType = ac;
-      const acMap = {
-        '359': 'A350-900',
-        '350': 'A350-900H',
-        '339': 'A330-900',
-        '333': 'A330-300',
-        '332': 'A330-200',
-        '738': '737-800NR',
-        '73H': '737-800R',
-        '7M8': '737-800MAX'
-      };
-      acType = acMap[acType] || acType;
-
-      if(acReg && !acReg.startsWith('9M-')){
-        acReg = '9M-' + acReg;
+      // FH (flight hours -> FT field): its position relative to
+      // date/flight/rank varies between report exports, but it's reliably
+      // the second-to-last bare HH:MM token that appears between this row's
+      // Arr time and its aircraft-type code (the last such token being DH).
+      let fh = '';
+      if(arr){
+        const segStart = arr.index + arr[0].length;
+        const segEnd = (i+1 < flightMatches.length) ? flightMatches[i+1].index : tableSection.length;
+        const rowTail = tableSection.slice(segStart, segEnd);
+        const acPos = rowTail.search(/\b\d{3,4}\b/);
+        const clusterText = acPos >= 0 ? rowTail.slice(0, acPos) : rowTail;
+        const times = clusterText.match(/\d{2}:\d{2}(?:\(\+1\))?/g) || [];
+        if(times.length >= 2) fh = times[times.length - 2];
       }
 
       itin.push({
@@ -1554,7 +1554,7 @@
         dep: dep ? dep[2] : '',
         to: arr ? arr[1] : '',
         arr: arr ? arr[2] : '',
-        ac: acType,
+        ac: ac,
         version: '',
         acReg: acReg,
         flightTime: fh,
@@ -1779,6 +1779,7 @@
     const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
     const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
     const fos = d.crew.filter(c => c.opRank.toUpperCase() === 'FO');
+    const cdts = d.crew.filter(c => c.opRank.toUpperCase() === 'CDT');
     const ac0 = d.itin.length ? d.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
 
@@ -1922,12 +1923,14 @@
     // Captain & FO names
     const captainNames = captains.length ? captains.map(c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName)).join('<br>') : '—';
     const foNames = fos.length ? fos.map(c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName)).join('<br>') : '—';
+    const cdtNames = cdts.length ? cdts.map(c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName)).join('<br>') : '—';
 
     html += `<table class="captain-icc-table">
       <tr>
         <td class="left-col">
           <div><span class="label">Captain:</span><br>${captainNames}</div>
           ${fos.length ? `<div style="margin-top:2px;"><span class="label">FO:</span><br>${foNames}</div>` : ''}
+          ${cdts.length ? `<div style="margin-top:2px;"><span class="label">CDT:</span><br>${cdtNames}</div>` : ''}
         </td>
         <td class="right-col">
           <div>
@@ -1988,11 +1991,11 @@
         <th style="width:10%;">1P</th>
         <th style="width:10%;">BC</th>
         <th style="width:10%;">DC</th>
-        <th style="width:10%;">DO</th>
+        <th style="width:10%;">LPO</th>
       </tr>`;
     d.itin.forEach((l, rowIndex) => {
       const flightNo = esc(l.flightId);
-      const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
+      const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','LPO'];
       html += `<tr>`;
       html += `<td style="font-weight:bold;font-size:9px;">${flightNo}</td>`;
       cats.forEach((cat, colIndex) => {
