@@ -955,20 +955,20 @@
     .rpad { page-break-inside: avoid; }
     .alt-icc-badge { display: inline-block !important; background: #111 !important; color: #fff !important; }
     .captain-icc-table td { padding: 2px 4px; }
-
-    /* ── ADDED: Force one page & hide overflow ── */
-    html, body, .container, .report-card, .report-inner {
-      overflow: hidden !important;
-      max-height: 100vh !important;
-      height: 100vh !important;
-    }
-    .report-inner {
-      max-height: 100vh !important;
-      overflow: hidden !important;
-      page-break-after: avoid !important;
-      page-break-inside: avoid !important;
-    }
+    /* ── NEW: Force only one page, hide page 2 ── */
+  html, body, .container, .report-card, .report-inner {
+    overflow: hidden !important;
+    max-height: 100vh !important;
+    height: 100vh !important;
   }
+  .report-inner {
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
+
 </style>
 </head>
 <body>
