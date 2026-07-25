@@ -659,6 +659,96 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
   }
 
+  /* ── Captain & ICC Table ── */
+  .captain-icc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9px;
+    margin-top: 4px;
+    table-layout: fixed;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+  .captain-icc-table td {
+    border: 1px solid #333;
+    padding: 2px 4px;
+    vertical-align: top;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+  .captain-icc-table .left-col { width: 55%; }
+  .captain-icc-table .right-col { width: 45%; }
+  .captain-icc-table .label { font-weight: 600; color: #444; }
+  .captain-icc-table .clickable-cell {
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: 3px;
+  }
+  .captain-icc-table .clickable-cell:hover {
+    background: rgba(255,111,0,0.1);
+  }
+
+  /* ── ICC selection modal ── */
+  .icc-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .icc-btn {
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 2px solid #ddd;
+    background: #f7f7f7;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+  }
+  .icc-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .icc-btn.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Alternate ICC toggle button in modal ── */
+  .alt-icc-toggle-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 2px solid #ddd;
+    background: #f7f7f7;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .alt-icc-toggle-btn.active {
+    background: #222;
+    border-color: #222;
+    color: #fff;
+  }
+  .alt-icc-toggle-btn.active::after {
+    content: ' ✓';
+  }
+  .alt-icc-toggle-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .alt-icc-toggle-btn.active:hover {
+    background: #444;
+    border-color: #444;
+    color: #fff;
+  }
+
   /* ── Flight Table ── */
   table.rtab {
     width: 100%;
@@ -729,6 +819,21 @@
     color: #1d4ed8;
   }
   .door-cell.unset { color: #aaa; font-weight: 400; }
+
+  .alt-icc-badge {
+    display: inline-block;
+    background: #111;
+    color: #fff;
+    font-size: 7.5px;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 100px;
+    margin-left: 6px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.04em;
+    border: 1px solid #333;
+    vertical-align: middle;
+  }
 
   /* ── Top info ── */
   .top-info {
@@ -848,6 +953,8 @@
     .toast { display: none !important; }
     .report-inner, #report, .rpad { page-break-after: avoid; }
     .rpad { page-break-inside: avoid; }
+    .alt-icc-badge { display: inline-block !important; background: #111 !important; color: #fff !important; }
+    .captain-icc-table td { padding: 2px 4px; }
   }
 </style>
 </head>
@@ -864,6 +971,7 @@
     <div class="badge-group">
       <div class="badge">📄 PDF Parser</div>
       <div class="badge">🔒 Offline</div>
+      <div class="badge accent">v2.0</div>
     </div>
   </header>
 
@@ -881,8 +989,8 @@
       <button class="primary-btn" id="parseBtn">⚡ Parse & Fill Report</button>
       <button class="secondary-btn" id="clearBtn">Clear</button>
     </div>
-    <div class="status" id="status"></div>
-    <details id="dbgWrap" style="display:none; margin-top:10px;">
+    <div class="status noprint" id="status"></div>
+    <details id="dbgWrap" style="display:none; margin-top:10px;" class="noprint">
       <summary style="color:var(--text-muted); font-family:'DM Mono',monospace; font-size:11px; cursor:pointer;">Parsed data (debug)</summary>
       <div id="dbgContent"></div>
     </details>
@@ -912,8 +1020,8 @@
         <span class="file-status" id="fileStatus">No file chosen</span>
       </div>
     </div>
-    <div class="status" id="pdfStatus"></div>
-    <details id="pdfDbgWrap" style="display:none; margin-top:10px;">
+    <div class="status noprint" id="pdfStatus"></div>
+    <details id="pdfDbgWrap" style="display:none; margin-top:10px;" class="noprint">
       <summary style="color:var(--text-muted); font-family:'DM Mono',monospace; font-size:11px; cursor:pointer;">Parsed data (debug)</summary>
       <div id="pdfDbgContent"></div>
     </details>
@@ -954,7 +1062,19 @@
     <div class="modal-title">Working Position</div>
     <div class="modal-sub" id="modalCrewName"></div>
     <div class="pos-grid" id="posGrid"></div>
-    <button class="secondary-btn" id="modalCloseBtn">Close</button>
+    <!-- Alternate ICC toggle button -->
+    <button class="alt-icc-toggle-btn" id="altIccToggleBtn">Set as Alternate ICC</button>
+    <button class="secondary-btn" id="modalCloseBtn" style="margin-top:8px;">Close</button>
+  </div>
+</div>
+
+<!-- ===== ICC SELECTION MODAL ===== -->
+<div class="modal-overlay" id="iccModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">Select Crew In Charge</div>
+    <div class="modal-sub" id="iccModalSub">Choose from available crew</div>
+    <div class="icc-grid" id="iccGrid"></div>
+    <button class="secondary-btn" id="iccModalCloseBtn">Close</button>
   </div>
 </div>
 
@@ -1039,6 +1159,10 @@
   const posModalOverlay = document.getElementById('posModalOverlay');
   const posGrid = document.getElementById('posGrid');
   const modalCrewName = document.getElementById('modalCrewName');
+  const altIccToggleBtn = document.getElementById('altIccToggleBtn');
+  const iccModalOverlay = document.getElementById('iccModalOverlay');
+  const iccGrid = document.getElementById('iccGrid');
+  const iccModalSub = document.getElementById('iccModalSub');
   const doorModalOverlay = document.getElementById('doorModalOverlay');
   const doorGrid = document.getElementById('doorGrid');
   const doorModalCrewName = document.getElementById('doorModalCrewName');
@@ -1058,13 +1182,17 @@
   let keypadMode = 'bay'; // 'bay', 'briefing', or 'time'
   let selectedBayLetter = '';
 
+  // ===== ICC & Alt ICC state =====
+  let iccChosenCrew = null; // { crewId, crewName, opRank }
+  let altIccCrewId = null;   // crewId of alternate ICC
+
   // ===== Constants =====
   const DUTY_HEADERS = ["Start","End","Pairing Id","Duty Hours","Flying Hours","Rest Required","Rest Available"];
   const ITIN_HEADERS = ["Flight/Acy Id","Date","From","Dep.","To","Arr.","A/C","Version","A/C Reg","Flight Time","Ground Time","Activity Start","Activity End","Activity Location"];
   const CREW_HEADERS = ["OP Rank","Postion Rank","Crew Id","Crew Name","WT","Work Pos.","Base","SDC","Check In"];
   const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary'];
   const COCKPIT_RANKS = ['CAPT','FO','SO'];
-  const POSITIONS_NARROW = ['P1','P2','P3','P4','A1','A2','SNY'];
+  const POSITIONS_NARROW = ['ICC', 'P1','P2','P3','P4','A1','A2','SNY'];
   const POSITIONS_WIDE = ['ICC', 'IFS B', 'LSB', 'LSC', 'LSD', 'AG', 'BG1', 'BG2', 'CG', 'DG', 'BC', 'BC1', 'CC', 'DC', 'DC2', 'SNY'];
   const RANK_PRIORITY = { 'IFS': 1, 'LS': 2, 'FS': 3, 'FSS': 4, 'SS': 5, 'CS': 6, 'AS': 7 };
   const DOORS_NARROW = ['1L','1R','2L','2R'];
@@ -1379,18 +1507,6 @@
 
     const itin = [];
     for(let i=0; i<flightNos.length; i++){
-      const start = flightMatches[i].index;
-      const end = (i+1 < flightMatches.length) ? flightMatches[i+1].index : tableSection.length;
-      const rowStr = tableSection.substring(start, end);
-
-      const flightIdx = rowStr.indexOf(flightNos[i]);
-      const afterFlight = rowStr.substring(flightIdx + flightNos[i].length);
-      const timesAfter = afterFlight.match(/\d{2}:\d{2}(?:\(\+1\))?/g) || [];
-      let fh = '';
-      if(timesAfter.length >= 3){
-        fh = timesAfter[2];
-      }
-
       const seg = segments[i] || '';
       const acMatch = seg.match(/\b(\d{3,4})\b/);
       const ac = acMatch ? acMatch[1] : '';
@@ -1403,21 +1519,19 @@
       const dep = depArrMatches[i*2];
       const arr = depArrMatches[i*2+1];
 
-      let acType = ac;
-      const acMap = {
-        '359': 'A350-900',
-        '350': 'A350-900H',
-        '339': 'A330-900',
-        '333': 'A330-300',
-        '332': 'A330-200',
-        '738': '737-800NR',
-        '73H': '737-800R',
-        '7M8': '737-800MAX'
-      };
-      acType = acMap[acType] || acType;
-
-      if(acReg && !acReg.startsWith('9M-')){
-        acReg = '9M-' + acReg;
+      // FH (flight hours -> FT field): its position relative to
+      // date/flight/rank varies between report exports, but it's reliably
+      // the second-to-last bare HH:MM token that appears between this row's
+      // Arr time and its aircraft-type code (the last such token being DH).
+      let fh = '';
+      if(arr){
+        const segStart = arr.index + arr[0].length;
+        const segEnd = (i+1 < flightMatches.length) ? flightMatches[i+1].index : tableSection.length;
+        const rowTail = tableSection.slice(segStart, segEnd);
+        const acPos = rowTail.search(/\b\d{3,4}\b/);
+        const clusterText = acPos >= 0 ? rowTail.slice(0, acPos) : rowTail;
+        const times = clusterText.match(/\d{2}:\d{2}(?:\(\+1\))?/g) || [];
+        if(times.length >= 2) fh = times[times.length - 2];
       }
 
       itin.push({
@@ -1427,7 +1541,7 @@
         dep: dep ? dep[2] : '',
         to: arr ? arr[1] : '',
         arr: arr ? arr[2] : '',
-        ac: acType,
+        ac: ac,
         version: '',
         acReg: acReg,
         flightTime: fh,
@@ -1509,12 +1623,13 @@
   window.updateField = function(key, val){ state.fields[key] = val; };
 
   // ---- Position modal ----
+  let currentModalCrewId = null; // crewId of the person whose position modal is open
   window.openPositionModal = function(crewId, crewName){
     const ac0 = state.itin.length ? state.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
     const posList = isNarrow ? POSITIONS_NARROW : POSITIONS_WIDE;
     const gridClass = isNarrow ? 'narrow' : 'wide';
-    state.modalCrew = crewId;
+    currentModalCrewId = crewId;
     modalCrewName.textContent = crewName;
     posGrid.className = 'pos-grid ' + gridClass;
     posGrid.innerHTML = '';
@@ -1525,13 +1640,26 @@
       btn.addEventListener('click', () => window.assignPosition(crewId, pos));
       posGrid.appendChild(btn);
     });
+
+    // Update Alternate ICC toggle button state
+    const isAltIcc = (altIccCrewId === crewId);
+    altIccToggleBtn.textContent = isAltIcc ? 'Remove Alternate ICC' : 'Set as Alternate ICC';
+    altIccToggleBtn.className = 'alt-icc-toggle-btn' + (isAltIcc ? ' active' : '');
+
     posModalOverlay.style.display = 'flex';
   };
 
   window.assignPosition = function(crewId, pos){
-    if(pos !== 'SNY'){
+    // If assigning ICC, remove any existing ICC
+    if (pos === 'ICC') {
+      for (let id in state.positions) {
+        if (state.positions[id] === 'ICC') state.positions[id] = '';
+      }
+    }
+    // Handle SNY
+    if (pos !== 'SNY' && pos !== 'ICC') {
       Object.keys(state.positions).forEach(id => {
-        if(id !== crewId && state.positions[id] === pos) state.positions[id] = '';
+        if (id !== crewId && state.positions[id] === pos) state.positions[id] = '';
       });
     }
     state.positions[crewId] = pos;
@@ -1539,8 +1667,53 @@
     buildReport();
   };
 
+  // Alternate ICC toggle button
+  altIccToggleBtn.addEventListener('click', function() {
+    if (!currentModalCrewId) return;
+    if (altIccCrewId === currentModalCrewId) {
+      // Remove
+      altIccCrewId = null;
+    } else {
+      // Set – if someone else has it, remove from them
+      altIccCrewId = currentModalCrewId;
+    }
+    posModalOverlay.style.display = 'none';
+    buildReport();
+  });
+
   document.getElementById('modalCloseBtn').addEventListener('click', () => { posModalOverlay.style.display = 'none'; });
   posModalOverlay.addEventListener('click', (e) => { if(e.target === posModalOverlay) posModalOverlay.style.display = 'none'; });
+
+  // ---- ICC selection modal ----
+  function openIccSelectionModal(candidates, title) {
+    iccModalSub.textContent = title || 'Choose Crew In Charge';
+    iccGrid.innerHTML = '';
+    candidates.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'icc-btn' + (iccChosenCrew && iccChosenCrew.crewId === c.crewId ? ' selected' : '');
+      const pos = state.positions[c.crewId] || '';
+      const posDisplay = pos ? ' (' + pos + ')' : '';
+      btn.textContent = c.crewId + ' · ' + c.opRank + ' · ' + c.crewName + posDisplay;
+      btn.addEventListener('click', function() {
+        iccChosenCrew = c;
+        // Also set the position to ICC if not already
+        if (state.positions[c.crewId] !== 'ICC') {
+          // Remove any existing ICC position
+          for (let id in state.positions) {
+            if (state.positions[id] === 'ICC') state.positions[id] = '';
+          }
+          state.positions[c.crewId] = 'ICC';
+        }
+        iccModalOverlay.style.display = 'none';
+        buildReport();
+      });
+      iccGrid.appendChild(btn);
+    });
+    iccModalOverlay.style.display = 'flex';
+  }
+
+  document.getElementById('iccModalCloseBtn').addEventListener('click', () => { iccModalOverlay.style.display = 'none'; });
+  iccModalOverlay.addEventListener('click', (e) => { if(e.target === iccModalOverlay) iccModalOverlay.style.display = 'none'; });
 
   // ---- Door modal ----
   window.openDoorModal = function(crewId, crewName){
@@ -1598,19 +1771,52 @@
 
     const sortedCabin = sortCabinCrew(cabinCrew);
 
-    const cic = determineCrewInCharge(sortedCabin);
-    let cicChosen = cic.auto;
-    if(!cicChosen && cic.candidates.length){
-      cicChosen = state.chosenCIC || cic.candidates[0];
+    // ---- ICC Logic ----
+    const ifsCrew = sortedCabin.filter(c => c.opRank.toUpperCase() === 'IFS');
+    const lsCrew = sortedCabin.filter(c => c.opRank.toUpperCase() === 'LS');
+
+    // Determine ICC based on positions and rules
+    let iccDisplay = null;
+
+    // Check if any crew has "ICC" position
+    let iccPositionCrew = null;
+    for (let id in state.positions) {
+      if (state.positions[id] === 'ICC') {
+        const crew = sortedCabin.find(c => c.crewId === id);
+        if (crew) {
+          iccPositionCrew = crew;
+          break;
+        }
+      }
     }
 
-    let picChosen = null;
-    if(isNarrow && captains.length > 1){
-      picChosen = state.selectedPIC || captains[0];
-    } else if(captains.length === 1){
-      picChosen = captains[0];
+    // Determine ICC automatically if not manually set
+    if (!iccPositionCrew) {
+      if (ifsCrew.length === 1) {
+        iccDisplay = ifsCrew[0];
+      } else if (ifsCrew.length === 0 && lsCrew.length === 1) {
+        iccDisplay = lsCrew[0];
+      } else {
+        // Multiple or none - let user choose
+        iccDisplay = iccChosenCrew || null;
+      }
+    } else {
+      iccDisplay = iccPositionCrew;
     }
 
+    // Determine Alternate ICC
+    let altIccDisplay = null;
+    if (altIccCrewId) {
+      const crew = sortedCabin.find(c => c.crewId === altIccCrewId);
+      if (crew) {
+        altIccDisplay = crew;
+      } else {
+        // if crew not found (e.g., removed from list), clear
+        altIccCrewId = null;
+      }
+    }
+
+    // ---- REP display ----
     let repDisplay = '';
     if(d.dutyDate || (d.pdfData && d.pdfData.date)){
       const dateStr = (d.pdfData && d.pdfData.date) || d.dutyDate || '';
@@ -1630,7 +1836,7 @@
     }
     if(!repDisplay) repDisplay = '----';
 
-    // Get bay and briefing station values from state
+    // ---- Build Report HTML ----
     const bayVal = fval('bay', '');
     const briefingVal = fval('briefing', '');
 
@@ -1688,29 +1894,52 @@
       <input value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;font-family:inherit;" placeholder="">
     </div>`;
 
-    // Captain & FO
-    html += `<table class="rtab" style="margin-top:4px;width:60%;">
-      <tr><th style="width:25%;">Staff No</th><th style="width:15%;">Rank</th><th style="width:60%;">Name</th></tr>`;
-    if(captains.length){
-      captains.forEach(c => {
-        html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
-      });
-    } else {
-      html += `<tr><td colspan="3">—</td></tr>`;
+    // ---- Captain & ICC Table ----
+    // Determine ICC candidates for clicking
+    let iccCandidates = [];
+    if (ifsCrew.length > 1) {
+      iccCandidates = ifsCrew;
+    } else if (ifsCrew.length === 0 && lsCrew.length > 1) {
+      iccCandidates = lsCrew;
     }
-    if(fos.length){
-      fos.forEach(c => {
-        html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
-      });
-    }
-    html += `</table>`;
+
+    const iccDisplayName = iccDisplay ? esc(iccDisplay.crewId) + ' · ' + esc(iccDisplay.opRank) + ' · ' + esc(iccDisplay.crewName) : '—';
+    const altIccDisplayName = altIccDisplay ? esc(altIccDisplay.crewId) + ' · ' + esc(altIccDisplay.opRank) + ' · ' + esc(altIccDisplay.crewName) : '—';
+
+    // Captain & FO names
+    const captainNames = captains.length ? captains.map(c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName)).join('<br>') : '—';
+    const foNames = fos.length ? fos.map(c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName)).join('<br>') : '—';
+
+    html += `<table class="captain-icc-table">
+      <tr>
+        <td class="left-col">
+          <div><span class="label">Captain:</span><br>${captainNames}</div>
+          ${fos.length ? `<div style="margin-top:2px;"><span class="label">FO:</span><br>${foNames}</div>` : ''}
+        </td>
+        <td class="right-col">
+          <div>
+            <span class="label">ICC:</span>
+            <span class="clickable-cell" id="iccDisplayCell" style="display:inline-block;padding:0 4px;">
+              ${iccDisplayName}
+            </span>
+          </div>
+          <div style="margin-top:4px;">
+            <span class="label">Alternate ICC:</span>
+            <span id="altIccDisplayCell" style="display:inline-block;padding:0 4px;">
+              ${altIccDisplayName}
+            </span>
+          </div>
+        </td>
+      </tr>
+    </table>`;
 
     // Cabin Crew
     html += `<div style="margin-top:6px;font-weight:bold;font-size:9.5px;">CABIN CREW (${sortedCabin.length})</div>`;
     html += `<table class="rtab crew-table" style="font-size:9px;">
       <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:62%;text-align:left;">Name</th><th style="width:10%;">Working Post</th><th style="width:10%;">Door</th></tr>`;
     sortedCabin.forEach(c => {
-      const isCIC = cicChosen && c.crewId === cicChosen.crewId;
+      const isCIC = iccDisplay && c.crewId === iccDisplay.crewId;
+      const isAltIcc = altIccDisplay && c.crewId === altIccDisplay.crewId;
       const pos = state.positions[c.crewId] || '';
       let doorAssigned = '';
       for(let d in state.doors){
@@ -1719,10 +1948,14 @@
           break;
         }
       }
+      let nameDisplay = esc(c.crewName);
+      if (isAltIcc) {
+        nameDisplay += ' <span class="alt-icc-badge">alt ICC</span>';
+      }
       html += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
         <td>${esc(c.crewId)}</td>
         <td>${esc(c.opRank)}</td>
-        <td style="text-align:left;">${esc(c.crewName)}</td>
+        <td style="text-align:left;">${nameDisplay}</td>
         <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${pos ? esc(pos) : ''}</td>
         <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${doorAssigned ? esc(doorAssigned) : '+'}</td>
       </tr>`;
@@ -1761,7 +1994,7 @@
     html += `</div>`;
     reportEl.innerHTML = html;
 
-    // ---- Attach keypad event listeners ----
+    // ---- Attach event listeners ----
     // BAY input – opens letter modal
     const bayInput = document.getElementById('bayInput');
     if (bayInput) {
@@ -1784,6 +2017,15 @@
       briefingInput.addEventListener('click', function(e) {
         e.stopPropagation();
         openNumberKeypad(this, 'briefing', this.value);
+      });
+    }
+
+    // ICC display cell – opens selection modal if candidates exist
+    const iccDisplayCell = document.getElementById('iccDisplayCell');
+    if (iccDisplayCell && iccCandidates.length > 0) {
+      iccDisplayCell.addEventListener('click', function() {
+        const rankLabel = iccCandidates[0].opRank;
+        openIccSelectionModal(iccCandidates, 'Select ' + rankLabel + ' as Crew In Charge');
       });
     }
 
@@ -1846,6 +2088,8 @@
     state.positions = {};
     state.doors = {};
     state.source = source || 'iflight';
+    iccChosenCrew = null;
+    altIccCrewId = null;
     buildReport();
     reportCard.style.display = 'block';
     emptyCard.style.display = 'none';
@@ -1854,14 +2098,14 @@
         '<p style="font-size:11px;color:#888;">Duty Details</p>' + renderDebugTable(parsed.duty, ['start','end','pairingId','dutyHours','flyingHours','restRequired','restAvailable']) +
         '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, ['flightId','date','from','dep','to','arr','ac','version','acReg','flightTime']) +
         '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, ['opRank','posRank','crewId','crewName','base','sdc','checkIn']);
-      dbgWrap.style.display = 'block';
+      dbgWrap.style.display = '';
       pdfDbgWrap.style.display = 'none';
     } else {
       dbgWrap.style.display = 'none';
       pdfDbgContent.innerHTML =
         '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, ['flightId','date','from','dep','to','arr','ac','acReg','flightTime']) +
         '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, ['opRank','crewId','crewName']);
-      pdfDbgWrap.style.display = 'block';
+      pdfDbgWrap.style.display = '';
     }
   }
 
