@@ -1981,7 +1981,7 @@ tr > <th style="border:1px solid #333;background:#eee;font-weight:600;font-size:
     const iccDisplayName = iccDisplay ? esc(iccDisplay.crewId) + ' · ' + esc(iccDisplay.opRank) + ' · ' + esc(iccDisplay.crewName) : '—';
     html += `<tr><td class="role-col">ICC</td><td class="name-col"><span class="clickable-cell" id="iccDisplayCell">${iccDisplayName}</span></td></tr>`;
     // Alternate ICC
-    const altIccDisplayName = altIccDisplay ? esc(altIccDisplay.crewId) + ' · ' + esc(altIccDisplay.opRank) + ' · ' + esc(altIccDisplay.crewName) : '—';
+    const altIccDisplayName = altIccDisplay ? esc(altIccDisplay.crewId) + ' · ' + esc(altIccDisplay.opRank) + ' · ' + esc(altIccDisplay.crewName) : '';
     html += `<tr><td class="role-col">Alt ICC</td><td class="name-col" id="altIccDisplayCell">${altIccDisplayName}</td></tr>`;
     html += `</table>`;
 
