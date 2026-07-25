@@ -926,7 +926,7 @@
     padding: 1px;
   }
 
-  /* ── Print styles ── */
+  /* ── PRINT STYLES – fixed to avoid forced second page ── */
   @media print {
     body { background: #fff; }
     header, .card:not(.reportcard), .noprint, .noprint-inline { display: none !important; }
@@ -936,6 +936,13 @@
     .container { max-width: 100%; padding: 0; margin: 0; }
     #report { border-radius: 0; font-size: 8.5px; margin: 0; padding: 0; }
     #report .rpad { padding: 4px 6px; }
+
+    /* ── Allow natural page breaks ── */
+    .report-inner, #report, .rpad {
+      page-break-after: auto !important;
+      page-break-inside: auto !important;
+    }
+
     .top-info input, .top-info input.rep { border-color: #999 !important; background: #fff !important; }
     .ft-table td input { border: none !important; }
     table.rtab { font-size: 8px; }
@@ -951,24 +958,10 @@
     .door-cell.unset { color: transparent !important; font-size: 0 !important; }
     .ft-cell-clickable:hover { background: transparent !important; }
     .toast { display: none !important; }
-    .report-inner, #report, .rpad { page-break-after: avoid; }
-    .rpad { page-break-inside: avoid; }
+    .rpad { page-break-inside: auto !important; }
     .alt-icc-badge { display: inline-block !important; background: #111 !important; color: #fff !important; }
     .captain-icc-table td { padding: 2px 4px; }
-    /* ── NEW: Force only one page, hide page 2 ── */
-  html, body, .container, .report-card, .report-inner {
-    overflow: hidden !important;
-    max-height: 100vh !important;
-    height: 100vh !important;
   }
-  .report-inner {
-    max-height: 100vh !important;
-    overflow: hidden !important;
-    page-break-after: avoid !important;
-    page-break-inside: avoid !important;
-  }
-}
-
 </style>
 </head>
 <body>
