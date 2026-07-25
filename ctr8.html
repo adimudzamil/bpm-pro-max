@@ -659,8 +659,8 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
   }
 
-  /* ── Captain & ICC Table ── */
-  .captain-icc-table {
+  /* ── Pilot Table ── */
+  .pilot-table, .icc-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 9px;
@@ -668,20 +668,25 @@
     table-layout: fixed;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
   }
-  .captain-icc-table td {
+  .pilot-table td, .icc-table td {
     border: 1px solid #333;
     padding: 2px 4px;
     vertical-align: middle;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
   }
-  .captain-icc-table .role-col { width: 25%; font-weight: 600; color: #444; }
-  .captain-icc-table .name-col { width: 75%; }
-  .captain-icc-table .clickable-cell {
+  .pilot-table .role-col, .icc-table .role-col {
+    width: 20%;
+    font-weight: 600;
+    color: #444;
+  }
+  .pilot-table .name-col, .icc-table .name-col {
+    width: 80%;
+  }
+  .pilot-table .clickable-cell, .icc-table .clickable-cell {
     cursor: pointer;
     transition: background 0.15s;
     border-radius: 3px;
   }
-  .captain-icc-table .clickable-cell:hover {
+  .pilot-table .clickable-cell:hover, .icc-table .clickable-cell:hover {
     background: rgba(255,111,0,0.1);
   }
 
@@ -720,6 +725,7 @@
     width: 100%;
     padding: 10px;
     margin-top: 6px;
+    margin-bottom: 10px; /* consistent gap with grid */
     font-size: 14px;
     font-weight: 600;
     border-radius: var(--radius-sm);
@@ -839,8 +845,6 @@
 
   .alt-icc-badge, .sny-badge {
     display: inline-block;
-    background: #111;
-    color: #fff;
     font-size: 7.5px;
     font-weight: 700;
     padding: 1px 8px;
@@ -853,8 +857,13 @@
     float: right; /* align right */
     margin-right: 0;
   }
+  .alt-icc-badge {
+    background: #111;
+    color: #fff;
+  }
   .sny-badge {
     background: #000;
+    color: #fff;
   }
 
   /* ── Top info ── */
@@ -965,10 +974,10 @@
     table.rtab th { font-size: 7.5px; }
     .crew-table th, .crew-table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .crew-table th:nth-child(1), .crew-table td:nth-child(1){width:10% !important;}
-    .crew-table th:nth-child(2), .crew-table td:nth-child(2){width:5% !important;}
-    .crew-table th:nth-child(3), .crew-table td:nth-child(3){width:50% !important;}
-    .crew-table th:nth-child(4), .crew-table td:nth-child(4){width:20% !important;}
-    .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:15% !important;}
+    .crew-table th:nth-child(2), .crew-table td:nth-child(2){width:8% !important;}
+    .crew-table th:nth-child(3), .crew-table td:nth-child(3){width:62% !important;}
+    .crew-table th:nth-child(4), .crew-table td:nth-child(4){width:10% !important;}
+    .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:10% !important;}
     .pos-cell.unset { color: transparent !important; font-size: 0 !important; }
     .door-cell.unset { color: transparent !important; font-size: 0 !important; }
     .ft-cell-clickable:hover { background: transparent !important; }
@@ -976,7 +985,7 @@
     .report-inner, #report, .rpad { page-break-after: avoid; }
     .rpad { page-break-inside: avoid; }
     .alt-icc-badge, .sny-badge { display: inline-block !important; background: #111 !important; color: #fff !important; float: right !important; }
-    .captain-icc-table td { padding: 2px 4px; }
+    .pilot-table td, .icc-table td { padding: 2px 4px; }
   }
 
   @media print {
@@ -1950,41 +1959,76 @@
       <input value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;font-family:inherit;" placeholder="">
     </div>`;
 
-    // ---- Captain & ICC Table - individual rows ----
-    // Determine ICC candidates for clicking
-    let iccCandidates = [];
-    if (ifsCrew.length > 1) {
-      iccCandidates = ifsCrew;
-    } else if (ifsCrew.length === 0 && lsCrew.length > 1) {
-      iccCandidates = lsCrew;
-    }
-
-    html += `<table class="captain-icc-table">
-      <tr><th style="border:1px solid #333;background:#eee;font-weight:600;font-size:8.5px;" colspan="2">Pilots & ICC</th></tr>`;
+    // ---- Separate Pilot Table ----
+    html += `<div style="margin-top:6px;font-weight:bold;font-size:9.5px;">Pilots</div>`;
+    html += `<table class="pilot-table">
+      <tr><th style="border:1px solid #333;background:#eee;font-weight:600;font-size:8.5px;" colspan="2">Flight Crew</th></tr>`;
     // Captains
     captains.forEach(c => {
-      html += `<tr><td class="role-col">CAPT</td><td class="name-col">${esc(c.crewId)} · ${esc(c.crewName)}</td></tr>`;
+      const staffId = fval('crew-id-'+c.crewId, c.crewId);
+      const rank = fval('crew-rank-'+c.crewId, c.opRank);
+      const name = fval('crew-name-'+c.crewId, c.crewName);
+      html += `<tr>
+        <td class="role-col">CAPT</td>
+        <td class="name-col">
+          <input class="editable-crew" type="text" value="${esc(staffId)}" oninput="updateField('crew-id-${c.crewId}', this.value)" style="width:25%;border:none;background:transparent;font-size:9px;font-family:inherit;">
+          <input class="editable-crew" type="text" value="${esc(rank)}" oninput="updateField('crew-rank-${c.crewId}', this.value)" style="width:20%;border:none;background:transparent;font-size:9px;font-family:inherit;">
+          <input class="editable-crew" type="text" value="${esc(name)}" oninput="updateField('crew-name-${c.crewId}', this.value)" style="width:50%;border:none;background:transparent;font-size:9px;font-family:inherit;">
+        </td>
+      </tr>`;
     });
     // FOs
     fos.forEach(c => {
-      html += `<tr><td class="role-col">FO</td><td class="name-col">${esc(c.crewId)} · ${esc(c.crewName)}</td></tr>`;
+      const staffId = fval('crew-id-'+c.crewId, c.crewId);
+      const rank = fval('crew-rank-'+c.crewId, c.opRank);
+      const name = fval('crew-name-'+c.crewId, c.crewName);
+      html += `<tr>
+        <td class="role-col">FO</td>
+        <td class="name-col">
+          <input class="editable-crew" type="text" value="${esc(staffId)}" oninput="updateField('crew-id-${c.crewId}', this.value)" style="width:25%;border:none;background:transparent;font-size:9px;font-family:inherit;">
+          <input class="editable-crew" type="text" value="${esc(rank)}" oninput="updateField('crew-rank-${c.crewId}', this.value)" style="width:20%;border:none;background:transparent;font-size:9px;font-family:inherit;">
+          <input class="editable-crew" type="text" value="${esc(name)}" oninput="updateField('crew-name-${c.crewId}', this.value)" style="width:50%;border:none;background:transparent;font-size:9px;font-family:inherit;">
+        </td>
+      </tr>`;
     });
     // CDTs
     cdts.forEach(c => {
-      html += `<tr><td class="role-col">CDT</td><td class="name-col">${esc(c.crewId)} · ${esc(c.crewName)}</td></tr>`;
+      const staffId = fval('crew-id-'+c.crewId, c.crewId);
+      const rank = fval('crew-rank-'+c.crewId, c.opRank);
+      const name = fval('crew-name-'+c.crewId, c.crewName);
+      html += `<tr>
+        <td class="role-col">CDT</td>
+        <td class="name-col">
+          <input class="editable-crew" type="text" value="${esc(staffId)}" oninput="updateField('crew-id-${c.crewId}', this.value)" style="width:25%;border:none;background:transparent;font-size:9px;font-family:inherit;">
+          <input class="editable-crew" type="text" value="${esc(rank)}" oninput="updateField('crew-rank-${c.crewId}', this.value)" style="width:20%;border:none;background:transparent;font-size:9px;font-family:inherit;">
+          <input class="editable-crew" type="text" value="${esc(name)}" oninput="updateField('crew-name-${c.crewId}', this.value)" style="width:50%;border:none;background:transparent;font-size:9px;font-family:inherit;">
+        </td>
+      </tr>`;
     });
-    // ICC
+    html += `</table>`;
+
+    // ---- Separate ICC Table ----
+    html += `<div style="margin-top:6px;font-weight:bold;font-size:9.5px;">In-Charge Crew</div>`;
+    html += `<table class="icc-table">
+      <tr><th style="border:1px solid #333;background:#eee;font-weight:600;font-size:8.5px;" colspan="2">ICC</th></tr>`;
+    // ICC row
     const iccDisplayName = iccDisplay ? esc(iccDisplay.crewId) + ' · ' + esc(iccDisplay.opRank) + ' · ' + esc(iccDisplay.crewName) : '—';
-    html += `<tr><td class="role-col">ICC</td><td class="name-col"><span class="clickable-cell" id="iccDisplayCell">${iccDisplayName}</span></td></tr>`;
-    // Alternate ICC
+    html += `<tr>
+      <td class="role-col">ICC</td>
+      <td class="name-col"><span class="clickable-cell" id="iccDisplayCell">${iccDisplayName}</span></td>
+    </tr>`;
+    // Alternate ICC row
     const altIccDisplayName = altIccDisplay ? esc(altIccDisplay.crewId) + ' · ' + esc(altIccDisplay.opRank) + ' · ' + esc(altIccDisplay.crewName) : '—';
-    html += `<tr><td class="role-col">Alt ICC</td><td class="name-col" id="altIccDisplayCell">${altIccDisplayName}</td></tr>`;
+    html += `<tr>
+      <td class="role-col">Alt ICC</td>
+      <td class="name-col" id="altIccDisplayCell">${altIccDisplayName}</td>
+    </tr>`;
     html += `</table>`;
 
     // Cabin Crew
     html += `<div style="margin-top:6px;font-weight:bold;font-size:9.5px;">CABIN CREW (${sortedCabin.length})</div>`;
     html += `<table class="rtab crew-table" style="font-size:9px;">
-      <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:50%;text-align:left;">Name</th><th style="width:17%;">Working Post</th><th style="width:15%;">Door</th></tr>`;
+      <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:62%;text-align:left;">Name</th><th style="width:10%;">Working Post</th><th style="width:10%;">Door</th></tr>`;
     sortedCabin.forEach(c => {
       const isCIC = iccDisplay && c.crewId === iccDisplay.crewId;
       const isAltIcc = altIccDisplay && c.crewId === altIccDisplay.crewId;
@@ -1998,7 +2042,7 @@
       }
       // SNY badge
       const isSny = snyStatus[c.crewId] || false;
-      // Staff number, rank, name editable: we use inputs
+      // Staff number, rank, name editable
       const staffId = fval('crew-id-'+c.crewId, c.crewId);
       const rank = fval('crew-rank-'+c.crewId, c.opRank);
       const name = fval('crew-name-'+c.crewId, c.crewName);
@@ -2032,7 +2076,7 @@
     headerLabels.forEach((label, idx) => {
       const key = 'ft-header-'+idx;
       const val = fval(key, label);
-      html += `<th style="width:10%;padding:0;"><input class="ft-header-input" type="text" value="${esc(val)}" oninput="updateField('${key}', this.value)" style="width:100%;border:none;background:transparent;font-size:8px;font-weight:600;text-align:center;font-family:inherit;"></th>`;
+      html += `<th style="width:10%;padding:0;"><input class="ft-header-input" type="text" value="${esc(val)}" oninput="updateField('${key}', this.value)" style="width:100%;border:none;background:transparent;font-size:8px;font-weight:600;text-align:center;font-family:inherit;"></th>
     });
     html += `</tr>`;
     d.itin.forEach((l, rowIndex) => {
