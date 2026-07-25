@@ -956,6 +956,55 @@
     .alt-icc-badge { display: inline-block !important; background: #111 !important; color: #fff !important; }
     .captain-icc-table td { padding: 2px 4px; }
   }
+  /* Debug: outlines elements on print so you can see what's causing overflow — remove after testing */
+@media print {
+  * { outline: 1px solid rgba(255,0,0,0.10) !important; }
+}
+
+/* Actual print fixes */
+@media print {
+  html, body {
+    height: auto !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Remove forced page breaks */
+  * {
+    page-break-after: auto !important;
+    page-break-before: auto !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    -webkit-column-break-inside: auto !important;
+  }
+
+  /* Prevent 100vh from generating overflow */
+  [style*="100vh"], .full-height, .vh-100 {
+    height: auto !important;
+    min-height: auto !important;
+  }
+
+  /* Allow images and tables to scale rather than forcing pages */
+  img { max-width: 100% !important; height: auto !important; }
+  table { page-break-inside: auto !important; break-inside: auto !important; }
+  tr, thead, tbody { page-break-inside: avoid !important; page-break-after: auto !important; }
+
+  /* If you use fixed header/footer, make room for them */
+  header, footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+  }
+  body {
+    /* adjust these values to match your header/footer heights */
+    margin-top: 60px !important;
+    margin-bottom: 40px !important;
+  }
+
+  /* Page margin — tweak or remove if not needed */
+  @page { size: auto; margin: 10mm; }
+}
 </style>
 </head>
 <body>
