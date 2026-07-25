@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>CTR Autofill</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%93%98</text></svg>">
+<!-- pdf.js for PDF upload -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   :root{
@@ -38,6 +39,7 @@
   .file-upload-wrapper{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
   .file-upload-wrapper input[type="file"]{color:var(--text);padding:4px;}
 
+  /* ---- Report ---- */
   #report{background:#fff;color:#111;border-radius:6px;overflow:hidden;}
   #report .rpad{padding:10px;}
   .rtitle{text-align:center;border-bottom:1px solid #111;padding-bottom:4px;margin-bottom:8px;}
@@ -49,43 +51,32 @@
   table.rtab td input.remarksTxt{text-align:left;border-bottom:1px dashed #999;}
   .pos-cell{cursor:pointer;font-weight:700;color:#1d4ed8;}
   .pos-cell.unset{color:#aaa;font-weight:400;font-style:italic;}
-  .pos-cell.icc-locked{color:#1d4ed8;font-weight:700;cursor:default;background:#e8f0fe;}
   .door-cell{cursor:pointer;font-weight:600;color:#1d4ed8;}
   .door-cell.unset{color:#aaa;font-weight:400;}
   .pick{font-size:10px;color:#a33;margin-top:3px;}
   .pick select{font-size:10px;padding:2px;color:#111;background:#fff;}
 
+  /* ---- Top info ---- */
   .top-info{display:flex;flex-wrap:wrap;gap:12px;font-size:9px;margin-bottom:6px;align-items:center;font-weight:bold;}
   .top-info .label{font-weight:bold;color:#444;}
-  .top-info input{border:1px solid #333;border-radius:4px;padding:2px 4px;font-size:9px;background:#fff;color:#111;}
-  .top-info input.small{width:70px;}
-  .top-info input.rep{font-weight:bold;width:210px;background:#f0f0f0;border-color:#555;}
-  .top-info input.bay{width:80px;}
-  .top-info input.brief{width:80px;}
+  .top-info input{border:1px solid #333;border-radius:4px;padding:2px 4px;font-size:9px;}
+  .top-info input.small{width:60px;}
+  .top-info input.rep{font-weight:bold;width:180px;background:#f0f0f0;border-color:#555;}
 
+  /* ---- Bottom Flight Time Details ---- */
   .ft-table{width:100%;border-collapse:collapse;font-size:8.5px;margin-top:4px;table-layout:fixed;}
   .ft-table th{background:#eee;font-weight:600;font-size:8px;border:1px solid #333;padding:2px;}
   .ft-table td{border:1px solid #333;padding:2px;text-align:center;height:1.6em;}
   .ft-table td input{width:100%;border:none;background:transparent;font-size:8.5px;text-align:center;font-family:inherit;padding:1px;}
 
+  /* ---- Position modal ---- */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
-  .modal-box{background:#fff;color:#111;border-radius:12px;padding:16px;width:100%;max-width:360px;}
+  .modal-box{background:#fff;color:#111;border-radius:12px;padding:16px;width:100%;max-width:340px;}
   .modal-title{font-size:14px;font-weight:700;margin-bottom:2px;}
   .modal-sub{font-size:12px;color:#555;margin-bottom:12px;}
   .pos-grid{display:grid;gap:8px;margin-bottom:14px;}
   .pos-grid.narrow{grid-template-columns:repeat(3,1fr);}
   .pos-grid.wide{grid-template-columns:repeat(4,1fr);}
-  .pos-btn{padding:12px 8px;font-size:14px;font-weight:600;border-radius:10px;border:2px solid #ddd;background:#f7f7f7;color:#333;cursor:pointer;transition:transform .18s ease, background .18s ease, border-color .18s ease;}
-  .pos-btn:active{transform:scale(.94);}
-  .pos-btn.selected{background:#dbeafe;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.3);}
-  .pos-btn.badge-sny{border-color:#3b82f6;background:#eff6ff;}
-  .pos-btn.badge-alt-icc{border-color:#1f2937;background:#f3f4f6;}
-  .modal-badge-row{display:flex;gap:8px;margin-bottom:10px;}
-  .modal-badge-row .half{flex:1;padding:10px 8px;font-size:12px;font-weight:600;border-radius:10px;border:2px solid #ddd;background:#f7f7f7;color:#333;cursor:pointer;transition:transform .18s ease, background .18s ease, border-color .18s ease;text-align:center;}
-  .modal-badge-row .half:active{transform:scale(.94);}
-  .modal-badge-row .half.badge-active-sny{background:#dbeafe;border-color:#3b82f6;}
-  .modal-badge-row .half.badge-active-alt-icc{background:#e5e7eb;border-color:#1f2937;}
-
   .door-grid{display:grid;gap:8px;margin-bottom:14px;grid-template-columns:1fr 1fr;}
   .door-btn{padding:12px 8px;font-size:14px;font-weight:600;border-radius:10px;border:2px solid #ddd;background:#f7f7f7;color:#333;cursor:pointer;transition:transform .18s ease, background .18s ease, border-color .18s ease;}
   .door-btn:active{transform:scale(.94);}
@@ -94,43 +85,13 @@
   .door-btn .check{color:#22c55e;font-weight:bold;margin-left:6px;}
   .modal-box button.secondary{width:100%;}
 
-  .icc-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;max-height:260px;overflow-y:auto;}
-  .icc-option{padding:12px 14px;font-size:14px;font-weight:500;border-radius:10px;border:2px solid #ddd;background:#f7f7f7;color:#111;cursor:pointer;transition:transform .18s ease, background .18s ease, border-color .18s ease;text-align:left;display:flex;justify-content:space-between;}
-  .icc-option:active{transform:scale(.97);}
-  .icc-option:hover{background:#eef2ff;border-color:#3b82f6;}
-  .icc-option .rank-tag{font-size:11px;color:#666;font-weight:400;}
-
-  .name-with-badge{display:flex;align-items:center;justify-content:space-between;gap:4px;width:100%;}
-  .name-with-badge .crew-name{flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .badge-pill{display:inline-block;font-size:7px;font-weight:700;padding:1px 6px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;flex-shrink:0;margin-left:2px;}
-  .badge-pill.sny{background:#3b82f6;color:#fff;}
-  .badge-pill.alt-icc{background:#1f2937;color:#fff;}
-
-  .ccic-table-wrap{display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;align-items:stretch;}
-  .ccic-table-wrap .captain-wrap{flex:1 1 180px;min-width:140px;}
-  .ccic-table-wrap .ccic-wrap{flex:1 1 180px;min-width:140px;}
-  .ccic-wrap table.rtab{margin-bottom:0;}
-  .ccic-wrap .ccic-row{cursor:pointer;transition:background .15s ease;}
-  .ccic-wrap .ccic-row:hover{background:#f0f4ff;}
-  .ccic-wrap .ccic-row .label-bold{font-weight:700;}
-  .ccic-wrap .ccic-row .empty-msg{color:#3b82f6;font-style:italic;}
-
+  /* ---- Print styles ---- */
   @media print{
     body{background:#fff;}
     header, .card:not(.reportcard), .noprint, .noprint-inline{display:none !important;}
     .wrap{padding:0;max-width:none;}
     .reportcard{border:none;padding:0;margin:0;}
     #report{border-radius:0;}
-
-    /* Hide placeholder texts and dashed borders in print */
-    .ccic-row .empty-msg { display: none !important; }
-    table.rtab td input.remarksTxt { border-bottom: none !important; }
-
-    /* Ensure blue text becomes black for B&W printing */
-    .pos-cell, .pos-cell.icc-locked, .door-cell {
-      color: #000 !important;
-    }
-    .ccic-row .empty-msg { color: #000 !important; }
 
     .crew-table{table-layout:fixed !important; width:100% !important;}
     .crew-table th, .crew-table td{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
@@ -144,10 +105,6 @@
     .door-cell.unset{color:transparent !important; font-size:0 !important;}
     .top-info input, .top-info input.rep{border-color:#999 !important; background:#fff !important;}
     .ft-table td input{border:none !important;}
-    .ccic-wrap .ccic-row:hover{background:transparent !important;}
-    .badge-pill.sny{background:#3b82f6 !important; color:#fff !important; print-color-adjust:exact; -webkit-print-color-adjust:exact;}
-    .badge-pill.alt-icc{background:#1f2937 !important; color:#fff !important; print-color-adjust:exact; -webkit-print-color-adjust:exact;}
-    .pos-cell.icc-locked{background:#e8f0fe !important; print-color-adjust:exact; -webkit-print-color-adjust:exact;}
   }
 </style>
 </head>
@@ -156,7 +113,7 @@
 <header>
   <h1>CTR Autofill by *2100551*</h1>
   <p>iFlight Crew Trip Report <b>OR</b> PDF Crew Trip Report → auto‑fill a printable alternate Crew Trip Report</p>
-  <p style="font-size:10px;color:#555;margin-top:4px;">build v2.0</p>
+  <p style="font-size:10px;color:#555;margin-top:4px;">build v1.5</p>
 </header>
 
 <div class="wrap">
@@ -215,10 +172,6 @@
     <div class="modal-title">Working Position</div>
     <div class="modal-sub" id="modalCrewName"></div>
     <div class="pos-grid" id="posGrid"></div>
-    <div class="modal-badge-row">
-      <button class="half" id="badgeSnyBtn">⛑ SNY</button>
-      <button class="half" id="badgeAltIccBtn">ALT ICC</button>
-    </div>
     <button class="secondary" id="modalCloseBtn">Close</button>
   </div>
 </div>
@@ -230,16 +183,6 @@
     <div class="modal-sub" id="doorModalCrewName"></div>
     <div class="door-grid" id="doorGrid"></div>
     <button class="secondary" id="doorModalCloseBtn">Close</button>
-  </div>
-</div>
-
-<!-- ICC Selection Modal -->
-<div class="modal-overlay" id="iccModalOverlay">
-  <div class="modal-box">
-    <div class="modal-title">Select ICC</div>
-    <div class="modal-sub" id="iccModalSub">Choose the In-Charge Cabin Crew</div>
-    <div class="icc-grid" id="iccGrid"></div>
-    <button class="secondary" id="iccModalCloseBtn">Cancel</button>
   </div>
 </div>
 
@@ -264,20 +207,15 @@
   const doorModalOverlay = document.getElementById('doorModalOverlay');
   const doorGrid = document.getElementById('doorGrid');
   const doorModalCrewName = document.getElementById('doorModalCrewName');
-  const badgeSnyBtn = document.getElementById('badgeSnyBtn');
-  const badgeAltIccBtn = document.getElementById('badgeAltIccBtn');
-  const iccModalOverlay = document.getElementById('iccModalOverlay');
-  const iccGrid = document.getElementById('iccGrid');
-  const iccModalSub = document.getElementById('iccModalSub');
 
   // ===== Constants =====
   const DUTY_HEADERS = ["Start","End","Pairing Id","Duty Hours","Flying Hours","Rest Required","Rest Available"];
   const ITIN_HEADERS = ["Flight/Acy Id","Date","From","Dep.","To","Arr.","A/C","Version","A/C Reg","Flight Time","Ground Time","Activity Start","Activity End","Activity Location"];
   const CREW_HEADERS = ["OP Rank","Postion Rank","Crew Id","Crew Name","WT","Work Pos.","Base","SDC","Check In"];
   const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary'];
-  const COCKPIT_RANKS = ['CAPT','FO','SO', 'CDT'];
+  const COCKPIT_RANKS = ['CAPT','FO','SO'];
   const POSITIONS_NARROW = ['P1','P2','P3','P4','A1','A2','SNY'];
-  const POSITIONS_WIDE = ['ICC','IFS B','LSB','LSC','LSD','AG','BG1','BG2','CG','DG','BC','BC1','CC','DC','DC2','SNY'];
+  const POSITIONS_WIDE = ['ICC','LSB','LSC','LSD','AG','BG1','BG2','CG','DG','BC','BC1','CC','DC','DC2','SNY'];
   const RANK_PRIORITY = { 'IFS': 1, 'LS': 2, 'FS': 3, 'FSS': 4, 'SS': 5, 'CS': 6, 'AS': 7 };
   const DOORS_NARROW = ['1L','1R','2L','2R'];
   const DOORS_WIDE = ['1L','1R','2L','2R','3L','3R','4L','4R'];
@@ -296,6 +234,15 @@
     return hh + mm;
   }
   function isNarrowbody(ac){ if(!ac) return false; const a = ac.trim().toUpperCase(); return a === '737' || a.indexOf('73') === 0 || a.indexOf('7M') === 0; }
+  function determineCrewInCharge(cabinCrew){
+    const ifs = cabinCrew.filter(c => c.opRank.toUpperCase() === 'IFS');
+    const ls = cabinCrew.filter(c => c.opRank.toUpperCase() === 'LS');
+    if(ifs.length === 1) return { auto: ifs[0], candidates: [] };
+    if(ifs.length > 1) return { auto: null, candidates: ifs };
+    if(ls.length === 1) return { auto: ls[0], candidates: [] };
+    if(ls.length > 1) return { auto: null, candidates: ls };
+    return { auto: null, candidates: cabinCrew.slice() };
+  }
   function getDayName(dateStr){
     try{
       const d = new Date(dateStr);
@@ -341,7 +288,7 @@
   }
   function extractRows(lines, headerSeq, cols){
     const idxAfterHeader = findHeaderEnd(lines, headerSeq);
-    if(idxAfterHeader === -1) return { rows: [], found: false };
+    if(idxAfterHeader === -1) return { rows: [], found:false };
     let idx = idxAfterHeader;
     const rows = [];
     while(idx + cols <= lines.length){
@@ -351,7 +298,7 @@
       rows.push(chunk);
       idx += cols;
     }
-    return { rows, found: true };
+    return { rows, found:true };
   }
   function parseTripText(raw){
     const lines = raw.split(/\r?\n/);
@@ -371,13 +318,27 @@
   }
 
   // ===== PDF CrewTripReport parser =====
+  // NOTE: pdf.js text extraction (see the upload handler below) joins every
+  // item on a page with a single space and does not preserve line breaks, so
+  // a whole page of the PDF arrives as ONE line. Worse, different report
+  // exports have been observed to lay the SAME table's fields out in
+  // different token orders — sometimes even mixing two different row
+  // orderings within one section of the same PDF (a row wraps to two lines
+  // in the PDF and the text stream reorders around it). So this parser does
+  // not assume any fixed order: each field type (flight numbers, dates,
+  // dep/arr pairs, aircraft type, crew rows) is found independently via
+  // pattern matching and reassembled by position, and multiple row patterns
+  // are tried for crew rows so a mixed-order section still parses cleanly.
   function parseCrewTripReport(raw){
+    // Collapse everything to single-spaced text, and separate text from a
+    // following ID or date when the PDF's wrapped cell text gets glued
+    // together with no space (e.g. "...MARIA2102462", "...MAD23-Jul-2026").
     let text = raw.replace(/\r?\n/g,' ')
       .replace(/([A-Za-z])(\d{7})\b/g,'$1 $2')
       .replace(/([A-Za-z])(\d{2}-[A-Za-z]{3}-\d{4})/g,'$1 $2')
       .replace(/\s+/g,' ').trim();
 
-    const RANKS = 'CAPT|FO|SO|CDT|IFS|LS|FSS|FS|SS|CS|AS';
+    const RANKS = 'CAPT|FO|SO|IFS|LS|FSS|FS|SS|CS|AS';
 
     const idxInbound = text.search(/\bInbound\b/i);
     const idxOutbound = text.search(/\bOutbound\b/i);
@@ -389,6 +350,18 @@
     const outboundSection = idxOutbound >= 0 ? text.substring(idxOutbound, idxCrewPairing >= 0 ? idxCrewPairing : text.length) : '';
     const pairingSection = idxCrewPairing >= 0 ? text.substring(idxCrewPairing, idxReportGen >= 0 ? idxReportGen : text.length) : '';
 
+    // ---- Flight legs from the top summary table ----
+    // Field types are extracted independently (order-agnostic) and zipped
+    // back together by row position, rather than matching one fixed-order
+    // row pattern:
+    //  - flight numbers & dates: global matches, taken in row order
+    //  - dep/arr: "AIRPORT HH:MM" only occurs for dep & arr (report/debrief
+    //    times have no adjacent airport code), taken two at a time
+    //  - aircraft type / rego: dates/times/flight-numbers are masked out,
+    //    the remaining text is split into one segment per row (by flight
+    //    number), and within each segment the first bare 3-4 digit number
+    //    is the aircraft type, with the next real token after it taken as
+    //    the registration
     const dateIdx = headerSection.search(/\bDate\b/i);
     const tableSection = dateIdx >= 0 ? headerSection.substring(dateIdx) : headerSection;
 
@@ -416,6 +389,10 @@
       }
       const dep = depArrMatches[i*2];
       const arr = depArrMatches[i*2+1];
+      // FH (flight hours -> our FT field): its position relative to
+      // date/flight/rank varies between report exports, but it's reliably
+      // the second-to-last bare HH:MM token that appears between this row's
+      // Arr time and its aircraft-type code (the last such token being DH).
       let fh = '';
       if(arr){
         const segStart = arr.index + arr[0].length;
@@ -434,6 +411,8 @@
         actStart:'', actEnd:'', actLoc:''
       });
     }
+    // Fallback: if no legs found at all, at least pick up flight numbers so
+    // the itinerary isn't empty.
     if(!itin.length){
       const seen = new Set();
       (tableSection.match(/MH\d{3,4}/g) || []).forEach(f => {
@@ -441,6 +420,12 @@
       });
     }
 
+    // ---- Crew: Inbound & Outbound rows ----
+    // Multiple row layouts have been observed, sometimes mixed within the
+    // same section, so all patterns are tried against both sections:
+    //   A) FLIGHT RANK BASE "SIGNING ON/OFF" NAME ID WT
+    //   B) FLIGHT ID NAME RANK BASE "SIGNING ON/OFF" WT
+    //   C) FLIGHT ID NAME RANK WT BASE "SIGNING ON/OFF"  (WT before base)
     const crewMap = {};
     const patA = new RegExp('(MH\\d{3,4})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z][A-Z .]*?)\\s+(\\d{7})\\s+([A-Z]{1,3})\\b', 'g');
     const patB = new RegExp('(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z]{1,3})\\b', 'g');
@@ -458,6 +443,8 @@
       }
     });
 
+    // ---- Crew On My Pairing ----
+    // Two layouts observed:  A) BASE RANK ID NAME   B) ID RANK BASE NAME
     const pairA = new RegExp('([A-Z]{3})\\s+(' + RANKS + ')\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)(?=\\s+[A-Z]{3}\\s+(?:' + RANKS + ')\\s+\\d{7}|\\s+\\d{7}\\s+(?:' + RANKS + ')\\s+[A-Z]{3}|$)', 'g');
     const pairB = new RegExp('(\\d{7})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+([A-Z][A-Z .]*?)(?=\\s+\\d{7}|\\s+[A-Z]{3}\\s+(?:' + RANKS + ')\\s+\\d{7}|$)', 'g');
     {
@@ -470,7 +457,8 @@
       }
     }
 
-    const ownerMatch = headerSection.match(/([A-Z][A-Z .]+?)\s*\|\s*(\d{7})\s*\|\s*([A-Z]+)\s*\|\s*([A-Z]{3})\s*\|\s*(CAPT|FO|SO|CDT|IFS|LS|FSS|FS|SS|CS|AS)\b/);
+    // ---- Report owner strap line: "NAME | ID | TYPE | BASE | RANK" ----
+    const ownerMatch = headerSection.match(/([A-Z][A-Z .]+?)\s*\|\s*(\d{7})\s*\|\s*([A-Z]+)\s*\|\s*([A-Z]{3})\s*\|\s*(CAPT|FO|SO|IFS|LS|FSS|FS|SS|CS|AS)\b/);
     if(ownerMatch){
       crewMap[ownerMatch[2]] = { opRank: ownerMatch[5], crewId: ownerMatch[2], crewName: ownerMatch[1].trim() };
     }
@@ -494,9 +482,8 @@
     };
   }
 
-  // ===== Shared state =====
+  // ===== Shared state & rendering =====
   let state = null;
-  let modalCrewId = null;
 
   function fval(key, def){
     if(state.fields && state.fields.hasOwnProperty(key) && state.fields[key] !== '') return state.fields[key];
@@ -505,185 +492,36 @@
 
   window.updateField = function(key, val){ state.fields[key] = val; };
 
-  // ---- Badge toggles ----
-  function toggleBadge(crewId, badgeType){
-    if(!state.badges) state.badges = {};
-    const current = state.badges[crewId];
-    if(current === badgeType){
-      delete state.badges[crewId];
-    } else {
-      delete state.badges[crewId];
-      state.badges[crewId] = badgeType;
-    }
-    posModalOverlay.style.display = 'none';
-    buildReport();
-  }
-
-  // ---- ICC logic ----
-  function getEligibleICC(crewList){
-    const ifs = crewList.filter(c => c.opRank.toUpperCase() === 'IFS');
-    const ls = crewList.filter(c => c.opRank.toUpperCase() === 'LS');
-    if(ifs.length === 1) return { eligible: ifs, auto: ifs[0], mode: 'auto' };
-    if(ifs.length >= 2) return { eligible: ifs, auto: null, mode: 'select' };
-    if(ls.length === 1) return { eligible: ls, auto: ls[0], mode: 'auto' };
-    if(ls.length >= 2) return { eligible: ls, auto: null, mode: 'select' };
-    return { eligible: [], auto: null, mode: 'none' };
-  }
-
-  function getCurrentICC(){
-    if(!state) return null;
-    const cabin = state.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
-    const sorted = sortCabinCrew(cabin);
-    const info = getEligibleICC(sorted);
-    if(state.icc && state.icc.manual){
-      const found = sorted.find(c => c.crewId === state.icc.crewId);
-      if(found) return { crew: found, mode: 'manual' };
-    }
-    if(info.auto){
-      if(state.icc && state.icc.crewId && state.icc.manual){
-        const found = sorted.find(c => c.crewId === state.icc.crewId);
-        if(found) return { crew: found, mode: 'manual' };
-      }
-      return { crew: info.auto, mode: 'auto' };
-    }
-    if(info.eligible.length > 0){
-      if(state.icc && state.icc.crewId){
-        const found = sorted.find(c => c.crewId === state.icc.crewId);
-        if(found && info.eligible.some(e => e.crewId === found.crewId)){
-          return { crew: found, mode: 'manual' };
-        }
-      }
-      return { crew: null, mode: 'select', eligible: info.eligible };
-    }
-    return { crew: null, mode: 'none' };
-  }
-
-  function getAltIccCrew(){
-    if(!state || !state.badges) return null;
-    let found = null;
-    for(const id in state.badges){
-      if(state.badges[id] === 'ALT_ICC'){
-        const crew = state.crew.find(c => c.crewId === id);
-        if(crew){ found = crew; break; }
-      }
-    }
-    return found;
-  }
-
   // ---- Position modal ----
   window.openPositionModal = function(crewId, crewName){
-    modalCrewId = crewId;
     const ac0 = state.itin.length ? state.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
     const posList = isNarrow ? POSITIONS_NARROW : POSITIONS_WIDE;
     const gridClass = isNarrow ? 'narrow' : 'wide';
-
-    const iccInfo = getCurrentICC();
-    const isIcc = iccInfo && iccInfo.crew && iccInfo.crew.crewId === crewId;
-
-    modalCrewName.textContent = crewName + (isIcc ? ' (ICC — locked)' : '');
+    state.modalCrew = crewId;
+    modalCrewName.textContent = crewName;
     posGrid.className = 'pos-grid ' + gridClass;
     posGrid.innerHTML = '';
-
-    if(isIcc){
-      const msg = document.createElement('div');
-      msg.style.cssText = 'grid-column:1/-1;padding:16px;background:#e8f0fe;border-radius:8px;text-align:center;font-weight:600;color:#1d4ed8;font-size:13px;';
-      msg.textContent = 'ICC → position is locked to ICC';
-      posGrid.appendChild(msg);
-    } else {
-      posList.forEach(pos => {
-        const btn = document.createElement('button');
-        btn.className = 'pos-btn';
-        const isAssigned = (state.positions[crewId] === pos);
-        if(isAssigned) btn.classList.add('selected');
-        let takenBy = null;
-        let takenByHasSny = false;
-        for(const id in state.positions){
-          if(id !== crewId && state.positions[id] === pos && state.positions[id] !== ''){
-            takenBy = id;
-            if(state.badges && state.badges[id] === 'SNY'){
-              takenByHasSny = true;
-            }
-            break;
-          }
-        }
-        const hasSny = state.badges && state.badges[crewId] === 'SNY';
-        if(!hasSny && takenBy && !takenByHasSny){
-          btn.style.opacity = '0.4';
-          btn.title = 'Taken by ' + takenBy;
-        }
-        btn.textContent = pos;
-        btn.addEventListener('click', () => {
-          if(isIcc) return;
-          const hasSnyNow = state.badges && state.badges[crewId] === 'SNY';
-          let blocked = false;
-          if(!hasSnyNow){
-            for(const id in state.positions){
-              if(id !== crewId && state.positions[id] === pos && state.positions[id] !== ''){
-                const otherHasSny = state.badges && state.badges[id] === 'SNY';
-                if(!otherHasSny){ blocked = true; break; }
-              }
-            }
-          }
-          if(blocked){
-            btn.style.borderColor = '#ef4444';
-            btn.style.background = '#fee2e2';
-            setTimeout(() => { btn.style.borderColor = ''; btn.style.background = ''; }, 400);
-            return;
-          }
-          for(const id in state.positions){
-            if(id !== crewId && state.positions[id] === pos){
-              const otherHasSny = state.badges && state.badges[id] === 'SNY';
-              if(!otherHasSny){
-                state.positions[id] = '';
-              }
-            }
-          }
-          if(state.positions[crewId] === pos){
-            state.positions[crewId] = '';
-          } else {
-            state.positions[crewId] = pos;
-          }
-          posModalOverlay.style.display = 'none';
-          buildReport();
-        });
-        posGrid.appendChild(btn);
-      });
-    }
-
-    const hasSny = state.badges && state.badges[crewId] === 'SNY';
-    const hasAltIcc = state.badges && state.badges[crewId] === 'ALT_ICC';
-    badgeSnyBtn.textContent = hasSny ? '⛑ SNY ✓' : '⛑ SNY';
-    badgeSnyBtn.className = 'half' + (hasSny ? ' badge-active-sny' : '');
-    badgeAltIccBtn.textContent = hasAltIcc ? 'ALT ICC ✓' : 'ALT ICC';
-    badgeAltIccBtn.className = 'half' + (hasAltIcc ? ' badge-active-alt-icc' : '');
-
+    posList.forEach(pos => {
+      const btn = document.createElement('button');
+      btn.className = 'pos-btn' + (state.positions[crewId] === pos ? ' selected' : '');
+      btn.textContent = pos;
+      btn.addEventListener('click', () => window.assignPosition(crewId, pos));
+      posGrid.appendChild(btn);
+    });
     posModalOverlay.style.display = 'flex';
   };
 
-  badgeSnyBtn.addEventListener('click', function(){
-    if(!modalCrewId) return;
-    const iccInfo = getCurrentICC();
-    if(iccInfo && iccInfo.crew && iccInfo.crew.crewId === modalCrewId){
-      badgeSnyBtn.style.borderColor = '#ef4444';
-      badgeSnyBtn.style.background = '#fee2e2';
-      setTimeout(() => { badgeSnyBtn.style.borderColor = ''; badgeSnyBtn.style.background = ''; }, 400);
-      return;
+  window.assignPosition = function(crewId, pos){
+    if(pos !== 'SNY'){
+      Object.keys(state.positions).forEach(id => {
+        if(id !== crewId && state.positions[id] === pos) state.positions[id] = '';
+      });
     }
-    toggleBadge(modalCrewId, 'SNY');
-  });
-
-  badgeAltIccBtn.addEventListener('click', function(){
-    if(!modalCrewId) return;
-    const iccInfo = getCurrentICC();
-    if(iccInfo && iccInfo.crew && iccInfo.crew.crewId === modalCrewId){
-      badgeAltIccBtn.style.borderColor = '#ef4444';
-      badgeAltIccBtn.style.background = '#fee2e2';
-      setTimeout(() => { badgeAltIccBtn.style.borderColor = ''; badgeAltIccBtn.style.background = ''; }, 400);
-      return;
-    }
-    toggleBadge(modalCrewId, 'ALT_ICC');
-  });
+    state.positions[crewId] = pos;
+    posModalOverlay.style.display = 'none';
+    buildReport();
+  };
 
   document.getElementById('modalCloseBtn').addEventListener('click', () => { posModalOverlay.style.display = 'none'; });
   posModalOverlay.addEventListener('click', (e) => { if(e.target === posModalOverlay) posModalOverlay.style.display = 'none'; });
@@ -734,69 +572,30 @@
   document.getElementById('doorModalCloseBtn').addEventListener('click', () => { doorModalOverlay.style.display = 'none'; });
   doorModalOverlay.addEventListener('click', (e) => { if(e.target === doorModalOverlay) doorModalOverlay.style.display = 'none'; });
 
-  // ---- ICC modal ----
-  function openIccModal(eligible){
-    iccGrid.innerHTML = '';
-    if(!eligible || eligible.length === 0){
-      iccModalSub.textContent = 'No eligible crew members.';
-      iccGrid.innerHTML = '<div style="padding:16px;text-align:center;color:#888;">No candidates available.</div>';
-      iccModalOverlay.style.display = 'flex';
-      return;
-    }
-    const rankLabel = eligible[0].opRank.toUpperCase() === 'IFS' ? 'IFS' : 'LS';
-    iccModalSub.textContent = 'Select ' + rankLabel + ' to be In-Charge Cabin Crew (ICC)';
-    eligible.forEach(c => {
-      const div = document.createElement('div');
-      div.className = 'icc-option';
-      div.innerHTML = '<span>' + esc(c.crewName) + '</span><span class="rank-tag">' + esc(c.opRank) + ' · ' + esc(c.crewId) + '</span>';
-      div.addEventListener('click', () => {
-        if(!state.icc) state.icc = {};
-        state.icc.crewId = c.crewId;
-        state.icc.manual = true;
-        state.positions[c.crewId] = 'ICC';
-        for(const id in state.positions){
-          if(id !== c.crewId && state.positions[id] === 'ICC'){
-            state.positions[id] = '';
-          }
-        }
-        iccModalOverlay.style.display = 'none';
-        buildReport();
-      });
-      iccGrid.appendChild(div);
-    });
-    iccModalOverlay.style.display = 'flex';
-  }
-
-  document.getElementById('iccModalCloseBtn').addEventListener('click', () => { iccModalOverlay.style.display = 'none'; });
-  iccModalOverlay.addEventListener('click', (e) => { if(e.target === iccModalOverlay) iccModalOverlay.style.display = 'none'; });
-
-  // ===== Build Report =====
   function buildReport(){
     const d = state;
-    if(!d) return;
     const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
     const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
     const fos = d.crew.filter(c => c.opRank.toUpperCase() === 'FO');
-    const fos = d.crew.filter(c => c.opRank.toUpperCase() === 'CDT');
     const ac0 = d.itin.length ? d.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
 
     const sortedCabin = sortCabinCrew(cabinCrew);
 
-    const iccInfo = getCurrentICC();
-    let iccCrew = iccInfo && iccInfo.crew ? iccInfo.crew : null;
-    if(iccCrew){
-      d.positions[iccCrew.crewId] = 'ICC';
-      for(const id in d.positions){
-        if(id !== iccCrew.crewId && d.positions[id] === 'ICC'){
-          d.positions[id] = '';
-        }
-      }
+    const cic = determineCrewInCharge(sortedCabin);
+    let cicChosen = cic.auto;
+    if(!cicChosen && cic.candidates.length){
+      cicChosen = state.chosenCIC || cic.candidates[0];
     }
-    const eligibleForIcc = iccInfo && iccInfo.mode === 'select' ? iccInfo.eligible : null;
 
-    const altIccCrew = getAltIccCrew();
+    let picChosen = null;
+    if(isNarrow && captains.length > 1){
+      picChosen = state.selectedPIC || captains[0];
+    } else if(captains.length === 1){
+      picChosen = captains[0];
+    }
 
+    // REP display
     let repDisplay = '';
     if(d.dutyDate || (d.pdfData && d.pdfData.date)){
       const dateStr = (d.pdfData && d.pdfData.date) || d.dutyDate || '';
@@ -816,14 +615,16 @@
     }
     if(!repDisplay) repDisplay = '----';
 
+    // ---- Build unified layout ----
     let html = `<div class="rpad">`;
 
+    // Top info: only BAY and REP
     html += `<div class="top-info">
-      <span><span class="label">REP</span> <input value="${esc(fval('rep', repDisplay))}" oninput="updateField('rep', this.value)" class="rep"></span>
-      <span><span class="label">BAY</span> <input value="${esc(fval('bay', ''))}" oninput="updateField('bay', this.value)" class="bay" maxlength="8"></span>
-      <span><span class="label">BRIEFING ST</span> <input value="${esc(fval('briefingSt', ''))}" oninput="updateField('briefingSt', this.value)" class="brief" maxlength="6"></span>
+      <span><span class="label">BAY:</span> <input value="${esc(fval('bay', ''))}" oninput="updateField('bay', this.value)" class="small"></span>
+      <span><input value="${esc(repDisplay)}" class="rep" readonly></span>
     </div>`;
 
+    // Flight table
     html += `<table class="rtab" style="font-size:9px;">
       <tr>
         <th style="width:8%;">F.NO</th>
@@ -854,15 +655,14 @@
     });
     html += `</table>`;
 
+    // Airport name – blank by default
     html += `<div style="font-size:9px;margin-top:2px;text-align:left;border:1px solid #333;border-top:none;padding:2px 4px;">
       <input value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;" placeholder="">
     </div>`;
 
-    html += `<div class="ccic-table-wrap">`;
-
-    html += `<div class="captain-wrap">
-      <table class="rtab" style="margin-top:4px;width:100%;">
-        <tr><th style="width:25%;">Staff No</th><th style="width:15%;">Rank</th><th style="width:60%;">Name</th></tr>`;
+    // Captain & FO
+    html += `<table class="rtab" style="margin-top:4px;width:60%;">
+      <tr><th style="width:25%;">Staff No</th><th style="width:15%;">Rank</th><th style="width:60%;">Name</th></tr>`;
     if(captains.length){
       captains.forEach(c => {
         html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
@@ -875,43 +675,15 @@
         html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td style="text-align:left;">${esc(c.crewName)}</td></tr>`;
       });
     }
-    html += `</table>
-    </div>`;
+    html += `</table>`;
 
-    html += `<div class="ccic-wrap">
-      <table class="rtab" style="margin-top:4px;width:100%;">
-        <tr><th style="width:30%;">Role</th><th style="width:70%;">Rank / Name</th></tr>
-        <tr class="ccic-row" id="iccRow" style="cursor:pointer;">
-          <td class="label-bold">ICC</td>
-          <td style="text-align:left;">`;
-    if(iccCrew){
-      html += `<strong>${esc(iccCrew.opRank)} ${esc(iccCrew.crewName)}</strong>`;
-    } else if(eligibleForIcc && eligibleForIcc.length > 0){
-      html += `<span class="empty-msg">click to select</span>`;
-    } else {
-      html += `<span class="empty-msg">—</span>`;
-    }
-    html += `</td></tr>
-        <tr class="ccic-row" id="altIccRow">
-          <td class="label-bold">ALT ICC</td>
-          <td style="text-align:left;">`;
-    if(altIccCrew){
-      html += `<strong>${esc(altIccCrew.opRank)} ${esc(altIccCrew.crewName)}</strong>`;
-    } else {
-      html += `<span class="empty-msg">—</span>`;
-    }
-    html += `</td></tr>
-      </table>
-    </div>`;
-
-    html += `</div>`;
-
+    // Cabin Crew
     html += `<div style="margin-top:6px;font-weight:bold;font-size:9px;">CABIN CREW (${sortedCabin.length})</div>`;
     html += `<table class="rtab crew-table" style="font-size:9px;">
       <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:62%;text-align:left;">Name</th><th style="width:10%;">Working Post</th><th style="width:10%;">Door</th></tr>`;
     sortedCabin.forEach(c => {
-      const isIcc = iccCrew && c.crewId === iccCrew.crewId;
-      const pos = isIcc ? 'ICC' : (state.positions[c.crewId] || '');
+      const isCIC = cicChosen && c.crewId === cicChosen.crewId;
+      const pos = state.positions[c.crewId] || '';
       let doorAssigned = '';
       for(let d in state.doors){
         if(state.doors[d] === c.crewId){
@@ -919,26 +691,17 @@
           break;
         }
       }
-      const hasSny = state.badges && state.badges[c.crewId] === 'SNY';
-      const hasAltIccBadge = state.badges && state.badges[c.crewId] === 'ALT_ICC';
-      let nameHtml = `<span class="crew-name">${esc(c.crewName)}</span>`;
-      if(hasSny) nameHtml += `<span class="badge-pill sny">SNY</span>`;
-      if(hasAltIccBadge) nameHtml += `<span class="badge-pill alt-icc">alt icc</span>`;
-
-      const posClass = isIcc ? 'pos-cell icc-locked' : (pos ? 'pos-cell' : 'pos-cell unset');
-      const posDisplay = isIcc ? 'ICC' : (pos || '');
-      const doorDisplay = doorAssigned || '+';
-
-      html += `<tr${isIcc ? ' style="background:#e8f0fe;"' : ''}>
+      html += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
         <td>${esc(c.crewId)}</td>
         <td>${esc(c.opRank)}</td>
-        <td style="text-align:left;"><span class="name-with-badge">${nameHtml}</span></td>
-        <td class="${posClass}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}"${isIcc ? ' style="cursor:default;"' : ''}>${esc(posDisplay)}</td>
-        <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${esc(doorDisplay)}</td>
+        <td style="text-align:left;">${esc(c.crewName)}</td>
+        <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${pos ? esc(pos) : ''}</td>
+        <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${doorAssigned ? esc(doorAssigned) : '+'}</td>
       </tr>`;
     });
     html += `</table>`;
 
+    // Bottom Flight Time Details
     html += `<div style="margin-top:8px;font-weight:bold;font-size:9px;">Flight Time Details</div>`;
     html += `<table class="ft-table">
       <tr>
@@ -951,11 +714,11 @@
         <th style="width:10%;">1P</th>
         <th style="width:10%;">BC</th>
         <th style="width:10%;">DC</th>
-        <th style="width:10%;">LP</th>
+        <th style="width:10%;">DO</th>
       </tr>`;
     d.itin.forEach((l) => {
       const flightNo = esc(l.flightId);
-      const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','LP'];
+      const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
       html += `<tr>
         <td style="font-weight:bold;">${flightNo}</td>
         ${cats.map(() => `<td><input value="" placeholder=""></td>`).join('')}
@@ -966,71 +729,19 @@
     html += `</div>`;
     reportEl.innerHTML = html;
 
-    reportEl.querySelectorAll('.pos-cell:not(.icc-locked)').forEach(el => {
+    // Position cell clicks
+    reportEl.querySelectorAll('.pos-cell').forEach(el => {
       el.addEventListener('click', () => {
         window.openPositionModal(el.getAttribute('data-crewid'), el.getAttribute('data-crewname'));
       });
     });
-    reportEl.querySelectorAll('.pos-cell.icc-locked').forEach(el => {
-      el.addEventListener('click', () => {
-        const cabin = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
-        const sorted = sortCabinCrew(cabin);
-        const info = getEligibleICC(sorted);
-        if(info.mode === 'select' && info.eligible.length > 0){
-          openIccModal(info.eligible);
-        } else if(info.mode === 'auto' && info.auto){
-          const rank = info.auto.opRank.toUpperCase();
-          const sameRank = sorted.filter(c => c.opRank.toUpperCase() === rank);
-          if(sameRank.length >= 2){
-            openIccModal(sameRank);
-          } else {
-            const sub = document.getElementById('iccModalSub');
-            sub.textContent = 'Only one ' + rank + ' — automatically ICC.';
-            iccGrid.innerHTML = `<div style="padding:16px;text-align:center;color:#888;">${esc(info.auto.crewName)} (${esc(info.auto.crewId)}) is the ICC.</div>`;
-            iccModalOverlay.style.display = 'flex';
-          }
-        } else {
-          const sub = document.getElementById('iccModalSub');
-          sub.textContent = 'No eligible crew for ICC.';
-          iccGrid.innerHTML = '<div style="padding:16px;text-align:center;color:#888;">No IFS or LS crew found.</div>';
-          iccModalOverlay.style.display = 'flex';
-        }
-      });
-    });
 
+    // Door cell clicks
     reportEl.querySelectorAll('.door-cell').forEach(el => {
       el.addEventListener('click', () => {
         window.openDoorModal(el.getAttribute('data-crewid'), el.getAttribute('data-crewname'));
       });
     });
-
-    const iccRow = document.getElementById('iccRow');
-    if(iccRow){
-      iccRow.addEventListener('click', () => {
-        const cabin = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
-        const sorted = sortCabinCrew(cabin);
-        const info = getEligibleICC(sorted);
-        if(info.mode === 'select' && info.eligible.length > 0){
-          openIccModal(info.eligible);
-        } else if(info.mode === 'auto' && info.auto){
-          const rank = info.auto.opRank.toUpperCase();
-          const sameRank = sorted.filter(c => c.opRank.toUpperCase() === rank);
-          if(sameRank.length >= 2){
-            openIccModal(sameRank);
-          } else {
-            const sub = document.getElementById('iccModalSub');
-            sub.textContent = 'Only one ' + rank + ' — automatically ICC.';
-            iccGrid.innerHTML = `<div style="padding:16px;text-align:center;color:#888;">${esc(info.auto.crewName)} (${esc(info.auto.crewId)}) is the ICC.</div>`;
-            iccModalOverlay.style.display = 'flex';
-          }
-        } else {
-          const sub = document.getElementById('iccModalSub');
-          sub.textContent = 'No eligible crew for ICC.';
-          iccGrid.innerHTML = '<div style="padding:16px;text-align:center;color:#888;">No IFS or LS crew found.</div>';
-          iccModalOverlay.style.display = 'flex';
-        }
-      });
-    }
   }
 
   // ===== Shared state setter =====
@@ -1041,29 +752,10 @@
     state.fields = {};
     state.positions = {};
     state.doors = {};
-    state.badges = {};
-    state.icc = {};
     state.source = source || 'iflight';
-
-    const cabin = state.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
-    const sorted = sortCabinCrew(cabin);
-    const info = getEligibleICC(sorted);
-    if(info.auto && info.mode === 'auto'){
-      state.icc.crewId = info.auto.crewId;
-      state.icc.manual = false;
-      state.positions[info.auto.crewId] = 'ICC';
-    } else if(info.mode === 'select' && info.eligible.length > 0){
-      state.icc.crewId = null;
-      state.icc.manual = false;
-    } else {
-      state.icc.crewId = null;
-      state.icc.manual = false;
-    }
-
     buildReport();
     reportCard.style.display = '';
     emptyCard.style.display = 'none';
-
     if(source === 'iflight'){
       dbgContent.innerHTML =
         '<p style="font-size:11px;color:#888;">Duty Details</p>' + renderDebugTable(parsed.duty, ['start','end','pairingId','dutyHours','flyingHours','restRequired','restAvailable']) +
