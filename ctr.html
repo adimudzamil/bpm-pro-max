@@ -950,11 +950,11 @@
         <th style="width:10%;">1P</th>
         <th style="width:10%;">BC</th>
         <th style="width:10%;">DC</th>
-        <th style="width:10%;">DO</th>
+        <th style="width:10%;">LP</th>
       </tr>`;
     d.itin.forEach((l) => {
       const flightNo = esc(l.flightId);
-      const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','DO'];
+      const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','LP'];
       html += `<tr>
         <td style="font-weight:bold;">${flightNo}</td>
         ${cats.map(() => `<td><input value="" placeholder=""></td>`).join('')}
