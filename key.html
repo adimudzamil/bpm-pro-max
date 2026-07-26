@@ -7,10 +7,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0a0f0a">
   <title>⌨️ MATRIX TERMINAL</title>
-  <!-- PWA manifest inline -->
   <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1hdHJpeCBUZXJtaW5hbCIsCiAgInNob3J0X25hbWUiOiAiVGVybWluYWwiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzBhMGYwYSIsCiAgInRoZW1lX2NvbG9yIjogIiMwYTBmMGEiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDUxMiA1MTInJTNFJTNDcmVjdCB3aWR0aD0nNTEyJyBoZWlnaHQ9JzUxMicgcng9JzUwJyBmaWxsPSclMjMwYTBmMGEnLyUzRSUzQ3RleHQgeD0nMjU2JyB5PSczMjAnIGZvbnQtc2l6ZT0nMjAwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmaWxsPSclMjMwMGZmNDEnIGZvbnQtZmFtaWx5PSdtb25vc3BhY2UnJTNFJTIzJTNDL3RleHQlM0UlM0Mvc3ZnJTNFIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIgogICAgfQogIF0KfQ==">
   <style>
-    /* lock everything down: no scrolling, no zoom, no movement */
     * {
       margin: 0;
       padding: 0;
@@ -31,7 +29,6 @@
       left: 0;
       right: 0;
       bottom: 0;
-      /* prevent any rubber-band / overscroll */
       overscroll-behavior: none;
       -webkit-overflow-scrolling: none;
       touch-action: none;
@@ -43,7 +40,7 @@
       height: 100%;
       width: 100%;
       background: #0a0f0a;
-      padding: 8px 6px 6px 6px;
+      padding: 6px 6px 4px 6px;
       overflow: hidden;
       position: fixed;
       top: 0;
@@ -53,16 +50,18 @@
       touch-action: none;
     }
 
-    /* ----- SCREEN (top half) ----- */
+    /* ----- SCREEN (top) - now smaller to fit keyboard ----- */
     #screen-container {
-      flex: 1 1 50%;
-      min-height: 40%;
+      flex: 0 0 auto;
+      height: 30%;
+      min-height: 80px;
+      max-height: 35%;
       background: #0f140f;
       border: 1px solid #1f3f1f;
-      border-radius: 16px 16px 8px 8px;
+      border-radius: 14px 14px 8px 8px;
       box-shadow: inset 0 0 20px rgba(0, 255, 65, 0.08), 0 0 12px rgba(0, 255, 65, 0.15);
-      padding: 12px 14px;
-      margin-bottom: 8px;
+      padding: 8px 12px;
+      margin-bottom: 6px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -71,10 +70,10 @@
 
     #screen {
       flex: 1;
-      font-size: 1.3rem;
-      line-height: 1.6;
+      font-size: 1.1rem;
+      line-height: 1.5;
       font-weight: 400;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
       color: #00ff41;
       text-shadow: 0 0 6px #00ff4166;
       background: transparent;
@@ -89,14 +88,13 @@
       overflow-y: auto;
       scrollbar-width: thin;
       scrollbar-color: #00ff4133 #0f140f;
-      /* prevent text selection / zoom */
       touch-action: none;
       -webkit-user-select: none;
       user-select: none;
     }
 
     #screen::-webkit-scrollbar {
-      width: 5px;
+      width: 4px;
     }
     #screen::-webkit-scrollbar-track {
       background: #0f140f;
@@ -106,14 +104,14 @@
       border-radius: 8px;
     }
 
-    /* ----- KEYBOARD (bottom half) ----- */
+    /* ----- KEYBOARD (bottom) - takes remaining space ----- */
     #keyboard {
-      flex: 1 1 50%;
-      min-height: 45%;
+      flex: 1 1 auto;
+      min-height: 55%;
       background: #0f140f;
       border-radius: 12px 12px 18px 18px;
       border: 1px solid #1f3f1f;
-      padding: 6px 4px 10px 4px;
+      padding: 4px 4px 6px 4px;
       display: flex;
       flex-direction: column;
       box-shadow: 0 -2px 12px rgba(0, 255, 65, 0.08);
@@ -126,35 +124,36 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 5px 3px;
-      padding: 6px 4px 8px 4px;
+      gap: 3px 2px;
+      padding: 3px 2px 5px 2px;
       border-bottom: 1px solid #1a3a1a;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       background: #0c120c;
-      border-radius: 10px 10px 0 0;
-      min-height: 48px;
+      border-radius: 8px 8px 0 0;
+      min-height: 34px;
       align-items: center;
       touch-action: none;
+      flex-shrink: 0;
     }
 
     .sym-btn {
       background: #162016;
       border: 1px solid #2a5a2a;
       color: #7fdb7f;
-      font-size: 0.9rem;
+      font-size: 0.7rem;
       font-weight: 600;
-      padding: 4px 9px;
-      border-radius: 20px;
+      padding: 2px 6px;
+      border-radius: 16px;
       cursor: pointer;
       box-shadow: 0 0 4px #00ff4111;
       transition: all 0.08s ease;
       font-family: 'Courier New', monospace;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.2px;
       touch-action: manipulation;
-      min-width: 32px;
+      min-width: 26px;
       text-align: center;
-      /* prevent zoom on double-tap */
-      touch-action: manipulation;
+      line-height: 1.4;
+      flex-shrink: 0;
     }
 
     .sym-btn:active {
@@ -168,20 +167,21 @@
     #key-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 5px 4px;
+      gap: 3px 3px;
       flex: 1;
-      padding: 4px 2px;
+      padding: 2px 2px;
       align-content: stretch;
       touch-action: none;
+      min-height: 0;
     }
 
     .key-btn {
       background: #121a12;
       border: 1px solid #2a4a2a;
       color: #b3ffb3;
-      font-size: 1.2rem;
+      font-size: 0.95rem;
       font-weight: 500;
-      border-radius: 14px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -189,11 +189,10 @@
       transition: all 0.07s ease;
       box-shadow: 0 0 4px #00ff4111;
       touch-action: manipulation;
-      padding: 2px 0;
+      padding: 1px 0;
       font-family: 'Courier New', monospace;
-      min-height: 40px;
-      /* prevent zoom */
-      touch-action: manipulation;
+      min-height: 28px;
+      line-height: 1.2;
     }
 
     .key-btn:active {
@@ -207,8 +206,8 @@
     .key-btn.space {
       grid-column: span 2;
       background: #162016;
-      font-size: 0.8rem;
-      letter-spacing: 1px;
+      font-size: 0.7rem;
+      letter-spacing: 0.5px;
       color: #7fbf7f;
     }
 
@@ -216,17 +215,17 @@
       background: #1a1f1a;
       color: #ff7f7f;
       border-color: #5a3a3a;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
 
     .key-btn.clear {
       background: #1a1a1a;
       color: #ff9f5f;
       border-color: #5a4a2a;
-      font-size: 0.8rem;
+      font-size: 0.7rem;
     }
 
-    /* settings panel (hidden by default) */
+    /* settings panel */
     #settings-panel {
       position: fixed;
       top: 0;
@@ -252,8 +251,8 @@
       background: #0f170f;
       border: 1px solid #2a5a2a;
       border-radius: 32px;
-      padding: 28px 22px;
-      max-width: 550px;
+      padding: 24px 18px;
+      max-width: 500px;
       width: 100%;
       box-shadow: 0 0 40px #00ff4122;
       touch-action: none;
@@ -263,26 +262,26 @@
       color: #00ff41;
       font-weight: 300;
       letter-spacing: 2px;
-      font-size: 1.6rem;
-      margin-bottom: 12px;
+      font-size: 1.4rem;
+      margin-bottom: 10px;
       text-align: center;
       text-shadow: 0 0 8px #00ff4155;
     }
 
     #code-input {
       width: 100%;
-      height: 160px;
+      height: 140px;
       background: #0a0f0a;
       border: 1px solid #2a5a2a;
       border-radius: 16px;
       color: #00ff41;
-      font-size: 1rem;
-      padding: 14px;
+      font-size: 0.95rem;
+      padding: 12px;
       font-family: 'Courier New', monospace;
       resize: vertical;
       outline: none;
-      margin-bottom: 18px;
-      touch-action: auto; /* allow scroll in textarea */
+      margin-bottom: 14px;
+      touch-action: auto;
     }
 
     #code-input:focus {
@@ -292,7 +291,7 @@
 
     .settings-actions {
       display: flex;
-      gap: 14px;
+      gap: 12px;
       justify-content: flex-end;
     }
 
@@ -300,9 +299,9 @@
       background: #1a2a1a;
       border: 1px solid #2a5a2a;
       color: #b3ffb3;
-      padding: 12px 26px;
+      padding: 10px 22px;
       border-radius: 40px;
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
       transition: 0.1s ease;
@@ -318,22 +317,21 @@
 
     #load-status {
       color: #8fbf8f;
-      margin-top: 6px;
-      font-size: 0.9rem;
+      margin-top: 4px;
+      font-size: 0.85rem;
       text-align: center;
     }
 
-    /* gear */
     #gear {
       position: fixed;
-      bottom: 12px;
-      right: 16px;
+      bottom: 8px;
+      right: 12px;
       background: #0f170fcc;
       border: 1px solid #2a5a2a;
       border-radius: 40px;
-      padding: 8px 12px;
+      padding: 6px 10px;
       color: #5f9f5f;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       cursor: pointer;
       z-index: 50;
       backdrop-filter: blur(4px);
@@ -347,14 +345,31 @@
       color: #afffaf;
     }
 
+    /* responsive adjustments */
     @media (max-width: 480px) {
-      .key-btn { font-size: 1rem; min-height: 36px; }
-      .sym-btn { font-size: 0.75rem; padding: 3px 6px; }
-      #screen { font-size: 1rem; }
-      #settings-box { padding: 20px 14px; }
+      .key-btn { font-size: 0.8rem; min-height: 24px; }
+      .sym-btn { font-size: 0.6rem; padding: 1px 4px; min-width: 20px; }
+      #screen { font-size: 0.95rem; }
+      #settings-box { padding: 18px 14px; }
+      #screen-container { height: 25%; min-height: 60px; }
     }
 
-    /* extra lock: prevent any kind of selection or movement */
+    @media (max-height: 600px) {
+      #screen-container { height: 22%; min-height: 50px; }
+      .key-btn { font-size: 0.7rem; min-height: 20px; }
+      .sym-btn { font-size: 0.55rem; padding: 1px 3px; min-width: 18px; }
+      #symbol-bar { min-height: 26px; gap: 2px; padding: 2px 2px 3px 2px; }
+      #key-grid { gap: 2px; }
+    }
+
+    @media (max-height: 500px) {
+      #screen-container { height: 18%; min-height: 40px; padding: 4px 8px; }
+      #screen { font-size: 0.8rem; line-height: 1.3; }
+      .key-btn { font-size: 0.6rem; min-height: 16px; border-radius: 6px; }
+      .sym-btn { font-size: 0.5rem; padding: 0px 3px; min-width: 14px; }
+      #key-grid { gap: 1px; }
+    }
+
     ::selection {
       background: transparent;
     }
@@ -372,9 +387,7 @@
 
   <!-- KEYBOARD -->
   <div id="keyboard">
-    <!-- symbol bar -->
     <div id="symbol-bar"></div>
-    <!-- grid -->
     <div id="key-grid"></div>
   </div>
 </div>
@@ -392,17 +405,14 @@
   </div>
 </div>
 
-<!-- gear -->
 <div id="gear">⚙️</div>
 
 <script>
   (function() {
-    // ---- state ----
     let fullCode = '';
     let currentIndex = 0;
     let displayString = '';
 
-    // DOM refs
     const screenEl = document.getElementById('screen');
     const symbolBar = document.getElementById('symbol-bar');
     const keyGrid = document.getElementById('key-grid');
@@ -411,14 +421,12 @@
     const loadStatus = document.getElementById('load-status');
     const gearBtn = document.getElementById('gear');
 
-    // ---- default symbols (top bar) ----
     const DEFAULT_SYMBOLS = [
       '{', '}', '(', ')', '[', ']', '<', '>', '=', '!', '?',
       '&', '|', '^', '~', '#', '@', '$', '%', '*', '+', '-',
       '_', '/', '\\', ';', ':', ',', '.', '`', '"', "'"
     ];
 
-    // ---- keyboard layout ----
     const KEY_ROWS = [
       ['1','2','3','4','5','6','7','8','9','0','-','='],
       ['q','w','e','r','t','y','u','i','o','p','[',']'],
@@ -426,14 +434,12 @@
       ['z','x','c','v','b','n','m',',','.','/','`'],
     ];
 
-    // ---- core: update screen ----
     function updateScreen() {
       displayString = fullCode.substring(0, currentIndex);
       screenEl.textContent = displayString;
       screenEl.scrollTop = screenEl.scrollHeight;
     }
 
-    // ---- type next character ----
     function typeNextChar() {
       if (currentIndex < fullCode.length) {
         currentIndex++;
@@ -441,16 +447,12 @@
       }
     }
 
-    // ---- reset / clear ----
     function resetTyping() {
       currentIndex = 0;
       updateScreen();
     }
-    function clearScreen() {
-      resetTyping();
-    }
+    function clearScreen() { resetTyping(); }
 
-    // ---- backspace ----
     function backspace() {
       if (currentIndex > 0) {
         currentIndex--;
@@ -458,7 +460,6 @@
       }
     }
 
-    // ---- load code from settings ----
     function loadCodeFromSettings() {
       const raw = codeInput.value;
       fullCode = raw;
@@ -468,7 +469,6 @@
       settingsPanel.classList.remove('active');
     }
 
-    // ---- build symbol bar ----
     function buildSymbolBar(symbolsArray) {
       symbolBar.innerHTML = '';
       symbolsArray.forEach(sym => {
@@ -488,7 +488,6 @@
       });
     }
 
-    // ---- build key grid ----
     function buildKeyGrid() {
       keyGrid.innerHTML = '';
 
@@ -509,7 +508,6 @@
         keyGrid.appendChild(btn);
       });
 
-      // SPACE
       const spaceBtn = document.createElement('button');
       spaceBtn.className = 'key-btn space';
       spaceBtn.textContent = '␣ SPACE';
@@ -517,7 +515,6 @@
       spaceBtn.addEventListener('touchstart', (e) => { e.preventDefault(); typeNextChar(); }, { passive: false });
       keyGrid.appendChild(spaceBtn);
 
-      // BACKSPACE
       const backBtn = document.createElement('button');
       backBtn.className = 'key-btn backspace';
       backBtn.textContent = '⌫';
@@ -525,7 +522,6 @@
       backBtn.addEventListener('touchstart', (e) => { e.preventDefault(); backspace(); }, { passive: false });
       keyGrid.appendChild(backBtn);
 
-      // CLEAR
       const clearBtn = document.createElement('button');
       clearBtn.className = 'key-btn clear';
       clearBtn.textContent = '✕ CLR';
@@ -534,7 +530,6 @@
       keyGrid.appendChild(clearBtn);
     }
 
-    // ---- settings handlers ----
     function openSettings() {
       settingsPanel.classList.add('active');
       codeInput.value = fullCode;
@@ -546,12 +541,10 @@
       settingsPanel.classList.remove('active');
     }
 
-    // ---- init ----
     function init() {
       buildSymbolBar(DEFAULT_SYMBOLS);
       buildKeyGrid();
 
-      // Demo code
       const demoCode = `<!DOCTYPE html>
 <html>
 <head>
@@ -565,7 +558,6 @@
       currentIndex = 0;
       updateScreen();
 
-      // Events
       gearBtn.addEventListener('click', openSettings);
       document.getElementById('close-settings-btn').addEventListener('click', closeSettings);
       document.getElementById('load-code-btn').addEventListener('click', loadCodeFromSettings);
@@ -584,7 +576,6 @@
         loadStatus.textContent = `📝 ${codeInput.value.length} chars (press LOAD)`;
       });
 
-      // keyboard support for desktop (any key reveals next char)
       document.addEventListener('keydown', (e) => {
         if (settingsPanel.classList.contains('active')) return;
         if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
@@ -593,12 +584,10 @@
         }
       });
 
-      // prevent zoom gestures on the whole app
       document.addEventListener('gesturestart', (e) => e.preventDefault());
       document.addEventListener('gesturechange', (e) => e.preventDefault());
       document.addEventListener('gestureend', (e) => e.preventDefault());
       document.addEventListener('touchmove', (e) => {
-        // allow scroll inside textarea only
         if (e.target.closest('#code-input')) return;
         e.preventDefault();
       }, { passive: false });
