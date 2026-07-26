@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, minimum-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0a0f0a">
@@ -10,6 +10,7 @@
   <!-- PWA manifest inline -->
   <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1hdHJpeCBUZXJtaW5hbCIsCiAgInNob3J0X25hbWUiOiAiVGVybWluYWwiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzBhMGYwYSIsCiAgInRoZW1lX2NvbG9yIjogIiMwYTBmMGEiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDUxMiA1MTInJTNFJTNDcmVjdCB3aWR0aD0nNTEyJyBoZWlnaHQ9JzUxMicgcng9JzUwJyBmaWxsPSclMjMwYTBmMGEnLyUzRSUzQ3RleHQgeD0nMjU2JyB5PSczMjAnIGZvbnQtc2l6ZT0nMjAwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmaWxsPSclMjMwMGZmNDEnIGZvbnQtZmFtaWx5PSdtb25vc3BhY2UnJTNFJTIzJTNDL3RleHQlM0UlM0Mvc3ZnJTNFIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIgogICAgfQogIF0KfQ==">
   <style>
+    /* lock everything down: no scrolling, no zoom, no movement */
     * {
       margin: 0;
       padding: 0;
@@ -19,17 +20,21 @@
       font-family: 'Courier New', Courier, 'Fira Code', monospace;
     }
 
-    body {
+    html, body {
       background: #0a0f0a;
       color: #00ff41;
-      height: 100vh;
-      width: 100vw;
+      height: 100%;
+      width: 100%;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
       position: fixed;
       top: 0;
       left: 0;
+      right: 0;
+      bottom: 0;
+      /* prevent any rubber-band / overscroll */
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: none;
+      touch-action: none;
     }
 
     #app {
@@ -39,6 +44,13 @@
       width: 100%;
       background: #0a0f0a;
       padding: 8px 6px 6px 6px;
+      overflow: hidden;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      touch-action: none;
     }
 
     /* ----- SCREEN (top half) ----- */
@@ -54,6 +66,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      touch-action: none;
     }
 
     #screen {
@@ -76,6 +89,10 @@
       overflow-y: auto;
       scrollbar-width: thin;
       scrollbar-color: #00ff4133 #0f140f;
+      /* prevent text selection / zoom */
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     #screen::-webkit-scrollbar {
@@ -100,6 +117,8 @@
       display: flex;
       flex-direction: column;
       box-shadow: 0 -2px 12px rgba(0, 255, 65, 0.08);
+      touch-action: none;
+      overflow: hidden;
     }
 
     /* top bar: symbols & specials */
@@ -115,6 +134,7 @@
       border-radius: 10px 10px 0 0;
       min-height: 48px;
       align-items: center;
+      touch-action: none;
     }
 
     .sym-btn {
@@ -133,6 +153,8 @@
       touch-action: manipulation;
       min-width: 32px;
       text-align: center;
+      /* prevent zoom on double-tap */
+      touch-action: manipulation;
     }
 
     .sym-btn:active {
@@ -150,6 +172,7 @@
       flex: 1;
       padding: 4px 2px;
       align-content: stretch;
+      touch-action: none;
     }
 
     .key-btn {
@@ -169,6 +192,8 @@
       padding: 2px 0;
       font-family: 'Courier New', monospace;
       min-height: 40px;
+      /* prevent zoom */
+      touch-action: manipulation;
     }
 
     .key-btn:active {
@@ -216,6 +241,7 @@
       z-index: 999;
       padding: 20px;
       flex-direction: column;
+      touch-action: none;
     }
 
     #settings-panel.active {
@@ -230,6 +256,7 @@
       max-width: 550px;
       width: 100%;
       box-shadow: 0 0 40px #00ff4122;
+      touch-action: none;
     }
 
     #settings-box h2 {
@@ -255,6 +282,7 @@
       resize: vertical;
       outline: none;
       margin-bottom: 18px;
+      touch-action: auto; /* allow scroll in textarea */
     }
 
     #code-input:focus {
@@ -279,6 +307,7 @@
       cursor: pointer;
       transition: 0.1s ease;
       font-family: 'Courier New', monospace;
+      touch-action: manipulation;
     }
 
     .settings-actions button:active {
@@ -324,6 +353,14 @@
       #screen { font-size: 1rem; }
       #settings-box { padding: 20px 14px; }
     }
+
+    /* extra lock: prevent any kind of selection or movement */
+    ::selection {
+      background: transparent;
+    }
+    ::-moz-selection {
+      background: transparent;
+    }
   </style>
 </head>
 <body>
@@ -361,9 +398,9 @@
 <script>
   (function() {
     // ---- state ----
-    let fullCode = '';            // the full pasted code
-    let currentIndex = 0;         // how many characters have been revealed
-    let displayString = '';       // current visible string (cached)
+    let fullCode = '';
+    let currentIndex = 0;
+    let displayString = '';
 
     // DOM refs
     const screenEl = document.getElementById('screen');
@@ -389,38 +426,31 @@
       ['z','x','c','v','b','n','m',',','.','/','`'],
     ];
 
-    // ---- core: update screen from fullCode and currentIndex ----
+    // ---- core: update screen ----
     function updateScreen() {
-      // reveal up to currentIndex characters
       displayString = fullCode.substring(0, currentIndex);
       screenEl.textContent = displayString;
-      // auto-scroll to bottom
       screenEl.scrollTop = screenEl.scrollHeight;
     }
 
-    // ---- type next character (any key press) ----
+    // ---- type next character ----
     function typeNextChar() {
       if (currentIndex < fullCode.length) {
         currentIndex++;
         updateScreen();
-      } else {
-        // optional: subtle feedback that we're at the end
-        // just ignore or flash
       }
     }
 
-    // ---- reset typing (clear screen, but keep fullCode) ----
+    // ---- reset / clear ----
     function resetTyping() {
       currentIndex = 0;
       updateScreen();
     }
-
-    // ---- clear screen (reset index to 0) ----
     function clearScreen() {
       resetTyping();
     }
 
-    // ---- backspace: remove last revealed character ----
+    // ---- backspace ----
     function backspace() {
       if (currentIndex > 0) {
         currentIndex--;
@@ -432,7 +462,7 @@
     function loadCodeFromSettings() {
       const raw = codeInput.value;
       fullCode = raw;
-      currentIndex = 0;           // start from blank
+      currentIndex = 0;
       updateScreen();
       loadStatus.textContent = `✅ Loaded ${raw.length} characters. Ready to type.`;
       settingsPanel.classList.remove('active');
@@ -448,7 +478,7 @@
         btn.dataset.char = sym;
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          typeNextChar();   // any button reveals next char
+          typeNextChar();
         });
         btn.addEventListener('touchstart', (e) => {
           e.preventDefault();
@@ -495,7 +525,7 @@
       backBtn.addEventListener('touchstart', (e) => { e.preventDefault(); backspace(); }, { passive: false });
       keyGrid.appendChild(backBtn);
 
-      // CLEAR (reset)
+      // CLEAR
       const clearBtn = document.createElement('button');
       clearBtn.className = 'key-btn clear';
       clearBtn.textContent = '✕ CLR';
@@ -518,11 +548,10 @@
 
     // ---- init ----
     function init() {
-      // Build UI
       buildSymbolBar(DEFAULT_SYMBOLS);
       buildKeyGrid();
 
-      // Set initial code: a short demo (like HTML opening)
+      // Demo code
       const demoCode = `<!DOCTYPE html>
 <html>
 <head>
@@ -533,10 +562,10 @@
 </body>
 </html>`;
       fullCode = demoCode;
-      currentIndex = 0;   // start blank
+      currentIndex = 0;
       updateScreen();
 
-      // Event listeners
+      // Events
       gearBtn.addEventListener('click', openSettings);
       document.getElementById('close-settings-btn').addEventListener('click', closeSettings);
       document.getElementById('load-code-btn').addEventListener('click', loadCodeFromSettings);
@@ -555,19 +584,24 @@
         loadStatus.textContent = `📝 ${codeInput.value.length} chars (press LOAD)`;
       });
 
-      // for demo: if user types any key, reveal next char (but we already handle via buttons)
-      // additionally, we can also support keyboard input for desktop testing
+      // keyboard support for desktop (any key reveals next char)
       document.addEventListener('keydown', (e) => {
-        // ignore if settings is open or if it's a control key
         if (settingsPanel.classList.contains('active')) return;
-        // ignore if the key is a modifier or special (we only want printable chars)
         if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-          // but we don't actually use the key value, we just reveal next char
-          // This makes any keypress on the keyboard advance the code.
           e.preventDefault();
           typeNextChar();
         }
       });
+
+      // prevent zoom gestures on the whole app
+      document.addEventListener('gesturestart', (e) => e.preventDefault());
+      document.addEventListener('gesturechange', (e) => e.preventDefault());
+      document.addEventListener('gestureend', (e) => e.preventDefault());
+      document.addEventListener('touchmove', (e) => {
+        // allow scroll inside textarea only
+        if (e.target.closest('#code-input')) return;
+        e.preventDefault();
+      }, { passive: false });
     }
 
     init();
