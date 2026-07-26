@@ -303,10 +303,10 @@
                 • 🟢 <strong>Rest</strong> (light green) – off duty at home (no alarm).<br>
                 • 🟢 <strong>REST in XXX</strong> (dark green) – off duty, but on a layover away from base (no alarm).<br>
                 • ⏰ <strong>Rest until HH:MM</strong> (yellow) – duty report time later today (4h alarm).<br>
-                • 🔴 <strong>N/S \| Rest until HH:MM</strong> (red) – layover day with a duty report time (4h alarm).<br>
+                • 🔴 <strong>N/S | Rest until HH:MM</strong> (red) – layover day with a duty report time (4h alarm).<br>
                 • 🛫 <strong>DEP XXX HH:MM</strong> – flight departure today (4h alarm).<br>
                 • 🛬 <strong>ARR XXX HH:MM GO rest!</strong> – flight arrival today (4h alarm).<br>
-                • 🔴 <strong>N/S in XXX \| Rest until HH:MM</strong> (red) – extra layover row between legs (4h alarm).<br>
+                • 🔴 <strong>N/S in XXX | Rest until HH:MM</strong> (red) – extra layover row between legs (4h alarm).<br>
                 • ❌ <strong>No alarms</strong> on D, DO, DO1, DO2 (Rest days).
             </div>
         </div>
@@ -377,164 +377,11 @@
                 return ['D', 'DO', 'DO1', 'DO2'].includes(p);
             }
 
-            // --- Build day rows ---
-            function buildDayRows(date, event, legMap, layoverMap) {
-                const dateStr = date.toDateString();
-                const rows = [];
-                const isLayover = layoverMap.has(dateStr);
-                const layoverStation = layoverMap.get(dateStr) || '';
-                const legsOnDay = legMap[dateStr] || [];
-
-                // Check if this day has a duty report (and it's NOT a day off)
-                const hasDutyReport = event && !event.isOff && !isDayOff(event.pairing);
-
-                // 1. Duty Report row (only if active duty, NOT day off)
-                if (hasDutyReport) {
-                    const reportHour = String(date.getHours()).padStart(2, '0');
-                    const reportMin = String(date.getMinutes()).padStart(2, '0');
-                    let badge = '';
-                    let type = '';
-                    if (isLayover) {
-                        badge = `🔴 N/S | ⏰ Rest until ${reportHour}:${reportMin}`;
-                        type = 'layover';
-                    } else {
-                        badge = `⏰ Rest until ${reportHour}:${reportMin}`;
-                        type = 'restuntil';
-                    }
-                    rows.push({
-                        content: `Duty Report: ${reportHour}:${reportMin}`,
-                        badge: badge,
-                        type: type,
-                        isDutyReport: true,
-                        eventRef: event,
-                        hasAlarm: true
-                    });
-                }
-
-                // 2. Leg rows (items) - only if NOT day off
-                const isOff = event && isDayOff(event.pairing);
-                if (!isOff) {
-                    legsOnDay.forEach(legInfo => {
-                        const leg = legInfo.leg;
-                        const depParsed = parseTimeString(leg.dep);
-                        const arrParsed = parseTimeString(leg.arr);
-                        const flight = leg.item || (event && event.pairing && !event.pairing.includes('/') ? event
-                            .pairing : 'Duty');
-
-                        // Determine if departure or arrival is on this day
-                        const depDate = new Date(date);
-                        if (depParsed) {
-                            depDate.setDate(depDate.getDate() + depParsed.dayOffset);
-                            depDate.setHours(depParsed.hours, depParsed.mins, 0, 0);
-                        }
-                        const arrDate = new Date(date);
-                        if (arrParsed) {
-                            arrDate.setDate(arrDate.getDate() + arrParsed.dayOffset);
-                            arrDate.setHours(arrParsed.hours, arrParsed.mins, 0, 0);
-                        }
-
-                        const isDepOnThisDay = depParsed && depDate.toDateString() === dateStr;
-                        const isArrOnThisDay = arrParsed && arrDate.toDateString() === dateStr;
-
-                        let badge = '';
-                        let type = '';
-                        let startTime = null;
-                        let endTime = null;
-
-                        // Build the content string
-                        let content = `${flight} ${leg.dep || '??'} → ${leg.arr || '??'}`;
-
-                        if (isDepOnThisDay) {
-                            badge = `🛫 DEP ${depParsed.station} ${String(depParsed.hours).padStart(2,'0')}:${String(depParsed.mins).padStart(2,'0')}`;
-                            type = 'depart';
-                            startTime = new Date(depDate);
-                            // End time: debrief or +30m
-                            if (event && event.dutyDebrief) {
-                                const debrief = parseTimeString(`KUL ${event.dutyDebrief}`);
-                                if (debrief) {
-                                    const end = new Date(date);
-                                    end.setHours(debrief.hours, debrief.mins, 0, 0);
-                                    if (end < startTime) end.setDate(end.getDate() + 1);
-                                    endTime = end;
-                                }
-                            }
-                            if (!endTime) {
-                                endTime = new Date(startTime);
-                                endTime.setMinutes(endTime.getMinutes() + 30);
-                            }
-                            // Add N/S if arrival is non-KUL and layover
-                            if (arrParsed && arrParsed.station !== 'KUL' && isLayover) {
-                                badge += ` | 🔴 N/S`;
-                            }
-                        } else if (isArrOnThisDay) {
-                            badge =
-                                `🛬 ARR ${arrParsed.station} ${String(arrParsed.hours).padStart(2,'0')}:${String(arrParsed.mins).padStart(2,'0')} GO rest!`;
-                            type = 'arrive';
-                            startTime = new Date(arrDate);
-                            endTime = new Date(startTime);
-                            endTime.setMinutes(endTime.getMinutes() + 30);
-                            if (arrParsed && arrParsed.station !== 'KUL' && isLayover) {
-                                badge += ` | 🔴 N/S`;
-                            }
-                        } else {
-                            // Fallback
-                            badge = `✈️ ${flight}`;
-                            type = 'duty';
-                            startTime = new Date(date);
-                            endTime = new Date(startTime);
-                            endTime.setMinutes(endTime.getMinutes() + 30);
-                        }
-
-                        rows.push({
-                            content: content,
-                            badge: badge,
-                            type: type,
-                            isLeg: true,
-                            legRef: leg,
-                            eventRef: event,
-                            startTime: startTime,
-                            endTime: endTime,
-                            hasAlarm: true
-                        });
-                    });
-                }
-
-                // 3. Layover rest day (no duty report, no legs, but on layover)
-                if (isLayover && !hasDutyReport && legsOnDay.length === 0) {
-                    rows.push({
-                        content: '',
-                        badge: `🟢 REST in ${layoverStation}`,
-                        type: 'restbase',
-                        isLayoverRest: true,
-                        station: layoverStation,
-                        hasAlarm: false
-                    });
-                }
-
-                // 4. Pure rest day at home (no layover, no duty, no legs, or day off)
-                const isOffDay = event && isDayOff(event.pairing);
-                if (!isLayover && !hasDutyReport && legsOnDay.length === 0 && !isOffDay) {
-                    rows.push({
-                        content: 'Off duty',
-                        badge: '🟢 Rest',
-                        type: 'off',
-                        isRest: true,
-                        hasAlarm: false
-                    });
-                }
-
-                // 5. Day Off (D, DO, DO1, DO2) - just Rest, no alarm
-                if (isOffDay) {
-                    rows.push({
-                        content: 'Off duty',
-                        badge: '🟢 Rest',
-                        type: 'off',
-                        isRest: true,
-                        hasAlarm: false
-                    });
-                }
-
-                return rows;
+            // --- Get the display flight name ---
+            function getFlightName(leg, event) {
+                if (leg.item) return leg.item;
+                if (event && event.pairing && !event.pairing.includes('/')) return event.pairing;
+                return 'Duty';
             }
 
             // --- Parse Roster from XLSX ---
@@ -616,37 +463,91 @@
                 return events;
             }
 
-            // --- Build legMap and layoverMap ---
-            function buildMaps(events) {
+            // --- Build legMap (ONE entry per leg per calendar day) ---
+            function buildLegMap(events) {
                 const legMap = {};
-                const layoverMap = new Map();
 
-                // Build legMap
                 events.forEach(evt => {
+                    // Skip day off events for leg mapping
+                    if (isDayOff(evt.pairing)) return;
+
                     evt.legs.forEach(leg => {
                         const depParsed = parseTimeString(leg.dep);
+                        const arrParsed = parseTimeString(leg.arr);
+
+                        // Determine which day this leg belongs to
+                        // If departure is on this day, that's the primary day
+                        let primaryDate = null;
+                        let depDate = null;
+                        let arrDate = null;
+
                         if (depParsed) {
-                            const depDate = new Date(evt.date);
+                            depDate = new Date(evt.date);
                             depDate.setDate(depDate.getDate() + depParsed.dayOffset);
                             depDate.setHours(depParsed.hours, depParsed.mins, 0, 0);
-                            const key = depDate.toDateString();
-                            if (!legMap[key]) legMap[key] = [];
-                            legMap[key].push({ leg, event: evt });
+                            primaryDate = depDate;
                         }
-                        const arrParsed = parseTimeString(leg.arr);
+
                         if (arrParsed) {
-                            const arrDate = new Date(evt.date);
+                            arrDate = new Date(evt.date);
                             arrDate.setDate(arrDate.getDate() + arrParsed.dayOffset);
                             arrDate.setHours(arrParsed.hours, arrParsed.mins, 0, 0);
-                            const key = arrDate.toDateString();
-                            if (!legMap[key]) legMap[key] = [];
-                            legMap[key].push({ leg, event: evt });
+                            if (!primaryDate) primaryDate = arrDate;
+                        }
+
+                        if (!primaryDate) return;
+
+                        // Use the departure date as the key if it exists, otherwise arrival date
+                        const keyDate = depDate || arrDate;
+                        if (!keyDate) return;
+
+                        const key = keyDate.toDateString();
+
+                        if (!legMap[key]) legMap[key] = [];
+                        // Check if this leg already exists in this day's map
+                        const exists = legMap[key].some(l =>
+                            l.leg === leg && l.event === evt
+                        );
+                        if (!exists) {
+                            legMap[key].push({
+                                leg: leg,
+                                event: evt,
+                                depDate: depDate,
+                                arrDate: arrDate,
+                                depParsed: depParsed,
+                                arrParsed: arrParsed
+                            });
+                        }
+
+                        // Also add the leg to the arrival day if different from departure day
+                        if (arrDate && depDate && arrDate.toDateString() !== depDate.toDateString()) {
+                            const arrKey = arrDate.toDateString();
+                            if (!legMap[arrKey]) legMap[arrKey] = [];
+                            const existsArr = legMap[arrKey].some(l =>
+                                l.leg === leg && l.event === evt
+                            );
+                            if (!existsArr) {
+                                legMap[arrKey].push({
+                                    leg: leg,
+                                    event: evt,
+                                    depDate: depDate,
+                                    arrDate: arrDate,
+                                    depParsed: depParsed,
+                                    arrParsed: arrParsed
+                                });
+                            }
                         }
                     });
                 });
 
-                // Detect layovers
-                const sorted = [...events].filter(e => !e.isOff).sort((a, b) => a.date - b.date);
+                return legMap;
+            }
+
+            // --- Detect layovers ---
+            function detectLayovers(events) {
+                const layoverMap = new Map();
+                const sorted = [...events].filter(e => !e.isOff && !isDayOff(e.pairing)).sort((a, b) => a.date - b.date);
+
                 for (let i = 0; i < sorted.length; i++) {
                     const evt = sorted[i];
                     if (!evt.legs || evt.legs.length === 0) continue;
@@ -682,8 +583,183 @@
                         break;
                     }
                 }
+                return layoverMap;
+            }
 
-                return { legMap, layoverMap };
+            // --- Build day rows ---
+            function buildDayRows(date, event, legMap, layoverMap) {
+                const dateStr = date.toDateString();
+                const rows = [];
+                const isLayover = layoverMap.has(dateStr);
+                const layoverStation = layoverMap.get(dateStr) || '';
+                const legsOnDay = legMap[dateStr] || [];
+
+                // Check if this day has a duty report (and it's NOT a day off)
+                const isOff = event && isDayOff(event.pairing);
+                const hasDutyReport = event && !event.isOff && !isOff;
+
+                // 1. Duty Report row (only if active duty, NOT day off)
+                if (hasDutyReport) {
+                    const reportHour = String(date.getHours()).padStart(2, '0');
+                    const reportMin = String(date.getMinutes()).padStart(2, '0');
+                    let badge = '';
+                    let type = '';
+                    if (isLayover) {
+                        badge = `🔴 N/S | ⏰ Rest until ${reportHour}:${reportMin}`;
+                        type = 'layover';
+                    } else {
+                        badge = `⏰ Rest until ${reportHour}:${reportMin}`;
+                        type = 'restuntil';
+                    }
+                    rows.push({
+                        content: `Duty Report: ${reportHour}:${reportMin}`,
+                        badge: badge,
+                        type: type,
+                        isDutyReport: true,
+                        eventRef: event,
+                        hasAlarm: true
+                    });
+                }
+
+                // 2. Leg rows (items) - each leg = ONE row
+                if (!isOff) {
+                    legsOnDay.forEach(legInfo => {
+                        const leg = legInfo.leg;
+                        const depParsed = legInfo.depParsed;
+                        const arrParsed = legInfo.arrParsed;
+                        const depDate = legInfo.depDate;
+                        const arrDate = legInfo.arrDate;
+                        const flight = getFlightName(leg, event);
+
+                        // Determine if departure or arrival is on this day
+                        const isDepOnThisDay = depDate && depDate.toDateString() === dateStr;
+                        const isArrOnThisDay = arrDate && arrDate.toDateString() === dateStr;
+
+                        let badge = '';
+                        let type = '';
+                        let startTime = null;
+                        let endTime = null;
+
+                        // Build the content string
+                        let content = `${flight} ${leg.dep || '??'} → ${leg.arr || '??'}`;
+
+                        // Determine badge based on what happens on this day
+                        if (isDepOnThisDay && isArrOnThisDay) {
+                            // Both departure and arrival on same day -> departure takes priority
+                            const depStn = depParsed ? depParsed.station : '??';
+                            const depTime = depParsed ? `${String(depParsed.hours).padStart(2, '0')}:${String(depParsed.mins).padStart(2, '0')}` :
+                                '??';
+                            badge = `🛫 DEP ${depStn} ${depTime}`;
+                            type = 'depart';
+                            startTime = new Date(depDate);
+                            // End time: debrief or +30m
+                            if (event && event.dutyDebrief) {
+                                const debrief = parseTimeString(`KUL ${event.dutyDebrief}`);
+                                if (debrief) {
+                                    const end = new Date(date);
+                                    end.setHours(debrief.hours, debrief.mins, 0, 0);
+                                    if (end < startTime) end.setDate(end.getDate() + 1);
+                                    endTime = end;
+                                }
+                            }
+                            if (!endTime) {
+                                endTime = new Date(startTime);
+                                endTime.setMinutes(endTime.getMinutes() + 30);
+                            }
+                            // Add N/S if arrival is non-KUL and layover
+                            if (arrParsed && arrParsed.station !== 'KUL' && isLayover) {
+                                badge += ` | 🔴 N/S`;
+                            }
+                        } else if (isDepOnThisDay) {
+                            const depStn = depParsed ? depParsed.station : '??';
+                            const depTime = depParsed ? `${String(depParsed.hours).padStart(2, '0')}:${String(depParsed.mins).padStart(2, '0')}` :
+                                '??';
+                            badge = `🛫 DEP ${depStn} ${depTime}`;
+                            type = 'depart';
+                            startTime = new Date(depDate);
+                            if (event && event.dutyDebrief) {
+                                const debrief = parseTimeString(`KUL ${event.dutyDebrief}`);
+                                if (debrief) {
+                                    const end = new Date(date);
+                                    end.setHours(debrief.hours, debrief.mins, 0, 0);
+                                    if (end < startTime) end.setDate(end.getDate() + 1);
+                                    endTime = end;
+                                }
+                            }
+                            if (!endTime) {
+                                endTime = new Date(startTime);
+                                endTime.setMinutes(endTime.getMinutes() + 30);
+                            }
+                        } else if (isArrOnThisDay) {
+                            const arrStn = arrParsed ? arrParsed.station : '??';
+                            const arrTime = arrParsed ? `${String(arrParsed.hours).padStart(2, '0')}:${String(arrParsed.mins).padStart(2, '0')}` :
+                                '??';
+                            badge = `🛬 ARR ${arrStn} ${arrTime} GO rest!`;
+                            type = 'arrive';
+                            startTime = new Date(arrDate);
+                            endTime = new Date(startTime);
+                            endTime.setMinutes(endTime.getMinutes() + 30);
+                            if (arrParsed && arrParsed.station !== 'KUL' && isLayover) {
+                                badge += ` | 🔴 N/S`;
+                            }
+                        } else {
+                            // Fallback - should not happen
+                            badge = `✈️ ${flight}`;
+                            type = 'duty';
+                            startTime = new Date(date);
+                            endTime = new Date(startTime);
+                            endTime.setMinutes(endTime.getMinutes() + 30);
+                        }
+
+                        rows.push({
+                            content: content,
+                            badge: badge,
+                            type: type,
+                            isLeg: true,
+                            legRef: leg,
+                            eventRef: event,
+                            startTime: startTime,
+                            endTime: endTime,
+                            hasAlarm: true
+                        });
+                    });
+                }
+
+                // 3. Layover rest day (no duty report, no legs, but on layover)
+                if (isLayover && !hasDutyReport && legsOnDay.length === 0) {
+                    rows.push({
+                        content: '',
+                        badge: `🟢 REST in ${layoverStation}`,
+                        type: 'restbase',
+                        isLayoverRest: true,
+                        station: layoverStation,
+                        hasAlarm: false
+                    });
+                }
+
+                // 4. Day Off (D, DO, DO1, DO2) - just Rest, no alarm
+                if (isOff) {
+                    rows.push({
+                        content: 'Off duty',
+                        badge: '🟢 Rest',
+                        type: 'off',
+                        isRest: true,
+                        hasAlarm: false
+                    });
+                }
+
+                // 5. Pure rest day at home (no layover, no duty, no legs, no day off)
+                if (!isLayover && !hasDutyReport && legsOnDay.length === 0 && !isOff) {
+                    rows.push({
+                        content: 'Off duty',
+                        badge: '🟢 Rest',
+                        type: 'off',
+                        isRest: true,
+                        hasAlarm: false
+                    });
+                }
+
+                return rows;
             }
 
             // --- Build all rows for all days ---
@@ -771,8 +847,9 @@
                                 end.setHours(end.getHours() + 1, 0, 0, 0);
                             }
                             const leg = row.legRef;
-                            const flight = leg.item || 'Flight';
-                            summary = `${flight} ${leg.dep || '??'} → ${leg.arr || '??'}`;
+                            const flight = getFlightName(leg, row.eventRef);
+                            summary =
+                            `${flight} ${leg.dep || '??'} → ${leg.arr || '??'}`;
                             description =
                             `Flight: ${flight}\nDeparture: ${leg.dep || '??'}\nArrival: ${leg.arr || '??'}`;
                             if (row.eventRef && row.eventRef.hotel) {
@@ -858,7 +935,8 @@
                             return;
                         }
 
-                        const { legMap, layoverMap } = buildMaps(parsed);
+                        const legMap = buildLegMap(parsed);
+                        const layoverMap = detectLayovers(parsed);
                         const allRows = buildAllRows(parsed, legMap, layoverMap);
 
                         // Count stats
