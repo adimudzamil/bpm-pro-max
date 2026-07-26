@@ -8,7 +8,7 @@
     <style>
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background: #f5f7fa; margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
-        .container { max-width: 750px; width: 100%; background: white; border-radius: 32px; padding: 30px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin: 20px auto; }
+        .container { max-width: 800px; width: 100%; background: white; border-radius: 32px; padding: 30px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin: 20px auto; }
         h1 { font-size: 28px; font-weight: 700; color: #1a1a2e; margin: 0 0 8px 0; display: flex; align-items: center; gap: 10px; }
         h1 span { background: #eef2ff; padding: 4px 12px; border-radius: 40px; font-size: 14px; color: #4f46e5; }
         .subhead { color: #64748b; font-size: 16px; margin-bottom: 30px; border-left: 4px solid #4f46e5; padding-left: 16px; }
@@ -25,12 +25,13 @@
         .stat-label { font-size: 13px; color: #64748b; }
         .stat-number.green { color: #16a34a; }
         .stat-number.blue { color: #2563eb; }
-        .event-list { max-height: 450px; overflow-y: auto; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 24px; }
-        .event-row { display: flex; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; align-items: center; gap: 8px; }
+        .stat-number.red { color: #dc2626; }
+        .event-list { max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 24px; }
+        .event-row { display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; align-items: center; gap: 8px; }
         .event-row:last-child { border-bottom: none; }
-        .event-row .date-badge { font-weight: 600; color: #0f172a; min-width: 110px; font-size: 13px; }
+        .event-row .date-badge { font-weight: 600; color: #0f172a; min-width: 100px; font-size: 13px; }
         .event-row .desc { color: #334155; flex: 1; margin: 0 8px; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .event-row .tag { font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 40px; background: #e2e8f0; color: #475569; white-space: nowrap; }
+        .event-row .tag { font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 40px; background: #e2e8f0; color: #475569; white-space: nowrap; }
         .tag.duty { background: #dbeafe; color: #1d4ed8; }
         .tag.off { background: #dcfce7; color: #15803d; }
         .tag.depart { background: #fef3c7; color: #92400e; }
@@ -47,14 +48,14 @@
         .info-note { margin-top: 24px; padding: 16px; background: #fef9c3; border-radius: 16px; font-size: 14px; color: #854d0e; border-left: 4px solid #eab308; line-height: 1.6; }
         .info-note strong { color: #713f12; }
         .footer { margin-top: 20px; text-align: center; color: #94a3b8; font-size: 13px; }
-        @media (max-width: 480px) { .container { padding: 20px 16px; } h1 { font-size: 24px; } .event-row { flex-wrap: wrap; gap: 4px; } .event-row .desc { white-space: normal; min-width: 100%; order: 3; } .event-row .date-badge { min-width: 90px; } }
+        @media (max-width: 480px) { .container { padding: 20px 16px; } h1 { font-size: 24px; } .event-row { flex-wrap: wrap; gap: 4px; } .event-row .desc { white-space: normal; min-width: 100%; order: 3; } .event-row .date-badge { min-width: 80px; } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>📅 Roster to Calendar <span>.ics</span></h1>
-    <div class="subhead">Upload your <strong>CWProsterReport.xlsx</strong> – now shows "REST in AKL" instead of "REST BASE".</div>
+    <div class="subhead">Upload your <strong>CWProsterReport.xlsx</strong> – all days mapped with correct badges and ICS events.</div>
 
     <div class="upload-zone" id="dropZone">
         <input type="file" id="fileInput" accept=".xlsx,.xls" />
@@ -68,19 +69,22 @@
             <div class="stat-item"><div class="stat-number" id="totalDays">0</div><div class="stat-label">📆 Total Days</div></div>
             <div class="stat-item"><div class="stat-number blue" id="dutyDays">0</div><div class="stat-label">🟦 Duty Days</div></div>
             <div class="stat-item"><div class="stat-number green" id="offDays">0</div><div class="stat-label">🟩 Rest Days</div></div>
+            <div class="stat-item"><div class="stat-number red" id="layoverDays">0</div><div class="stat-label">🔴 Layover Days</div></div>
         </div>
 
         <div class="event-list" id="eventListContainer"></div>
 
-        <button class="btn green" id="downloadBtn">⬇️ Download Full Month Calendar (.ics)</button>
+        <button class="btn green" id="downloadBtn">⬇️ Download Calendar (.ics)</button>
 
         <div class="info-note">
             <strong>📱 Badge guide:</strong><br>
-            • 🟢 <strong>Rest</strong> (light green) – off duty at home (KUL).<br>
-            • 🟢 <strong>REST in XXX</strong> (dark green) – off duty, but you're on a night stop / away from base (e.g., AKL).<br>
-            • 🟡 <strong>Rest until HH:MM</strong> – report later today (not on layover).<br>
-            • 🔴 <strong>N/S | Rest until HH:MM</strong> – layover day with a report time (red background).<br>
-            • 🛫 / 🛬 – departure or arrival days.
+            • 🟢 <strong>Rest</strong> (light green) – off duty at home.<br>
+            • 🟢 <strong>REST in XXX</strong> (dark green) – off duty, but on a layover away from base.<br>
+            • ⏰ <strong>Rest until HH:MM</strong> (yellow) – duty report time later today.<br>
+            • 🔴 <strong>N/S | Rest until HH:MM</strong> (red) – layover day with a duty report time.<br>
+            • 🛫 <strong>DEP XXX HH:MM</strong> – flight departure today.<br>
+            • 🛬 <strong>ARR XXX HH:MM GO rest!</strong> – flight arrival today.<br>
+            • 🔴 <strong>N/S in XXX | Rest until HH:MM</strong> (red) – extra layover row between legs.
         </div>
     </div>
     <div class="footer">Everything stays on your device. No data is uploaded anywhere.</div>
@@ -96,8 +100,7 @@
         const totalDaysSpan = document.getElementById('totalDays');
         const dutyDaysSpan = document.getElementById('dutyDays');
         const offDaysSpan = document.getElementById('offDays');
-
-        let allFilledEvents = []; 
+        const layoverDaysSpan = document.getElementById('layoverDays');
 
         // --- Helper: Parse date/time from XLSX cell ---
         function parseExcelDate(cellValue) {
@@ -153,114 +156,148 @@
             return `${flight} ${leg.dep || '??'} → ${leg.arr || '??'}`;
         }
 
-        // --- Detect layovers (N/S) and return a Map of date->station ---
-        function detectLayovers(parsedEvents) {
-            const layoverMap = new Map();
-            const sorted = [...parsedEvents].filter(e => !e.isOff).sort((a,b) => a.date - b.date);
-            
-            for (let i = 0; i < sorted.length; i++) {
-                const evt = sorted[i];
-                if (!evt.legs || evt.legs.length === 0) continue;
-                
-                const lastLeg = evt.legs[evt.legs.length - 1];
-                const arrParsed = parseTimeString(lastLeg.arr);
-                if (!arrParsed || arrParsed.station === 'KUL') continue;
-
-                // Absolute arrival date (layover starts)
-                const arrDate = new Date(evt.date);
-                arrDate.setDate(arrDate.getDate() + arrParsed.dayOffset);
-                arrDate.setHours(arrParsed.hours, arrParsed.mins, 0, 0);
-
-                for (let j = i + 1; j < sorted.length; j++) {
-                    const nextEvt = sorted[j];
-                    if (!nextEvt.legs || nextEvt.legs.length === 0) continue;
-                    
-                    const firstLeg = nextEvt.legs[0];
-                    const depParsed = parseTimeString(firstLeg.dep);
-                    if (!depParsed || depParsed.station !== arrParsed.station) continue;
-
-                    const depDate = new Date(nextEvt.date);
-                    depDate.setDate(depDate.getDate() + depParsed.dayOffset);
-                    depDate.setHours(depParsed.hours, depParsed.mins, 0, 0);
-
-                    const diffHours = (depDate - arrDate) / (1000 * 60 * 60);
-                    if (diffHours > 12) {
-                        // Mark from arrival day (inclusive) up to the NEXT duty report date (inclusive)
-                        let current = new Date(arrDate);
-                        while (current <= nextEvt.date) {
-                            layoverMap.set(current.toDateString(), arrParsed.station);
-                            current.setDate(current.getDate() + 1);
-                        }
-                    }
-                    break;
-                }
-            }
-            return layoverMap;
-        }
-
-        // --- Determine day badge ---
-        function getDayBadge(date, event, layoverMap) {
+        // --- Build event rows for a day ---
+        function buildDayRows(date, event, allEvents, dutyMap, legMap, layoverMap, dayActivityMap) {
             const dateStr = date.toDateString();
+            const rows = [];
+            
+            // Check what's on this day
+            const activity = dayActivityMap[dateStr] || { dutyReport: false, legs: [], isLayover: false, layoverStation: '' };
             const isLayover = layoverMap.has(dateStr);
             const layoverStation = layoverMap.get(dateStr) || '';
-
-            // Check for arrival/departure on this day
-            let hasArrive = false, hasDepart = false;
-            let arrTime = '', depTime = '';
-            const legs = event.legs || [];
-            legs.forEach(leg => {
-                const arrParsed = parseTimeString(leg.arr);
-                if (arrParsed) {
-                    const arrDate = new Date(date);
-                    arrDate.setDate(arrDate.getDate() + arrParsed.dayOffset);
-                    arrDate.setHours(arrParsed.hours, arrParsed.mins, 0, 0);
-                    if (arrDate.toDateString() === dateStr) { hasArrive = true; arrTime = `${String(arrParsed.hours).padStart(2,'0')}:${String(arrParsed.mins).padStart(2,'0')}`; }
-                }
-                const depParsed = parseTimeString(leg.dep);
-                if (depParsed) {
-                    const depDate = new Date(date);
-                    depDate.setDate(depDate.getDate() + depParsed.dayOffset);
-                    depDate.setHours(depParsed.hours, depParsed.mins, 0, 0);
-                    if (depDate.toDateString() === dateStr) { hasDepart = true; depTime = `${String(depParsed.hours).padStart(2,'0')}:${String(depParsed.mins).padStart(2,'0')}`; }
-                }
-            });
-
-            // 1. Pure rest day (not a layover)
-            if (!isLayover && event.isOff) return { label: '🟢 Rest', type: 'off' };
-
-            // 2. Layover day with arrival
-            if (isLayover && hasArrive) return { label: `🛬 ARR ${arrTime} GO rest! | 🔴 N/S`, type: 'layover' };
-
-            // 3. Layover day with departure
-            if (isLayover && hasDepart) return { label: `🛫 DEP ${depTime} | 🔴 N/S`, type: 'layover' };
-
-            // 4. Layover day without depart/arrive
-            if (isLayover) {
-                if (!event.isOff) {
-                    const reportHour = String(date.getHours()).padStart(2,'0');
-                    const reportMin = String(date.getMinutes()).padStart(2,'0');
-                    return { label: `🔴 N/S | ⏰ Rest until ${reportHour}:${reportMin}`, type: 'layover' };
-                } else {
-                    // Off day out of base -> Dark green "REST in [STATION]"
-                    return { label: `🟢 REST in ${layoverStation}`, type: 'restbase' };
-                }
-            }
-
-            // 5. Non-layover, duty day with no depart/arrive -> Rest until (Yellow)
-            if (!event.isOff && !hasDepart && !hasArrive) {
+            
+            // 1. Duty Report row
+            if (activity.dutyReport && event && !event.isOff) {
                 const reportHour = String(date.getHours()).padStart(2,'0');
                 const reportMin = String(date.getMinutes()).padStart(2,'0');
-                return { label: `⏰ Rest until ${reportHour}:${reportMin}`, type: 'restuntil' };
+                let badge = '';
+                let type = '';
+                if (isLayover) {
+                    badge = `🔴 N/S | ⏰ Rest until ${reportHour}:${reportMin}`;
+                    type = 'layover';
+                } else {
+                    badge = `⏰ Rest until ${reportHour}:${reportMin}`;
+                    type = 'restuntil';
+                }
+                rows.push({
+                    content: `Duty Report: ${reportHour}:${reportMin}`,
+                    badge: badge,
+                    type: type,
+                    isDutyReport: true,
+                    eventRef: event
+                });
             }
-
-            // 6. Normal depart/arrive (non-layover)
-            let label = '';
-            let type = 'duty';
-            if (hasDepart && hasArrive) { label = `🛫 DEP ${depTime} | 🛬 ARR ${arrTime}`; type = 'duty'; }
-            else if (hasDepart) { label = `🛫 DEP ${depTime}`; type = 'depart'; }
-            else if (hasArrive) { label = `🛬 ARR ${arrTime} GO rest!`; type = 'arrive'; }
-            else { label = '🟢 Rest'; type = 'off'; }
-            return { label, type };
+            
+            // 2. Leg rows (items)
+            const legsOnDay = legMap[dateStr] || [];
+            legsOnDay.forEach(legInfo => {
+                const leg = legInfo.leg;
+                const depParsed = parseTimeString(leg.dep);
+                const arrParsed = parseTimeString(leg.arr);
+                const flight = leg.item || (event && event.pairing && !event.pairing.includes('/') ? event.pairing : 'Duty');
+                const depTime = depParsed ? `${String(depParsed.hours).padStart(2,'0')}:${String(depParsed.mins).padStart(2,'0')}` : '??';
+                const arrTime = arrParsed ? `${String(arrParsed.hours).padStart(2,'0')}:${String(arrParsed.mins).padStart(2,'0')}` : '??';
+                const depStn = depParsed ? depParsed.station : '??';
+                const arrStn = arrParsed ? arrParsed.station : '??';
+                
+                // Determine if departure or arrival is on this day
+                const depDate = new Date(date);
+                if (depParsed) {
+                    depDate.setDate(depDate.getDate() + depParsed.dayOffset);
+                    depDate.setHours(depParsed.hours, depParsed.mins, 0, 0);
+                }
+                const arrDate = new Date(date);
+                if (arrParsed) {
+                    arrDate.setDate(arrDate.getDate() + arrParsed.dayOffset);
+                    arrDate.setHours(arrParsed.hours, arrParsed.mins, 0, 0);
+                }
+                
+                const isDepOnThisDay = depParsed && depDate.toDateString() === dateStr;
+                const isArrOnThisDay = arrParsed && arrDate.toDateString() === dateStr;
+                
+                let badge = '';
+                let type = '';
+                let startTime = null;
+                let endTime = null;
+                
+                if (isDepOnThisDay) {
+                    badge = `🛫 DEP ${depStn} ${depTime}`;
+                    type = 'depart';
+                    startTime = new Date(depDate);
+                    // End time: arrival time or debrief
+                    if (event && event.dutyDebrief) {
+                        const debrief = parseTimeString(`KUL ${event.dutyDebrief}`);
+                        if (debrief) {
+                            const end = new Date(date);
+                            end.setHours(debrief.hours, debrief.mins, 0, 0);
+                            if (end < startTime) end.setDate(end.getDate() + 1);
+                            endTime = end;
+                        }
+                    }
+                    if (!endTime) {
+                        endTime = new Date(startTime);
+                        endTime.setMinutes(endTime.getMinutes() + 30);
+                    }
+                    // Add N/S if arrival is non-KUL and next report >12h away
+                    if (arrParsed && arrParsed.station !== 'KUL') {
+                        // Check if this is a layover
+                        if (isLayover) {
+                            badge += ` | 🔴 N/S`;
+                        }
+                    }
+                } else if (isArrOnThisDay) {
+                    badge = `🛬 ARR ${arrStn} ${arrTime} GO rest!`;
+                    type = 'arrive';
+                    startTime = new Date(arrDate);
+                    endTime = new Date(startTime);
+                    endTime.setMinutes(endTime.getMinutes() + 30);
+                    // Add N/S if arrival is non-KUL and next report >12h away
+                    if (arrParsed && arrParsed.station !== 'KUL' && isLayover) {
+                        badge += ` | 🔴 N/S`;
+                    }
+                } else {
+                    // Should not happen, but fallback
+                    badge = `✈️ ${flight}`;
+                    type = 'duty';
+                }
+                
+                rows.push({
+                    content: `${flight} ${leg.dep || '??'} → ${leg.arr || '??'}`,
+                    badge: badge,
+                    type: type,
+                    isLeg: true,
+                    legRef: leg,
+                    eventRef: event,
+                    startTime: startTime,
+                    endTime: endTime
+                });
+            });
+            
+            // 3. Extra N/S row if gap >12h
+            // This is handled separately when building all events
+            
+            // 4. Layover rest day (no duty report, no legs)
+            if (isLayover && !activity.dutyReport && legsOnDay.length === 0) {
+                rows.push({
+                    content: '',
+                    badge: `🟢 REST in ${layoverStation}`,
+                    type: 'restbase',
+                    isLayoverRest: true,
+                    station: layoverStation
+                });
+            }
+            
+            // 5. Pure rest day at home
+            if (!isLayover && !activity.dutyReport && legsOnDay.length === 0) {
+                rows.push({
+                    content: 'Off duty',
+                    badge: '🟢 Rest',
+                    type: 'off',
+                    isRest: true
+                });
+            }
+            
+            return rows;
         }
 
         // --- Parse Roster from XLSX ---
@@ -342,52 +379,128 @@
             return events;
         }
 
-        // --- Fill missing dates to cover the entire range ---
-        function fillAllDays(events) {
-            if (events.length === 0) return [];
+        // --- Build all data structures ---
+        function buildDataStructures(events) {
+            const legMap = {}; // dateString -> [{leg, event}]
+            const dutyMap = {}; // dateString -> event
+            const dayActivityMap = {}; // dateString -> {dutyReport: bool, legs: []}
+            const layoverMap = new Map(); // dateString -> station
+            
+            // First pass: build legMap and dutyMap
+            events.forEach(evt => {
+                if (!evt.isOff) {
+                    const dutyKey = evt.date.toDateString();
+                    dutyMap[dutyKey] = evt;
+                    if (!dayActivityMap[dutyKey]) dayActivityMap[dutyKey] = { dutyReport: false, legs: [] };
+                    dayActivityMap[dutyKey].dutyReport = true;
+                }
+                
+                evt.legs.forEach(leg => {
+                    // Departure
+                    const depParsed = parseTimeString(leg.dep);
+                    if (depParsed) {
+                        const depDate = new Date(evt.date);
+                        depDate.setDate(depDate.getDate() + depParsed.dayOffset);
+                        depDate.setHours(depParsed.hours, depParsed.mins, 0, 0);
+                        const key = depDate.toDateString();
+                        if (!legMap[key]) legMap[key] = [];
+                        legMap[key].push({ leg, event: evt, isDep: true, isArr: false });
+                        if (!dayActivityMap[key]) dayActivityMap[key] = { dutyReport: false, legs: [] };
+                        dayActivityMap[key].legs.push(leg);
+                    }
+                    // Arrival
+                    const arrParsed = parseTimeString(leg.arr);
+                    if (arrParsed) {
+                        const arrDate = new Date(evt.date);
+                        arrDate.setDate(arrDate.getDate() + arrParsed.dayOffset);
+                        arrDate.setHours(arrParsed.hours, arrParsed.mins, 0, 0);
+                        const key = arrDate.toDateString();
+                        if (!legMap[key]) legMap[key] = [];
+                        legMap[key].push({ leg, event: evt, isDep: false, isArr: true });
+                        if (!dayActivityMap[key]) dayActivityMap[key] = { dutyReport: false, legs: [] };
+                        dayActivityMap[key].legs.push(leg);
+                    }
+                });
+            });
+            
+            // Second pass: detect layovers
+            const sortedEvents = [...events].filter(e => !e.isOff).sort((a, b) => a.date - b.date);
+            for (let i = 0; i < sortedEvents.length; i++) {
+                const evt = sortedEvents[i];
+                if (!evt.legs || evt.legs.length === 0) continue;
+                
+                const lastLeg = evt.legs[evt.legs.length - 1];
+                const arrParsed = parseTimeString(lastLeg.arr);
+                if (!arrParsed || arrParsed.station === 'KUL') continue;
+                
+                const arrDate = new Date(evt.date);
+                arrDate.setDate(arrDate.getDate() + arrParsed.dayOffset);
+                arrDate.setHours(arrParsed.hours, arrParsed.mins, 0, 0);
+                
+                for (let j = i + 1; j < sortedEvents.length; j++) {
+                    const nextEvt = sortedEvents[j];
+                    if (!nextEvt.legs || nextEvt.legs.length === 0) continue;
+                    
+                    const firstLeg = nextEvt.legs[0];
+                    const depParsed = parseTimeString(firstLeg.dep);
+                    if (!depParsed || depParsed.station !== arrParsed.station) continue;
+                    
+                    const depDate = new Date(nextEvt.date);
+                    depDate.setDate(depDate.getDate() + depParsed.dayOffset);
+                    depDate.setHours(depParsed.hours, depParsed.mins, 0, 0);
+                    
+                    const diffHours = (depDate - arrDate) / (1000 * 60 * 60);
+                    if (diffHours > 12) {
+                        let current = new Date(arrDate);
+                        while (current <= nextEvt.date) {
+                            layoverMap.set(current.toDateString(), arrParsed.station);
+                            current.setDate(current.getDate() + 1);
+                        }
+                    }
+                    break;
+                }
+            }
+            
+            return { legMap, dutyMap, dayActivityMap, layoverMap };
+        }
 
+        // --- Build all rows for all days ---
+        function buildAllRows(events, legMap, dutyMap, dayActivityMap, layoverMap) {
+            if (events.length === 0) return [];
+            
             const sorted = [...events].sort((a, b) => a.date - b.date);
             const minDate = new Date(sorted[0].date);
             const maxDate = new Date(sorted[sorted.length - 1].date);
-
+            
             let start = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
             let end = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
-
+            
             const dateMap = {};
             events.forEach(evt => {
                 const key = evt.date.toDateString();
                 dateMap[key] = evt;
             });
-
-            const filled = [];
+            
+            const allRows = [];
             let current = new Date(start);
+            
             while (current <= end) {
                 const key = current.toDateString();
-                if (dateMap[key]) {
-                    filled.push(dateMap[key]);
-                } else {
-                    filled.push({
-                        date: new Date(current),
-                        isOff: true,
-                        pairing: 'N/A',
-                        legs: [],
-                        hotel: '',
-                        acType: '',
-                        dutyDebrief: '',
-                        item: '',
-                        dep: '',
-                        arr: ''
-                    });
-                }
+                const event = dateMap[key] || null;
+                const rows = buildDayRows(current, event, events, dutyMap, legMap, layoverMap, dayActivityMap);
+                allRows.push({
+                    date: new Date(current),
+                    rows: rows,
+                    hasActivity: rows.length > 0
+                });
                 current.setDate(current.getDate() + 1);
             }
-            return filled;
+            
+            return allRows;
         }
 
-        // --- Generate ICS from filled events ---
-        function generateICS(events) {
-            events.sort((a, b) => a.date - b.date);
-
+        // --- Generate ICS ---
+        function generateICS(allRows) {
             let ics = [
                 'BEGIN:VCALENDAR',
                 'VERSION:2.0',
@@ -395,100 +508,113 @@
                 'CALSCALE:GREGORIAN',
                 'METHOD:PUBLISH'
             ];
-
-            events.forEach((evt) => {
-                let start = new Date(evt.date);
-                let end = new Date(evt.date);
-                let summary = '';
-                let description = '';
-                let location = '';
-                let isAllDay = false;
-
-                if (evt.isOff) {
-                    isAllDay = true;
-                    summary = '🟢 DAY OFF';
-                    description = 'Rest day / No duty.';
-                    start.setHours(0, 0, 0, 0);
-                    end = new Date(start);
-                    end.setDate(end.getDate() + 1);
-                } else {
-                    let endDate = null;
-                    if (evt.dutyDebrief && typeof evt.dutyDebrief === 'string') {
-                        const timeStr = evt.dutyDebrief.trim();
-                        if (timeStr.includes(':')) {
-                            const parts = timeStr.split(':');
-                            if (parts.length >= 2) {
-                                const h = parseInt(parts[0]);
-                                const m = parseInt(parts[1]);
-                                if (!isNaN(h) && !isNaN(m)) {
-                                    endDate = new Date(start);
-                                    endDate.setHours(h, m, 0, 0);
-                                    if (endDate < start) endDate.setDate(endDate.getDate() + 1);
-                                }
+            
+            allRows.forEach(dayData => {
+                dayData.rows.forEach(row => {
+                    let start, end, summary, description, location = '';
+                    let isAllDay = false;
+                    let alarm = false;
+                    
+                    if (row.isRest || row.isLayoverRest) {
+                        isAllDay = true;
+                        summary = row.badge;
+                        description = row.isLayoverRest ? `Rest day in ${row.station || ''}` : 'Off duty at home';
+                        start = new Date(dayData.date);
+                        start.setHours(0, 0, 0, 0);
+                        end = new Date(start);
+                        end.setDate(end.getDate() + 1);
+                    } else if (row.isDutyReport) {
+                        start = new Date(dayData.date);
+                        end = new Date(dayData.date);
+                        if (row.eventRef && row.eventRef.dutyDebrief) {
+                            const debrief = parseTimeString(`KUL ${row.eventRef.dutyDebrief}`);
+                            if (debrief) {
+                                end.setHours(debrief.hours, debrief.mins, 0, 0);
+                                if (end < start) end.setDate(end.getDate() + 1);
+                            } else {
+                                end.setHours(start.getHours() + 1, 0, 0, 0);
                             }
+                        } else {
+                            end.setHours(start.getHours() + 1, 0, 0, 0);
+                        }
+                        summary = row.badge;
+                        description = `Duty Report at ${start.toLocaleTimeString()}`;
+                        alarm = true;
+                    } else if (row.isLeg) {
+                        start = row.startTime || new Date(dayData.date);
+                        end = row.endTime || new Date(start);
+                        if (!row.endTime) {
+                            end.setHours(end.getHours() + 1, 0, 0, 0);
+                        }
+                        const leg = row.legRef;
+                        const flight = leg.item || 'Flight';
+                        summary = `${flight} ${leg.dep || '??'} → ${leg.arr || '??'}`;
+                        description = `Flight: ${flight}\nDeparture: ${leg.dep || '??'}\nArrival: ${leg.arr || '??'}`;
+                        if (row.eventRef && row.eventRef.hotel) {
+                            description += `\nHotel: ${row.eventRef.hotel}`;
+                            location = row.eventRef.hotel;
+                        }
+                        alarm = true;
+                    } else {
+                        // Skip unknown rows
+                        return;
+                    }
+                    
+                    const uid = `evt-${start.getTime()}-${Math.random().toString(36).substr(2, 6)}@roster`;
+                    const dtStart = isAllDay ? start.toISOString().split('T')[0].replace(/-/g, '') : formatICSDate(start);
+                    const dtEnd = isAllDay ? end.toISOString().split('T')[0].replace(/-/g, '') : formatICSDate(end);
+                    
+                    ics.push('BEGIN:VEVENT');
+                    ics.push(`UID:${uid}`);
+                    ics.push(`DTSTAMP:${formatICSDate(new Date())}`);
+                    
+                    if (isAllDay) {
+                        ics.push(`DTSTART;VALUE=DATE:${dtStart}`);
+                        ics.push(`DTEND;VALUE=DATE:${dtEnd}`);
+                        ics.push('TRANSP:TRANSPARENT');
+                        if (row.isLayoverRest) {
+                            ics.push('X-APPLE-CALENDAR-COLOR:#15803d');
+                            ics.push('COLOR:#15803d');
+                        } else {
+                            ics.push('X-APPLE-CALENDAR-COLOR:#34C759');
+                            ics.push('COLOR:#34C759');
+                        }
+                    } else {
+                        ics.push(`DTSTART:${dtStart}`);
+                        ics.push(`DTEND:${dtEnd}`);
+                        ics.push('TRANSP:OPAQUE');
+                        if (row.type === 'layover') {
+                            ics.push('X-APPLE-CALENDAR-COLOR:#dc2626');
+                            ics.push('COLOR:#dc2626');
+                        } else if (row.type === 'restuntil') {
+                            ics.push('X-APPLE-CALENDAR-COLOR:#eab308');
+                            ics.push('COLOR:#eab308');
+                        } else if (row.type === 'depart') {
+                            ics.push('X-APPLE-CALENDAR-COLOR:#fef3c7');
+                            ics.push('COLOR:#fef3c7');
+                        } else if (row.type === 'arrive') {
+                            ics.push('X-APPLE-CALENDAR-COLOR:#ede9fe');
+                            ics.push('COLOR:#ede9fe');
+                        } else {
+                            ics.push('X-APPLE-CALENDAR-COLOR:#007AFF');
+                            ics.push('COLOR:#007AFF');
+                        }
+                        if (alarm) {
+                            ics.push('BEGIN:VALARM');
+                            ics.push('ACTION:DISPLAY');
+                            ics.push('DESCRIPTION:Reminder for duty');
+                            ics.push('TRIGGER:-PT4H');
+                            ics.push('END:VALARM');
                         }
                     }
-                    if (!endDate) {
-                        endDate = new Date(start);
-                        endDate.setHours(endDate.getHours() + 4);
-                    }
-                    start = new Date(evt.date);
-                    end = endDate;
-
-                    const legStrings = evt.legs.map(leg => formatLeg(leg, evt.pairing));
-                    const summaryText = legStrings.join(' | ');
-                    summary = `✈️ ${summaryText}`;
-
-                    let descLines = [];
-                    descLines.push(`Report Time: ${start.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`);
-                    descLines.push(`Pairing: ${evt.pairing}`);
-                    descLines.push(`Aircraft: ${evt.acType || 'N/A'}`);
-                    descLines.push('--- Flights ---');
-                    evt.legs.forEach((leg, idx) => {
-                        descLines.push(`Leg ${idx+1}: ${formatLeg(leg, evt.pairing)}`);
-                    });
-                    if (evt.hotel) {
-                        descLines.push(`Hotel: ${evt.hotel}`);
-                        location = evt.hotel;
-                    }
-                    descLines.push(`Duty End: ${end.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit' })}`);
-                    description = descLines.join('\n');
-                }
-
-                const dtStart = isAllDay ? start.toISOString().split('T')[0].replace(/-/g, '') : formatICSDate(start);
-                const dtEnd = isAllDay ? end.toISOString().split('T')[0].replace(/-/g, '') : formatICSDate(end);
-                const uid = `evt-${start.getTime()}-${Math.random().toString(36).substr(2, 6)}@roster`;
-
-                ics.push('BEGIN:VEVENT');
-                ics.push(`UID:${uid}`);
-                ics.push(`DTSTAMP:${formatICSDate(new Date())}`);
-                
-                if (isAllDay) {
-                    ics.push(`DTSTART;VALUE=DATE:${dtStart}`);
-                    ics.push(`DTEND;VALUE=DATE:${dtEnd}`);
-                    ics.push('TRANSP:TRANSPARENT');
-                    ics.push('X-APPLE-CALENDAR-COLOR:#34C759');
-                    ics.push('COLOR:#34C759');
-                    ics.push('CATEGORIES:DAYOFF');
-                } else {
-                    ics.push(`DTSTART:${dtStart}`);
-                    ics.push(`DTEND:${dtEnd}`);
-                    ics.push('TRANSP:OPAQUE');
-                    ics.push('X-APPLE-CALENDAR-COLOR:#007AFF');
-                    ics.push('COLOR:#007AFF');
-                    ics.push('BEGIN:VALARM');
-                    ics.push('ACTION:DISPLAY');
-                    ics.push('DESCRIPTION:Reminder: Report for duty');
-                    ics.push('TRIGGER:-PT60M');
-                    ics.push('END:VALARM');
-                }
-
-                ics.push(`SUMMARY:${summary}`);
-                ics.push(`DESCRIPTION:${description.replace(/\n/g, '\\n')}`);
-                if (location) ics.push(`LOCATION:${location}`);
-                ics.push('END:VEVENT');
+                    
+                    ics.push(`SUMMARY:${summary}`);
+                    ics.push(`DESCRIPTION:${description.replace(/\n/g, '\\n')}`);
+                    if (location) ics.push(`LOCATION:${location}`);
+                    ics.push('END:VEVENT');
+                });
             });
-
+            
             ics.push('END:VCALENDAR');
             return ics.join('\r\n');
         }
@@ -504,43 +630,67 @@
                         alert('No events found. Please check the file format.');
                         return;
                     }
-
-                    allFilledEvents = fillAllDays(parsed);
-                    const layoverMap = detectLayovers(parsed);
-
-                    const total = allFilledEvents.length;
-                    const off = allFilledEvents.filter(e => e.isOff).length;
-                    const duty = total - off;
-                    totalDaysSpan.textContent = total;
-                    dutyDaysSpan.textContent = duty;
-                    offDaysSpan.textContent = off;
-
-                    // --- Render ---
+                    
+                    const { legMap, dutyMap, dayActivityMap, layoverMap } = buildDataStructures(parsed);
+                    const allRows = buildAllRows(parsed, legMap, dutyMap, dayActivityMap, layoverMap);
+                    
+                    // Count stats
+                    let totalDays = allRows.length;
+                    let dutyDays = 0;
+                    let offDays = 0;
+                    let layoverDays = 0;
+                    
+                    allRows.forEach(dayData => {
+                        let hasDuty = false;
+                        let hasOff = false;
+                        let hasLayover = false;
+                        dayData.rows.forEach(row => {
+                            if (row.type === 'layover' || row.isLayoverRest) hasLayover = true;
+                            if (row.isDutyReport || row.isLeg) hasDuty = true;
+                            if (row.isRest) hasOff = true;
+                        });
+                        if (hasLayover) layoverDays++;
+                        if (hasDuty) dutyDays++;
+                        if (hasOff && !hasDuty && !hasLayover) offDays++;
+                    });
+                    
+                    totalDaysSpan.textContent = totalDays;
+                    dutyDaysSpan.textContent = dutyDays;
+                    offDaysSpan.textContent = offDays;
+                    layoverDaysSpan.textContent = layoverDays;
+                    
+                    // Render
                     let html = '';
-                    allFilledEvents.forEach((evt) => {
-                        const dateStr = fmtDateWithDay(evt.date);
-                        const badge = getDayBadge(evt.date, evt, layoverMap);
-                        
-                        let desc = '';
-                        if (evt.isOff) {
-                            desc = 'Off duty';
+                    allRows.forEach(dayData => {
+                        const dateStr = fmtDateWithDay(dayData.date);
+                        if (dayData.rows.length === 0) {
+                            html += `
+                                <div class="event-row">
+                                    <span class="date-badge">${dateStr}</span>
+                                    <span class="desc">-</span>
+                                    <span class="tag off">🟢 Rest</span>
+                                </div>
+                            `;
                         } else {
-                            const legDescs = evt.legs.map(leg => formatLeg(leg, evt.pairing));
-                            desc = legDescs.join(' | ');
-                            if (!desc) desc = 'Duty (no flight details)';
+                            dayData.rows.forEach((row, idx) => {
+                                const desc = row.content || '-';
+                                html += `
+                                    <div class="event-row">
+                                        <span class="date-badge">${idx === 0 ? dateStr : ''}</span>
+                                        <span class="desc" title="${desc}">${desc}</span>
+                                        <span class="tag ${row.type}">${row.badge}</span>
+                                    </div>
+                                `;
+                            });
                         }
-                        
-                        html += `
-                            <div class="event-row">
-                                <span class="date-badge">${dateStr}</span>
-                                <span class="desc" title="${desc}">${desc}</span>
-                                <span class="tag ${badge.type}">${badge.label}</span>
-                            </div>
-                        `;
                     });
                     eventListContainer.innerHTML = html;
                     previewArea.style.display = 'block';
                     previewArea.scrollIntoView({ behavior: 'smooth' });
+                    
+                    // Store for download
+                    window._icsData = generateICS(allRows);
+                    
                 } catch (err) {
                     alert('Error: ' + err.message);
                     console.error(err);
@@ -551,16 +701,15 @@
 
         // --- Download ---
         function downloadICS() {
-            if (allFilledEvents.length === 0) {
-                alert('No events. Please upload a roster first.');
+            if (!window._icsData) {
+                alert('No data. Please upload a roster first.');
                 return;
             }
-            const icsContent = generateICS(allFilledEvents);
-            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const blob = new Blob([window._icsData], { type: 'text/calendar;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'full_month_roster.ics';
+            a.download = 'roster_calendar.ics';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
