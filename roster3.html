@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+    <title>Roster to Calendar Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            background: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 750px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin: 20px auto;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        h1 span {
+            background: #eef2ff;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 14px;
+            color: #4f46e5;
+        }
+        .subhead {
+            color: #64748b;
+            font-size: 16px;
+            margin-bottom: 30px;
+            border-left: 4px solid #4f46e5;
+            padding-left: 16px;
+        }
+        .upload-zone {
+            border: 3px dashed #cbd5e1;
+            border-radius: 24px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            background: #fafbff;
+            position: relative;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #4f46e5;
+            background: #eef2ff;
+        }
+        .upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .upload-icon {
+            font-size: 48px;
+        }
+        .upload-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 12px 0 4px;
+        }
+        .upload-hint {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        #previewArea {
+            margin-top: 30px;
+            display: none;
+        }
+        .stats {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            flex: 1;
+            min-width: 80px;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .stat-label {
+            font-size: 13px;
+            color: #64748b;
+        }
+        .stat-number.green { color: #16a34a; }
+        .stat-number.blue { color: #2563eb; }
+
+        .event-list {
+            max-height: 450px;
+            overflow-y: auto;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+        .event-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+            align-items: center;
+            gap: 8px;
+        }
+        .event-row:last-child { border-bottom: none; }
+        .event-row .date-badge {
+            font-weight: 600;
+            color: #0f172a;
+            min-width: 110px;
+            font-size: 13px;
+        }
+        .event-row .desc {
+            color: #334155;
+            flex: 1;
+            margin: 0 8px;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .event-row .tag {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 40px;
+            background: #e2e8f0;
+            color: #475569;
+            white-space: nowrap;
+        }
+        .tag.duty { background: #dbeafe; color: #1d4ed8; }
+        .tag.off { background: #dcfce7; color: #15803d; }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 22px;
+            font-weight: 700;
+            border: none;
+            border-radius: 60px;
+            color: white;
+            background: #4f46e5;
+            cursor: pointer;
+            transition: 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        .btn:hover { background: #4338ca; transform: scale(1.01); }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn.green {
+            background: #16a34a;
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+        }
+        .btn.green:hover { background: #15803d; }
+
+        .info-note {
+            margin-top: 24px;
+            padding: 16px;
+            background: #fef9c3;
+            border-radius: 16px;
+            font-size: 14px;
+            color: #854d0e;
+            border-left: 4px solid #eab308;
+            line-height: 1.6;
+        }
+        .info-note strong { color: #713f12; }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        @media (max-width: 480px) {
+            .container { padding: 20px 16px; }
+            h1 { font-size: 24px; }
+            .event-row { flex-wrap: wrap; gap: 4px; }
+            .event-row .desc { white-space: normal; min-width: 100%; order: 3; }
+            .event-row .date-badge { min-width: 90px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>
+        📅 Roster to Calendar
+        <span>.ics</span>
+    </h1>
+    <div class="subhead">
+        Upload your <strong>CWProsterReport.xlsx</strong> – missing flight numbers are replaced with clean activity codes (e.g., S4WBA, 570SFAW2).
+    </div>
+
+    <div class="upload-zone" id="dropZone">
+        <input type="file" id="fileInput" accept=".xlsx,.xls" />
+        <div class="upload-icon">📂</div>
+        <div class="upload-text">Tap to select your roster</div>
+        <div class="upload-hint">Supports .xlsx files from your email or downloads</div>
+    </div>
+
+    <div id="previewArea">
+        <div class="stats" id="statsContainer">
+            <div class="stat-item">
+                <div class="stat-number" id="totalDays">0</div>
+                <div class="stat-label">📆 Total Days</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number blue" id="dutyDays">0</div>
+                <div class="stat-label">🟦 Duty Days</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number green" id="offDays">0</div>
+                <div class="stat-label">🟩 Rest Days</div>
+            </div>
+        </div>
+
+        <div class="event-list" id="eventListContainer"></div>
+
+        <button class="btn green" id="downloadBtn">
+            ⬇️ Download Full Month Calendar (.ics)
+        </button>
+
+        <div class="info-note">
+            <strong>📱 What you'll see in your calendar:</strong><br>
+            • ✈️ <strong>Duty days</strong> show the flight number <em>or</em> activity code (e.g., <em>S4WBA KUL 12:00 → KUL 20:00</em>).<br>
+            • 🟢 <strong>Rest days</strong> are clearly marked in green (Apple) or with 🟢 (Google).<br>
+            • 🔔 A <strong>1-hour alarm</strong> is automatically set before your <strong>reporting time</strong>.
+        </div>
+    </div>
+
+    <div class="footer">
+        Everything stays on your device. No data is uploaded anywhere.
+    </div>
+</div>
+
+<script>
+    (function() {
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const previewArea = document.getElementById('previewArea');
+        const eventListContainer = document.getElementById('eventListContainer');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const totalDaysSpan = document.getElementById('totalDays');
+        const dutyDaysSpan = document.getElementById('dutyDays');
+        const offDaysSpan = document.getElementById('offDays');
+
+        let allFilledEvents = []; 
+
+        // --- Helper: Parse date/time from XLSX cell ---
+        function parseExcelDate(cellValue) {
+            if (!cellValue) return null;
+            if (typeof cellValue === 'number') {
+                const epoch = new Date(1899, 11, 30);
+                return new Date(epoch.getTime() + cellValue * 86400000);
+            }
+            const str = String(cellValue).trim();
+            let d = new Date(str);
+            if (!isNaN(d.getTime())) return d;
+            const parts = str.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+            if (parts) {
+                return new Date(parts[1], parts[2]-1, parts[3], parts[4], parts[5], parts[6]);
+            }
+            return null;
+        }
+
+        // --- Helper: Format Date to ICS (YYYYMMDDTHHMMSS) ---
+        function formatICSDate(date) {
+            if (!date || isNaN(date.getTime())) return '';
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            const h = String(date.getHours()).padStart(2, '0');
+            const min = String(date.getMinutes()).padStart(2, '0');
+            const s = String(date.getSeconds()).padStart(2, '0');
+            return `${y}${m}${d}T${h}${min}${s}`;
+        }
+
+        // --- Helper: Format Date for preview ---
+        function fmtDateWithDay(d) {
+            if (!d) return '';
+            return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        }
+
+        // --- Format a single leg for display ---
+        // Uses pairing as fallback ONLY if item is empty AND pairing has no "/"
+        function formatLeg(leg, pairing) {
+            if (!leg) return '';
+            let flight = leg.item || '';
+            
+            // If flight number is empty, try to use pairing if it has no "/"
+            if (!flight && pairing) {
+                // Only use pairing if it doesn't contain a slash
+                if (!pairing.includes('/')) {
+                    flight = pairing;
+                }
+            }
+            
+            // Final fallback
+            if (!flight) flight = 'Duty';
+            
+            const dep = leg.dep || '??';
+            const arr = leg.arr || '??';
+            return `${flight} ${dep} → ${arr}`;
+        }
+
+        // --- Parse Roster from XLSX ---
+        function parseRoster(data) {
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+            let headerRowIndex = -1;
+            let colMap = { date: -1, pairing: -1, item: -1, dep: -1, arr: -1, dutyDebrief: -1, hotel: -1, acType: -1 };
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                if (row.includes('Date') && row.includes('Pairing/Activity')) {
+                    headerRowIndex = i;
+                    row.forEach((cell, idx) => {
+                        const val = String(cell).trim();
+                        if (val === 'Date') colMap.date = idx;
+                        else if (val === 'Pairing/Activity') colMap.pairing = idx;
+                        else if (val === 'Item') colMap.item = idx;
+                        else if (val.includes('Dep Stn / Dep Time')) colMap.dep = idx;
+                        else if (val.includes('Arr. Stn / Arr. Time')) colMap.arr = idx;
+                        else if (val === 'Duty Debrief') colMap.dutyDebrief = idx;
+                        else if (val === 'Hotel') colMap.hotel = idx;
+                        else if (val === 'A/C Type') colMap.acType = idx;
+                    });
+                    break;
+                }
+            }
+
+            if (headerRowIndex === -1) {
+                throw new Error("Could not find header row (Date / Pairing/Activity).");
+            }
+
+            const events = [];
+            let currentEvent = null;
+
+            for (let i = headerRowIndex + 1; i < rows.length; i++) {
+                const row = rows[i];
+                const dateVal = row[colMap.date] || '';
+                const pairing = String(row[colMap.pairing] || '').trim();
+                const item = String(row[colMap.item] || '').trim();
+                const dep = String(row[colMap.dep] || '').trim();
+                const arr = String(row[colMap.arr] || '').trim();
+                const dutyDebrief = row[colMap.dutyDebrief] || '';
+                const hotel = String(row[colMap.hotel] || '').trim();
+                const acType = String(row[colMap.acType] || '').trim();
+
+                const dateObj = parseExcelDate(dateVal);
+
+                if (dateObj && !isNaN(dateObj.getTime())) {
+                    if (currentEvent) events.push(currentEvent);
+                    
+                    const isOff = ['D', 'DO', 'DO1', 'DO2'].includes(pairing.toUpperCase());
+                    currentEvent = {
+                        date: dateObj,
+                        pairing: pairing, // Store pairing for fallback logic
+                        isOff: isOff,
+                        item: item,
+                        dep: dep,
+                        arr: arr,
+                        dutyDebrief: dutyDebrief,
+                        hotel: hotel,
+                        acType: acType,
+                        legs: []
+                    };
+                    if (item || dep || arr) {
+                        currentEvent.legs.push({ item, dep, arr, acType, hotel });
+                    }
+                } else {
+                    if (currentEvent && (item || dep || arr)) {
+                        if (hotel && !currentEvent.hotel) currentEvent.hotel = hotel;
+                        if (acType && !currentEvent.acType) currentEvent.acType = acType;
+                        currentEvent.legs.push({ item, dep, arr, acType, hotel });
+                    }
+                }
+            }
+            if (currentEvent) events.push(currentEvent);
+            return events;
+        }
+
+        // --- Fill missing dates to cover the entire range ---
+        function fillAllDays(events) {
+            if (events.length === 0) return [];
+
+            const sorted = [...events].sort((a, b) => a.date - b.date);
+            const minDate = new Date(sorted[0].date);
+            const maxDate = new Date(sorted[sorted.length - 1].date);
+
+            let start = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+            let end = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
+
+            const dateMap = {};
+            events.forEach(evt => {
+                const key = evt.date.toDateString();
+                dateMap[key] = evt;
+            });
+
+            const filled = [];
+            let current = new Date(start);
+            while (current <= end) {
+                const key = current.toDateString();
+                if (dateMap[key]) {
+                    filled.push(dateMap[key]);
+                } else {
+                    filled.push({
+                        date: new Date(current),
+                        isOff: true,
+                        pairing: 'N/A',
+                        legs: [],
+                        hotel: '',
+                        acType: '',
+                        dutyDebrief: '',
+                        item: '',
+                        dep: '',
+                        arr: ''
+                    });
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            return filled;
+        }
+
+        // --- Generate ICS from filled events ---
+        function generateICS(events) {
+            events.sort((a, b) => a.date - b.date);
+
+            let ics = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//Roster Converter//EN',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH'
+            ];
+
+            events.forEach((evt) => {
+                let start = new Date(evt.date);
+                let end = new Date(evt.date);
+                let summary = '';
+                let description = '';
+                let location = '';
+                let isAllDay = false;
+
+                if (evt.isOff) {
+                    isAllDay = true;
+                    summary = '🟢 DAY OFF';
+                    description = 'Rest day / No duty.';
+                    start.setHours(0, 0, 0, 0);
+                    end = new Date(start);
+                    end.setDate(end.getDate() + 1);
+                } else {
+                    // --- Determine end time (Duty Debrief) ---
+                    let endDate = null;
+                    if (evt.dutyDebrief && typeof evt.dutyDebrief === 'string') {
+                        const timeStr = evt.dutyDebrief.trim();
+                        if (timeStr.includes(':')) {
+                            const parts = timeStr.split(':');
+                            if (parts.length >= 2) {
+                                const h = parseInt(parts[0]);
+                                const m = parseInt(parts[1]);
+                                if (!isNaN(h) && !isNaN(m)) {
+                                    endDate = new Date(start);
+                                    endDate.setHours(h, m, 0, 0);
+                                    if (endDate < start) endDate.setDate(endDate.getDate() + 1);
+                                }
+                            }
+                        }
+                    }
+                    if (!endDate) {
+                        endDate = new Date(start);
+                        endDate.setHours(endDate.getHours() + 4);
+                    }
+                    start = new Date(evt.date);
+                    end = endDate;
+
+                    // --- Build Summary using the new formatLeg with pairing fallback ---
+                    const legStrings = evt.legs.map(leg => formatLeg(leg, evt.pairing));
+                    const summaryText = legStrings.join(' | ');
+                    summary = `✈️ ${summaryText}`;
+
+                    // --- Build Description with full details ---
+                    let descLines = [];
+                    descLines.push(`Report Time: ${start.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`);
+                    descLines.push(`Pairing: ${evt.pairing}`);
+                    descLines.push(`Aircraft: ${evt.acType || 'N/A'}`);
+                    descLines.push('--- Flights ---');
+                    evt.legs.forEach((leg, idx) => {
+                        descLines.push(`Leg ${idx+1}: ${formatLeg(leg, evt.pairing)}`);
+                    });
+                    if (evt.hotel) {
+                        descLines.push(`Hotel: ${evt.hotel}`);
+                        location = evt.hotel;
+                    }
+                    descLines.push(`Duty End: ${end.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit' })}`);
+                    description = descLines.join('\n');
+                }
+
+                const dtStart = isAllDay ? start.toISOString().split('T')[0].replace(/-/g, '') : formatICSDate(start);
+                const dtEnd = isAllDay ? end.toISOString().split('T')[0].replace(/-/g, '') : formatICSDate(end);
+                const uid = `evt-${start.getTime()}-${Math.random().toString(36).substr(2, 6)}@roster`;
+
+                ics.push('BEGIN:VEVENT');
+                ics.push(`UID:${uid}`);
+                ics.push(`DTSTAMP:${formatICSDate(new Date())}`);
+                
+                if (isAllDay) {
+                    ics.push(`DTSTART;VALUE=DATE:${dtStart}`);
+                    ics.push(`DTEND;VALUE=DATE:${dtEnd}`);
+                    ics.push('TRANSP:TRANSPARENT');
+                    ics.push('X-APPLE-CALENDAR-COLOR:#34C759');
+                    ics.push('COLOR:#34C759');
+                    ics.push('CATEGORIES:DAYOFF');
+                } else {
+                    ics.push(`DTSTART:${dtStart}`);
+                    ics.push(`DTEND:${dtEnd}`);
+                    ics.push('TRANSP:OPAQUE');
+                    ics.push('X-APPLE-CALENDAR-COLOR:#007AFF');
+                    ics.push('COLOR:#007AFF');
+                    ics.push('BEGIN:VALARM');
+                    ics.push('ACTION:DISPLAY');
+                    ics.push('DESCRIPTION:Reminder: Report for duty');
+                    ics.push('TRIGGER:-PT60M');
+                    ics.push('END:VALARM');
+                }
+
+                ics.push(`SUMMARY:${summary}`);
+                ics.push(`DESCRIPTION:${description.replace(/\n/g, '\\n')}`);
+                if (location) ics.push(`LOCATION:${location}`);
+                ics.push('END:VEVENT');
+            });
+
+            ics.push('END:VCALENDAR');
+            return ics.join('\r\n');
+        }
+
+        // --- Main handler ---
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const parsed = parseRoster(data);
+                    if (parsed.length === 0) {
+                        alert('No events found. Please check the file format.');
+                        return;
+                    }
+
+                    allFilledEvents = fillAllDays(parsed);
+
+                    const total = allFilledEvents.length;
+                    const off = allFilledEvents.filter(e => e.isOff).length;
+                    const duty = total - off;
+                    totalDaysSpan.textContent = total;
+                    dutyDaysSpan.textContent = duty;
+                    offDaysSpan.textContent = off;
+
+                    // --- Render full list with times ---
+                    let html = '';
+                    allFilledEvents.forEach((evt) => {
+                        const label = evt.isOff ? '🟢 Rest' : '✈️ Duty';
+                        const tagClass = evt.isOff ? 'off' : 'duty';
+                        const dateStr = fmtDateWithDay(evt.date);
+                        
+                        let desc = '';
+                        if (evt.isOff) {
+                            desc = 'Off duty';
+                        } else {
+                            const legDescs = evt.legs.map(leg => formatLeg(leg, evt.pairing));
+                            desc = legDescs.join(' | ');
+                        }
+                        
+                        html += `
+                            <div class="event-row">
+                                <span class="date-badge">${dateStr}</span>
+                                <span class="desc" title="${desc}">${desc}</span>
+                                <span class="tag ${tagClass}">${label}</span>
+                            </div>
+                        `;
+                    });
+                    eventListContainer.innerHTML = html;
+                    previewArea.style.display = 'block';
+                    previewArea.scrollIntoView({ behavior: 'smooth' });
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                    console.error(err);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- Download ---
+        function downloadICS() {
+            if (allFilledEvents.length === 0) {
+                alert('No events. Please upload a roster first.');
+                return;
+            }
+            const icsContent = generateICS(allFilledEvents);
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'full_month_roster.ics';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // --- Event listeners ---
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                handleFile(this.files[0]);
+            }
+            this.value = '';
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                    handleFile(file);
+                } else {
+                    alert('Please drop an Excel file (.xlsx or .xls)');
+                }
+            }
+        });
+
+        downloadBtn.addEventListener('click', downloadICS);
+    })();
+</script>
+</body>
+</html>
