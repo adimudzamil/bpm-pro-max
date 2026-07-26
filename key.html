@@ -50,7 +50,7 @@
       touch-action: none;
     }
 
-    /* ----- SCREEN (top) - now smaller to fit keyboard ----- */
+    /* ----- SCREEN (top) ----- */
     #screen-container {
       flex: 0 0 auto;
       height: 30%;
@@ -66,6 +66,7 @@
       display: flex;
       flex-direction: column;
       touch-action: none;
+      position: relative;
     }
 
     #screen {
@@ -104,7 +105,7 @@
       border-radius: 8px;
     }
 
-    /* ----- KEYBOARD (bottom) - takes remaining space ----- */
+    /* ----- KEYBOARD (bottom) ----- */
     #keyboard {
       flex: 1 1 auto;
       min-height: 55%;
@@ -117,23 +118,55 @@
       box-shadow: 0 -2px 12px rgba(0, 255, 65, 0.08);
       touch-action: none;
       overflow: hidden;
+      position: relative;
     }
 
-    /* top bar: symbols & specials */
+    /* Glide trail overlay */
+    #glide-trail {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    .glide-dot {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: radial-gradient(circle, #00ff41 0%, rgba(0, 255, 65, 0.3) 70%, transparent 100%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: fadeDot 0.6s ease-out forwards;
+      box-shadow: 0 0 20px #00ff4166;
+    }
+
+    @keyframes fadeDot {
+      0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+    }
+
+    /* top bar: symbols - all same size, jumbled */
     #symbol-bar {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 3px 2px;
-      padding: 3px 2px 5px 2px;
+      gap: 4px;
+      padding: 4px 2px 6px 2px;
       border-bottom: 1px solid #1a3a1a;
       margin-bottom: 4px;
       background: #0c120c;
       border-radius: 8px 8px 0 0;
-      min-height: 34px;
+      min-height: 32px;
       align-items: center;
       touch-action: none;
       flex-shrink: 0;
+      position: relative;
+      z-index: 1;
     }
 
     .sym-btn {
@@ -142,18 +175,23 @@
       color: #7fdb7f;
       font-size: 0.7rem;
       font-weight: 600;
-      padding: 2px 6px;
+      padding: 2px 0;
       border-radius: 16px;
       cursor: pointer;
       box-shadow: 0 0 4px #00ff4111;
       transition: all 0.08s ease;
       font-family: 'Courier New', monospace;
-      letter-spacing: 0.2px;
-      touch-action: manipulation;
-      min-width: 26px;
+      touch-action: none;
       text-align: center;
       line-height: 1.4;
       flex-shrink: 0;
+      width: 32px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
     }
 
     .sym-btn:active {
@@ -163,23 +201,25 @@
       box-shadow: 0 0 12px #00ff4166;
     }
 
-    /* main grid: alphabets + numbers + extras */
+    /* main grid: all buttons exactly the same size, jumbled */
     #key-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 3px 3px;
+      gap: 4px;
       flex: 1;
       padding: 2px 2px;
       align-content: stretch;
       touch-action: none;
       min-height: 0;
+      position: relative;
+      z-index: 1;
     }
 
     .key-btn {
       background: #121a12;
-      border: 1px solid #2a4a2a;
+      border: 1px solid #2a5a2a;
       color: #b3ffb3;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 500;
       border-radius: 10px;
       display: flex;
@@ -188,11 +228,16 @@
       cursor: pointer;
       transition: all 0.07s ease;
       box-shadow: 0 0 4px #00ff4111;
-      touch-action: manipulation;
-      padding: 1px 0;
+      touch-action: none;
+      padding: 0;
       font-family: 'Courier New', monospace;
       min-height: 28px;
+      height: 100%;
+      width: 100%;
+      aspect-ratio: 1 / 1;
       line-height: 1.2;
+      position: relative;
+      z-index: 2;
     }
 
     .key-btn:active {
@@ -203,11 +248,11 @@
       color: #ffffff;
     }
 
+    /* special buttons - same size, just different label */
     .key-btn.space {
-      grid-column: span 2;
       background: #162016;
-      font-size: 0.7rem;
-      letter-spacing: 0.5px;
+      font-size: 0.65rem;
+      letter-spacing: 0.3px;
       color: #7fbf7f;
     }
 
@@ -345,10 +390,10 @@
       color: #afffaf;
     }
 
-    /* responsive adjustments */
+    /* responsive */
     @media (max-width: 480px) {
-      .key-btn { font-size: 0.8rem; min-height: 24px; }
-      .sym-btn { font-size: 0.6rem; padding: 1px 4px; min-width: 20px; }
+      .key-btn { font-size: 0.75rem; min-height: 24px; }
+      .sym-btn { font-size: 0.6rem; width: 26px; height: 24px; }
       #screen { font-size: 0.95rem; }
       #settings-box { padding: 18px 14px; }
       #screen-container { height: 25%; min-height: 60px; }
@@ -357,17 +402,17 @@
     @media (max-height: 600px) {
       #screen-container { height: 22%; min-height: 50px; }
       .key-btn { font-size: 0.7rem; min-height: 20px; }
-      .sym-btn { font-size: 0.55rem; padding: 1px 3px; min-width: 18px; }
-      #symbol-bar { min-height: 26px; gap: 2px; padding: 2px 2px 3px 2px; }
-      #key-grid { gap: 2px; }
+      .sym-btn { font-size: 0.55rem; width: 22px; height: 20px; }
+      #symbol-bar { min-height: 24px; gap: 3px; padding: 2px 2px 4px 2px; }
+      #key-grid { gap: 3px; }
     }
 
     @media (max-height: 500px) {
       #screen-container { height: 18%; min-height: 40px; padding: 4px 8px; }
       #screen { font-size: 0.8rem; line-height: 1.3; }
       .key-btn { font-size: 0.6rem; min-height: 16px; border-radius: 6px; }
-      .sym-btn { font-size: 0.5rem; padding: 0px 3px; min-width: 14px; }
-      #key-grid { gap: 1px; }
+      .sym-btn { font-size: 0.5rem; width: 18px; height: 16px; }
+      #key-grid { gap: 2px; }
     }
 
     ::selection {
@@ -387,6 +432,7 @@
 
   <!-- KEYBOARD -->
   <div id="keyboard">
+    <div id="glide-trail"></div>
     <div id="symbol-bar"></div>
     <div id="key-grid"></div>
   </div>
@@ -420,19 +466,42 @@
     const codeInput = document.getElementById('code-input');
     const loadStatus = document.getElementById('load-status');
     const gearBtn = document.getElementById('gear');
+    const glideTrail = document.getElementById('glide-trail');
 
-    const DEFAULT_SYMBOLS = [
-      '{', '}', '(', ')', '[', ']', '<', '>', '=', '!', '?',
-      '&', '|', '^', '~', '#', '@', '$', '%', '*', '+', '-',
-      '_', '/', '\\', ';', ':', ',', '.', '`', '"', "'"
+    // All symbols - jumbled order
+    const SYMBOLS = [
+      '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
+      '-', '_', '=', '+', '[', ']', '{', '}', '\\', '|', ';',
+      ':', '"', "'", '<', '>', ',', '.', '/', '?', '`'
     ];
 
-    const KEY_ROWS = [
-      ['1','2','3','4','5','6','7','8','9','0','-','='],
-      ['q','w','e','r','t','y','u','i','o','p','[',']'],
-      ['a','s','d','f','g','h','j','k','l',';','\'','\\'],
-      ['z','x','c','v','b','n','m',',','.','/','`'],
+    // All characters - jumbled (alphabets, numbers, symbols mixed)
+    const ALL_CHARS = [
+      '7', 'w', 'f', '2', 'k', 'z', '9', 'p', 'm', 'q', 'x', 'd',
+      '4', 'r', 'h', 'j', '3', 'y', 'u', 'c', 'v', 'b', 'n', '8',
+      'e', 't', 'i', 'o', 'a', 's', 'g', 'l', '6', '0', '1', '5',
+      '=', '-', '_', '+', '[', ']', '{', '}', '\\', '|', ';', ':',
+      '"', "'", '<', '>', ',', '.', '/', '?', '`', '~', '!', '@',
+      '#', '$', '%', '^', '&', '*', '(', ')'
     ];
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    // Jumble the arrays
+    const jumbledSymbols = shuffleArray([...SYMBOLS]);
+    const jumbledChars = shuffleArray([...ALL_CHARS]);
+
+    // Glide typing state
+    let isGliding = false;
+    let lastGlideX = 0;
+    let lastGlideY = 0;
+    let glideTimeout = null;
 
     function updateScreen() {
       displayString = fullCode.substring(0, currentIndex);
@@ -469,64 +538,222 @@
       settingsPanel.classList.remove('active');
     }
 
-    function buildSymbolBar(symbolsArray) {
+    // Glide trail effects
+    function createGlideDot(x, y) {
+      const dot = document.createElement('div');
+      dot.className = 'glide-dot';
+      dot.style.left = x + 'px';
+      dot.style.top = y + 'px';
+      glideTrail.appendChild(dot);
+      setTimeout(() => {
+        if (dot.parentNode) dot.remove();
+      }, 700);
+    }
+
+    function getRelativePos(e, element) {
+      const rect = element.getBoundingClientRect();
+      let clientX, clientY;
+      if (e.touches) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    // Handle glide start
+    function startGlide(e) {
+      isGliding = true;
+      const pos = getRelativePos(e, glideTrail);
+      lastGlideX = pos.x;
+      lastGlideY = pos.y;
+      createGlideDot(pos.x, pos.y);
+    }
+
+    // Handle glide move
+    function moveGlide(e) {
+      if (!isGliding) return;
+      e.preventDefault();
+      const pos = getRelativePos(e, glideTrail);
+      // Add dot if moved enough
+      const dx = pos.x - lastGlideX;
+      const dy = pos.y - lastGlideY;
+      if (Math.sqrt(dx*dx + dy*dy) > 8) {
+        createGlideDot(pos.x, pos.y);
+        lastGlideX = pos.x;
+        lastGlideY = pos.y;
+      }
+    }
+
+    // Handle glide end
+    function endGlide(e) {
+      if (isGliding) {
+        isGliding = false;
+        // Add one final dot
+        const pos = getRelativePos(e, glideTrail);
+        createGlideDot(pos.x, pos.y);
+        // Type the character from the last touched button
+        const target = e.target.closest ? e.target.closest('.key-btn, .sym-btn') : null;
+        if (target && target.dataset && target.dataset.char !== undefined) {
+          typeNextChar();
+        }
+      }
+    }
+
+    // Setup glide events on keyboard
+    const keyboard = document.getElementById('keyboard');
+
+    // Touch events for glide
+    keyboard.addEventListener('touchstart', (e) => {
+      // Check if touch started on a button
+      const btn = e.target.closest('.key-btn, .sym-btn');
+      if (btn) {
+        startGlide(e);
+        // Also trigger immediate type on tap (non-glide)
+        // But we'll let glide handle it on end
+      }
+    }, { passive: true });
+
+    keyboard.addEventListener('touchmove', (e) => {
+      if (isGliding) {
+        moveGlide(e);
+      }
+    }, { passive: false });
+
+    keyboard.addEventListener('touchend', (e) => {
+      if (isGliding) {
+        // Get the button that was touched
+        const touch = e.changedTouches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        const btn = element ? element.closest('.key-btn, .sym-btn') : null;
+        if (btn) {
+          // Add final dot at touch end position
+          const rect = glideTrail.getBoundingClientRect();
+          createGlideDot(touch.clientX - rect.left, touch.clientY - rect.top);
+          // Type the character
+          typeNextChar();
+        }
+        isGliding = false;
+      }
+    }, { passive: true });
+
+    // Mouse events for desktop glide simulation
+    let mouseDown = false;
+    keyboard.addEventListener('mousedown', (e) => {
+      const btn = e.target.closest('.key-btn, .sym-btn');
+      if (btn) {
+        mouseDown = true;
+        startGlide(e);
+      }
+    });
+
+    keyboard.addEventListener('mousemove', (e) => {
+      if (mouseDown) {
+        moveGlide(e);
+      }
+    });
+
+    keyboard.addEventListener('mouseup', (e) => {
+      if (mouseDown) {
+        mouseDown = false;
+        const btn = e.target.closest('.key-btn, .sym-btn');
+        if (btn) {
+          const rect = glideTrail.getBoundingClientRect();
+          createGlideDot(e.clientX - rect.left, e.clientY - rect.top);
+          typeNextChar();
+        }
+        isGliding = false;
+      }
+    });
+
+    keyboard.addEventListener('mouseleave', () => {
+      if (mouseDown) {
+        mouseDown = false;
+        isGliding = false;
+      }
+    });
+
+    // Also support regular click as fallback
+    function handleButtonClick(e) {
+      const btn = e.target.closest('.key-btn, .sym-btn');
+      if (btn && !e.touches) {
+        // For mouse click without drag
+        const rect = glideTrail.getBoundingClientRect();
+        createGlideDot(e.clientX - rect.left, e.clientY - rect.top);
+        typeNextChar();
+      }
+    }
+
+    // Build symbol bar
+    function buildSymbolBar() {
       symbolBar.innerHTML = '';
-      symbolsArray.forEach(sym => {
+      jumbledSymbols.forEach(sym => {
         const btn = document.createElement('button');
         btn.className = 'sym-btn';
         btn.textContent = sym;
         btn.dataset.char = sym;
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
+          // For click fallback
+          const rect = glideTrail.getBoundingClientRect();
+          createGlideDot(e.clientX - rect.left, e.clientY - rect.top);
           typeNextChar();
         });
-        btn.addEventListener('touchstart', (e) => {
-          e.preventDefault();
-          typeNextChar();
-        }, { passive: false });
         symbolBar.appendChild(btn);
       });
     }
 
+    // Build key grid
     function buildKeyGrid() {
       keyGrid.innerHTML = '';
 
-      const allKeys = KEY_ROWS.flat();
-      allKeys.forEach(key => {
+      jumbledChars.forEach(char => {
         const btn = document.createElement('button');
         btn.className = 'key-btn';
-        btn.textContent = key;
-        btn.dataset.char = key;
+        btn.textContent = char;
+        btn.dataset.char = char;
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
+          const rect = glideTrail.getBoundingClientRect();
+          createGlideDot(e.clientX - rect.left, e.clientY - rect.top);
           typeNextChar();
         });
-        btn.addEventListener('touchstart', (e) => {
-          e.preventDefault();
-          typeNextChar();
-        }, { passive: false });
         keyGrid.appendChild(btn);
       });
 
+      // SPACE
       const spaceBtn = document.createElement('button');
       spaceBtn.className = 'key-btn space';
-      spaceBtn.textContent = '␣ SPACE';
-      spaceBtn.addEventListener('click', () => typeNextChar());
-      spaceBtn.addEventListener('touchstart', (e) => { e.preventDefault(); typeNextChar(); }, { passive: false });
+      spaceBtn.textContent = '␣';
+      spaceBtn.dataset.char = ' ';
+      spaceBtn.addEventListener('click', () => {
+        typeNextChar();
+      });
       keyGrid.appendChild(spaceBtn);
 
+      // BACKSPACE
       const backBtn = document.createElement('button');
       backBtn.className = 'key-btn backspace';
       backBtn.textContent = '⌫';
-      backBtn.addEventListener('click', backspace);
-      backBtn.addEventListener('touchstart', (e) => { e.preventDefault(); backspace(); }, { passive: false });
+      backBtn.dataset.char = '⌫';
+      backBtn.addEventListener('click', () => {
+        backspace();
+      });
       keyGrid.appendChild(backBtn);
 
+      // CLEAR
       const clearBtn = document.createElement('button');
       clearBtn.className = 'key-btn clear';
-      clearBtn.textContent = '✕ CLR';
-      clearBtn.addEventListener('click', clearScreen);
-      clearBtn.addEventListener('touchstart', (e) => { e.preventDefault(); clearScreen(); }, { passive: false });
+      clearBtn.textContent = '✕';
+      clearBtn.dataset.char = '✕';
+      clearBtn.addEventListener('click', () => {
+        clearScreen();
+      });
       keyGrid.appendChild(clearBtn);
     }
 
@@ -542,7 +769,7 @@
     }
 
     function init() {
-      buildSymbolBar(DEFAULT_SYMBOLS);
+      buildSymbolBar();
       buildKeyGrid();
 
       const demoCode = `<!DOCTYPE html>
