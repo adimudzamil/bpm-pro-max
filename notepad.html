@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Text to File Saver</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 400px;
+            padding: 14px 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            resize: vertical;
+            transition: border-color 0.2s;
+            background: #fafbfc;
+            color: #1f2937;
+            tab-size: 2;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+            align-items: center;
+        }
+
+        .controls label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .controls input[type="text"] {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px 14px;
+            font-size: 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            transition: border-color 0.2s;
+            background: white;
+        }
+
+        .controls input[type="text"]:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .controls .file-ext {
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+            padding-right: 4px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .btn-success {
+            background: #059669;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #047857;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+
+        .stats {
+            margin-top: 14px;
+            font-size: 13px;
+            color: #6b7280;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stats span {
+            background: #f3f4f6;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .alert {
+            margin-top: 12px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .alert-success {
+            display: block;
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-error {
+            display: block;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .quick-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .quick-presets button {
+            padding: 4px 12px;
+            font-size: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: #374151;
+        }
+
+        .quick-presets button:hover {
+            background: #f3f4f6;
+            border-color: #4f46e5;
+            color: #4f46e5;
+        }
+
+        .quick-presets button:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 16px;
+            }
+
+            textarea {
+                height: 300px;
+                font-size: 12px;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls input[type="text"] {
+                min-width: unset;
+            }
+
+            .btn-group {
+                justify-content: stretch;
+            }
+
+            .btn {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📄 Text to File Saver</h1>
+        <p class="subtitle">Paste any text, choose a filename, and save as .ics, .txt, .json, or any extension</p>
+
+        <textarea id="textInput" placeholder="Paste your text here...">BEGIN:VCALENDAR
+VERSION:2.0
+PRODID://dartclub//ical/serializer//EN
+BEGIN:VEVENT
+DTSTART:20260801T120000
+DTEND:20260801T200000
+SUMMARY:Sample Event
+END:VEVENT
+END:VCALENDAR</textarea>
+
+        <div class="controls">
+            <label for="fileName">Filename:</label>
+            <input type="text" id="fileName" value="schedule" />
+            <span class="file-ext">.</span>
+            <input type="text" id="fileExt" value="ics" style="flex:0.4; min-width:60px;" />
+            <div class="btn-group">
+                <button class="btn btn-primary" id="saveBtn">💾 Save File</button>
+                <button class="btn btn-secondary" id="clearBtn">✕ Clear</button>
+            </div>
+        </div>
+
+        <div class="quick-presets">
+            <span style="font-size:12px;color:#6b7280;margin-right:4px;">Quick presets:</span>
+            <button data-ext="ics" data-name="schedule">.ics</button>
+            <button data-ext="txt" data-name="notes">.txt</button>
+            <button data-ext="json" data-name="data">.json</button>
+            <button data-ext="csv" data-name="export">.csv</button>
+            <button data-ext="html" data-name="page">.html</button>
+            <button data-ext="xml" data-name="config">.xml</button>
+            <button data-ext="md" data-name="readme">.md</button>
+        </div>
+
+        <div class="stats">
+            <span id="charCount">Characters: 0</span>
+            <span id="lineCount">Lines: 0</span>
+            <span id="wordCount">Words: 0</span>
+        </div>
+
+        <div id="alert" class="alert"></div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const fileName = document.getElementById('fileName');
+        const fileExt = document.getElementById('fileExt');
+        const saveBtn = document.getElementById('saveBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const alertBox = document.getElementById('alert');
+        const charCount = document.getElementById('charCount');
+        const lineCount = document.getElementById('lineCount');
+        const wordCount = document.getElementById('wordCount');
+
+        // Update stats
+        function updateStats() {
+            const text = textInput.value;
+            charCount.textContent = `Characters: ${text.length}`;
+            lineCount.textContent = `Lines: ${text.split('\n').length}`;
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            wordCount.textContent = `Words: ${words}`;
+        }
+
+        textInput.addEventListener('input', updateStats);
+        updateStats();
+
+        // Show alert
+        function showAlert(message, type = 'success') {
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type}`;
+            setTimeout(() => {
+                alertBox.className = 'alert';
+            }, 5000);
+        }
+
+        // Save file
+        function saveFile() {
+            const text = textInput.value;
+            if (!text.trim()) {
+                showAlert('⚠️ Please paste some text first!', 'error');
+                return;
+            }
+
+            const name = fileName.value.trim() || 'file';
+            const ext = fileExt.value.trim() || 'txt';
+            const fullName = `${name}.${ext}`;
+
+            try {
+                const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fullName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                showAlert(`✅ File saved as "${fullName}" (${text.length} characters)`, 'success');
+            } catch (err) {
+                showAlert(`❌ Error: ${err.message}`, 'error');
+            }
+        }
+
+        // Clear text
+        function clearText() {
+            if (textInput.value && !confirm('Clear all text?')) return;
+            textInput.value = '';
+            updateStats();
+            showAlert('🗑️ Cleared', 'success');
+        }
+
+        // Preset buttons
+        document.querySelectorAll('.quick-presets button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const ext = btn.dataset.ext;
+                const name = btn.dataset.name;
+                fileExt.value = ext;
+                fileName.value = name;
+                showAlert(`🔧 Set to ${name}.${ext}`, 'success');
+            });
+        });
+
+        // Event listeners
+        saveBtn.addEventListener('click', saveFile);
+        clearBtn.addEventListener('click', clearText);
+
+        // Keyboard shortcuts: Ctrl+S to save
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveFile();
+            }
+        });
+
+        // Auto-detect extension from content (simple heuristic)
+        textInput.addEventListener('input', () => {
+            const text = textInput.value;
+            if (text.startsWith('BEGIN:VCALENDAR')) {
+                fileExt.value = 'ics';
+                fileName.value = 'schedule';
+            } else if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
+                // Don't auto-change if user already set something else
+            }
+        });
+    </script>
+
+</body>
+</html>
