@@ -63,24 +63,12 @@
             padding: 8px 12px;
             flex-wrap: wrap;
         }
-        .control-bar-options {
+        .control-bar-secondary {
             display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
             border-top: 1px solid #e9ecef;
         }
-        .control-bar.collapsed .control-bar-options {
+        .control-bar.collapsed .control-bar-secondary {
             display: none;
-        }
-        .mode-options-label {
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            padding: 3px 8px;
-            border-radius: 10px;
-            white-space: nowrap;
         }
         .more-toggle {
             padding: 8px 10px;
@@ -265,11 +253,8 @@
             color: #fff;
             border-color: #007bff;
         }
-        .mode-btn[data-mode="view"].active { background: #2563eb; border-color: #2563eb; }
-        .mode-btn[data-mode="color"].active { background: #9333ea; border-color: #9333ea; }
-        .mode-btn[data-mode="edit"].active { background: #475569; border-color: #475569; }
-        .mode-btn[data-mode="order"].active { background: #d97706; border-color: #d97706; }
         .swap-btn {
+            display: none;
             padding: 6px 12px;
             border-radius: 6px;
             border: 1px solid #ffe08a;
@@ -285,6 +270,7 @@
             border-color: #28a745;
         }
         .swap-hint {
+            display: none;
             font-size: 11px;
             color: #856404;
             margin-left: 4px;
@@ -298,6 +284,20 @@
             font-size: 11px;
             color: #6c757d;
         }
+        .tier-chip-row {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .tier-chip {
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid rgba(0,0,0,0.15);
+        }
+
         .single-chart-container {
             width: 100%;
             height: 100%;
@@ -974,6 +974,11 @@
                 margin: 5mm;
             }
 
+            @page landscape {
+                size: A4 landscape;
+                margin: 5mm;
+            }
+
             .order-fill-overlay {
                 display: none !important;
             }
@@ -988,6 +993,12 @@
                 font-size: inherit !important;
             }
 
+            body.landscape-print {
+                width: 297mm !important;
+                height: 210mm !important;
+                padding: 5mm !important;
+            }
+
             .control-bar, .panel-overlay, .popup-overlay {
                 display: none !important;
             }
@@ -996,6 +1007,15 @@
                 padding: 5mm;
                 width: 100% !important;
                 height: 100% !important;
+                transform-origin: top left;
+            }
+
+            body.landscape-print .single-chart-container {
+                transform: scale(calc(297mm / 210mm)) !important;
+                transform-origin: top left;
+                width: 210mm !important;
+                height: 297mm !important;
+                padding: 5mm !important;
             }
 
             .seat-box {
@@ -1047,18 +1067,6 @@
                 min-height: 50px !important;
             }
         }
-
-        /* Reacts to the browser's real print orientation, not just our own
-           dropdown/button — this way it fills the page correctly whether
-           landscape was chosen via our button or set manually in the print
-           dialog itself. Default stays portrait either way. */
-        @media print and (orientation: landscape) {
-            body {
-                width: 297mm !important;
-                height: 210mm !important;
-                padding: 5mm !important;
-            }
-        }
     </style>
 </head>
 <body>
@@ -1071,17 +1079,59 @@
                 <button type="button" class="mode-btn" data-mode="edit" onclick="setMode('edit')">✏️ Edit</button>
                 <button type="button" class="mode-btn" data-mode="order" onclick="setMode('order')">🍽️ Order</button>
             </div>
+            <button type="button" id="swapSeatsBtn" class="swap-btn" onclick="toggleSwapMode()">🔀 Swap</button>
+            <span id="swapHint" class="swap-hint">Tap seat A, then B</span>
 
             <div class="control-spacer"></div>
 
-            <button type="button" class="more-toggle" onclick="toggleMoreControls()" aria-label="Toggle mode options">⚙️</button>
+            <button type="button" class="more-toggle" onclick="toggleMoreControls()" aria-label="More settings">⚙️</button>
             <button class="print-button" onclick="handlePrint()">
                 <span style="font-size: 16px;">🖨️</span> Print
             </button>
         </div>
 
-        <div class="control-bar-row control-bar-options" id="modeOptionsRow">
-            <!-- Populated by renderModeOptions() based on the active mode -->
+        <div class="control-bar-row control-bar-secondary">
+            <div class="control-group">
+                <label for="fontSizeSlider">Font Size:</label>
+                <input type="range" id="fontSizeSlider" class="font-slider" min="8" max="20" value="12" step="1">
+                <span id="fontSizeValue" class="font-value">12px</span>
+            </div>
+
+            <div class="control-group">
+                <label for="aftViewToggle">Aft View:</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="aftViewToggle" onchange="toggleAftView()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <button type="button" class="theme-reset-btn" onclick="resetThemeToDefaults()">Reset colours</button>
+            <button type="button" class="theme-reset-btn" onclick="exportTheme()">💾 Backup colours</button>
+            <button type="button" class="theme-reset-btn" onclick="triggerImportTheme()">📂 Restore colours</button>
+            <input type="file" id="themeImportInput" accept="application/json" style="display:none;" onchange="importThemeFromFile(event)">
+
+            <div class="control-group" id="tierColorChipsGroup" style="display:none;">
+                <label>Tier colours:</label>
+                <div id="tierColorChips" class="tier-chip-row"></div>
+            </div>
+
+            <div class="control-spacer"></div>
+
+            <div class="print-options">
+                <select id="orientationSelect">
+                    <option value="portrait">Portrait</option>
+                    <option value="landscape">Landscape</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="control-bar-row control-bar-order" id="orderControlRow" style="display:none;">
+            <div class="control-group">
+                <label>Service:</label>
+                <div id="serviceTabRow" class="service-tab-row"></div>
+                <button type="button" class="service-add-btn" onclick="addMealService()">+</button>
+            </div>
+            <button type="button" class="meal-menu-btn" onclick="openMealMenuSetup()">🍽️ Meal Menu</button>
         </div>
     </div>
 
@@ -1264,6 +1314,7 @@
                     theme.orderColors = theme.orderColors || {};
                     saveTheme();
                     applyTheme();
+                    if (currentMode === 'color') renderTierColorChips();
                     showToast('\u2713 Colour theme restored');
                 } catch (err) {
                     console.error('Theme import failed', err);
@@ -1371,109 +1422,43 @@
         let currentMode = 'view';
         let swapModeActive = false;
         let swapFirstSeat = null;
-        let showAllTiers = false;
-        let printOrientation = 'portrait';
         const SECTION = 'main'; // single chart, kept as a constant for parity with sc-737.html's dual-chart functions
-
-        const MODE_META = {
-            view:  { label: 'VIEW',    color: '#2563eb' },
-            color: { label: 'COLOURS', color: '#9333ea' },
-            edit:  { label: 'EDIT',    color: '#475569' },
-            order: { label: 'ORDER',   color: '#d97706' }
-        };
 
         function setMode(mode) {
             currentMode = mode;
             swapModeActive = false;
-            swapFirstSeat = null;
+            clearSwapSelection();
             document.querySelectorAll('.mode-btn').forEach(function (b) {
                 b.classList.toggle('active', b.dataset.mode === mode);
             });
+            document.getElementById('swapSeatsBtn').style.display = mode === 'edit' ? 'inline-flex' : 'none';
+            document.getElementById('swapSeatsBtn').classList.remove('active');
+            document.getElementById('swapHint').style.display = 'none';
             document.body.classList.toggle('color-mode', mode === 'color');
             document.body.classList.toggle('edit-mode', mode === 'edit');
             document.body.classList.toggle('order-mode', mode === 'order');
-            renderModeOptions();
+            document.getElementById('tierColorChipsGroup').style.display = mode === 'color' ? 'flex' : 'none';
+            if (mode === 'color') renderTierColorChips();
+            document.getElementById('orderControlRow').style.display = mode === 'order' ? 'flex' : 'none';
+            if (mode === 'order') {
+                renderServiceTabs();
+            }
             refreshAllOrderOverlays();
         }
 
-        function modeOptionsLabel(mode) {
-            const meta = MODE_META[mode];
-            return '<span class="mode-options-label" style="background:' + meta.color + '1a; color:' + meta.color + ';">' + meta.label + '</span>';
-        }
-
-        function renderModeOptions() {
-            const row = document.getElementById('modeOptionsRow');
-            if (!row) return;
-
-            if (currentMode === 'view') {
-                row.innerHTML = modeOptionsLabel('view') +
-                    '<div class="control-group">' +
-                        '<label for="fontSizeSlider">Font Size:</label>' +
-                        '<input type="range" id="fontSizeSlider" class="font-slider" min="8" max="20" step="1" value="' + currentFontSize + '" oninput="adjustFontSize(parseInt(this.value))">' +
-                        '<span id="fontSizeValue" class="font-value">' + currentFontSize + 'px</span>' +
-                    '</div>' +
-                    '<div class="control-group">' +
-                        '<label for="aftViewToggle">Aft View:</label>' +
-                        '<label class="toggle-switch"><input type="checkbox" id="aftViewToggle" ' + (isAftView ? 'checked' : '') + ' onchange="toggleAftView()"><span class="toggle-slider"></span></label>' +
-                    '</div>' +
-                    '<div class="print-options">' +
-                        '<select id="orientationSelect" onchange="printOrientation=this.value;">' +
-                            '<option value="portrait"' + (printOrientation === 'portrait' ? ' selected' : '') + '>Portrait</option>' +
-                            '<option value="landscape"' + (printOrientation === 'landscape' ? ' selected' : '') + '>Landscape</option>' +
-                        '</select>' +
-                    '</div>';
-            } else if (currentMode === 'color') {
-                row.innerHTML = modeOptionsLabel('color') +
-                    '<button type="button" class="theme-reset-btn" onclick="resetThemeToDefaults()">Reset colours</button>' +
-                    '<button type="button" class="theme-reset-btn" onclick="exportTheme()">💾 Backup colours</button>' +
-                    '<button type="button" class="theme-reset-btn" onclick="triggerImportTheme()">📂 Restore colours</button>' +
-                    '<input type="file" id="themeImportInput" accept="application/json" style="display:none;" onchange="importThemeFromFile(event)">' +
-                    '<span style="font-size:11px;color:#94a3b8;">Tap any coloured badge on the chart to recolour it</span>';
-            } else if (currentMode === 'edit') {
-                row.innerHTML = modeOptionsLabel('edit') +
-                    '<button type="button" id="swapSeatsBtn" class="swap-btn" onclick="toggleSwapMode()">🔀 Swap</button>' +
-                    '<span id="swapHint" class="swap-hint" style="display:none;">Tap seat A, then B</span>' +
-                    '<div class="control-group">' +
-                        '<label for="showAllTiersToggle">Show all tiers:</label>' +
-                        '<label class="toggle-switch"><input type="checkbox" id="showAllTiersToggle" ' + (showAllTiers ? 'checked' : '') + ' onchange="toggleShowAllTiers()"><span class="toggle-slider"></span></label>' +
-                    '</div>';
-            } else if (currentMode === 'order') {
-                row.innerHTML = modeOptionsLabel('order') +
-                    '<div class="control-group">' +
-                        '<label>Service:</label>' +
-                        '<div id="serviceTabRow" class="service-tab-row"></div>' +
-                        '<button type="button" class="service-add-btn" onclick="addMealService()">+</button>' +
-                    '</div>' +
-                    '<button type="button" class="meal-menu-btn" onclick="openMealMenuSetup()">🍽️ Meal Menu</button>';
-                renderServiceTabs();
-            }
-        }
-
-        function toggleShowAllTiers() {
-            const toggle = document.getElementById('showAllTiersToggle');
-            showAllTiers = toggle.checked;
-            localStorage.setItem('scUIShowAllTiers', showAllTiers ? 'true' : 'false');
-            refreshSeatTierDisplay();
-        }
-
-        function refreshSeatTierDisplay() {
-            if (!chartData || !chartData.passengers) return;
-            const container = document.getElementById('mainSeatContainer');
-            if (!container) return;
-            chartData.passengers.forEach(function (p) {
-                if (!p.seat) return;
-                const seatBox = container.querySelector('[data-seat="' + normalizeSeatNumber(p.seat) + '"]');
-                if (seatBox) populateSeatData(p, seatBox);
-            });
+        function renderTierColorChips() {
+            const holder = document.getElementById('tierColorChips');
+            holder.innerHTML = Object.keys(DEFAULT_TIER_COLORS).map(function (t) {
+                const c = theme.tiers[t] || DEFAULT_TIER_COLORS[t];
+                return '<span class="tier-chip" style="background:' + c.bg + ';color:' + c.text + ';" onclick="openTierColorPanel(\'' + t + '\')">' + t + '</span>';
+            }).join('');
         }
 
         function toggleSwapMode() {
             swapModeActive = !swapModeActive;
             clearSwapSelection();
-            const btn = document.getElementById('swapSeatsBtn');
-            const hint = document.getElementById('swapHint');
-            if (btn) btn.classList.toggle('active', swapModeActive);
-            if (hint) hint.style.display = swapModeActive ? 'inline-block' : 'none';
+            document.getElementById('swapSeatsBtn').classList.toggle('active', swapModeActive);
+            document.getElementById('swapHint').style.display = swapModeActive ? 'inline-block' : 'none';
         }
 
         function toggleMoreControls() {
@@ -1602,6 +1587,7 @@
             theme.tiers[tierCode][prop] = val;
             saveTheme();
             applyTheme();
+            if (currentMode === 'color') renderTierColorChips();
         }
 
         function openMealColorPanel(code) {
@@ -2480,8 +2466,7 @@
         function adjustFontSize(fontSize) {
             currentFontSize = fontSize;
             localStorage.setItem('scUIFontSize', fontSize);
-            const fsv = document.getElementById('fontSizeValue');
-            if (fsv) fsv.textContent = fontSize + 'px';
+            document.getElementById('fontSizeValue').textContent = fontSize + 'px';
             document.body.style.fontSize = fontSize + 'px';
             const scale = fontSize / 12;
             document.querySelectorAll('.seat-box').forEach(box => {
@@ -2550,7 +2535,7 @@
             const title = passenger.title || '';
             clearTierClasses(seatBox);
             let seatNumberHTML = normalizedSeat;
-            const DISPLAYED_TIERS = showAllTiers ? Object.keys(DEFAULT_TIER_COLORS) : ['EMER', 'PLAT'];
+            const DISPLAYED_TIERS = ['EMER', 'PLAT'];
             if (passenger.tier && DISPLAYED_TIERS.includes(passenger.tier)) {
                 seatNumberHTML += ` <span class="tier tier-${passenger.tier}">*${passenger.tier}*</span>`;
                 seatBox.classList.add('tier-' + passenger.tier);
@@ -2649,26 +2634,14 @@
             console.log(`Loaded ${passengers.length} passengers`);
         }
 
-        function setPrintPageSize(isLandscape) {
-            let styleTag = document.getElementById('dynamicPageSizeStyle');
-            if (!styleTag) {
-                styleTag = document.createElement('style');
-                styleTag.id = 'dynamicPageSizeStyle';
-                document.head.appendChild(styleTag);
-            }
-            // This hints the print dialog's default orientation. Whether or not the
-            // browser honours it, the @media print and (orientation: landscape) rule
-            // in the stylesheet reacts to whatever orientation is actually used, so
-            // the layout fills the page correctly either way.
-            styleTag.textContent = '@media print { @page { size: A4 ' + (isLandscape ? 'landscape' : 'portrait') + '; margin: 5mm; } }';
-        }
-
         function handlePrint() {
-            const isLandscape = printOrientation === 'landscape';
-            setPrintPageSize(isLandscape);
+            const orientationSelect = document.getElementById('orientationSelect');
+            const isLandscape = orientationSelect.value === 'landscape';
+            if (isLandscape) { document.body.classList.add('landscape-print'); } else { document.body.classList.remove('landscape-print'); }
             document.documentElement.style.setProperty('--print-font-size', currentFontSize + 'px');
             setTimeout(() => {
                 window.print();
+                setTimeout(() => { document.body.classList.remove('landscape-print'); }, 100);
             }, 100);
         }
 
@@ -2737,18 +2710,21 @@
 
                 const savedFont = parseInt(localStorage.getItem('scUIFontSize')) || 12;
                 const savedAft = localStorage.getItem('scUIAftView') === 'true';
-                const savedShowAllTiers = localStorage.getItem('scUIShowAllTiers') === 'true';
                 currentFontSize = savedFont;
                 isAftView = savedAft;
-                showAllTiers = savedShowAllTiers;
+
+                document.getElementById('fontSizeSlider').value = savedFont;
+                document.getElementById('aftViewToggle').checked = savedAft;
 
                 generateSeatRows('mainSeatContainer');
-                renderModeOptions(); // builds the View options row (default mode), including the font/aft controls
 
                 adjustFontSize(currentFontSize);
                 if (isAftView) {
                     applyAftViewToContainer('mainSeatContainer', true);
                 }
+
+                const fontSizeSlider = document.getElementById('fontSizeSlider');
+                fontSizeSlider.addEventListener('input', function(e) { adjustFontSize(parseInt(e.target.value)); });
 
                 loadInitialData();
                 if (window.opener) {
