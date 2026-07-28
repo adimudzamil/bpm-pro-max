@@ -964,28 +964,6 @@
                 display: none !important;
             }
 
-            /* Print is the pre-flight handout: only seat number, title, tier,
-               name, and the dietary meal code (if any). Everything added via
-               Edit mode (special handling codes, remarks, INF/EXT summary) or
-               Order mode (meal choices, service summary) is screen-only. */
-            .special-code-part,
-            .meal-sep {
-                display: none !important;
-            }
-
-            .header-chips,
-            .meal-order-summary {
-                display: none !important;
-            }
-
-            .seat-number-container {
-                visibility: visible !important;
-            }
-
-            .seat-box.swap-selected {
-                outline: none !important;
-            }
-
             body {
                 padding: 0;
                 margin: 0;
@@ -2646,17 +2624,8 @@
 
         function handlePrint() {
             document.documentElement.style.setProperty('--print-font-size', currentFontSize + 'px');
-            const wasShowAllTiers = showAllTiers;
-            if (wasShowAllTiers) {
-                showAllTiers = false;
-                refreshSeatTierDisplay();
-            }
             setTimeout(() => {
                 window.print();
-                if (wasShowAllTiers) {
-                    showAllTiers = true;
-                    refreshSeatTierDisplay();
-                }
             }, 100);
         }
 
