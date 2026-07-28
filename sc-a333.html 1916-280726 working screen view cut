@@ -41,7 +41,7 @@
             padding: 5mm;
             background: white;
             width: 210mm;
-            min-height: 297mm;
+            height: 297mm;
             margin: 0 auto;
             transition: all 0.3s ease;
             font-size: 12px;
@@ -410,7 +410,7 @@
 
         .seat-grid {
             flex: 1;
-            overflow: visible;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
         }
@@ -982,10 +982,6 @@
                 padding: 5mm;
                 width: 100% !important;
                 height: 100% !important;
-            }
-
-            .seat-grid {
-                overflow: hidden !important;
             }
 
             .seat-box {
