@@ -293,9 +293,9 @@
 
         .header {
             text-align: center;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             border: 2px solid #000;
-            padding: 6px;
+            padding: 8px;
             transition: all 0.3s ease;
             flex-shrink: 0;
         }
@@ -303,7 +303,7 @@
         .header h1 {
             font-size: 16px;
             font-weight: bold;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             transition: all 0.3s ease;
             text-align: left;
         }
@@ -454,7 +454,7 @@
             background: var(--sc-seat-bg);
             padding: 0;
             transition: all 0.3s ease;
-            min-height: 50px;
+            min-height: 55px;
             position: relative;
             width: 100%;
             display: flex;
@@ -1026,11 +1026,11 @@
             }
 
             .row {
-                margin-bottom: 2px !important;
+                margin-bottom: 3px !important;
             }
 
             .seat-box {
-                min-height: 46px !important;
+                min-height: 50px !important;
             }
         }
     </style>
@@ -1382,7 +1382,7 @@
                 row.innerHTML = modeOptionsLabel('view') +
                     '<div class="control-group">' +
                         '<label for="fontSizeSlider">Font Size:</label>' +
-                        '<input type="range" id="fontSizeSlider" class="font-slider" min="8" max="17" step="1" value="' + currentFontSize + '" oninput="adjustFontSize(parseInt(this.value))">' +
+                        '<input type="range" id="fontSizeSlider" class="font-slider" min="8" max="20" step="1" value="' + currentFontSize + '" oninput="adjustFontSize(parseInt(this.value))">' +
                         '<span id="fontSizeValue" class="font-value">' + currentFontSize + 'px</span>' +
                     '</div>' +
                     '<div class="control-group">' +
@@ -2454,7 +2454,7 @@
             document.body.style.fontSize = fontSize + 'px';
             const scale = fontSize / 12;
             document.querySelectorAll('.seat-box').forEach(box => {
-                box.style.minHeight = (50 * scale) + 'px';
+                box.style.minHeight = (55 * scale) + 'px';
                 const nameLines = box.querySelectorAll('.name-line');
                 nameLines.forEach(line => {
                     line.style.height = (14 * scale) + 'px';
@@ -2475,7 +2475,7 @@
                 });
                 const seatNumberContainer = box.querySelector('.seat-number-container');
                 if (seatNumberContainer) {
-                    seatNumberContainer.style.padding = (1.5 * scale) + 'px ' + (4 * scale) + 'px';
+                    seatNumberContainer.style.padding = (2 * scale) + 'px ' + (4 * scale) + 'px';
                     const seatNumber = seatNumberContainer.querySelector('.seat-number');
                     if (seatNumber) {
                         seatNumber.style.fontSize = (1.1 * fontSize) + 'px';
@@ -2483,7 +2483,7 @@
                 }
             });
             document.querySelectorAll('.row').forEach(row => {
-                row.style.marginBottom = (3 * scale) + 'px';
+                row.style.marginBottom = (4 * scale) + 'px';
             });
         }
 
@@ -2688,7 +2688,7 @@
                 loadTheme();
                 applyTheme();
 
-                const savedFont = Math.min(17, parseInt(localStorage.getItem('scUIFontSize')) || 12);
+                const savedFont = parseInt(localStorage.getItem('scUIFontSize')) || 12;
                 const savedAft = localStorage.getItem('scUIAftView') === 'true';
                 const savedShowAllTiers = localStorage.getItem('scUIShowAllTiers') === 'true';
                 currentFontSize = savedFont;
