@@ -12,6 +12,7 @@
         }
 
         @page {
+            size: A4;
             margin: 5mm;
         }
 
@@ -224,6 +225,21 @@
 
         .print-button:active {
             transform: translateY(0);
+        }
+
+        .print-options {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .print-options select {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            background: white;
+            font-size: 12px;
+            cursor: pointer;
         }
 
         .control-spacer {
@@ -839,7 +855,6 @@
             margin-top: 4px;
             font-size: 10px;
             color: #475569;
-            text-align: left;
         }
         .meal-order-summary strong { color: #1e293b; }
         .meal-order-summary .pen-gap {
@@ -955,6 +970,7 @@
 
         @media print {
             @page {
+                size: A4;
                 margin: 5mm;
             }
 
@@ -1356,6 +1372,7 @@
         let swapModeActive = false;
         let swapFirstSeat = null;
         let showAllTiers = false;
+        let printOrientation = 'portrait';
         const SECTION = 'main'; // single chart, kept as a constant for parity with sc-737.html's dual-chart functions
 
         const MODE_META = {
@@ -1398,6 +1415,12 @@
                     '<div class="control-group">' +
                         '<label for="aftViewToggle">Aft View:</label>' +
                         '<label class="toggle-switch"><input type="checkbox" id="aftViewToggle" ' + (isAftView ? 'checked' : '') + ' onchange="toggleAftView()"><span class="toggle-slider"></span></label>' +
+                    '</div>' +
+                    '<div class="print-options">' +
+                        '<select id="orientationSelect" onchange="printOrientation=this.value;">' +
+                            '<option value="portrait"' + (printOrientation === 'portrait' ? ' selected' : '') + '>Portrait</option>' +
+                            '<option value="landscape"' + (printOrientation === 'landscape' ? ' selected' : '') + '>Landscape</option>' +
+                        '</select>' +
                     '</div>';
             } else if (currentMode === 'color') {
                 row.innerHTML = modeOptionsLabel('color') +
@@ -2626,7 +2649,23 @@
             console.log(`Loaded ${passengers.length} passengers`);
         }
 
+        function setPrintPageSize(isLandscape) {
+            let styleTag = document.getElementById('dynamicPageSizeStyle');
+            if (!styleTag) {
+                styleTag = document.createElement('style');
+                styleTag.id = 'dynamicPageSizeStyle';
+                document.head.appendChild(styleTag);
+            }
+            // This hints the print dialog's default orientation. Whether or not the
+            // browser honours it, the @media print and (orientation: landscape) rule
+            // in the stylesheet reacts to whatever orientation is actually used, so
+            // the layout fills the page correctly either way.
+            styleTag.textContent = '@media print { @page { size: A4 ' + (isLandscape ? 'landscape' : 'portrait') + '; margin: 5mm; } }';
+        }
+
         function handlePrint() {
+            const isLandscape = printOrientation === 'landscape';
+            setPrintPageSize(isLandscape);
             document.documentElement.style.setProperty('--print-font-size', currentFontSize + 'px');
             setTimeout(() => {
                 window.print();
