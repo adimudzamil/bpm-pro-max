@@ -605,8 +605,8 @@
             font-size: 1em;
             margin: 0;
             padding: 1px 4px;
-            height: 14px;
-            line-height: 12px;
+            height: 13px;
+            line-height: 11px;
             box-sizing: content-box;
             transition: all 0.3s ease;
             overflow: hidden;
@@ -639,8 +639,8 @@
             font-size: 1em;
             margin: 0;
             padding: 1px 4px;
-            height: 14px;
-            line-height: 12px;
+            height: 13px;
+            line-height: 11px;
             box-sizing: content-box;
             transition: all 0.3s ease;
             font-weight: 700;
@@ -2457,15 +2457,15 @@
                 box.style.minHeight = (50 * scale) + 'px';
                 const nameLines = box.querySelectorAll('.name-line');
                 nameLines.forEach(line => {
-                    line.style.height = (14 * scale) + 'px';
-                    line.style.lineHeight = (12 * scale) + 'px';
+                    line.style.height = (13 * scale) + 'px';
+                    line.style.lineHeight = (11 * scale) + 'px';
                     line.style.padding = (1 * scale) + 'px 4px';
                     line.style.fontSize = (1 * fontSize) + 'px';
                 });
                 const fieldLines = box.querySelectorAll('.field-line');
                 fieldLines.forEach(line => {
-                    line.style.height = (14 * scale) + 'px';
-                    line.style.lineHeight = (12 * scale) + 'px';
+                    line.style.height = (13 * scale) + 'px';
+                    line.style.lineHeight = (11 * scale) + 'px';
                     line.style.padding = (1 * scale) + 'px 4px';
                     if (line.classList.contains('meal-line')) {
                         line.style.fontSize = (1.1 * fontSize) + 'px';
