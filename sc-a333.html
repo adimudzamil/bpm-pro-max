@@ -1382,7 +1382,7 @@
                 row.innerHTML = modeOptionsLabel('view') +
                     '<div class="control-group">' +
                         '<label for="fontSizeSlider">Font Size:</label>' +
-                        '<input type="range" id="fontSizeSlider" class="font-slider" min="8" max="20" step="1" value="' + currentFontSize + '" oninput="adjustFontSize(parseInt(this.value))">' +
+                        '<input type="range" id="fontSizeSlider" class="font-slider" min="8" max="16" step="1" value="' + currentFontSize + '" oninput="adjustFontSize(parseInt(this.value))">' +
                         '<span id="fontSizeValue" class="font-value">' + currentFontSize + 'px</span>' +
                     '</div>' +
                     '<div class="control-group">' +
@@ -2688,7 +2688,7 @@
                 loadTheme();
                 applyTheme();
 
-                const savedFont = parseInt(localStorage.getItem('scUIFontSize')) || 12;
+                const savedFont = Math.min(16, parseInt(localStorage.getItem('scUIFontSize')) || 12);
                 const savedAft = localStorage.getItem('scUIAftView') === 'true';
                 const savedShowAllTiers = localStorage.getItem('scUIShowAllTiers') === 'true';
                 currentFontSize = savedFont;
