@@ -12,7 +12,6 @@
         }
 
         @page {
-            size: A4;
             margin: 5mm;
         }
 
@@ -956,7 +955,6 @@
 
         @media print {
             @page {
-                size: A4;
                 margin: 5mm;
             }
 
@@ -1031,6 +1029,18 @@
 
             .seat-box {
                 min-height: 50px !important;
+            }
+        }
+
+        /* Reacts to the browser's real print orientation, not just our own
+           dropdown/button — this way it fills the page correctly whether
+           landscape was chosen via our button or set manually in the print
+           dialog itself. Default stays portrait either way. */
+        @media print and (orientation: landscape) {
+            body {
+                width: 297mm !important;
+                height: 210mm !important;
+                padding: 5mm !important;
             }
         }
     </style>
