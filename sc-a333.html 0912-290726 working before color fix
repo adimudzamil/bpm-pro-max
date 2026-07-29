@@ -26,14 +26,14 @@
             --sc-meal-default-bg: #f0f0f0;
             --sc-meal-default-text: #000000;
             --sc-empty-placeholder: #cccccc;
-            --sc-tier-ELIT-bg: #dbeafe; --sc-tier-ELIT-text: #1e3a8a;
-            --sc-tier-PLAT-bg: #fee2e2; --sc-tier-PLAT-text: #991b1b;
-            --sc-tier-GOLD-bg: #fef9c3; --sc-tier-GOLD-text: #c2410c;
-            --sc-tier-RUBY-bg: #f3e8ff; --sc-tier-RUBY-text: #6b21a8;
-            --sc-tier-SLVR-bg: #f3e8ff; --sc-tier-SLVR-text: #6b21a8;
-            --sc-tier-BLUE-bg: #dbeafe; --sc-tier-BLUE-text: #1e3a8a;
-            --sc-tier-SAPH-bg: #fef9c3; --sc-tier-SAPH-text: #c2410c;
-            --sc-tier-EMER-bg: #fee2e2; --sc-tier-EMER-text: #991b1b;
+            --sc-tier-ELIT-bg: #e3f2fd; --sc-tier-ELIT-text: #0d47a1;
+            --sc-tier-PLAT-bg: #f3e5f5; --sc-tier-PLAT-text: #4a148c;
+            --sc-tier-GOLD-bg: #fff8e1; --sc-tier-GOLD-text: #e65100;
+            --sc-tier-RUBY-bg: #ffebee; --sc-tier-RUBY-text: #b71c1c;
+            --sc-tier-SLVR-bg: #eceff1; --sc-tier-SLVR-text: #37474f;
+            --sc-tier-BLUE-bg: #e1f5fe; --sc-tier-BLUE-text: #01579b;
+            --sc-tier-SAPH-bg: #e8eaf6; --sc-tier-SAPH-text: #1a237e;
+            --sc-tier-EMER-bg: #ffcdd2; --sc-tier-EMER-text: #b71c1c;
         }
 
         body {
@@ -1147,17 +1147,17 @@
     <script>
         // ============== THEME CONSTANTS (shared format with sc-737.html) ==============
         const DEFAULT_TIER_COLORS = {
-            ELIT: { bg: '#dbeafe', text: '#1e3a8a' },
-            PLAT: { bg: '#fee2e2', text: '#991b1b' },
-            GOLD: { bg: '#fef9c3', text: '#c2410c' },
-            RUBY: { bg: '#f3e8ff', text: '#6b21a8' },
-            SLVR: { bg: '#f3e8ff', text: '#6b21a8' },
-            BLUE: { bg: '#dbeafe', text: '#1e3a8a' },
-            SAPH: { bg: '#fef9c3', text: '#c2410c' },
-            EMER: { bg: '#fee2e2', text: '#991b1b' }
+            ELIT: { bg: '#e3f2fd', text: '#0d47a1' },
+            PLAT: { bg: '#f3e5f5', text: '#4a148c' },
+            GOLD: { bg: '#fff8e1', text: '#e65100' },
+            RUBY: { bg: '#ffebee', text: '#b71c1c' },
+            SLVR: { bg: '#eceff1', text: '#37474f' },
+            BLUE: { bg: '#e1f5fe', text: '#01579b' },
+            SAPH: { bg: '#e8eaf6', text: '#1a237e' },
+            EMER: { bg: '#ffcdd2', text: '#b71c1c' }
         };
-        const MEAL_PALETTE = ['#e8f5e9','#fff3e0','#e1f5fe','#fce4ec','#ede7f6','#fffde7','#e0f2f1','#fbe9e7','#e8eaf6','#f1f8e9'];
-        const SPECIAL_PALETTE = ['#e3f2fd','#e8eaf6','#ede7f6','#ede7f6','#e3f2fd','#e0f7fa','#e0f7fa','#eceff1'];
+        const MEAL_PALETTE = ['#c8e6c9','#ffe0b2','#b3e5fc','#f8bbd0','#d1c4e9','#fff9c4','#b2dfdb','#ffccbc','#c5cae9','#dcedc8'];
+        const SPECIAL_PALETTE = ['#bbdefb','#c5cae9','#d1c4e9','#b39ddb','#90caf9','#80deea','#b2ebf2','#cfd8dc'];
         const ORDER_PALETTE = ['#fff3cd','#d4edda','#cce5ff','#f8d7da','#e2d9f3','#d1ecf1','#fde2e2','#e8f5e9'];
         const SPECIAL_CODES = ['DEPO', 'MAAS', 'MEDA', 'NTL', 'UM', 'VVIP', 'WCHC', 'WCHR', 'WCHS', 'YPTA', 'LMU X Meal', 'LMU EY Meal'];
         // Same key as sc-737.html so meal/special/tier colours stay in sync across templates.
