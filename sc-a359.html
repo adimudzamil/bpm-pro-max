@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A359 Business Class Meal Service Tracker</title>
+    <title>A350-900 Business Class - Meal Service Tracker</title>
     <style>
         * {
             margin: 0;
@@ -16,31 +16,87 @@
             margin: 5mm;
         }
 
+        :root {
+            --sc-border-color: #000000;
+            --sc-seat-bg: #ffffff;
+            --sc-header-bg: #f0f0f0;
+            --sc-header-text: #000000;
+            --sc-title-color: #000000;
+            --sc-name-color: #000000;
+            --sc-meal-default-bg: #f0f0f0;
+            --sc-meal-default-text: #000000;
+            --sc-empty-placeholder: #cccccc;
+            --sc-tier-ELIT-bg: #dbeafe; --sc-tier-ELIT-text: #1e3a8a;
+            --sc-tier-PLAT-bg: #fee2e2; --sc-tier-PLAT-text: #991b1b;
+            --sc-tier-GOLD-bg: #fef9c3; --sc-tier-GOLD-text: #c2410c;
+            --sc-tier-RUBY-bg: #f3e8ff; --sc-tier-RUBY-text: #6b21a8;
+            --sc-tier-SLVR-bg: #f3e8ff; --sc-tier-SLVR-text: #6b21a8;
+            --sc-tier-BLUE-bg: #dbeafe; --sc-tier-BLUE-text: #1e3a8a;
+            --sc-tier-SAPH-bg: #fef9c3; --sc-tier-SAPH-text: #c2410c;
+            --sc-tier-EMER-bg: #fee2e2; --sc-tier-EMER-text: #991b1b;
+        }
+
         body {
             font-family: Arial, sans-serif;
             padding: 5mm;
             background: white;
             width: 210mm;
-            height: 297mm;
+            min-height: 297mm;
             margin: 0 auto;
             transition: all 0.3s ease;
-            font-size: 12px; /* Base font size */
+            font-size: 12px;
         }
 
-        /* Control Bar at the top */
+        /* Control Bar */
         .control-bar {
-            position: fixed;
+            position: sticky;
             top: 0;
-            left: 0;
-            right: 0;
             background: #f8f9fa;
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             z-index: 1000;
             border-bottom: 1px solid #dee2e6;
+        }
+        .control-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            flex-wrap: wrap;
+        }
+        .control-bar-options {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-top: 1px solid #e9ecef;
+        }
+        .control-bar.collapsed .control-bar-options {
+            display: none;
+        }
+        .mode-options-label {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            white-space: nowrap;
+        }
+        .more-toggle {
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            background: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            min-height: 36px;
+        }
+        @media (max-width: 600px) {
+            .control-bar-row { padding: 6px 8px; gap: 6px; }
+            .control-group { padding: 4px 8px; }
+            .mode-btn { padding: 8px 10px; font-size: 11px; }
+            .print-button { padding: 8px 12px; font-size: 12px; }
+            .font-slider { width: 90px; }
         }
 
         .control-group {
@@ -60,7 +116,6 @@
             white-space: nowrap;
         }
 
-        /* Font Size Slider */
         .font-slider {
             width: 120px;
             height: 6px;
@@ -101,7 +156,6 @@
             text-align: center;
         }
 
-        /* Toggle Switch for Aft View */
         .toggle-switch {
             position: relative;
             display: inline-block;
@@ -147,7 +201,6 @@
             transform: translateX(34px);
         }
 
-        /* Print Button */
         .print-button {
             padding: 8px 20px;
             background: #007bff;
@@ -174,32 +227,63 @@
             transform: translateY(0);
         }
 
-        /* Print Options */
-        .print-options {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .print-options select {
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid #dee2e6;
-            background: white;
-            font-size: 12px;
-            cursor: pointer;
-        }
-
         .control-spacer {
             flex: 1;
         }
 
-        /* Adjust body padding to account for control bar */
-        body {
-            padding-top: 60px;
+        .mode-selector {
+            display: flex;
+            gap: 4px;
         }
-
-        .container {
+        .mode-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            background: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: #495057;
+        }
+        .mode-btn.active {
+            background: #007bff;
+            color: #fff;
+            border-color: #007bff;
+        }
+        .mode-btn[data-mode="view"].active { background: #2563eb; border-color: #2563eb; }
+        .mode-btn[data-mode="color"].active { background: #9333ea; border-color: #9333ea; }
+        .mode-btn[data-mode="edit"].active { background: #475569; border-color: #475569; }
+        .mode-btn[data-mode="order"].active { background: #d97706; border-color: #d97706; }
+        .swap-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #ffe08a;
+            background: #fff3cd;
+            color: #856404;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .swap-btn.active {
+            background: #28a745;
+            color: #fff;
+            border-color: #28a745;
+        }
+        .swap-hint {
+            font-size: 11px;
+            color: #856404;
+            margin-left: 4px;
+        }
+        .theme-reset-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            background: #fff;
+            cursor: pointer;
+            font-size: 11px;
+            color: #6c757d;
+        }
+        .single-chart-container {
             width: 100%;
             height: 100%;
             display: flex;
@@ -213,93 +297,148 @@
             border: 2px solid #000;
             padding: 8px;
             transition: all 0.3s ease;
-        }
-
-        .header h1 {
-            font-size: 1.8em;
-            font-weight: bold;
-            margin-bottom: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .choice-line {
-            text-align: left;
-            margin: 3px 0;
-            font-size: 1em;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .header-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-            margin-top: 8px;
-            font-size: 1em;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .info-field {
-            display: flex;
-            gap: 5px;
-        }
-
-        .info-field span {
             flex-shrink: 0;
         }
 
-        /* Zone Summary Styling */
+        .header h1 {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .header-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 6px;
+        }
+        .summary-chip {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 3px 9px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+        }
+        .summary-chip:active { background: #e2e8f0; }
+
+        .meal-menu-btn {
+            display: inline-flex;
+            padding: 5px 10px;
+            border-radius: 12px;
+            border: 1px solid #fbbf24;
+            background: #fffbeb;
+            color: #92400e;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 6px;
+        }
+
+        body.order-mode .field-line.meal-line {
+            cursor: pointer;
+        }
+        body.order-mode .seat-box:hover .field-line.meal-line {
+            outline: 2px dashed #d97706;
+            outline-offset: -2px;
+        }
+
+        .menu-item-remove {
+            border: none;
+            background: #fee2e2;
+            color: #b91c1c;
+            border-radius: 6px;
+            width: 30px;
+            height: 30px;
+            font-size: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .category-list {
+            max-height: 280px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .category-list-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 4px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+        }
+        .category-list-row:active { background: #f8fafc; }
+        .category-list-seat {
+            font-weight: 700;
+            color: #2563eb;
+            min-width: 34px;
+            font-size: 12px;
+        }
+        .category-list-name {
+            flex: 1;
+            font-size: 11px;
+            color: #1e293b;
+        }
+        .category-list-tag {
+            font-size: 9px;
+            font-weight: 700;
+            color: #fff;
+            background: #2563eb;
+            padding: 2px 8px;
+            border-radius: 10px;
+            white-space: nowrap;
+            max-width: 110px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .zone-summary {
             margin-top: 8px;
             padding: 5px;
             background: #f0f0f0;
             border: 1px solid #ccc;
             border-radius: 4px;
-            font-size: 1.1em;
+            font-size: 12px;
             font-weight: bold;
-            text-align: center;
+            text-align: left;
         }
 
-        /* A350-900 Specific Grid Templates */
-        
-        /* 5-seat rows (standard) */
+        .seat-grid {
+            flex: 1;
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* A350-900 business class: rows 2,3,5,6,7,8,9,10,11 (rows 1 and 4 skipped).
+           Row types: 5-seat (default, A/D/G/H/K), 4-seat (row-4, A/D/G/K),
+           3-seat (row-3, A/D/G + spacer), 1-seat (row-1, A + spacer). */
         .row {
             display: grid;
             grid-template-columns: 19% 1% 19% 2% 19% 1% 19% 1% 19%;
             width: 100%;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             transition: all 0.3s ease;
+            flex-shrink: 0;
         }
 
-        /* 4-seat rows (A, D, G, K) */
         .row.row-4 {
-            display: grid;
             grid-template-columns: 19% 1% 19% 2% 19% 1% 39%;
-            width: 100%;
-            margin-bottom: 5px;
-            transition: all 0.3s ease;
         }
 
-        /* 3-seat rows (A, D, G) - with spacer */
         .row.row-3 {
-            display: grid;
             grid-template-columns: 19% 1% 19% 2% 19% 40%;
-            width: 100%;
-            margin-bottom: 5px;
-            transition: all 0.3s ease;
         }
 
-        /* 1-seat rows (A only) - with spacer */
         .row.row-1 {
-            display: grid;
             grid-template-columns: 39% 61%;
-            width: 100%;
-            margin-bottom: 5px;
-            transition: all 0.3s ease;
         }
 
-        /* Aft view grid templates */
         .row.aft-view {
             grid-template-columns: 19% 1% 19% 1% 19% 2% 19% 1% 19%;
         }
@@ -308,12 +447,10 @@
             grid-template-columns: 39% 1% 19% 2% 19% 1% 19%;
         }
 
-        /* Aft view for 3-seat rows (spacer, gap, G, aisle, D, gap, A) */
         .row.row-3.aft-view {
-            grid-template-columns: 39% 1% 19% 2% 19% 1% 19%;
+            grid-template-columns: 40% 19% 2% 19% 1% 19%;
         }
 
-        /* Aft view for 1-seat rows (spacer, A) */
         .row.row-1.aft-view {
             grid-template-columns: 61% 39%;
         }
@@ -328,26 +465,98 @@
             border: none;
         }
 
-        /* Spacer for rows with missing seats */
         .spacer {
             background: transparent;
             border: none;
         }
 
         .seat-box {
-            border: 1px solid #000;
+            border: 1px solid var(--sc-border-color);
+            background: var(--sc-seat-bg);
             padding: 0;
             transition: all 0.3s ease;
-            min-height: 65px;
+            min-height: 55px;
             position: relative;
             width: 100%;
             display: flex;
             flex-direction: column;
         }
 
-        /* Empty seat placeholder styling */
+        .order-fill-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            border: 1px solid transparent;
+            z-index: 5;
+            padding: 0;
+            border-radius: 1px;
+            cursor: pointer;
+        }
+
+        .seat-box.peek-mode .order-fill-overlay {
+            display: none !important;
+        }
+
+        .seat-box.has-order .seat-number-container {
+            visibility: hidden;
+        }
+
+        .order-seat-number {
+            position: absolute;
+            top: 4px;
+            left: 6px;
+            font-size: 1.1em;
+            font-weight: 900;
+            color: #000;
+            cursor: pointer;
+            z-index: 2;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+            padding: 2px;
+        }
+
+        .order-fill-letter {
+            font-size: 2.5em;
+            font-weight: 900;
+            line-height: 1.1;
+            z-index: 2;
+            text-shadow: 0 0 4px rgba(255,255,255,0.8);
+            pointer-events: none;
+        }
+
+        .order-fill-icon {
+            font-size: 2.5em;
+            font-weight: 900;
+            line-height: 1.1;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .order-remark-input {
+            width: 85%;
+            font-size: 1em;
+            font-weight: 700;
+            padding: 4px 6px;
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.15);
+            background: rgba(255,255,255,0.85);
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            margin-top: 8px;
+            min-height: 2em;
+            z-index: 3;
+            cursor: text;
+            outline: none;
+        }
+        .order-remark-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.3);
+        }
+
         .seat-box.empty-seat {
-            border: 1px solid #000;
+            border: 1px solid var(--sc-border-color);
             visibility: visible !important;
         }
 
@@ -357,93 +566,103 @@
             color: transparent;
         }
 
-        /* Empty seat with placeholder text */
         .seat-box.empty-seat .name-line.surname-line::after,
         .seat-box.empty-seat .name-line.firstname-line::after,
         .seat-box.empty-seat .field-line.meal-line::after {
             content: "______";
-            color: #ccc;
+            color: var(--sc-empty-placeholder);
             visibility: visible;
             font-weight: normal;
         }
 
-        /* Thicker border for EMER/PLAT seats */
-        .seat-box.tier-emer,
-        .seat-box.tier-plat {
-            border-width: 1px !important;
-        }
+        .seat-box.tier-ELIT { border-width: 2px !important; border-color: var(--sc-tier-ELIT-text) !important; }
+        .seat-box.tier-PLAT { border-width: 2px !important; border-color: var(--sc-tier-PLAT-text) !important; }
+        .seat-box.tier-GOLD { border-width: 2px !important; border-color: var(--sc-tier-GOLD-text) !important; }
+        .seat-box.tier-RUBY { border-width: 2px !important; border-color: var(--sc-tier-RUBY-text) !important; }
+        .seat-box.tier-SLVR { border-width: 2px !important; border-color: var(--sc-tier-SLVR-text) !important; }
+        .seat-box.tier-BLUE { border-width: 2px !important; border-color: var(--sc-tier-BLUE-text) !important; }
+        .seat-box.tier-SAPH { border-width: 2px !important; border-color: var(--sc-tier-SAPH-text) !important; }
+        .seat-box.tier-EMER { border-width: 2px !important; border-color: var(--sc-tier-EMER-text) !important; }
 
-        /* Seat number container */
         .seat-number-container {
-            background-color: #f0f0f0;
-            padding: 3px 4px;
-            border-bottom: 1px solid #000;
+            background-color: var(--sc-header-bg);
+            padding: 2px 4px;
+            border-bottom: 1px solid var(--sc-border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-shrink: 0;
         }
 
-        /* Seat number styling */
         .seat-number {
             font-weight: 900;
-            font-size: 1.2em;
+            font-size: 1.1em;
             text-align: left;
             transition: all 0.3s ease;
-            color: #000;
+            color: var(--sc-header-text);
             text-transform: uppercase;
             flex-grow: 1;
         }
 
-        /* Tier indicator styling */
         .seat-number .tier {
-            color: #000000;
             font-weight: 900;
-            font-size: 1.2em;
+            font-size: 1.1em;
             margin-left: auto;
-            background-color: #ffebee;
             padding: 1px 3px;
             border-radius: 3px;
             text-align: right;
+            cursor: default;
         }
+        .tier.tier-ELIT { background-color: var(--sc-tier-ELIT-bg); color: var(--sc-tier-ELIT-text); }
+        .tier.tier-PLAT { background-color: var(--sc-tier-PLAT-bg); color: var(--sc-tier-PLAT-text); }
+        .tier.tier-GOLD { background-color: var(--sc-tier-GOLD-bg); color: var(--sc-tier-GOLD-text); }
+        .tier.tier-RUBY { background-color: var(--sc-tier-RUBY-bg); color: var(--sc-tier-RUBY-text); }
+        .tier.tier-SLVR { background-color: var(--sc-tier-SLVR-bg); color: var(--sc-tier-SLVR-text); }
+        .tier.tier-BLUE { background-color: var(--sc-tier-BLUE-bg); color: var(--sc-tier-BLUE-text); }
+        .tier.tier-SAPH { background-color: var(--sc-tier-SAPH-bg); color: var(--sc-tier-SAPH-text); }
+        .tier.tier-EMER { background-color: var(--sc-tier-EMER-bg); color: var(--sc-tier-EMER-text); }
 
-        /* Name lines styling */
         .name-line {
-            font-size: 1.1em;
+            font-size: 1em;
             margin: 0;
             padding: 1px 4px;
-            min-height: 12px;
+            height: 14px;
+            line-height: 12px;
+            box-sizing: content-box;
             transition: all 0.3s ease;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             font-weight: 700;
-            color: #000;
             text-transform: uppercase;
             flex-shrink: 0;
         }
 
         .name-line.title-line {
             text-align: center;
-            border-bottom: 0.5px solid #000;
+            border-bottom: 0.5px solid var(--sc-border-color);
+            color: var(--sc-title-color);
         }
 
         .name-line.surname-line {
             text-align: center;
             border-bottom: none;
+            color: var(--sc-name-color);
         }
 
         .name-line.firstname-line {
             text-align: center;
-            border-bottom: 0.5px solid #000;
+            border-bottom: 0.5px solid var(--sc-border-color);
+            color: var(--sc-name-color);
         }
 
-        /* Field lines styling */
         .field-line {
-            font-size: 1.1em;
+            font-size: 1em;
             margin: 0;
             padding: 1px 4px;
-            min-height: 12px;
+            height: 14px;
+            line-height: 12px;
+            box-sizing: content-box;
             transition: all 0.3s ease;
             font-weight: 700;
             color: #000;
@@ -453,11 +672,21 @@
 
         .field-line.meal-line {
             font-weight: 1000;
-            font-size: 1.2em;
-            color: #000;
-            background-color: #f0f0f0;
+            font-size: 1.1em;
+            color: var(--sc-meal-default-text);
+            background-color: var(--sc-meal-default-bg);
             border-bottom: none;
             text-align: center;
+        }
+        .meal-code-part, .special-code-part, .order-code-part {
+            display: inline-block;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+        .meal-sep {
+            color: #888;
+            font-weight: 400;
+            padding: 0 1px;
         }
 
         .field-line.drink-line,
@@ -466,17 +695,318 @@
             font-weight: normal;
         }
 
+        body.color-mode .seat-box,
+        body.color-mode .seat-number-container,
+        body.color-mode .name-line.title-line,
+        body.color-mode .name-line.surname-line,
+        body.color-mode .name-line.firstname-line,
+        body.color-mode .field-line.meal-line,
+        body.color-mode .meal-code-part,
+        body.color-mode .special-code-part,
+        body.color-mode .order-code-part,
+        body.color-mode .tier {
+            cursor: pointer;
+        }
+        body.color-mode .seat-box:hover {
+            outline: 2px dashed #007bff;
+            outline-offset: -2px;
+        }
+
+        body.edit-mode .seat-box {
+            cursor: pointer;
+        }
+        body.edit-mode .seat-box:hover {
+            outline: 2px dashed #6c757d;
+            outline-offset: -2px;
+        }
+        .seat-box.swap-selected {
+            outline: 3px solid #28a745 !important;
+            outline-offset: -3px;
+        }
+
+        .panel-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.55);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .panel-modal {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 320px;
+            width: 100%;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        .color-panel-title, .edit-modal-title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 12px;
+            color: #1E3A8A;
+        }
+        .color-field {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        .color-field label { font-size: 12px; color: #495057; font-weight: 600; }
+        .color-field input[type="color"] {
+            width: 50px;
+            height: 32px;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            background: none;
+        }
+        .btn-close-panel {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: #007bff;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        #infoEditBody label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #495057;
+            margin: 10px 0 4px;
+        }
+        #infoEditBody select, #infoEditBody input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        #infoEditBody textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        .edit-toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .edit-toggle-row .toggle-switch {
+            width: 44px;
+            height: 24px;
+        }
+        .edit-toggle-row .toggle-slider:before {
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+        }
+        .edit-toggle-row input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+        .edit-toggle-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .service-tab-row {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .service-tab {
+            padding: 5px 10px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .service-tab.active {
+            background: #1e3a8a;
+            color: #fff;
+            border-color: #1e3a8a;
+        }
+        .service-add-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 1px dashed #94a3b8;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .meal-order-summary {
+            margin-top: 4px;
+            font-size: 10px;
+            color: #475569;
+            text-align: left;
+        }
+        .meal-order-summary strong { color: #1e293b; }
+        .meal-order-summary .pen-gap {
+            display: inline-block;
+            letter-spacing: 1px;
+            color: #aaa;
+            margin-left: 1px;
+        }
+        .meal-menu-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .meal-menu-row.disabled .meal-menu-name {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+        .meal-menu-name {
+            flex: 1;
+            min-width: 0;
+            padding: 6px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+        .meal-menu-qty {
+            width: 48px;
+            padding: 6px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 12px;
+            text-align: center;
+        }
+        .meal-menu-select-btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #28a745;
+            background: #fff;
+            color: #28a745;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .meal-menu-select-btn.active {
+            background: #28a745;
+            color: #fff;
+        }
+        .meal-menu-select-btn:disabled {
+            border-color: #cbd5e1;
+            color: #cbd5e1;
+            cursor: not-allowed;
+            background: #f8fafc;
+        }
+        .meal-menu-remove-btn {
+            padding: 6px 8px;
+            border: none;
+            background: transparent;
+            color: #dc2626;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .add-meal-choice-btn {
+            width: 100%;
+            padding: 10px;
+            border: 1px dashed #94a3b8;
+            border-radius: 8px;
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 8px 0;
+        }
+        .edit-modal-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+        }
+        .edit-modal-buttons button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .edit-modal-buttons button:first-child { background: #e2e8f0; color: #334155; }
+        .edit-modal-buttons button:last-child { background: #28a745; color: #fff; }
+
+        .popup-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 2100;
+            align-items: center; justify-content: center;
+        }
+        .popup-modal {
+            background: #fff; border-radius: 12px; padding: 20px;
+            width: 90%; max-width: 350px; max-height: 80vh; overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .preset-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 15px 0;
+        }
+        .preset-btn {
+            padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;
+            font-size: 14px; font-weight: 600; cursor: pointer; text-align: center;
+        }
+        .preset-btn:hover { background: #e2e8f0; }
+        .preset-custom-input {
+            width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; margin-top: 10px;
+        }
+
         @media print {
             @page {
                 size: A4;
                 margin: 5mm;
             }
-            
-            @page landscape {
-                size: A4 landscape;
-                margin: 5mm;
+
+            .order-fill-overlay {
+                display: none !important;
             }
-            
+
+            /* Print is the pre-flight handout: only seat number, title, tier,
+               name, and the dietary meal code (if any). Everything added via
+               Edit mode (special handling codes, remarks, INF/EXT summary) or
+               Order mode (meal choices, service summary) is screen-only. */
+            .special-code-part,
+            .meal-sep {
+                display: none !important;
+            }
+
+            .header-chips,
+            .meal-order-summary {
+                display: none !important;
+            }
+
+            .seat-number-container {
+                visibility: visible !important;
+            }
+
+            .seat-box.swap-selected {
+                outline: none !important;
+            }
+
             body {
                 padding: 0;
                 margin: 0;
@@ -486,43 +1016,31 @@
                 print-color-adjust: exact;
                 font-size: inherit !important;
             }
-            
-            body.landscape-print {
-                width: 297mm !important;
-                height: 210mm !important;
-                padding: 5mm !important;
+
+            .control-bar, .panel-overlay, .popup-overlay {
+                display: none !important;
             }
-            
-            .control-bar {
-                display: none;
-            }
-            
-            .container {
+
+            .single-chart-container {
                 padding: 5mm;
                 width: 100% !important;
                 height: 100% !important;
-                transform-origin: top left;
             }
-            
-            body.landscape-print .container {
-                transform: scale(calc(297mm / 210mm)) !important;
-                transform-origin: top left;
-                width: 210mm !important;
-                height: 297mm !important;
-                padding: 5mm !important;
+
+            .seat-grid {
+                overflow: hidden !important;
             }
-            
+
             .seat-box {
                 page-break-inside: avoid;
             }
-            
+
             .seat-number, .name-line, .field-line {
-                color: #000 !important;
                 font-weight: 700 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            
+
             .seat-box.empty-seat .name-line.surname-line::after,
             .seat-box.empty-seat .name-line.firstname-line::after,
             .seat-box.empty-seat .field-line.meal-line::after {
@@ -530,1073 +1048,1746 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            
+
             .seat-number .tier {
-                color: #000 !important;
                 font-weight: 900 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            
+
             .field-line.meal-line {
                 font-weight: 1000 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            
+
+            .meal-code-part, .special-code-part {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
             .seat-number-container,
             .field-line.meal-line {
-                background-color: #f0f0f0 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            
+
             .row {
-                margin-bottom: 4px !important;
+                margin-bottom: 3px !important;
             }
-            
+
             .seat-box {
-                min-height: 60px !important;
+                min-height: 50px !important;
             }
         }
     </style>
 </head>
 <body>
     <!-- Control Bar -->
-    <div class="control-bar">
-        <div class="control-group">
-            <label for="fontSizeSlider">Font Size:</label>
-            <input type="range" id="fontSizeSlider" class="font-slider" min="8" max="20" value="12" step="1">
-            <span id="fontSizeValue" class="font-value">12px</span>
-        </div>
-        
-        <div class="control-group">
-            <label for="aftViewToggle">Aft View:</label>
-            <label class="toggle-switch">
-                <input type="checkbox" id="aftViewToggle" onchange="toggleAftView()">
-                <span class="toggle-slider"></span>
-            </label>
-        </div>
-        
-        <div class="control-spacer"></div>
-        
-        <div class="print-options">
-            <select id="orientationSelect">
-                <option value="portrait">Portrait</option>
-                <option value="landscape">Landscape</option>
-            </select>
+    <div class="control-bar" id="controlBar">
+        <div class="control-bar-row control-bar-primary">
+            <div class="mode-selector">
+                <button type="button" class="mode-btn active" data-mode="view" onclick="setMode('view')">View</button>
+                <button type="button" class="mode-btn" data-mode="color" onclick="setMode('color')">🎨 Colours</button>
+                <button type="button" class="mode-btn" data-mode="edit" onclick="setMode('edit')">✏️ Edit</button>
+                <button type="button" class="mode-btn" data-mode="order" onclick="setMode('order')">🍽️ Order</button>
+            </div>
+
+            <div class="control-spacer"></div>
+
+            <button type="button" class="more-toggle" onclick="toggleMoreControls()" aria-label="Toggle mode options">⚙️</button>
             <button class="print-button" onclick="handlePrint()">
                 <span style="font-size: 16px;">🖨️</span> Print
             </button>
         </div>
+
+        <div class="control-bar-row control-bar-options" id="modeOptionsRow">
+            <!-- Populated by renderModeOptions() based on the active mode -->
+        </div>
     </div>
-    
-    <div class="container" id="seatContainer">
-        <!-- Header will be populated dynamically -->
-        <div class="header" id="dynamicHeader">
-            <h1>A359</h1>
-            <div class="zone-summary" id="zoneSummary">Loading passenger data...</div>
-        </div>
 
-        <!-- Row 2: 4 seats (A, D, G, K) - No H -->
-        <div class="row row-4">
-            <div class="seat-box empty-seat" data-seat="2A">
-                <div class="seat-number-container">
-                    <div class="seat-number">2A</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="2D">
-                <div class="seat-number-container">
-                    <div class="seat-number">2D</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="aisle"></div>
-            <div class="seat-box empty-seat" data-seat="2G">
-                <div class="seat-number-container">
-                    <div class="seat-number">2G</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="2K">
-                <div class="seat-number-container">
-                    <div class="seat-number">2K</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
+    <!-- Single Chart Container -->
+    <div class="single-chart-container">
+        <div class="header" id="mainHeader">
+            <h1 id="mainHeaderTitle">A350-900 - Business Class</h1>
+            <div class="header-chips" id="mainSummaryChips" style="display:none;"></div>
+            <div class="zone-summary" id="mainZoneSummary">Waiting for manifest...</div>
+            <div class="meal-order-summary" id="mainMealOrderSummary" style="display:none;"></div>
         </div>
-
-        <!-- Row 3: 5 seats (A, D, G, H, K) -->
-        <div class="row">
-            <div class="seat-box empty-seat" data-seat="3A">
-                <div class="seat-number-container">
-                    <div class="seat-number">3A</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="3D">
-                <div class="seat-number-container">
-                    <div class="seat-number">3D</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="aisle"></div>
-            <div class="seat-box empty-seat" data-seat="3G">
-                <div class="seat-number-container">
-                    <div class="seat-number">3G</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="3H">
-                <div class="seat-number-container">
-                    <div class="seat-number">3H</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="3K">
-                <div class="seat-number-container">
-                    <div class="seat-number">3K</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
+        <div class="seat-grid" id="mainSeatContainer">
+            <!-- Seat rows generated dynamically -->
         </div>
+    </div>
 
-        <!-- Row 5: 4 seats (A, D, G, K) - No H -->
-        <div class="row row-4">
-            <div class="seat-box empty-seat" data-seat="5A">
-                <div class="seat-number-container">
-                    <div class="seat-number">5A</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="5D">
-                <div class="seat-number-container">
-                    <div class="seat-number">5D</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="aisle"></div>
-            <div class="seat-box empty-seat" data-seat="5G">
-                <div class="seat-number-container">
-                    <div class="seat-number">5G</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="5K">
-                <div class="seat-number-container">
-                    <div class="seat-number">5K</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
+    <!-- Modals -->
+    <div id="categoryListOverlay" class="panel-overlay" onclick="if(event.target===this) closeCategoryList()">
+        <div class="panel-modal" id="categoryListBody"></div>
+    </div>
+    <div id="colorPanelOverlay" class="panel-overlay" onclick="if(event.target===this) closeColorPanel()">
+        <div class="panel-modal" id="colorPanelBody"></div>
+    </div>
+    <div id="infoEditOverlay" class="panel-overlay" onclick="if(event.target===this) closeInfoEditModal()">
+        <div class="panel-modal" id="infoEditBody"></div>
+    </div>
+    <div id="mealMenuOverlay" class="panel-overlay" onclick="if(event.target===this) closeMealMenuSetup()">
+        <div class="panel-modal" id="mealMenuBody"></div>
+    </div>
+    <div id="orderModalOverlay" class="panel-overlay" onclick="if(event.target===this) closeOrderModal()">
+        <div class="panel-modal" id="orderModalBody"></div>
+    </div>
+
+    <div id="presetPopup" class="popup-overlay" onclick="if(event.target===this) closeNamePreset()">
+        <div class="popup-modal">
+            <div style="font-weight:700; margin-bottom:10px;">Select Meal Name</div>
+            <div class="preset-grid" id="presetGrid"></div>
+            <input type="text" id="presetCustomInput" class="preset-custom-input" placeholder="Type custom name..." oninput="customPresetName(this.value)">
+            <button class="btn-close-panel" style="margin-top:10px;" onclick="closeNamePreset()">Cancel</button>
         </div>
+    </div>
 
-        <!-- Row 6: 5 seats (A, D, G, H, K) -->
-        <div class="row">
-            <div class="seat-box empty-seat" data-seat="6A">
-                <div class="seat-number-container">
-                    <div class="seat-number">6A</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="6D">
-                <div class="seat-number-container">
-                    <div class="seat-number">6D</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="aisle"></div>
-            <div class="seat-box empty-seat" data-seat="6G">
-                <div class="seat-number-container">
-                    <div class="seat-number">6G</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="6H">
-                <div class="seat-number-container">
-                    <div class="seat-number">6H</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="6K">
-                <div class="seat-number-container">
-                    <div class="seat-number">6K</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-        </div>
-
-        <!-- Row 7: 3 seats (A, D, G) - with spacer -->
-        <div class="row row-3">
-            <div class="seat-box empty-seat" data-seat="7A">
-                <div class="seat-number-container">
-                    <div class="seat-number">7A</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="7D">
-                <div class="seat-number-container">
-                    <div class="seat-number">7D</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="aisle"></div>
-            <div class="seat-box empty-seat" data-seat="7G">
-                <div class="seat-number-container">
-                    <div class="seat-number">7G</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <!-- 40% spacer for missing H and K seats -->
-            <div class="spacer"></div>
-        </div>
-
-        <!-- Row 8: 1 seat (A only) - with spacer -->
-        <div class="row row-1">
-            <div class="seat-box empty-seat" data-seat="8A">
-                <div class="seat-number-container">
-                    <div class="seat-number">8A</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <!-- 60% spacer -->
-            <div class="spacer"></div>
-        </div>
-
-        <!-- Row 9: 4 seats (A, D, G, K) - No H -->
-        <div class="row row-4">
-            <div class="seat-box empty-seat" data-seat="9A">
-                <div class="seat-number-container">
-                    <div class="seat-number">9A</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="9D">
-                <div class="seat-number-container">
-                    <div class="seat-number">9D</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="aisle"></div>
-            <div class="seat-box empty-seat" data-seat="9G">
-                <div class="seat-number-container">
-                    <div class="seat-number">9G</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="9K">
-                <div class="seat-number-container">
-                    <div class="seat-number">9K</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-        </div>
-
-        <!-- Row 10: 5 seats (A, D, G, H, K) -->
-        <div class="row">
-            <div class="seat-box empty-seat" data-seat="10A">
-                <div class="seat-number-container">
-                    <div class="seat-number">10A</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="10D">
-                <div class="seat-number-container">
-                    <div class="seat-number">10D</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="aisle"></div>
-            <div class="seat-box empty-seat" data-seat="10G">
-                <div class="seat-number-container">
-                    <div class="seat-number">10G</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="10H">
-                <div class="seat-number-container">
-                    <div class="seat-number">10H</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="10K">
-                <div class="seat-number-container">
-                    <div class="seat-number">10K</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-        </div>
-
-        <!-- Row 11: 4 seats (A, D, G, K) - No H -->
-        <div class="row row-4">
-            <div class="seat-box empty-seat" data-seat="11A">
-                <div class="seat-number-container">
-                    <div class="seat-number">11A</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="11D">
-                <div class="seat-number-container">
-                    <div class="seat-number">11D</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="aisle"></div>
-            <div class="seat-box empty-seat" data-seat="11G">
-                <div class="seat-number-container">
-                    <div class="seat-number">11G</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
-            </div>
-            <div class="gap"></div>
-            <div class="seat-box empty-seat" data-seat="11K">
-                <div class="seat-number-container">
-                    <div class="seat-number">11K</div>
-                </div>
-                <div class="name-line title-line"></div>
-                <div class="name-line surname-line"></div>
-                <div class="name-line firstname-line"></div>
-                <div class="field-line meal-line"></div>
-                <div class="field-line drink-line"></div>
-                <div class="field-line dessert-line"></div>
+    <div id="keypadPopup" class="popup-overlay" onclick="if(event.target===this) closeKeypad()">
+        <div class="popup-modal">
+            <div style="text-align:center; font-size:2em; font-weight:bold; margin-bottom:15px;" id="keypadDisplay">0</div>
+            <div class="preset-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <button class="preset-btn" onclick="keypadPress('1')">1</button>
+                <button class="preset-btn" onclick="keypadPress('2')">2</button>
+                <button class="preset-btn" onclick="keypadPress('3')">3</button>
+                <button class="preset-btn" onclick="keypadPress('4')">4</button>
+                <button class="preset-btn" onclick="keypadPress('5')">5</button>
+                <button class="preset-btn" onclick="keypadPress('6')">6</button>
+                <button class="preset-btn" onclick="keypadPress('7')">7</button>
+                <button class="preset-btn" onclick="keypadPress('8')">8</button>
+                <button class="preset-btn" onclick="keypadPress('9')">9</button>
+                <button class="preset-btn" onclick="keypadPress('backspace')">⌫</button>
+                <button class="preset-btn" onclick="keypadPress('0')">0</button>
+                <button class="preset-btn" style="background:#22c55e;color:white;" onclick="keypadPress('done')">Done</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Global variable to track aft view state
+        // ============== THEME CONSTANTS (shared format with sc-737.html) ==============
+        const DEFAULT_TIER_COLORS = {
+            ELIT: { bg: '#dbeafe', text: '#1e3a8a' },
+            PLAT: { bg: '#fee2e2', text: '#991b1b' },
+            GOLD: { bg: '#fef9c3', text: '#c2410c' },
+            RUBY: { bg: '#f3e8ff', text: '#6b21a8' },
+            SLVR: { bg: '#f3e8ff', text: '#6b21a8' },
+            BLUE: { bg: '#dbeafe', text: '#1e3a8a' },
+            SAPH: { bg: '#fef9c3', text: '#c2410c' },
+            EMER: { bg: '#fee2e2', text: '#991b1b' }
+        };
+        const MEAL_PALETTE = ['#e8f5e9','#fff3e0','#e1f5fe','#fce4ec','#ede7f6','#fffde7','#e0f2f1','#fbe9e7','#e8eaf6','#f1f8e9'];
+        const SPECIAL_PALETTE = ['#e3f2fd','#e8eaf6','#ede7f6','#ede7f6','#e3f2fd','#e0f7fa','#e0f7fa','#eceff1'];
+        const ORDER_PALETTE = ['#fff3cd','#d4edda','#cce5ff','#f8d7da','#e2d9f3','#d1ecf1','#fde2e2','#e8f5e9'];
+        const SPECIAL_CODES = ['DEPO', 'MAAS', 'MEDA', 'NTL', 'UM', 'VVIP', 'WCHC', 'WCHR', 'WCHS', 'YPTA', 'LMU X Meal', 'LMU EY Meal'];
+        // Same key as sc-737.html so meal/special/tier colours stay in sync across templates.
+        const THEME_STORAGE_KEY = 'bpmSeatChartTheme';
+        const TABS_STORAGE_KEY = 'bpmReportTabs';
+        const LAST_TAB_ID_KEY = 'bpmLastActiveTabId';
+        const PRESET_NAMES = ['Chicken', 'Beef', 'Fish', 'Seafood', 'Prawn', 'Vegetarian'];
+
+        // A350-900 business class row layout: rows 2,3,5,6,7,8,9,10,11 (rows 1 and 4 skipped).
+        // type 5 = A/D/G/H/K, type 4 = A/D/G/K, type 3 = A/D/G + spacer, type 1 = A + spacer.
+        const ROW_LAYOUT = [
+            { row: 2, type: 4 },
+            { row: 3, type: 5 },
+            { row: 5, type: 4 },
+            { row: 6, type: 5 },
+            { row: 7, type: 3 },
+            { row: 8, type: 1 },
+            { row: 9, type: 4 },
+            { row: 10, type: 5 },
+            { row: 11, type: 4 }
+        ];
+
+        let theme = null;
+
+        function getSpecialLabel(p) {
+            if (!p || !p.specialCode) return '';
+            if (p.specialCode === 'OTHERS') {
+                return p.specialOtherText ? p.specialOtherText.trim().toUpperCase() : '';
+            }
+            return p.specialCode;
+        }
+
+        function defaultTheme() {
+            return {
+                structural: {
+                    borderColor: '#000000', seatBg: '#ffffff', headerBg: '#f0f0f0', headerText: '#000000',
+                    titleColor: '#000000', nameColor: '#000000', mealBg: '#f0f0f0', mealText: '#000000',
+                    emptyPlaceholder: '#cccccc'
+                },
+                tiers: JSON.parse(JSON.stringify(DEFAULT_TIER_COLORS)),
+                mealColors: {},
+                specialColors: {},
+                orderColors: {}
+            };
+        }
+
+        function loadTheme() {
+            try {
+                const raw = localStorage.getItem(THEME_STORAGE_KEY);
+                theme = raw ? JSON.parse(raw) : defaultTheme();
+            } catch (e) { theme = defaultTheme(); }
+            const d = defaultTheme();
+            theme.structural = Object.assign(d.structural, theme.structural || {});
+            theme.tiers = Object.assign(d.tiers, theme.tiers || {});
+            theme.mealColors = theme.mealColors || {};
+            theme.specialColors = theme.specialColors || {};
+            theme.orderColors = theme.orderColors || {};
+        }
+
+        function saveTheme() {
+            try { localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(theme)); } catch (e) { console.error('Theme save failed', e); }
+        }
+
+        function resetThemeToDefaults() {
+            theme = defaultTheme();
+            saveTheme();
+            applyTheme();
+            showToast('Colours reset to defaults');
+        }
+
+        function exportTheme() {
+            try {
+                const dataStr = JSON.stringify(theme, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'bpm-seat-chart-colours-backup.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('\u2713 Colour theme backed up');
+            } catch (e) {
+                console.error('Theme export failed', e);
+                showToast('Backup failed');
+            }
+        }
+
+        function triggerImportTheme() {
+            document.getElementById('themeImportInput').click();
+        }
+
+        function importThemeFromFile(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    theme = imported;
+                    const d = defaultTheme();
+                    theme.structural = Object.assign(d.structural, theme.structural || {});
+                    theme.tiers = Object.assign(d.tiers, theme.tiers || {});
+                    theme.mealColors = theme.mealColors || {};
+                    theme.specialColors = theme.specialColors || {};
+                    theme.orderColors = theme.orderColors || {};
+                    saveTheme();
+                    applyTheme();
+                    showToast('\u2713 Colour theme restored');
+                } catch (err) {
+                    console.error('Theme import failed', err);
+                    showToast('Could not read that file');
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function applyTheme() {
+            const s = theme.structural;
+            const root = document.documentElement.style;
+            root.setProperty('--sc-border-color', s.borderColor);
+            root.setProperty('--sc-seat-bg', s.seatBg);
+            root.setProperty('--sc-header-bg', s.headerBg);
+            root.setProperty('--sc-header-text', s.headerText);
+            root.setProperty('--sc-title-color', s.titleColor);
+            root.setProperty('--sc-name-color', s.nameColor);
+            root.setProperty('--sc-meal-default-bg', s.mealBg);
+            root.setProperty('--sc-meal-default-text', s.mealText);
+            root.setProperty('--sc-empty-placeholder', s.emptyPlaceholder);
+            Object.keys(theme.tiers).forEach(function (t) {
+                root.setProperty('--sc-tier-' + t + '-bg', theme.tiers[t].bg);
+                root.setProperty('--sc-tier-' + t + '-text', theme.tiers[t].text);
+            });
+            document.querySelectorAll('.field-line.meal-line').forEach(applyMealLineColors);
+        }
+
+        function hashCode(str) {
+            let h = 0;
+            for (let i = 0; i < str.length; i++) { h = ((h << 5) - h) + str.charCodeAt(i); h |= 0; }
+            return h;
+        }
+
+        function getMealColor(code) {
+            if (!code) return null;
+            if (theme.mealColors[code]) return theme.mealColors[code];
+            const idx = Math.abs(hashCode(code)) % MEAL_PALETTE.length;
+            const c = { bg: MEAL_PALETTE[idx], text: '#000000' };
+            theme.mealColors[code] = c;
+            saveTheme();
+            return c;
+        }
+
+        function getSpecialColor(code) {
+            if (!code) return null;
+            if (theme.specialColors[code]) return theme.specialColors[code];
+            const idx = Math.abs(hashCode(code + '::special')) % SPECIAL_PALETTE.length;
+            const c = { bg: SPECIAL_PALETTE[idx], text: '#000000' };
+            theme.specialColors[code] = c;
+            saveTheme();
+            return c;
+        }
+
+        function getOrderColor(choiceId) {
+            if (!choiceId) return { bg: '#ffffff', text: '#000000' };
+            if (theme.orderColors[choiceId]) return theme.orderColors[choiceId];
+            const idx = Math.abs(hashCode(choiceId + '::order')) % ORDER_PALETTE.length;
+            const c = { bg: ORDER_PALETTE[idx], text: '#000000' };
+            theme.orderColors[choiceId] = c;
+            saveTheme();
+            return c;
+        }
+
+        function applyMealLineColors(mealField) {
+            const mealSpan = mealField.querySelector('.meal-code-part');
+            if (mealSpan) {
+                const code = mealSpan.getAttribute('data-meal-code');
+                const c = getMealColor(code);
+                mealSpan.style.backgroundColor = c.bg;
+                mealSpan.style.color = c.text;
+            }
+            const orderSpan = mealField.querySelector('.order-code-part');
+            if (orderSpan) {
+                const choiceId = orderSpan.getAttribute('data-order-choice');
+                const c = getOrderColor(choiceId);
+                orderSpan.style.backgroundColor = c.bg;
+                orderSpan.style.color = c.text;
+            }
+            const specialSpan = mealField.querySelector('.special-code-part');
+            if (specialSpan) {
+                const code = specialSpan.getAttribute('data-special-code');
+                const c = getSpecialColor(code);
+                specialSpan.style.backgroundColor = c.bg;
+                specialSpan.style.color = c.text;
+            }
+        }
+
+        function showToast(msg) {
+            let toast = document.getElementById('scToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'scToast';
+                toast.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1E3A8A;color:#fff;padding:8px 16px;border-radius:20px;font-size:12px;z-index:3000;box-shadow:0 4px 10px rgba(0,0,0,0.2);';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = msg;
+            toast.style.opacity = '1';
+            clearTimeout(window._scToastTimer);
+            window._scToastTimer = setTimeout(function () { toast.style.opacity = '0'; }, 2000);
+        }
+
+        // ============== MODE MANAGEMENT ==============
+        let currentMode = 'view';
+        let swapModeActive = false;
+        let swapFirstSeat = null;
+        let showAllTiers = false;
+        const SECTION = 'main'; // single chart, kept as a constant for parity with sc-737.html's dual-chart functions
+
+        const MODE_META = {
+            view:  { label: 'VIEW',    color: '#2563eb' },
+            color: { label: 'COLOURS', color: '#9333ea' },
+            edit:  { label: 'EDIT',    color: '#475569' },
+            order: { label: 'ORDER',   color: '#d97706' }
+        };
+
+        function setMode(mode) {
+            currentMode = mode;
+            swapModeActive = false;
+            swapFirstSeat = null;
+            document.querySelectorAll('.mode-btn').forEach(function (b) {
+                b.classList.toggle('active', b.dataset.mode === mode);
+            });
+            document.body.classList.toggle('color-mode', mode === 'color');
+            document.body.classList.toggle('edit-mode', mode === 'edit');
+            document.body.classList.toggle('order-mode', mode === 'order');
+            renderModeOptions();
+            refreshAllOrderOverlays();
+        }
+
+        function modeOptionsLabel(mode) {
+            const meta = MODE_META[mode];
+            return '<span class="mode-options-label" style="background:' + meta.color + '1a; color:' + meta.color + ';">' + meta.label + '</span>';
+        }
+
+        function renderModeOptions() {
+            const row = document.getElementById('modeOptionsRow');
+            if (!row) return;
+
+            if (currentMode === 'view') {
+                row.innerHTML = modeOptionsLabel('view') +
+                    '<div class="control-group">' +
+                        '<label for="fontSizeSlider">Font Size:</label>' +
+                        '<input type="range" id="fontSizeSlider" class="font-slider" min="8" max="16" step="1" value="' + currentFontSize + '" oninput="adjustFontSize(parseInt(this.value))">' +
+                        '<span id="fontSizeValue" class="font-value">' + currentFontSize + 'px</span>' +
+                    '</div>' +
+                    '<div class="control-group">' +
+                        '<label for="aftViewToggle">Aft View:</label>' +
+                        '<label class="toggle-switch"><input type="checkbox" id="aftViewToggle" ' + (isAftView ? 'checked' : '') + ' onchange="toggleAftView()"><span class="toggle-slider"></span></label>' +
+                    '</div>';
+            } else if (currentMode === 'color') {
+                row.innerHTML = modeOptionsLabel('color') +
+                    '<button type="button" class="theme-reset-btn" onclick="resetThemeToDefaults()">Reset colours</button>' +
+                    '<button type="button" class="theme-reset-btn" onclick="exportTheme()">💾 Backup colours</button>' +
+                    '<button type="button" class="theme-reset-btn" onclick="triggerImportTheme()">📂 Restore colours</button>' +
+                    '<input type="file" id="themeImportInput" accept="application/json" style="display:none;" onchange="importThemeFromFile(event)">' +
+                    '<span style="font-size:11px;color:#94a3b8;">Tap any coloured badge on the chart to recolour it</span>';
+            } else if (currentMode === 'edit') {
+                row.innerHTML = modeOptionsLabel('edit') +
+                    '<button type="button" id="swapSeatsBtn" class="swap-btn" onclick="toggleSwapMode()">🔀 Swap</button>' +
+                    '<span id="swapHint" class="swap-hint" style="display:none;">Tap seat A, then B</span>' +
+                    '<div class="control-group">' +
+                        '<label for="showAllTiersToggle">Show all tiers:</label>' +
+                        '<label class="toggle-switch"><input type="checkbox" id="showAllTiersToggle" ' + (showAllTiers ? 'checked' : '') + ' onchange="toggleShowAllTiers()"><span class="toggle-slider"></span></label>' +
+                    '</div>';
+            } else if (currentMode === 'order') {
+                row.innerHTML = modeOptionsLabel('order') +
+                    '<div class="control-group">' +
+                        '<label>Service:</label>' +
+                        '<div id="serviceTabRow" class="service-tab-row"></div>' +
+                        '<button type="button" class="service-add-btn" onclick="addMealService()">+</button>' +
+                    '</div>' +
+                    '<button type="button" class="meal-menu-btn" onclick="openMealMenuSetup()">🍽️ Meal Menu</button>';
+                renderServiceTabs();
+            }
+        }
+
+        function toggleShowAllTiers() {
+            const toggle = document.getElementById('showAllTiersToggle');
+            showAllTiers = toggle.checked;
+            localStorage.setItem('scUIShowAllTiers', showAllTiers ? 'true' : 'false');
+            refreshSeatTierDisplay();
+        }
+
+        function refreshSeatTierDisplay() {
+            if (!chartData || !chartData.passengers) return;
+            const container = document.getElementById('mainSeatContainer');
+            if (!container) return;
+            chartData.passengers.forEach(function (p) {
+                if (!p.seat) return;
+                const seatBox = container.querySelector('[data-seat="' + normalizeSeatNumber(p.seat) + '"]');
+                if (seatBox) populateSeatData(p, seatBox);
+            });
+        }
+
+        function toggleSwapMode() {
+            swapModeActive = !swapModeActive;
+            clearSwapSelection();
+            const btn = document.getElementById('swapSeatsBtn');
+            const hint = document.getElementById('swapHint');
+            if (btn) btn.classList.toggle('active', swapModeActive);
+            if (hint) hint.style.display = swapModeActive ? 'inline-block' : 'none';
+        }
+
+        function toggleMoreControls() {
+            document.getElementById('controlBar').classList.toggle('collapsed');
+        }
+
+        function clearSwapSelection() {
+            if (swapFirstSeat) swapFirstSeat.classList.remove('swap-selected');
+            swapFirstSeat = null;
+        }
+
+        document.addEventListener('click', function (e) {
+            if (currentMode === 'view') return;
+
+            if (currentMode === 'edit') {
+                const seatBox = e.target.closest('.seat-box');
+                if (!seatBox) return;
+                if (swapModeActive) { handleSwapTap(seatBox); return; }
+                openInfoEditModal(seatBox);
+                return;
+            }
+
+            if (currentMode === 'order') {
+                const seatBox = e.target.closest('.seat-box');
+                if (!seatBox) return;
+
+                if (seatBox.classList.contains('peek-mode')) {
+                    seatBox.classList.remove('peek-mode');
+                    refreshSeatOrderOverlay(seatBox);
+                    return;
+                }
+                handleOrderTap(seatBox);
+                return;
+            }
+
+            if (currentMode === 'color') {
+                const tierBadge = e.target.closest('.tier');
+                if (tierBadge) {
+                    const tierClass = Array.from(tierBadge.classList).find(function (c) { return c.indexOf('tier-') === 0; });
+                    if (tierClass) { openTierColorPanel(tierClass.replace('tier-', '')); }
+                    return;
+                }
+                const mealCodeSpan = e.target.closest('.meal-code-part');
+                if (mealCodeSpan) {
+                    openMealColorPanel(mealCodeSpan.getAttribute('data-meal-code'));
+                    return;
+                }
+                const orderCodeSpan = e.target.closest('.order-code-part');
+                if (orderCodeSpan) {
+                    const choiceId = orderCodeSpan.getAttribute('data-order-choice');
+                    openOrderColorPanel(choiceId);
+                    return;
+                }
+                const specialCodeSpan = e.target.closest('.special-code-part');
+                if (specialCodeSpan) {
+                    openSpecialColorPanel(specialCodeSpan.getAttribute('data-special-code'));
+                    return;
+                }
+                const mealLineEmpty = e.target.closest('.field-line.meal-line');
+                if (mealLineEmpty && !mealLineEmpty.querySelector('.meal-code-part, .special-code-part, .order-code-part')) {
+                    openColorPanel([{ key: 'mealBg', label: 'Meal line background (default)' }, { key: 'mealText', label: 'Meal line text (default)' }], 'Meal Line (no code set)');
+                    return;
+                }
+                const titleLine = e.target.closest('.name-line.title-line');
+                if (titleLine) { openColorPanel([{ key: 'titleColor', label: 'Title text colour' }], 'Title Line'); return; }
+                const nameLine = e.target.closest('.name-line.surname-line, .name-line.firstname-line');
+                if (nameLine) { openColorPanel([{ key: 'nameColor', label: 'Name text colour' }], 'Passenger Name'); return; }
+                const header = e.target.closest('.seat-number-container');
+                if (header) {
+                    openColorPanel([{ key: 'headerBg', label: 'Header background' }, { key: 'headerText', label: 'Header text' }], 'Seat Number Header');
+                    return;
+                }
+                const box = e.target.closest('.seat-box');
+                if (box) {
+                    openColorPanel([{ key: 'seatBg', label: 'Seat background' }, { key: 'borderColor', label: 'Border colour' }, { key: 'emptyPlaceholder', label: 'Empty seat placeholder' }], 'Seat Box');
+                }
+            }
+        });
+
+        document.addEventListener('mousedown', function (e) {
+            if (currentMode !== 'order') return;
+            const seatBox = e.target.closest('.seat-box');
+            if (!seatBox) return;
+            orderCellPressStart(seatBox);
+        });
+        document.addEventListener('touchstart', function (e) {
+            if (currentMode !== 'order') return;
+            const seatBox = e.target.closest('.seat-box');
+            if (!seatBox) return;
+            orderCellPressStart(seatBox);
+        }, { passive: true });
+        document.addEventListener('mouseup', orderCellPressEnd);
+        document.addEventListener('touchend', orderCellPressEnd);
+        document.addEventListener('touchmove', orderCellPressEnd);
+
+        // ============== COLOUR PANELS ==============
+        function openColorPanel(fields, title) {
+            let html = '<div class="color-panel-title">' + title + '</div>';
+            fields.forEach(function (f) {
+                const val = theme.structural[f.key] || '#000000';
+                html += '<div class="color-field"><label>' + f.label + '</label><input type="color" value="' + val + '" onchange="updateStructuralColor(\'' + f.key + '\', this.value)"></div>';
+            });
+            html += '<button class="btn-close-panel" onclick="closeColorPanel()">Done</button>';
+            document.getElementById('colorPanelBody').innerHTML = html;
+            document.getElementById('colorPanelOverlay').style.display = 'flex';
+        }
+
+        function updateStructuralColor(key, val) {
+            theme.structural[key] = val;
+            saveTheme();
+            applyTheme();
+        }
+
+        function openTierColorPanel(tierCode) {
+            const t = theme.tiers[tierCode] || { bg: '#ffffff', text: '#000000' };
+            let html = '<div class="color-panel-title">' + tierCode + ' tier colours</div>' +
+                '<div class="color-field"><label>Badge background</label><input type="color" value="' + t.bg + '" onchange="updateTierColor(\'' + tierCode + '\',\'bg\',this.value)"></div>' +
+                '<div class="color-field"><label>Badge / border colour</label><input type="color" value="' + t.text + '" onchange="updateTierColor(\'' + tierCode + '\',\'text\',this.value)"></div>' +
+                '<button class="btn-close-panel" onclick="closeColorPanel()">Done</button>';
+            document.getElementById('colorPanelBody').innerHTML = html;
+            document.getElementById('colorPanelOverlay').style.display = 'flex';
+        }
+
+        function updateTierColor(tierCode, prop, val) {
+            if (!theme.tiers[tierCode]) theme.tiers[tierCode] = { bg: '#ffffff', text: '#000000' };
+            theme.tiers[tierCode][prop] = val;
+            saveTheme();
+            applyTheme();
+        }
+
+        function openMealColorPanel(code) {
+            const c = getMealColor(code);
+            let html = '<div class="color-panel-title">' + code + ' meal colour</div>' +
+                '<div class="color-field"><label>Background</label><input type="color" value="' + c.bg + '" onchange="updateMealColor(\'' + code + '\',\'bg\',this.value)"></div>' +
+                '<div class="color-field"><label>Text</label><input type="color" value="' + c.text + '" onchange="updateMealColor(\'' + code + '\',\'text\',this.value)"></div>' +
+                '<button class="btn-close-panel" onclick="closeColorPanel()">Done</button>';
+            document.getElementById('colorPanelBody').innerHTML = html;
+            document.getElementById('colorPanelOverlay').style.display = 'flex';
+        }
+
+        function updateMealColor(code, prop, val) {
+            if (!theme.mealColors[code]) theme.mealColors[code] = { bg: '#ffffff', text: '#000000' };
+            theme.mealColors[code][prop] = val;
+            saveTheme();
+            applyTheme();
+        }
+
+        function openSpecialColorPanel(code) {
+            const c = getSpecialColor(code);
+            let html = '<div class="color-panel-title">' + code + ' special code colour</div>' +
+                '<div class="color-field"><label>Background</label><input type="color" value="' + c.bg + '" onchange="updateSpecialColor(\'' + code + '\',\'bg\',this.value)"></div>' +
+                '<div class="color-field"><label>Text</label><input type="color" value="' + c.text + '" onchange="updateSpecialColor(\'' + code + '\',\'text\',this.value)"></div>' +
+                '<button class="btn-close-panel" onclick="closeColorPanel()">Done</button>';
+            document.getElementById('colorPanelBody').innerHTML = html;
+            document.getElementById('colorPanelOverlay').style.display = 'flex';
+        }
+
+        function updateSpecialColor(code, prop, val) {
+            if (!theme.specialColors[code]) theme.specialColors[code] = { bg: '#ffffff', text: '#000000' };
+            theme.specialColors[code][prop] = val;
+            saveTheme();
+            applyTheme();
+        }
+
+        function openOrderColorPanel(choiceId) {
+            const menu = getActiveService() ? getActiveService().menu : [];
+            const choice = menu.find(function (c) { return c.id === choiceId; });
+            const label = choice ? choice.name : 'Meal choice';
+            const c = getOrderColor(choiceId);
+            let html = '<div class="color-panel-title">' + label + ' colour</div>' +
+                '<div class="color-field"><label>Background</label><input type="color" value="' + c.bg + '" onchange="updateOrderColor(\'' + choiceId + '\',\'bg\',this.value)"></div>' +
+                '<div class="color-field"><label>Text</label><input type="color" value="' + c.text + '" onchange="updateOrderColor(\'' + choiceId + '\',\'text\',this.value)"></div>' +
+                '<button class="btn-close-panel" onclick="closeColorPanel()">Done</button>';
+            document.getElementById('colorPanelBody').innerHTML = html;
+            document.getElementById('colorPanelOverlay').style.display = 'flex';
+        }
+
+        function updateOrderColor(choiceId, prop, val) {
+            if (!theme.orderColors[choiceId]) theme.orderColors[choiceId] = { bg: '#ffffff', text: '#000000' };
+            theme.orderColors[choiceId][prop] = val;
+            saveTheme();
+            applyTheme();
+        }
+
+        function closeColorPanel() { document.getElementById('colorPanelOverlay').style.display = 'none'; }
+
+        // ============== INFO EDIT MODAL ==============
+        const TITLE_OPTIONS = ['MR','MS','MRS','MISS','MSTR','DATO','DATIN','DTUK','TSRI','MDM','DR','PROF'];
+        const TIER_OPTIONS = ['','ELIT','PLAT','GOLD','RUBY','SLVR','BLUE','SAPH','EMER'];
+
+        function dataForSection() {
+            return chartData;
+        }
+
+        function openInfoEditModal(seatBox) {
+            const seat = seatBox.getAttribute('data-seat');
+            let data = dataForSection();
+            if (!data) { showToast('No manifest loaded yet'); return; }
+            if (!data.passengers) data.passengers = [];
+            let p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
+            if (!p) p = { seat: seat, title: '', name: '', meal: '', tier: '', specialCode: '', specialOtherText: '', isInfant: false, extSeatbelt: false, remarksText: '' };
+            const nameParts = parsePassengerName(p.name || '');
+
+            let specialOptionsHTML = '<option value="">— None —</option>';
+            SPECIAL_CODES.forEach(function (code) {
+                specialOptionsHTML += '<option value="' + code + '"' + (p.specialCode === code ? ' selected' : '') + '>' + code + '</option>';
+            });
+            specialOptionsHTML += '<option value="OTHERS"' + (p.specialCode === 'OTHERS' ? ' selected' : '') + '>Others</option>';
+            const othersDisplay = p.specialCode === 'OTHERS' ? 'block' : 'none';
+
+            let html = '<div class="edit-modal-title">Edit ' + seat + '</div>';
+            html += '<label>Title</label><select id="editTitle"><option value="">-</option>' + TITLE_OPTIONS.map(function (t) { return '<option value="' + t + '"' + (p.title === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select>';
+            html += '<label>Surname</label><input type="text" id="editSurname" value="' + (nameParts.lastName || '').replace(/"/g, '&quot;') + '">';
+            html += '<label>First name</label><input type="text" id="editFirstname" value="' + (nameParts.firstName || '').replace(/"/g, '&quot;') + '">';
+            html += '<label>Meal code</label><input type="text" id="editMeal" value="' + (p.meal || '') + '" placeholder="e.g. VGML">';
+            html += '<label>Tier</label><select id="editTier">' + TIER_OPTIONS.map(function (t) { return '<option value="' + t + '"' + (p.tier === t ? ' selected' : '') + '>' + (t || 'None') + '</option>'; }).join('') + '</select>';
+            html += '<label>Special</label><select id="editSpecial" onchange="toggleEditOthersInput(this)">' + specialOptionsHTML + '</select>';
+            html += '<input type="text" id="editSpecialOther" style="display:' + othersDisplay + ';margin-top:6px;" placeholder="Enter special handling code" value="' + (p.specialOtherText || '').replace(/"/g, '&quot;') + '">';
+            html += '<div class="edit-toggle-row"><label class="toggle-switch"><input type="checkbox" id="editInfant" ' + (p.isInfant ? 'checked' : '') + '><span class="toggle-slider"></span></label><span class="edit-toggle-label">INF (Infant)</span></div>';
+            html += '<div class="edit-toggle-row"><label class="toggle-switch"><input type="checkbox" id="editExtSeatbelt" ' + (p.extSeatbelt ? 'checked' : '') + '><span class="toggle-slider"></span></label><span class="edit-toggle-label">EXT (Extension Seatbelt)</span></div>';
+            html += '<label>Remarks</label><textarea id="editRemarks" rows="2" placeholder="Add remarks...">' + (p.remarksText || '') + '</textarea>';
+            html += '<div class="edit-modal-buttons"><button onclick="closeInfoEditModal()">Cancel</button><button onclick="saveInfoEdit(\'' + seat + '\')">Save</button></div>';
+
+            document.getElementById('infoEditBody').innerHTML = html;
+            document.getElementById('infoEditOverlay').style.display = 'flex';
+        }
+
+        function toggleEditOthersInput(selectEl) {
+            const input = document.getElementById('editSpecialOther');
+            if (input) input.style.display = selectEl.value === 'OTHERS' ? 'block' : 'none';
+        }
+
+        function saveInfoEdit(seat) {
+            const data = dataForSection();
+            if (!data) return;
+            if (!data.passengers) data.passengers = [];
+            let p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
+            if (!p) { p = { seat: seat }; data.passengers.push(p); }
+
+            const title = document.getElementById('editTitle').value;
+            const surname = document.getElementById('editSurname').value.trim();
+            const firstname = document.getElementById('editFirstname').value.trim();
+            p.title = title;
+            p.name = surname + '/' + firstname;
+            p.meal = document.getElementById('editMeal').value.trim().toUpperCase();
+            p.tier = document.getElementById('editTier').value;
+            p.specialCode = document.getElementById('editSpecial').value;
+            p.specialOtherText = document.getElementById('editSpecialOther').value.trim();
+            p.isInfant = document.getElementById('editInfant').checked;
+            p.extSeatbelt = document.getElementById('editExtSeatbelt').checked;
+            p.remarksText = document.getElementById('editRemarks').value;
+            p.seat = seat;
+
+            const seatBox = document.querySelector('#mainSeatContainer [data-seat="' + seat + '"]');
+            if (seatBox) {
+                clearTierClasses(seatBox);
+                seatBox.classList.remove('empty-seat');
+                populateSeatData(p, seatBox);
+                const hasAnyData = p.title || p.name.replace('/', '') || p.meal || p.tier || p.specialCode || p.isInfant || p.extSeatbelt || (p.remarksText && p.remarksText.trim());
+                if (!hasAnyData) markSeatAsEmpty(seatBox);
+            }
+
+            closeInfoEditModal();
+            syncBackToMainPage();
+            persistChartState();
+            renderSummaryChips();
+            showToast('Saved ' + seat);
+        }
+
+        function closeInfoEditModal() { document.getElementById('infoEditOverlay').style.display = 'none'; }
+
+        // ============== ORDER MODE: MULTI-SERVICE MEAL ORDERS ==============
+        let activeServiceId = null;
+
+        function getMealServices() {
+            const data = dataForSection();
+            if (!data) return [];
+            if (!data.mealServices) data.mealServices = [];
+            if (data.mealMenu && data.mealMenu.length && data.mealServices.length === 0) {
+                const migratedId = 'service_' + Date.now();
+                data.mealServices.push({ id: migratedId, label: 'Meal Service 1', menu: data.mealMenu });
+                if (data.passengers) {
+                    data.passengers.forEach(function (p) {
+                        if (p.orderChoiceId) {
+                            p.orders = p.orders || {};
+                            p.orders[migratedId] = { choiceId: p.orderChoiceId, served: false };
+                            delete p.orderChoiceId;
+                        }
+                    });
+                }
+                delete data.mealMenu;
+            }
+            return data.mealServices;
+        }
+
+        function getActiveService() {
+            const services = getMealServices();
+            if (services.length === 0) return null;
+            let svc = services.find(function (s) { return s.id === activeServiceId; });
+            if (!svc) { svc = services[0]; activeServiceId = svc.id; }
+            return svc;
+        }
+
+        function renderServiceTabs() {
+            const holder = document.getElementById('serviceTabRow');
+            if (!holder) return;
+            const services = getMealServices();
+            if (services.length && !activeServiceId) {
+                activeServiceId = services[0].id;
+            }
+            holder.innerHTML = services.map(function (svc) {
+                const isActive = svc.id === activeServiceId;
+                return '<span class="service-tab' + (isActive ? ' active' : '') + '" onclick="selectServiceTab(\'' + svc.id + '\')">' + svc.label + '</span>';
+            }).join('');
+        }
+
+        function selectServiceTab(serviceId) {
+            activeServiceId = serviceId;
+            renderServiceTabs();
+            refreshAllOrderOverlays();
+        }
+
+        function addMealService() {
+            const services = getMealServices();
+            const svc = { id: 'service_' + Date.now() + '_' + Math.floor(Math.random() * 1000), label: 'Meal Service ' + (services.length + 1), menu: [] };
+            services.push(svc);
+            activeServiceId = svc.id;
+            renderServiceTabs();
+            persistChartState();
+            openMealMenuSetup();
+        }
+
+        function penGap(value) {
+            return value + '<span class="pen-gap">___</span>';
+        }
+
+        function renderMealCountSummary() {
+            const holder = document.getElementById('mainMealOrderSummary');
+            if (!holder) return;
+            const services = getMealServices();
+            if (!services.length) { holder.innerHTML = ''; holder.style.display = 'none'; return; }
+            holder.style.display = 'block';
+            const data = dataForSection();
+            const passengers = (data && data.passengers) ? data.passengers : [];
+            const serviceParts = services.map(function (svc) {
+                const parts = svc.menu.map(function (choice) {
+                    const ordered = passengers.filter(function (p) { return p.orders && p.orders[svc.id] && p.orders[svc.id].choiceId === choice.id; }).length;
+                    return choice.name + ': ' + penGap(ordered);
+                });
+                return '<strong>' + svc.label + ':</strong> ' + (parts.join(' &nbsp;|&nbsp; ') || '<span style="color:#94a3b8;">no choices set</span>');
+            });
+            holder.innerHTML = serviceParts.join('<br>');
+        }
+
+        // ---- Meal Menu setup ----
+        function openMealMenuSetup() {
+            if (getMealServices().length === 0) {
+                addMealService();
+                return;
+            }
+            renderMealMenuSetup();
+            document.getElementById('mealMenuOverlay').style.display = 'flex';
+        }
+
+        let activePresetInputId = null;
+        let activeKeypadInputId = null;
+
+        function renderMealMenuSetup() {
+            const svc = getActiveService();
+            if (!svc) return;
+            const isCustom = !['Breakfast','Brunch','Lunch','Dinner','All Day Dining','Supper','Refreshments','DAT'].includes(svc.label);
+
+            let html = '<div class="edit-modal-title">Meal Menu</div>';
+
+            html += '<label>Service name</label>';
+            html += `<select id="serviceNameSelect" onchange="handleServiceNameChange(this.value)" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #dee2e6; border-radius:6px; font-size:13px; margin-bottom:6px;">
+                <option value="Breakfast" ${svc.label === 'Breakfast' ? 'selected' : ''}>Breakfast</option>
+                <option value="Brunch" ${svc.label === 'Brunch' ? 'selected' : ''}>Brunch</option>
+                <option value="Lunch" ${svc.label === 'Lunch' ? 'selected' : ''}>Lunch</option>
+                <option value="Dinner" ${svc.label === 'Dinner' ? 'selected' : ''}>Dinner</option>
+                <option value="All Day Dining" ${svc.label === 'All Day Dining' ? 'selected' : ''}>All Day Dining</option>
+                <option value="Supper" ${svc.label === 'Supper' ? 'selected' : ''}>Supper</option>
+                <option value="Refreshments" ${svc.label === 'Refreshments' ? 'selected' : ''}>Refreshments</option>
+                <option value="DAT" ${svc.label === 'DAT' ? 'selected' : ''}>DAT</option>
+                <option value="Custom" ${isCustom ? 'selected' : ''}>Custom</option>
+            </select>`;
+            html += `<input type="text" id="customServiceName" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #dee2e6; border-radius:6px; font-size:13px; margin-bottom:10px; display:${isCustom ? 'block' : 'none'};" value="${isCustom ? svc.label : ''}" oninput="updateServiceLabel(this.value)" placeholder="Type custom service name...">`;
+
+            html += '<div id="mealMenuRows" style="margin-top:10px;">';
+            if (svc.menu.length === 0) {
+                html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">No meal choices yet. Add the options loaded for this flight.</div>';
+            }
+            svc.menu.forEach(function (choice) {
+                const randId = 'name_' + choice.id + '_' + Date.now();
+                const qtyId = 'qty_' + choice.id + '_' + Date.now();
+                html += '<div class="meal-menu-row">' +
+                    `<input type="text" id="${randId}" class="meal-menu-name" value="${choice.name.replace(/"/g, '&quot;')}" onfocus="openNamePreset(this.id)" onchange="updateMealMenuField('${choice.id}','name',this.value)">` +
+                    `<input type="number" id="${qtyId}" class="meal-menu-qty" value="${choice.qty}" onfocus="openKeypad(this.id)" onchange="updateMealMenuField('${choice.id}','qty',this.value)">` +
+                    '<button class="meal-menu-remove-btn" onclick="removeMealChoice(\'' + choice.id + '\')">\u2715</button>' +
+                    '</div>';
+            });
+            html += '</div>';
+            html += '<button class="add-meal-choice-btn" onclick="addMealChoice()">+ Add meal choice</button>';
+            html += '<button class="btn-close-panel" onclick="closeMealMenuSetup()">Done</button>';
+            document.getElementById('mealMenuBody').innerHTML = html;
+        }
+
+        function handleServiceNameChange(value) {
+            const svc = getActiveService();
+            if (!svc) return;
+            const customInput = document.getElementById('customServiceName');
+            if (value === 'Custom') {
+                customInput.style.display = 'block';
+                customInput.value = '';
+                svc.label = '';
+            } else {
+                customInput.style.display = 'none';
+                svc.label = value;
+                renderServiceTabs();
+                renderMealCountSummary();
+                persistChartState();
+            }
+        }
+
+        function openNamePreset(inputId) {
+            activePresetInputId = inputId;
+            const popup = document.getElementById('presetPopup');
+            const grid = document.getElementById('presetGrid');
+            grid.innerHTML = PRESET_NAMES.map(name =>
+                `<button class="preset-btn" onclick="selectPresetName('${name}')">${name}</button>`
+            ).join('');
+            document.getElementById('presetCustomInput').value = '';
+            popup.style.display = 'flex';
+        }
+        function selectPresetName(name) {
+            if (activePresetInputId) {
+                document.getElementById(activePresetInputId).value = name;
+                const evt = new Event('change', { bubbles: true });
+                document.getElementById(activePresetInputId).dispatchEvent(evt);
+                closeNamePreset();
+            }
+        }
+        function customPresetName(val) {
+            if (activePresetInputId && val.trim()) {
+                document.getElementById(activePresetInputId).value = val.trim();
+                const evt = new Event('change', { bubbles: true });
+                document.getElementById(activePresetInputId).dispatchEvent(evt);
+            }
+        }
+        function closeNamePreset() {
+            document.getElementById('presetPopup').style.display = 'none';
+            activePresetInputId = null;
+        }
+
+        function openKeypad(inputId) {
+            activeKeypadInputId = inputId;
+            document.getElementById('keypadDisplay').textContent = document.getElementById(inputId).value || '0';
+            document.getElementById('keypadPopup').style.display = 'flex';
+        }
+        function keypadPress(value) {
+            const display = document.getElementById('keypadDisplay');
+            let current = display.textContent;
+            if (value === 'backspace') {
+                current = current.slice(0, -1) || '0';
+            } else if (value === 'done') {
+                if (activeKeypadInputId) {
+                    const input = document.getElementById(activeKeypadInputId);
+                    input.value = parseInt(current, 10) || 0;
+                    const evt = new Event('change', { bubbles: true });
+                    input.dispatchEvent(evt);
+                    closeKeypad();
+                    return;
+                }
+                return;
+            } else {
+                if (current === '0') current = value;
+                else current += value;
+            }
+            display.textContent = current;
+        }
+        function closeKeypad() {
+            document.getElementById('keypadPopup').style.display = 'none';
+            activeKeypadInputId = null;
+        }
+
+        function updateServiceLabel(value) {
+            const svc = getActiveService();
+            if (!svc) return;
+            svc.label = value || svc.label;
+            renderServiceTabs();
+            renderMealCountSummary();
+            persistChartState();
+        }
+
+        function addMealChoice() {
+            const svc = getActiveService();
+            if (!svc) return;
+            svc.menu.push({ id: 'meal_' + Date.now() + '_' + Math.floor(Math.random() * 1000), name: 'New Meal', qty: 0 });
+            renderMealMenuSetup();
+            renderMealCountSummary();
+            persistChartState();
+        }
+
+        function removeMealChoice(choiceId) {
+            const svc = getActiveService();
+            if (!svc) return;
+            const data = dataForSection();
+            const idx = svc.menu.findIndex(function (c) { return c.id === choiceId; });
+            if (idx === -1) return;
+            if (data && data.passengers) {
+                data.passengers.forEach(function (p) {
+                    if (p.orders && p.orders[svc.id] && p.orders[svc.id].choiceId === choiceId) {
+                        delete p.orders[svc.id];
+                        refreshSeatOrderOverlayBySeat(p.seat);
+                    }
+                });
+            }
+            svc.menu.splice(idx, 1);
+            renderMealMenuSetup();
+            renderMealCountSummary();
+            syncBackToMainPage();
+            persistChartState();
+        }
+
+        function updateMealMenuField(choiceId, field, value) {
+            const svc = getActiveService();
+            if (!svc) return;
+            const choice = svc.menu.find(function (c) { return c.id === choiceId; });
+            if (!choice) return;
+            if (field === 'qty') {
+                choice.qty = Math.max(0, parseInt(value, 10) || 0);
+            } else {
+                choice.name = value;
+                const data = dataForSection();
+                if (data && data.passengers) {
+                    data.passengers.forEach(function (p) {
+                        if (p.orders && p.orders[svc.id] && p.orders[svc.id].choiceId === choiceId) refreshSeatOrderOverlayBySeat(p.seat);
+                    });
+                }
+            }
+            renderMealCountSummary();
+            persistChartState();
+        }
+
+        function closeMealMenuSetup() { document.getElementById('mealMenuOverlay').style.display = 'none'; }
+
+        // ---- Order-taking ----
+        let orderLongPressTimer = null;
+        let orderLongPressFired = false;
+
+        function orderCellPressStart(seatBox) {
+            orderLongPressFired = false;
+            if (orderLongPressTimer) clearTimeout(orderLongPressTimer);
+            orderLongPressTimer = setTimeout(function () {
+                orderLongPressFired = true;
+                openOrderModal(seatBox, true);
+            }, 550);
+        }
+        function orderCellPressEnd() {
+            if (orderLongPressTimer) { clearTimeout(orderLongPressTimer); orderLongPressTimer = null; }
+        }
+
+        function handleOrderTap(seatBox) {
+            if (orderLongPressFired) { orderLongPressFired = false; return; }
+            const seat = seatBox.getAttribute('data-seat');
+            const data = dataForSection();
+            if (!data) { showToast('No manifest loaded yet'); return; }
+            if (seatBox.classList.contains('empty-seat')) { showToast('No passenger in this seat'); return; }
+            const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
+            if (!p) { showToast('No passenger in this seat'); return; }
+            if (p.meal && p.meal.trim()) { showToast('Seat ' + seat + ' already has a declared special meal: ' + p.meal); return; }
+            const svc = getActiveService();
+            if (!svc) { showToast('No meal service set up yet \u2014 tap 🍽️ Meal Menu first'); return; }
+
+            p.orders = p.orders || {};
+            const existing = p.orders[svc.id];
+            if (!existing) {
+                openOrderModal(seatBox);
+            } else {
+                existing.served = !existing.served;
+                refreshSeatOrderOverlay(seatBox);
+                syncBackToMainPage();
+                persistChartState();
+            }
+        }
+
+        function openOrderModal(seatBox, forceReopen) {
+            const seat = seatBox.getAttribute('data-seat');
+            const data = dataForSection();
+            if (!data) { showToast('No manifest loaded yet'); return; }
+            if (seatBox.classList.contains('empty-seat')) { showToast('No passenger in this seat'); return; }
+            const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
+            if (!p) { showToast('No passenger in this seat'); return; }
+            if (p.meal && p.meal.trim() && !forceReopen) { showToast('Seat ' + seat + ' already has a declared special meal: ' + p.meal); return; }
+            const svc = getActiveService();
+            if (!svc) { showToast('No meal service set up yet \u2014 tap 🍽️ Meal Menu first'); return; }
+            if (svc.menu.length === 0) { showToast('No meal choices set up yet \u2014 tap 🍽️ Meal Menu first'); return; }
+
+            renderOrderModal(seat);
+            document.getElementById('orderModalOverlay').style.display = 'flex';
+        }
+
+        function renderOrderModal(seat) {
+            const data = dataForSection();
+            const svc = getActiveService();
+            const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
+            const currentOrder = p.orders ? p.orders[svc.id] : null;
+            const currentChoiceId = currentOrder ? currentOrder.choiceId : null;
+
+            let html = '<div class="edit-modal-title">' + svc.label + ' \u2014 Seat ' + seat + '</div>';
+            html += '<div id="orderMenuRows">';
+            svc.menu.forEach(function (choice) {
+                const isSelected = choice.id === currentChoiceId;
+                const isDisabled = choice.qty <= 0 && !isSelected;
+                html += '<div class="meal-menu-row' + (isDisabled ? ' disabled' : '') + '">' +
+                    '<span class="meal-menu-name" style="border:none;padding:6px 0;">' + choice.name + ' (' + choice.qty + ' left)</span>' +
+                    '<button class="meal-menu-select-btn' + (isSelected ? ' active' : '') + '" ' + (isDisabled ? 'disabled' : '') + ' onclick="selectMealChoice(\'' + seat + '\',\'' + choice.id + '\')">' + (isSelected ? '\u2713 Selected' : 'Select') + '</button>' +
+                    '</div>';
+            });
+            html += '</div>';
+            if (currentOrder) {
+                html += '<button class="add-meal-choice-btn" onclick="clearMealOrder(\'' + seat + '\')">Clear order</button>';
+            }
+            html += '<button class="btn-close-panel" onclick="closeOrderModal()">Done</button>';
+
+            document.getElementById('orderModalBody').innerHTML = html;
+        }
+
+        function selectMealChoice(seat, choiceId) {
+            const data = dataForSection();
+            if (!data || !data.passengers) return;
+            const svc = getActiveService();
+            const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
+            if (!p || !svc) return;
+            const newChoice = svc.menu.find(function (c) { return c.id === choiceId; });
+            if (!newChoice) return;
+
+            p.orders = p.orders || {};
+            const existing = p.orders[svc.id];
+
+            if (existing && existing.choiceId === choiceId) {
+                newChoice.qty += 1;
+                delete p.orders[svc.id];
+            } else {
+                if (newChoice.qty <= 0) { showToast('No more ' + newChoice.name + ' left'); return; }
+                if (existing) {
+                    const oldChoice = svc.menu.find(function (c) { return c.id === existing.choiceId; });
+                    if (oldChoice) oldChoice.qty += 1;
+                }
+                newChoice.qty -= 1;
+                p.orders[svc.id] = { choiceId: choiceId, served: false, remark: '' };
+            }
+
+            refreshSeatOrderOverlayBySeat(seat);
+            syncBackToMainPage();
+            persistChartState();
+            renderMealCountSummary();
+            closeOrderModal();
+        }
+
+        function clearMealOrder(seat) {
+            const data = dataForSection();
+            const svc = getActiveService();
+            const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
+            if (!p || !svc || !p.orders || !p.orders[svc.id]) { closeOrderModal(); return; }
+            const choice = svc.menu.find(function (c) { return c.id === p.orders[svc.id].choiceId; });
+            if (choice) choice.qty += 1;
+            delete p.orders[svc.id];
+            refreshSeatOrderOverlayBySeat(seat);
+            syncBackToMainPage();
+            persistChartState();
+            renderMealCountSummary();
+            closeOrderModal();
+        }
+
+        function refreshSeatOrderOverlayBySeat(seat) {
+            const normSeat = normalizeSeatNumber(seat);
+            const seatBox = document.querySelector('#mainSeatContainer [data-seat="' + normSeat + '"]');
+            if (seatBox) refreshSeatOrderOverlay(seatBox);
+        }
+
+        function refreshSeatOrderOverlay(seatBox) {
+            const overlay = seatBox.querySelector('.order-fill-overlay');
+            if (!overlay) return;
+            const seat = seatBox.getAttribute('data-seat');
+            const data = dataForSection();
+            const svc = getActiveService();
+            const p = data && data.passengers ? data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; }) : null;
+            const order = (p && svc && p.orders) ? p.orders[svc.id] : null;
+            const seatNumberContainer = seatBox.querySelector('.seat-number-container');
+
+            if (currentMode !== 'order' || !order) {
+                seatBox.classList.remove('has-order', 'peek-mode');
+                seatNumberContainer.style.visibility = 'visible';
+                overlay.style.display = 'none';
+                overlay.innerHTML = '';
+                return;
+            }
+
+            seatBox.classList.add('has-order');
+            seatNumberContainer.style.visibility = 'hidden';
+            overlay.style.display = 'flex';
+
+            let html = '';
+            if (order.served) {
+                overlay.style.backgroundColor = '#dcfce7';
+                overlay.style.color = '#166534';
+                html = `
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; position:relative; cursor:pointer;" onclick="handleOverlayBackgroundClick(event, '${seat}')">
+                        <div class="order-seat-number" onclick="event.stopPropagation(); toggleOrderServed('${seat}')">${seat}</div>
+                        <span class="order-fill-icon">\u2705</span>
+                    </div>
+                `;
+            } else {
+                const choice = svc.menu.find(function (c) { return c.id === order.choiceId; });
+                const letter = choice && choice.name ? choice.name.trim().charAt(0).toUpperCase() : '?';
+                const c = getOrderColor(order.choiceId);
+                overlay.style.backgroundColor = c.bg;
+                overlay.style.color = c.text;
+                const remark = order.remark || '';
+
+                html = `
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; position:relative; cursor:pointer;" onclick="handleOverlayBackgroundClick(event, '${seat}')">
+                        <div class="order-seat-number" onclick="event.stopPropagation(); toggleOrderServed('${seat}')">${seat}</div>
+                        <span class="order-fill-letter">${letter}</span>
+                        <input type="text" class="order-remark-input" value="${remark.replace(/"/g, '&quot;')}" placeholder="Remarks" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()" oninput="updateOrderRemark('${seat}',this.value)">
+                    </div>
+                `;
+            }
+            overlay.innerHTML = html;
+        }
+
+        function handleOverlayBackgroundClick(event, seat) {
+            event.stopPropagation();
+            if (event.target.closest('.order-remark-input') || event.target.closest('.order-seat-number')) return;
+
+            const seatBox = document.querySelector('#mainSeatContainer [data-seat="' + normalizeSeatNumber(seat) + '"]');
+            if (!seatBox) return;
+
+            seatBox.classList.add('peek-mode');
+        }
+
+        function toggleOrderServed(seat) {
+            const data = dataForSection();
+            const svc = getActiveService();
+            const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
+            if (!p || !svc || !p.orders || !p.orders[svc.id]) return;
+
+            p.orders[svc.id].served = !p.orders[svc.id].served;
+            const seatBox = document.querySelector('#mainSeatContainer [data-seat="' + normalizeSeatNumber(seat) + '"]');
+            if (seatBox) refreshSeatOrderOverlay(seatBox);
+            syncBackToMainPage();
+            persistChartState();
+        }
+
+        function updateOrderRemark(seat, value) {
+            const data = dataForSection();
+            const svc = getActiveService();
+            const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
+            if (!p || !svc) return;
+            if (!p.orders) p.orders = {};
+            if (!p.orders[svc.id]) return;
+            p.orders[svc.id].remark = value;
+            syncBackToMainPage();
+            persistChartState();
+        }
+
+        function refreshAllOrderOverlays() {
+            document.querySelectorAll('.seat-box').forEach(function (box) { refreshSeatOrderOverlay(box); });
+        }
+
+        function closeOrderModal() { document.getElementById('orderModalOverlay').style.display = 'none'; }
+
+        // ============== SUMMARY CHIPS + CATEGORY LIST ==============
+        function renderSummaryChips() {
+            const holder = document.getElementById('mainSummaryChips');
+            if (!holder) return;
+            const data = dataForSection();
+            const passengers = (data && data.passengers) ? data.passengers : [];
+
+            const specialCounts = {};
+            passengers.forEach(function (p) {
+                const label = getSpecialLabel(p);
+                if (label) specialCounts[label] = (specialCounts[label] || 0) + 1;
+            });
+            const infCount = passengers.filter(function (p) { return p.isInfant; }).length;
+            const extCount = passengers.filter(function (p) { return p.extSeatbelt; }).length;
+            const remarksCount = passengers.filter(function (p) { return p.remarksText && p.remarksText.trim(); }).length;
+
+            let chips = [];
+            Object.keys(specialCounts).sort().forEach(function (code) {
+                chips.push('<span class="summary-chip" onclick="openCategoryList(\'special\',\'' + code.replace(/'/g, "\\'") + '\')">' + code + ' (' + specialCounts[code] + ')</span>');
+            });
+            if (infCount > 0) chips.push('<span class="summary-chip" onclick="openCategoryList(\'inf\')">INF (' + infCount + ')</span>');
+            if (extCount > 0) chips.push('<span class="summary-chip" onclick="openCategoryList(\'ext\')">EXT (' + extCount + ')</span>');
+            if (remarksCount > 0) chips.push('<span class="summary-chip" onclick="openCategoryList(\'remarks\')">REMARKS (' + remarksCount + ')</span>');
+
+            holder.innerHTML = chips.join('');
+            holder.style.display = chips.length ? 'flex' : 'none';
+        }
+
+        function openCategoryList(category, code) {
+            const data = dataForSection();
+            const passengers = (data && data.passengers) ? data.passengers : [];
+            let items = [];
+            let title = '';
+
+            if (category === 'special') {
+                title = code + ' (' + passengers.filter(function (p) { return getSpecialLabel(p) === code; }).length + ')';
+                items = passengers.filter(function (p) { return getSpecialLabel(p) === code; })
+                    .map(function (p) { return { seat: p.seat || '—', name: p.name || '', tag: code }; });
+            } else if (category === 'inf') {
+                title = 'Infants (' + passengers.filter(function (p) { return p.isInfant; }).length + ')';
+                items = passengers.filter(function (p) { return p.isInfant; })
+                    .map(function (p) { return { seat: p.seat || '—', name: p.name || '', tag: 'INF' }; });
+            } else if (category === 'ext') {
+                title = 'Extension Seatbelt (' + passengers.filter(function (p) { return p.extSeatbelt; }).length + ')';
+                items = passengers.filter(function (p) { return p.extSeatbelt; })
+                    .map(function (p) { return { seat: p.seat || '—', name: p.name || '', tag: 'EXT' }; });
+            } else if (category === 'remarks') {
+                title = 'Remarks (' + passengers.filter(function (p) { return p.remarksText && p.remarksText.trim(); }).length + ')';
+                items = passengers.filter(function (p) { return p.remarksText && p.remarksText.trim(); })
+                    .map(function (p) { return { seat: p.seat || '—', name: p.name || '', tag: p.remarksText }; });
+            }
+
+            items.sort(function (a, b) {
+                if (a.seat === '—') return 1;
+                if (b.seat === '—') return -1;
+                return normalizeSeatNumber(a.seat).localeCompare(normalizeSeatNumber(b.seat));
+            });
+
+            const listHTML = items.length === 0
+                ? '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:12px;">No passengers found.</div>'
+                : items.map(function (it) {
+                    return '<div class="category-list-row" onclick="closeCategoryList(); jumpToSeatEdit(\'' + normalizeSeatNumber(it.seat) + '\');">' +
+                        '<span class="category-list-seat">' + it.seat + '</span>' +
+                        '<span class="category-list-name">' + (it.name || '—').replace(/\//g, ' / ') + '</span>' +
+                        '<span class="category-list-tag">' + it.tag + '</span>' +
+                        '</div>';
+                }).join('');
+
+            document.getElementById('categoryListBody').innerHTML =
+                '<div class="color-panel-title">' + title + '</div>' +
+                '<div class="category-list">' + listHTML + '</div>' +
+                '<button class="btn-close-panel" onclick="closeCategoryList()">Close</button>';
+
+            document.getElementById('categoryListOverlay').style.display = 'flex';
+        }
+
+        function jumpToSeatEdit(seat) {
+            const seatBox = document.querySelector('#mainSeatContainer [data-seat="' + seat + '"]');
+            if (seatBox) {
+                setMode('edit');
+                openInfoEditModal(seatBox);
+            } else {
+                showToast('Seat ' + seat + ' not found');
+            }
+        }
+
+        function closeCategoryList() { document.getElementById('categoryListOverlay').style.display = 'none'; }
+
+        // ============== SWAP SEATS ==============
+        function handleSwapTap(seatBox) {
+            if (!swapFirstSeat) {
+                swapFirstSeat = seatBox;
+                seatBox.classList.add('swap-selected');
+                return;
+            }
+            if (swapFirstSeat === seatBox) { clearSwapSelection(); return; }
+            swapPassengers(swapFirstSeat, seatBox);
+            clearSwapSelection();
+        }
+
+        function swapPassengers(boxA, boxB) {
+            const seatA = boxA.getAttribute('data-seat');
+            const seatB = boxB.getAttribute('data-seat');
+            const data = dataForSection();
+            if (!data) return;
+            if (!data.passengers) data.passengers = [];
+
+            let pA = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seatA; });
+            let pB = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seatB; });
+
+            if (pA && pB) {
+                const tempA = Object.assign({}, pA);
+                Object.assign(pA, pB); pA.seat = seatA;
+                Object.assign(pB, tempA); pB.seat = seatB;
+            } else if (pA && !pB) {
+                pA.seat = seatB;
+            } else if (!pA && pB) {
+                pB.seat = seatA;
+            } else {
+                showToast('Both seats are empty');
+                return;
+            }
+
+            [boxA, boxB].forEach(function (box) {
+                const seat = box.getAttribute('data-seat');
+                const p = data.passengers.find(function (x) { return normalizeSeatNumber(x.seat) === seat; });
+                clearTierClasses(box);
+                if (p) { box.classList.remove('empty-seat'); populateSeatData(p, box); } else { markSeatAsEmpty(box); }
+            });
+
+            syncBackToMainPage();
+            persistChartState();
+            renderSummaryChips();
+            showToast('Swapped ' + seatA + ' \u2194 ' + seatB);
+        }
+
+        function clearTierClasses(seatBox) {
+            Object.keys(DEFAULT_TIER_COLORS).forEach(function (t) { seatBox.classList.remove('tier-' + t); });
+        }
+
+        // ============== SYNC BACK TO MAIN PAGE ==============
+        function syncBackToMainPage() {
+            try {
+                const tabId = chartData && chartData.tabId;
+                if (!tabId) return;
+                const raw = localStorage.getItem(TABS_STORAGE_KEY);
+                if (!raw) return;
+                const tabs = JSON.parse(raw);
+                const tab = tabs.find(function (t) { return t.id === tabId; });
+                if (!tab || !tab.passengers) return;
+                if (chartData && chartData.passengers) {
+                    chartData.passengers.forEach(function (p) {
+                        const idx = tab.passengers.findIndex(function (tp) { return tp.seat === p.seat; });
+                        if (idx !== -1) tab.passengers[idx] = Object.assign({}, tab.passengers[idx], p);
+                    });
+                }
+                localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(tabs));
+            } catch (e) { console.error('Sync back failed', e); }
+        }
+
+        // ============== SEAT GRID GENERATION (data-driven) ==============
         let isAftView = false;
         let currentFontSize = 12;
+        let chartData = null;
+        let currentTabId = null;
 
-        // Function to parse name into first name and surname
+        function seatBoxHTML(seatId) {
+            return `
+                <div class="seat-box empty-seat" data-seat="${seatId}">
+                    <div class="seat-number-container">
+                        <div class="seat-number">${seatId}</div>
+                    </div>
+                    <div class="name-line title-line"></div>
+                    <div class="name-line surname-line"></div>
+                    <div class="name-line firstname-line"></div>
+                    <div class="field-line meal-line"></div>
+                    <div class="field-line drink-line"></div>
+                    <div class="field-line dessert-line"></div>
+                    <div class="order-fill-overlay"></div>
+                </div>`;
+        }
+
+        function generateSeatRows(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            ROW_LAYOUT.forEach(function (r) {
+                const row = document.createElement('div');
+                const rowNum = r.row;
+                if (r.type === 5) {
+                    row.className = 'row';
+                    row.innerHTML =
+                        seatBoxHTML(rowNum + 'A') + '<div class="gap"></div>' +
+                        seatBoxHTML(rowNum + 'D') + '<div class="aisle"></div>' +
+                        seatBoxHTML(rowNum + 'G') + '<div class="gap"></div>' +
+                        seatBoxHTML(rowNum + 'H') + '<div class="gap"></div>' +
+                        seatBoxHTML(rowNum + 'K');
+                } else if (r.type === 4) {
+                    row.className = 'row row-4';
+                    row.innerHTML =
+                        seatBoxHTML(rowNum + 'A') + '<div class="gap"></div>' +
+                        seatBoxHTML(rowNum + 'D') + '<div class="aisle"></div>' +
+                        seatBoxHTML(rowNum + 'G') + '<div class="gap"></div>' +
+                        seatBoxHTML(rowNum + 'K');
+                } else if (r.type === 3) {
+                    row.className = 'row row-3';
+                    row.innerHTML =
+                        seatBoxHTML(rowNum + 'A') + '<div class="gap"></div>' +
+                        seatBoxHTML(rowNum + 'D') + '<div class="aisle"></div>' +
+                        seatBoxHTML(rowNum + 'G') + '<div class="spacer"></div>';
+                } else if (r.type === 1) {
+                    row.className = 'row row-1';
+                    row.innerHTML =
+                        seatBoxHTML(rowNum + 'A') + '<div class="spacer"></div>';
+                }
+                container.appendChild(row);
+            });
+        }
+
+        // Reversing the full child list of each row (and the row order) is enough:
+        // the .aft-view grid-template-columns already expect the mirrored order,
+        // since gap/aisle/spacer placeholders are symmetric.
+        function applyAftViewToContainer(containerId, apply) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const rows = Array.from(container.querySelectorAll('.row'));
+            rows.slice().reverse().forEach(function (row) { container.appendChild(row); });
+            rows.forEach(function (row) {
+                row.classList.toggle('aft-view', apply);
+                const children = Array.from(row.children).reverse();
+                row.innerHTML = '';
+                children.forEach(function (c) { row.appendChild(c); });
+            });
+        }
+
+        function toggleAftView() {
+            const toggle = document.getElementById('aftViewToggle');
+            isAftView = toggle.checked;
+            localStorage.setItem('scUIAftView', isAftView ? 'true' : 'false');
+            applyAftViewToContainer('mainSeatContainer', isAftView);
+            adjustFontSize(currentFontSize);
+        }
+
+        function adjustFontSize(fontSize) {
+            currentFontSize = fontSize;
+            localStorage.setItem('scUIFontSize', fontSize);
+            const fsv = document.getElementById('fontSizeValue');
+            if (fsv) fsv.textContent = fontSize + 'px';
+            document.body.style.fontSize = fontSize + 'px';
+            const scale = fontSize / 12;
+            document.querySelectorAll('.seat-box').forEach(box => {
+                box.style.minHeight = (55 * scale) + 'px';
+                const nameLines = box.querySelectorAll('.name-line');
+                nameLines.forEach(line => {
+                    line.style.height = (14 * scale) + 'px';
+                    line.style.lineHeight = (12 * scale) + 'px';
+                    line.style.padding = (1 * scale) + 'px 4px';
+                    line.style.fontSize = (1 * fontSize) + 'px';
+                });
+                const fieldLines = box.querySelectorAll('.field-line');
+                fieldLines.forEach(line => {
+                    line.style.height = (14 * scale) + 'px';
+                    line.style.lineHeight = (12 * scale) + 'px';
+                    line.style.padding = (1 * scale) + 'px 4px';
+                    if (line.classList.contains('meal-line')) {
+                        line.style.fontSize = (1.1 * fontSize) + 'px';
+                    } else {
+                        line.style.fontSize = (1 * fontSize) + 'px';
+                    }
+                });
+                const seatNumberContainer = box.querySelector('.seat-number-container');
+                if (seatNumberContainer) {
+                    seatNumberContainer.style.padding = (2 * scale) + 'px ' + (4 * scale) + 'px';
+                    const seatNumber = seatNumberContainer.querySelector('.seat-number');
+                    if (seatNumber) {
+                        seatNumber.style.fontSize = (1.1 * fontSize) + 'px';
+                    }
+                }
+            });
+            document.querySelectorAll('.row').forEach(row => {
+                row.style.marginBottom = (4 * scale) + 'px';
+            });
+        }
+
         function parsePassengerName(fullName) {
             if (!fullName || !fullName.includes('/')) {
                 return { firstName: '', lastName: '' };
             }
-            
             const parts = fullName.split('/');
             const lastName = parts[0] || '';
             const firstName = parts[1] || '';
-            
             return { firstName, lastName };
         }
 
-        // Function to intelligently truncate names
-        function truncateIntelligently(text, maxLength = 15) {
+        function truncateIntelligently(text, maxLength = 25) {
             if (!text || text.length <= maxLength) return text;
-            
             const truncated = text.substring(0, maxLength);
             const lastSpace = truncated.lastIndexOf(' ');
-            
             if (lastSpace > maxLength * 0.7 && lastSpace > 0) {
                 return text.substring(0, lastSpace);
             }
-            
             return truncated + '…';
         }
 
-        // Function to get seat number without leading zeros
         function normalizeSeatNumber(seat) {
             if (!seat) return '';
             return seat.replace(/^0+(\d+)/, '$1');
         }
 
-        // Function to populate seat data
         function populateSeatData(passenger, seatBox) {
             if (!passenger || !seatBox) return;
-            
             const normalizedSeat = normalizeSeatNumber(passenger.seat);
             const { firstName, lastName } = parsePassengerName(passenger.name);
             const title = passenger.title || '';
-            
-            // Update seat number with tier if applicable
+            clearTierClasses(seatBox);
             let seatNumberHTML = normalizedSeat;
-            if (passenger.tier === 'EMER' || passenger.tier === 'PLAT') {
-                seatNumberHTML += ` <span class="tier">*${passenger.tier}*</span>`;
-                
-                if (passenger.tier === 'EMER') {
-                    seatBox.classList.add('tier-emer');
-                    seatBox.classList.remove('empty-seat');
-                } else if (passenger.tier === 'PLAT') {
-                    seatBox.classList.add('tier-plat');
-                    seatBox.classList.remove('empty-seat');
-                }
+            const DISPLAYED_TIERS = showAllTiers ? Object.keys(DEFAULT_TIER_COLORS) : ['EMER', 'PLAT'];
+            if (passenger.tier && DISPLAYED_TIERS.includes(passenger.tier)) {
+                seatNumberHTML += ` <span class="tier tier-${passenger.tier}">*${passenger.tier}*</span>`;
+                seatBox.classList.add('tier-' + passenger.tier);
+                seatBox.classList.remove('empty-seat');
             }
-            
-            seatBox.querySelector('.seat-number').innerHTML = seatNumberHTML;
-            
-            // Update name lines
-            seatBox.querySelector('.name-line.title-line').textContent = title.toUpperCase() || '';
-            seatBox.querySelector('.name-line.surname-line').textContent = truncateIntelligently(lastName, 15).toUpperCase() || '';
-            seatBox.querySelector('.name-line.firstname-line').textContent = truncateIntelligently(firstName, 15).toUpperCase() || '';
-            
-            // Update meal field
+            const seatNumberEl = seatBox.querySelector('.seat-number');
+            if (seatNumberEl) seatNumberEl.innerHTML = seatNumberHTML;
+            const titleLine = seatBox.querySelector('.name-line.title-line');
+            if (titleLine) titleLine.textContent = title.toUpperCase() || '';
+            const surnameLine = seatBox.querySelector('.name-line.surname-line');
+            if (surnameLine) surnameLine.textContent = truncateIntelligently(lastName, 25).toUpperCase() || '';
+            const firstNameLine = seatBox.querySelector('.name-line.firstname-line');
+            if (firstNameLine) firstNameLine.textContent = truncateIntelligently(firstName, 25).toUpperCase() || '';
             const mealField = seatBox.querySelector('.field-line.meal-line');
             if (mealField) {
-                if (passenger.meal && passenger.meal.trim()) {
-                    mealField.textContent = passenger.meal.toUpperCase();
-                    mealField.style.backgroundColor = '#f0f0f0';
-                } else {
-                    mealField.textContent = '';
-                    mealField.style.backgroundColor = '';
-                }
+                const mealCode = (passenger.meal || '').trim().toUpperCase();
+                const specialLabel = getSpecialLabel(passenger);
+                let innerHTML = '';
+                if (mealCode) innerHTML += '<span class="meal-code-part" data-meal-code="' + mealCode + '">' + mealCode + '</span>';
+                if (mealCode && specialLabel) innerHTML += '<span class="meal-sep"> | </span>';
+                if (specialLabel) innerHTML += '<span class="special-code-part" data-special-code="' + specialLabel + '">' + specialLabel + '</span>';
+                mealField.innerHTML = innerHTML;
+                mealField.style.backgroundColor = '';
+                mealField.style.color = '';
+                if (innerHTML) applyMealLineColors(mealField);
             }
-            
-            // Remove empty-seat class
+            refreshSeatOrderOverlay(seatBox);
             seatBox.classList.remove('empty-seat');
-            
-            // Ensure all text is visible
-            seatBox.querySelectorAll('.name-line, .field-line').forEach(line => {
-                line.style.color = '#000';
-            });
-            
-            // Remove placeholder pseudo-elements
-            const surnameLine = seatBox.querySelector('.name-line.surname-line');
-            const firstNameLine = seatBox.querySelector('.name-line.firstname-line');
-            const mealLine = seatBox.querySelector('.field-line.meal-line');
-            
+            seatBox.querySelectorAll('.name-line, .field-line').forEach(line => { line.style.color = ''; });
             if (surnameLine) surnameLine.style.setProperty('--placeholder-content', 'none');
             if (firstNameLine) firstNameLine.style.setProperty('--placeholder-content', 'none');
-            if (mealLine) mealLine.style.setProperty('--placeholder-content', 'none');
+            if (mealField) mealField.style.setProperty('--placeholder-content', 'none');
         }
 
-        // Function to mark a seat as empty
         function markSeatAsEmpty(seatBox) {
             if (!seatBox) return;
-            
+            clearTierClasses(seatBox);
             seatBox.classList.add('empty-seat');
-            
-            seatBox.querySelectorAll('.name-line, .field-line').forEach(line => {
-                line.style.color = 'transparent';
-            });
-            
+            const seatNumberEl = seatBox.querySelector('.seat-number');
+            if (seatNumberEl) seatNumberEl.innerHTML = seatBox.getAttribute('data-seat');
+            seatBox.querySelectorAll('.name-line, .field-line').forEach(line => { line.style.color = 'transparent'; });
             const surnameLine = seatBox.querySelector('.name-line.surname-line');
             const firstNameLine = seatBox.querySelector('.name-line.firstname-line');
             const mealLine = seatBox.querySelector('.field-line.meal-line');
-            
-            if (surnameLine) surnameLine.style.setProperty('--placeholder-content', '"______"');
-            if (firstNameLine) firstNameLine.style.setProperty('--placeholder-content', '"______"');
+            if (surnameLine) { surnameLine.textContent = ''; surnameLine.style.setProperty('--placeholder-content', '"______"'); }
+            if (firstNameLine) { firstNameLine.textContent = ''; firstNameLine.style.setProperty('--placeholder-content', '"______"'); }
             if (mealLine) {
+                mealLine.innerHTML = '';
                 mealLine.style.setProperty('--placeholder-content', '"______"');
                 mealLine.style.backgroundColor = '';
+                mealLine.style.color = '';
             }
+            const titleLine = seatBox.querySelector('.name-line.title-line');
+            if (titleLine) titleLine.textContent = '';
         }
 
-        // Function to flip the seating arrangement for aft view
-        function toggleAftView() {
-            const toggle = document.getElementById('aftViewToggle');
-            const container = document.getElementById('seatContainer');
-            const rows = Array.from(document.querySelectorAll('.row'));
-            const header = document.querySelector('.header');
-            
-            isAftView = toggle.checked;
-            rows.reverse();
-            
-            container.innerHTML = '';
-            container.appendChild(header);
-            
-            rows.forEach(row => {
-                const clonedRow = row.cloneNode(true);
-                
-                if (!isAftView) {
-                    // Remove aft-view classes (returning to forward view)
-                    clonedRow.classList.remove('aft-view');
-                    
-                    const rowClass = clonedRow.className;
-                    
-                    if (rowClass.includes('row-1')) {
-                        // 1-seat rows: Forward view: [40% A][60% spacer]
-                        const children = Array.from(clonedRow.children);
-                        
-                        // Find seat and spacer
-                        let seatBox = null;
-                        let spacer = null;
-                        
-                        children.forEach(child => {
-                            if (child.classList.contains('seat-box')) {
-                                seatBox = child;
-                            } else if (child.classList.contains('spacer')) {
-                                spacer = child;
-                            }
-                        });
-                        
-                        // Remove all children
-                        while (clonedRow.firstChild) {
-                            clonedRow.removeChild(clonedRow.firstChild);
-                        }
-                        
-                        // Re-add in correct order for forward view
-                        if (seatBox) clonedRow.appendChild(seatBox);
-                        if (spacer) clonedRow.appendChild(spacer);
-                    } else if (rowClass.includes('row-3')) {
-                        // 3-seat rows: Forward view: [A][gap][D][aisle][G][40% spacer]
-                        const seatBoxes = clonedRow.querySelectorAll('.seat-box');
-                        const children = Array.from(clonedRow.children);
-                        
-                        // Remove all children
-                        while (clonedRow.firstChild) {
-                            clonedRow.removeChild(clonedRow.firstChild);
-                        }
-                        
-                        // Find elements
-                        let seatA, seatD, seatG, gap, aisle, spacer;
-                        children.forEach(child => {
-                            if (child.classList.contains('seat-box')) {
-                                const seat = child.getAttribute('data-seat');
-                                if (seat && seat.includes('A')) seatA = child;
-                                else if (seat && seat.includes('D')) seatD = child;
-                                else if (seat && seat.includes('G')) seatG = child;
-                            } else if (child.classList.contains('gap')) {
-                                gap = child;
-                            } else if (child.classList.contains('aisle')) {
-                                aisle = child;
-                            } else if (child.classList.contains('spacer')) {
-                                spacer = child;
-                            }
-                        });
-                        
-                        // Reconstruct in forward order
-                        if (seatA) clonedRow.appendChild(seatA);
-                        if (gap) clonedRow.appendChild(gap);
-                        if (seatD) clonedRow.appendChild(seatD);
-                        if (aisle) clonedRow.appendChild(aisle);
-                        if (seatG) clonedRow.appendChild(seatG);
-                        if (spacer) clonedRow.appendChild(spacer);
-                    } else if (rowClass.includes('row-4')) {
-                        // 4-seat rows
-                        const seatBoxes = clonedRow.querySelectorAll('.seat-box');
-                        const children = Array.from(clonedRow.children);
-                        
-                        while (clonedRow.firstChild) {
-                            clonedRow.removeChild(clonedRow.firstChild);
-                        }
-                        
-                        const gaps = children.filter(child => child.classList.contains('gap'));
-                        const aisles = children.filter(child => child.classList.contains('aisle'));
-                        const spacers = children.filter(child => child.classList.contains('spacer'));
-                        
-                        // Reconstruct in forward order: A, gap, D, aisle, G, gap, K
-                        clonedRow.appendChild(seatBoxes[0]); // A
-                        clonedRow.appendChild(gaps[0]); // gap
-                        clonedRow.appendChild(seatBoxes[1]); // D
-                        clonedRow.appendChild(aisles[0]); // aisle
-                        clonedRow.appendChild(seatBoxes[2]); // G
-                        clonedRow.appendChild(gaps[1]); // gap
-                        clonedRow.appendChild(seatBoxes[3]); // K
-                    } else {
-                        // 5-seat rows
-                        const seatBoxes = clonedRow.querySelectorAll('.seat-box');
-                        const children = Array.from(clonedRow.children);
-                        
-                        while (clonedRow.firstChild) {
-                            clonedRow.removeChild(clonedRow.firstChild);
-                        }
-                        
-                        const gaps = children.filter(child => child.classList.contains('gap'));
-                        const aisles = children.filter(child => child.classList.contains('aisle'));
-                        
-                        // Reconstruct in forward order: A, gap, D, aisle, G, gap, H, gap, K
-                        clonedRow.appendChild(seatBoxes[0]); // A
-                        clonedRow.appendChild(gaps[0]); // gap
-                        clonedRow.appendChild(seatBoxes[1]); // D
-                        clonedRow.appendChild(aisles[0]); // aisle
-                        clonedRow.appendChild(seatBoxes[2]); // G
-                        clonedRow.appendChild(gaps[1]); // gap
-                        clonedRow.appendChild(seatBoxes[3]); // H
-                        clonedRow.appendChild(gaps[2]); // gap
-                        clonedRow.appendChild(seatBoxes[4]); // K
-                    }
-                } else {
-                    // Add aft-view class
-                    clonedRow.classList.add('aft-view');
-                    
-                    const rowClass = clonedRow.className;
-                    
-                    if (rowClass.includes('row-1')) {
-                        // 1-seat rows: Aft view: [60% spacer][40% A]
-                        const children = Array.from(clonedRow.children);
-                        
-                        // Find seat and spacer
-                        let seatBox = null;
-                        let spacer = null;
-                        
-                        children.forEach(child => {
-                            if (child.classList.contains('seat-box')) {
-                                seatBox = child;
-                            } else if (child.classList.contains('spacer')) {
-                                spacer = child;
-                            }
-                        });
-                        
-                        // Remove all children
-                        while (clonedRow.firstChild) {
-                            clonedRow.removeChild(clonedRow.firstChild);
-                        }
-                        
-                        // Re-add in correct order for aft view (spacer first, then seat)
-                        if (spacer) clonedRow.appendChild(spacer);
-                        if (seatBox) clonedRow.appendChild(seatBox);
-                    } else if (rowClass.includes('row-3')) {
-                        // 3-seat rows: Aft view: [40% spacer][1% gap][19% G][2% aisle][19% D][1% gap][19% A]
-                        const seatBoxes = clonedRow.querySelectorAll('.seat-box');
-                        const children = Array.from(clonedRow.children);
-                        
-                        // Remove all children
-                        while (clonedRow.firstChild) {
-                            clonedRow.removeChild(clonedRow.firstChild);
-                        }
-                        
-                        // Find elements
-                        let seatA, seatD, seatG, gap, aisle, spacer;
-                        children.forEach(child => {
-                            if (child.classList.contains('seat-box')) {
-                                const seat = child.getAttribute('data-seat');
-                                if (seat && seat.includes('A')) seatA = child;
-                                else if (seat && seat.includes('D')) seatD = child;
-                                else if (seat && seat.includes('G')) seatG = child;
-                            } else if (child.classList.contains('gap')) {
-                                gap = child;
-                            } else if (child.classList.contains('aisle')) {
-                                aisle = child;
-                            } else if (child.classList.contains('spacer')) {
-                                spacer = child;
-                            }
-                        });
-                        
-                        // Create a new gap for between D and A
-                        const newGap = document.createElement('div');
-                        newGap.className = 'gap';
-                        
-                        // Reconstruct in aft order: spacer, gap, G, aisle, D, newGap, A
-                        if (spacer) clonedRow.appendChild(spacer);
-                        if (gap) clonedRow.appendChild(gap);
-                        if (seatG) clonedRow.appendChild(seatG);
-                        if (aisle) clonedRow.appendChild(aisle);
-                        if (seatD) clonedRow.appendChild(seatD);
-                        clonedRow.appendChild(newGap);
-                        if (seatA) clonedRow.appendChild(seatA);
-                    } else if (rowClass.includes('row-4')) {
-                        // 4-seat rows: K, gap, G, aisle, D, gap, A
-                        const seatBoxes = clonedRow.querySelectorAll('.seat-box');
-                        const children = Array.from(clonedRow.children);
-                        
-                        while (clonedRow.firstChild) {
-                            clonedRow.removeChild(clonedRow.firstChild);
-                        }
-                        
-                        const gaps = children.filter(child => child.classList.contains('gap'));
-                        const aisles = children.filter(child => child.classList.contains('aisle'));
-                        
-                        // Reconstruct in aft order
-                        clonedRow.appendChild(seatBoxes[3]); // K
-                        clonedRow.appendChild(gaps[1]); // gap
-                        clonedRow.appendChild(seatBoxes[2]); // G
-                        clonedRow.appendChild(aisles[0]); // aisle
-                        clonedRow.appendChild(seatBoxes[1]); // D
-                        clonedRow.appendChild(gaps[0]); // gap
-                        clonedRow.appendChild(seatBoxes[0]); // A
-                    } else {
-                        // 5-seat rows: K, gap, H, gap, G, aisle, D, gap, A
-                        const seatBoxes = clonedRow.querySelectorAll('.seat-box');
-                        const children = Array.from(clonedRow.children);
-                        
-                        while (clonedRow.firstChild) {
-                            clonedRow.removeChild(clonedRow.firstChild);
-                        }
-                        
-                        const gaps = children.filter(child => child.classList.contains('gap'));
-                        const aisles = children.filter(child => child.classList.contains('aisle'));
-                        
-                        // Reconstruct in aft order
-                        clonedRow.appendChild(seatBoxes[4]); // K
-                        clonedRow.appendChild(gaps[2]); // gap
-                        clonedRow.appendChild(seatBoxes[3]); // H
-                        clonedRow.appendChild(gaps[1]); // gap
-                        clonedRow.appendChild(seatBoxes[2]); // G
-                        clonedRow.appendChild(aisles[0]); // aisle
-                        clonedRow.appendChild(seatBoxes[1]); // D
-                        clonedRow.appendChild(gaps[0]); // gap
-                        clonedRow.appendChild(seatBoxes[0]); // A
-                    }
-                }
-                
-                container.appendChild(clonedRow);
-            });
-            
-            // Re-apply font size adjustments
-            adjustFontSize(currentFontSize);
-        }
-
-        // Function to adjust font sizes dynamically
-        function adjustFontSize(fontSize) {
-            currentFontSize = fontSize;
-            document.getElementById('fontSizeValue').textContent = fontSize + 'px';
-            document.body.style.fontSize = fontSize + 'px';
-            
-            const scale = fontSize / 12;
-            
-            const rows = document.querySelectorAll('.row');
-            rows.forEach(row => {
-                row.style.marginBottom = (5 * scale) + 'px';
-            });
-            
-            const seatBoxes = document.querySelectorAll('.seat-box');
-            seatBoxes.forEach(box => {
-                box.style.minHeight = (65 * scale) + 'px';
-                
-                const nameLines = box.querySelectorAll('.name-line');
-                nameLines.forEach(line => {
-                    line.style.minHeight = (12 * scale) + 'px';
-                    line.style.padding = (1 * scale) + 'px 4px';
-                    line.style.fontSize = (1.1 * fontSize) + 'px';
-                });
-                
-                const fieldLines = box.querySelectorAll('.field-line');
-                fieldLines.forEach(line => {
-                    line.style.minHeight = (12 * scale) + 'px';
-                    line.style.padding = (1 * scale) + 'px 4px';
-                    if (line.classList.contains('meal-line')) {
-                        line.style.fontSize = (1.2 * fontSize) + 'px';
-                    } else {
-                        line.style.fontSize = (1.1 * fontSize) + 'px';
-                    }
-                });
-                
-                const seatNumberContainer = box.querySelector('.seat-number-container');
-                if (seatNumberContainer) {
-                    seatNumberContainer.style.padding = (3 * scale) + 'px ' + (4 * scale) + 'px';
-                    const seatNumber = seatNumberContainer.querySelector('.seat-number');
-                    if (seatNumber) {
-                        seatNumber.style.fontSize = (1.2 * fontSize) + 'px';
-                    }
-                }
-            });
-            
-            document.querySelectorAll('.seat-box').forEach(box => {
-                if (box.classList.contains('tier-emer') || box.classList.contains('tier-plat')) {
-                    box.style.borderWidth = (2 * scale) + 'px';
-                } else {
-                    box.style.borderWidth = (1.5 * scale) + 'px';
-                }
-            });
-            
-            document.querySelectorAll('.name-line.title-line, .name-line.firstname-line, .field-line.meal-line').forEach(line => {
-                line.style.borderBottomWidth = (0.5 * scale) + 'px';
-            });
-        }
-
-        // Handle printing with landscape/portrait option
-        function handlePrint() {
-            const orientationSelect = document.getElementById('orientationSelect');
-            const isLandscape = orientationSelect.value === 'landscape';
-            
-            if (isLandscape) {
-                document.body.classList.add('landscape-print');
-            } else {
-                document.body.classList.remove('landscape-print');
-            }
-            
-            document.documentElement.style.setProperty('--print-font-size', currentFontSize + 'px');
-            
-            setTimeout(() => {
-                window.print();
-                
-                setTimeout(() => {
-                    document.body.classList.remove('landscape-print');
-                }, 100);
-            }, 100);
-        }
-
-        // Main function to load and display data
-        function loadPassengerData() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const dataKey = urlParams.get('data');
-            
-            if (!dataKey) {
-                document.getElementById('zoneSummary').textContent = 'Error: No data provided. Please generate from main application.';
-                return;
-            }
-            
-            const chartData = JSON.parse(localStorage.getItem(dataKey));
-            
-            if (!chartData) {
-                document.getElementById('zoneSummary').textContent = 'Error: Data not found or expired. Please regenerate from main application.';
-                return;
-            }
-            
-            // Clean up: Remove data after retrieval
-            localStorage.removeItem(dataKey);
-            
-            // Update header with flight info
-            const header = document.getElementById('dynamicHeader');
+        function populateChart(newChartData) {
+            chartData = newChartData;
+            if (!chartData.mealMenu) chartData.mealMenu = [];
             const flightInfo = chartData.flightInfo;
+            if (flightInfo) {
+                document.getElementById('mainHeaderTitle').textContent =
+                    `${flightInfo.flightNumber} | ${flightInfo.sector} | ${flightInfo.date} ${flightInfo.stdLocal} | ${flightInfo.aircraft}`;
+            }
             const zoneSummary = chartData.zoneSummary;
-            
-            if (header && flightInfo) {
-                const headerH1 = header.querySelector('h1');
-                if (headerH1) {
-                    headerH1.textContent = `${flightInfo.flightNumber} | ${flightInfo.sector} | ${flightInfo.date} ${flightInfo.stdLocal} | ${flightInfo.aircraft}`;
-                }
-            }
-            
-            // Update zone summary
-            const summaryElement = document.getElementById('zoneSummary');
-            if (summaryElement && zoneSummary) {
+            if (zoneSummary) {
                 let summaryText = `Business Class: ${zoneSummary.totalPassengers} passengers`;
-                if (zoneSummary.specialMeals > 0) {
-                    summaryText += ` | Special Meals: ${zoneSummary.specialMeals}`;
-                }
-                if (zoneSummary.emerPlat > 0) {
-                    summaryText += ` | EMER/PLAT: ${zoneSummary.emerPlat}`;
-                }
-                if (zoneSummary.mealBreakdown) {
-                    summaryText += ` | ${zoneSummary.mealBreakdown}`;
-                }
-                if (zoneSummary.bbml > 0) {
-                    summaryText += ` | BBML: ${zoneSummary.bbml}`;
-                }
-                summaryElement.textContent = summaryText;
+                if (zoneSummary.specialMeals > 0) summaryText += ` | Special Meals: ${zoneSummary.specialMeals}`;
+                if (zoneSummary.emerPlat > 0) summaryText += ` | EMER/PLAT: ${zoneSummary.emerPlat}`;
+                if (zoneSummary.mealBreakdown) summaryText += ` | ${zoneSummary.mealBreakdown}`;
+                if (zoneSummary.bbml > 0) summaryText += ` | BBML: ${zoneSummary.bbml}`;
+                const zoneSummaryEl = document.getElementById('mainZoneSummary');
+                if (zoneSummaryEl) zoneSummaryEl.textContent = summaryText;
             }
-            
-            // Populate seat data
             const passengers = chartData.passengers || [];
             const occupiedSeats = new Set();
-            
+            const container = document.getElementById('mainSeatContainer');
             passengers.forEach(passenger => {
                 if (!passenger.seat) return;
-                
                 const normalizedSeat = normalizeSeatNumber(passenger.seat);
-                const seatBox = document.querySelector(`[data-seat="${normalizedSeat}"]`);
-                
+                const seatBox = container.querySelector(`[data-seat="${normalizedSeat}"]`);
                 if (seatBox) {
                     populateSeatData(passenger, seatBox);
                     occupiedSeats.add(normalizedSeat);
                 }
             });
-            
-            // Mark all seats as empty initially, then remove empty class from occupied seats
-            const allSeatBoxes = document.querySelectorAll('.seat-box');
+            const allSeatBoxes = container.querySelectorAll('.seat-box');
             allSeatBoxes.forEach(seatBox => {
                 const seatNumber = seatBox.getAttribute('data-seat');
                 if (!occupiedSeats.has(seatNumber)) {
                     markSeatAsEmpty(seatBox);
                 }
             });
-            
-            console.log(`Loaded ${passengers.length} business class passengers`);
+            renderSummaryChips();
+            renderMealCountSummary();
+            console.log(`Loaded ${passengers.length} passengers`);
         }
 
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set up font size slider
-            const fontSizeSlider = document.getElementById('fontSizeSlider');
-            const fontSizeValue = document.getElementById('fontSizeValue');
-            
-            if (fontSizeSlider && fontSizeValue) {
-                fontSizeSlider.addEventListener('input', function(e) {
-                    const fontSize = parseInt(e.target.value);
-                    adjustFontSize(fontSize);
-                });
-                
-                // Set initial font size
-                const initialFontSize = parseInt(fontSizeSlider.value);
-                adjustFontSize(initialFontSize);
+        function handlePrint() {
+            document.documentElement.style.setProperty('--print-font-size', currentFontSize + 'px');
+            const wasShowAllTiers = showAllTiers;
+            if (wasShowAllTiers) {
+                showAllTiers = false;
+                refreshSeatTierDisplay();
             }
-            
-            // Load passenger data
-            loadPassengerData();
-        });
+            setTimeout(() => {
+                window.print();
+                if (wasShowAllTiers) {
+                    showAllTiers = true;
+                    refreshSeatTierDisplay();
+                }
+            }, 100);
+        }
 
-        // Expose functions for external use
-        window.adjustFontSize = adjustFontSize;
-        window.handlePrint = handlePrint;
+        // ============== PERSISTENCE ==============
+        // Namespaced with _a359 so it never collides with sc-737.html's {top,bottom}
+        // shaped state, or the other aircraft templates' state, if the same tabId
+        // is ever opened against multiple templates.
+        function stateKey() {
+            return currentTabId ? ('bpmSeatChartState_' + currentTabId + '_a359') : null;
+        }
+
+        function persistChartState() {
+            const key = stateKey();
+            if (!key) return;
+            try {
+                localStorage.setItem(key, JSON.stringify({ chart: chartData, savedAt: Date.now() }));
+            } catch (e) { console.error('Persist failed', e); }
+        }
+
+        function loadPersistedState() {
+            const key = stateKey();
+            if (!key) return false;
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return false;
+                const saved = JSON.parse(raw);
+                if (saved.chart) { populateChart(saved.chart); return true; }
+                return false;
+            } catch (e) { console.error('Restore failed', e); return false; }
+        }
+
+        function loadInitialData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlTabId = urlParams.get('tabId');
+            if (urlTabId) {
+                currentTabId = urlTabId;
+                localStorage.setItem(LAST_TAB_ID_KEY, urlTabId);
+            } else {
+                currentTabId = localStorage.getItem(LAST_TAB_ID_KEY) || null;
+            }
+
+            const restored = loadPersistedState();
+            if (restored) {
+                showToast('\u2713 Restored your saved seat chart');
+                return;
+            }
+
+            const dataKey = urlParams.get('data');
+            if (dataKey) {
+                const loadedData = JSON.parse(localStorage.getItem(dataKey));
+                if (loadedData) {
+                    if (!currentTabId && loadedData.tabId) {
+                        currentTabId = loadedData.tabId;
+                        localStorage.setItem(LAST_TAB_ID_KEY, currentTabId);
+                    }
+                    populateChart(loadedData);
+                    localStorage.removeItem(dataKey);
+                    persistChartState();
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                loadTheme();
+                applyTheme();
+
+                const savedFont = Math.min(16, parseInt(localStorage.getItem('scUIFontSize')) || 12);
+                const savedAft = localStorage.getItem('scUIAftView') === 'true';
+                const savedShowAllTiers = localStorage.getItem('scUIShowAllTiers') === 'true';
+                currentFontSize = savedFont;
+                isAftView = savedAft;
+                showAllTiers = savedShowAllTiers;
+
+                generateSeatRows('mainSeatContainer');
+                renderModeOptions(); // builds the View options row (default mode), including the font/aft controls
+
+                adjustFontSize(currentFontSize);
+                if (isAftView) {
+                    applyAftViewToContainer('mainSeatContainer', true);
+                }
+
+                loadInitialData();
+                if (window.opener) {
+                    window.opener.postMessage({ type: 'chartReady' }, '*');
+                }
+            } catch (err) {
+                console.error('Seat chart init failed:', err);
+                const zs = document.getElementById('mainZoneSummary');
+                if (zs) {
+                    zs.style.color = '#b91c1c';
+                    zs.style.background = '#fee2e2';
+                    zs.textContent = 'Error loading chart: ' + (err && err.message ? err.message : err);
+                }
+            }
+        });
     </script>
 </body>
 </html>
