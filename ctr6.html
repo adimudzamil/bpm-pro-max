@@ -2108,11 +2108,12 @@ const itin = itinRaw.rows
 
     // ---- Attach event listeners ----
     // BAY input – opens letter modal
-    const bayInput = document.getElementById('bayInput');
-if (bayInput) {
-  bayInput.addEventListener('mousedown', function(e) { e.preventDefault(); });
-  bayInput.addEventListener('click', function(e) {
+        const bayInput = document.getElementById('bayInput');
+    if (bayInput) {
+      bayInput.addEventListener('mousedown', function(e) { if (this.readOnly) e.preventDefault(); });
+      bayInput.addEventListener('click', function(e) {
         e.stopPropagation();
+        if (!this.readOnly) return; // currently in manual-typing mode
         const currentVal = this.value;
         const letterMatch = currentVal.match(/^([A-Z])/);
         if (letterMatch) {
@@ -2122,18 +2123,24 @@ if (bayInput) {
         }
         openBayLetterModal(this);
       });
+      bayInput.addEventListener('blur', function() {
+        restoreManualEdit(this);
+      });
     }
 
     // BRIEFING STATION input – opens number keypad directly
     const briefingInput = document.getElementById('briefingInput');
 if (briefingInput) {
-  briefingInput.addEventListener('mousedown', function(e) { e.preventDefault(); });
+  briefingInput.addEventListener('mousedown', function(e) { if (this.readOnly) e.preventDefault(); });
   briefingInput.addEventListener('click', function(e) {
-        e.stopPropagation();
-        openNumberKeypad(this, 'briefing', this.value);
-      });
-    }
-
+    e.stopPropagation();
+    if (!this.readOnly) return; // currently in manual-typing mode
+    openNumberKeypad(this, 'briefing', this.value);
+  });
+  briefingInput.addEventListener('blur', function() {
+    restoreManualEdit(this);
+  });
+}
     // ICC display cell – opens selection modal if candidates exist
     const iccDisplayCell = document.getElementById('iccDisplayCell');
     if (iccDisplayCell && iccCandidates.length > 0) {
