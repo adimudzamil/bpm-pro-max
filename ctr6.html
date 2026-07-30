@@ -1380,10 +1380,18 @@ function enableManualEdit(targetInput) {
 function restoreManualEdit(input) {
   if (input.dataset.manualEdit === '1') {
     input.style.fontSize = input.dataset.origFontSize || '';
+    input.style.transform = input.dataset.origTransform || '';
+    input.style.transformOrigin = input.dataset.origTransformOrigin || '';
     input.readOnly = true;
     delete input.dataset.manualEdit;
     const key = input.dataset.key;
-    if (key) state.fields[key] = input.value;
+    if (key) {
+      state.fields[key] = input.value;
+    } else if (input.id === 'bayInput') {
+      state.fields['bay'] = input.value;
+    } else if (input.id === 'briefingInput') {
+      state.fields['briefing'] = input.value;
+    }
   }
 }
 
