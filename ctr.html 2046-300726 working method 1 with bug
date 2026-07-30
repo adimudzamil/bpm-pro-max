@@ -983,9 +983,9 @@
       <div class="card-header-left">
         <div class="card-title"><span class="icon">📋</span> 1. Paste iFlight text</div>
       </div>
-      <span class="card-sub">select-all + copy(ctrl A, C) from departure summary, paste (ctrl V) here.</span>
+      <span class="card-sub">select-all + copy</span>
     </div>
-    <textarea id="pasteBox" placeholder="Paste the iFlight Departure summary here…"></textarea>
+    <textarea id="pasteBox" placeholder="Paste the iFlight Crew Trip Report here…"></textarea>
     <div class="btnrow">
       <button class="primary-btn" id="parseBtn">⚡ Parse & Fill Report</button>
       <button class="secondary-btn" id="clearBtn">Clear</button>
@@ -1195,7 +1195,7 @@
   const DUTY_HEADERS = ["Start","End","Pairing Id","Duty Hours","Flying Hours","Rest Required","Rest Available"];
   const ITIN_HEADERS = ["Flight/Acy Id","Date","From","Dep.","To","Arr.","A/C","Version","A/C Reg","Flight Time","Ground Time","Activity Start","Activity End","Activity Location"];
   const CREW_HEADERS = ["OP Rank","Postion Rank","Crew Id","Crew Name","WT","Work Pos.","Base","SDC","Check In"];
-  const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary','flight/acy id','stand/pax info','recovery','special meal'];
+  const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary'];
   const COCKPIT_RANKS = ['CAPT','FO','SO','CDT'];
   const POSITIONS_NARROW = ['ICC', 'P1','P2','P3','P4','A1','A2'];
   const POSITIONS_WIDE = ['ICC', 'IFS B', 'LSB', 'LSC', 'LSD', 'AG', 'BG1', 'BG2', 'CG', 'DG', 'BC', 'BC1', 'CC', 'DC', 'DC2'];
@@ -1458,10 +1458,7 @@
     const lines = raw.split(/\r?\n/);
     const duty = extractRows(lines, DUTY_HEADERS, DUTY_HEADERS.length).rows.map(r => ({ start:r[0], end:r[1], pairingId:r[2], dutyHours:r[3], flyingHours:r[4], restRequired:r[5], restAvailable:r[6] }));
     const itinRaw = extractRows(lines, ITIN_HEADERS, ITIN_HEADERS.length);
-const itin = itinRaw.rows
-  .filter(r => /^[A-Z]{2,3}\d{2,4}$/i.test(norm(r[0]))) // keep only real flight rows
-  .map(r => ({ flightId:r[0], date:r[1], from:r[2], dep:r[3], to:r[4], arr:r[5], ac:r[6], version:r[7], acReg:r[8], flightTime:r[9], groundTime:r[10], actStart:r[11], actEnd:r[12], actLoc:r[13] }));
-
+    const itin = itinRaw.rows.map(r => ({ flightId:r[0], date:r[1], from:r[2], dep:r[3], to:r[4], arr:r[5], ac:r[6], version:r[7], acReg:r[8], flightTime:r[9], groundTime:r[10], actStart:r[11], actEnd:r[12], actLoc:r[13] }));
     const crewRaw = extractRows(lines, CREW_HEADERS, CREW_HEADERS.length);
     const crew = crewRaw.rows.map(r => ({ opRank:r[0], posRank:r[1], crewId:r[2], crewName:r[3], wt:r[4], workPos:r[5], base:r[6], sdc:r[7], checkIn:r[8] })).filter(c => c.crewId);
     let dutyStart = duty.length ? duty[0].start : '';
