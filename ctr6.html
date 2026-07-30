@@ -560,7 +560,25 @@
     margin-top: 8px;
   }
 
-  .keypad-actions .keypad-btn { padding: 12px; font-size: 16px; }
+    .keypad-actions .keypad-btn { padding: 12px; font-size: 16px; }
+
+  .keypad-manual-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+  }
+  .manual-type-btn {
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .manual-type-btn:active { border-color: var(--accent); color: var(--accent); }
 
   .keypad-btn .sub {
     font-size: 12px;
@@ -791,7 +809,6 @@
 
   table.rtab td input.remarksTxt {
     text-align: left;
-    border-bottom: 1px dashed #999;
     font-size: 9px;
   }
 
@@ -928,6 +945,8 @@
 
   /* ── Print styles ── */
   @media print {
+    html, body { height: auto !important; min-height: auto !important; }
+    body::before, body::after { display: none !important; }
     body { background: #fff; }
     header, .card:not(.reportcard), .noprint, .noprint-inline { display: none !important; }
     .report-card { background: none; border: none; padding: 0; margin: 0; }
@@ -951,58 +970,11 @@
     .door-cell.unset { color: transparent !important; font-size: 0 !important; }
     .ft-cell-clickable:hover { background: transparent !important; }
     .toast { display: none !important; }
-    .report-inner, #report, .rpad { page-break-after: avoid; }
-    .rpad { page-break-inside: avoid; }
+    table.rtab tr, .ft-table tr, .captain-icc-table tr { page-break-inside: avoid; }
     .alt-icc-badge { display: inline-block !important; background: #111 !important; color: #fff !important; }
     .captain-icc-table td { padding: 2px 4px; }
   }
-  /* Debug: outlines elements on print so you can see what's causing overflow — remove after testing */
-
-
-/* Actual print fixes */
-@media print {
-  html, body {
-    height: auto !important;
-    min-height: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* Remove forced page breaks */
-  * {
-    page-break-after: auto !important;
-    page-break-before: auto !important;
-    page-break-inside: auto !important;
-    break-inside: auto !important;
-    -webkit-column-break-inside: auto !important;
-  }
-
-  /* Prevent 100vh from generating overflow */
-  [style*="100vh"], .full-height, .vh-100 {
-    height: auto !important;
-    min-height: auto !important;
-  }
-
-  /* Allow images and tables to scale rather than forcing pages */
-  img { max-width: 100% !important; height: auto !important; }
-  table { page-break-inside: auto !important; break-inside: auto !important; }
-  tr, thead, tbody { page-break-inside: avoid !important; page-break-after: auto !important; }
-
-  /* If you use fixed header/footer, make room for them */
-  header, footer {
-    position: fixed;
-    left: 0;
-    right: 0;
-  }
-  body {
-    /* adjust these values to match your header/footer heights */
-    margin-top: 60px !important;
-    margin-bottom: 40px !important;
-  }
-
-  /* Page margin — tweak or remove if not needed */
-  @page { size: auto; margin: 10mm; }
-}
+  @page { size: auto; margin: 8mm; }
 </style>
 </head>
 <body>
@@ -1029,9 +1001,9 @@
       <div class="card-header-left">
         <div class="card-title"><span class="icon">📋</span> 1. Paste iFlight text</div>
       </div>
-      <span class="card-sub">select-all + copy</span>
+      <span class="card-sub">select-all + copy(ctrl A, C) from departure summary, paste (ctrl V) here.</span>
     </div>
-    <textarea id="pasteBox" placeholder="Paste the iFlight Crew Trip Report here…"></textarea>
+    <textarea id="pasteBox" placeholder="Paste the iFlight Departure summary here…"></textarea>
     <div class="btnrow">
       <button class="primary-btn" id="parseBtn">⚡ Parse & Fill Report</button>
       <button class="secondary-btn" id="clearBtn">Clear</button>
@@ -1109,8 +1081,10 @@
     <div class="modal-title">Working Position</div>
     <div class="modal-sub" id="modalCrewName"></div>
     <div class="pos-grid" id="posGrid"></div>
+    <!-- SNY toggle button -->
+    <button class="alt-icc-toggle-btn" id="snyToggleBtn">Set as SNY</button>
     <!-- Alternate ICC toggle button -->
-    <button class="alt-icc-toggle-btn" id="altIccToggleBtn">Set as Alternate ICC</button>
+    <button class="alt-icc-toggle-btn" id="altIccToggleBtn" style="margin-top:6px;">Set as Alternate ICC</button>
     <button class="secondary-btn" id="modalCloseBtn" style="margin-top:8px;">Close</button>
   </div>
 </div>
@@ -1172,10 +1146,13 @@
       <button class="keypad-btn accent" data-key="save">✓</button>
     </div>
     <div class="keypad-actions">
-      <button class="keypad-btn" data-key="cancel" style="grid-column:span 1;">Cancel</button>
-      <button class="keypad-btn accent" data-key="save" style="grid-column:span 1;">Save</button>
-    </div>
-  </div>
+  <button class="keypad-btn" data-key="cancel" style="grid-column:span 1;">Cancel</button>
+  <button class="keypad-btn accent" data-key="save" style="grid-column:span 1;">Save</button>
+</div>
+<div class="keypad-manual-row">
+  <button class="manual-type-btn" id="manualTypeBtn">⌨️ Type instead</button>
+</div>
+</div>
 </div>
 
 <!-- ===== TOAST (hidden in print) ===== -->
@@ -1207,6 +1184,7 @@
   const posGrid = document.getElementById('posGrid');
   const modalCrewName = document.getElementById('modalCrewName');
   const altIccToggleBtn = document.getElementById('altIccToggleBtn');
+  const snyToggleBtn = document.getElementById('snyToggleBtn');
   const iccModalOverlay = document.getElementById('iccModalOverlay');
   const iccGrid = document.getElementById('iccGrid');
   const iccModalSub = document.getElementById('iccModalSub');
@@ -1217,7 +1195,8 @@
   const numberKeypadModalOverlay = document.getElementById('numberKeypadModalOverlay');
   const numberKeypadDisplay = document.getElementById('numberKeypadDisplay');
   const numberKeypadTitle = document.getElementById('numberKeypadTitle');
-  const numberKeypadSub = document.getElementById('numberKeypadSub');
+const numberKeypadSub = document.getElementById('numberKeypadSub');
+const manualTypeBtn = document.getElementById('manualTypeBtn');
   const statsContainer = document.getElementById('statsContainer');
   const statFlights = document.getElementById('statFlights');
   const statCrew = document.getElementById('statCrew');
@@ -1232,15 +1211,16 @@
   // ===== ICC & Alt ICC state =====
   let iccChosenCrew = null; // { crewId, crewName, opRank }
   let altIccCrewId = null;   // crewId of alternate ICC
+  let snyCrewIds = {};       // crewId -> true; unlike alt ICC, any number of crew can be SNY
 
   // ===== Constants =====
   const DUTY_HEADERS = ["Start","End","Pairing Id","Duty Hours","Flying Hours","Rest Required","Rest Available"];
   const ITIN_HEADERS = ["Flight/Acy Id","Date","From","Dep.","To","Arr.","A/C","Version","A/C Reg","Flight Time","Ground Time","Activity Start","Activity End","Activity Location"];
   const CREW_HEADERS = ["OP Rank","Postion Rank","Crew Id","Crew Name","WT","Work Pos.","Base","SDC","Check In"];
-  const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary'];
+  const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary','flight/acy id','stand/pax info','recovery','special meal'];
   const COCKPIT_RANKS = ['CAPT','FO','SO','CDT'];
-  const POSITIONS_NARROW = ['ICC', 'P1','P2','P3','P4','A1','A2','SNY'];
-  const POSITIONS_WIDE = ['ICC', 'IFS B', 'LSB', 'LSC', 'LSD', 'AG', 'BG1', 'BG2', 'CG', 'DG', 'BC', 'BC1', 'CC', 'DC', 'DC2', 'SNY'];
+  const POSITIONS_NARROW = ['ICC', 'P1','P2','P3','P4','A1','A2'];
+  const POSITIONS_WIDE = ['ICC', 'IFS B', 'LSB', 'LSC', 'LSD', 'AG', 'BG1', 'BG2', 'CG', 'DG', 'BC', 'BC1', 'CC', 'DC', 'DC2'];
   const RANK_PRIORITY = { 'IFS': 1, 'LS': 2, 'FS': 3, 'FSS': 4, 'SS': 5, 'CS': 6, 'AS': 7 };
   const DOORS_NARROW = ['1L','1R','2L','2R'];
   const DOORS_WIDE = ['1L','1R','2L','2R','3L','3R','4L','4R'];
@@ -1379,11 +1359,42 @@
       }
     }
     numberKeypadModalOverlay.style.display = 'none';
-    keypadTarget = null;
-    keypadBuffer = '';
-  }
+keypadTarget = null;
+keypadBuffer = '';
+}
 
-  function numberKeypadPress(key) {
+function enableManualEdit(targetInput) {
+  if (!targetInput) return;
+  numberKeypadModalOverlay.style.display = 'none';
+  keypadBuffer = '';
+  selectedBayLetter = '';
+  targetInput.readOnly = false;
+  targetInput.dataset.manualEdit = '1';
+  targetInput.dataset.origFontSize = targetInput.style.fontSize || '';
+  targetInput.style.fontSize = '16px';
+  targetInput.focus();
+  targetInput.select();
+  keypadTarget = null;
+}
+
+function restoreManualEdit(input) {
+  if (input.dataset.manualEdit === '1') {
+    input.style.fontSize = input.dataset.origFontSize || '';
+    input.readOnly = true;
+    delete input.dataset.manualEdit;
+    const key = input.dataset.key;
+    if (key) state.fields[key] = input.value;
+  }
+}
+
+if (manualTypeBtn) {
+  manualTypeBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    enableManualEdit(keypadTarget);
+  });
+}
+
+function numberKeypadPress(key) {
     if (key === 'clear') {
       keypadBuffer = keypadBuffer.slice(0, -1);
     } else if (key === 'cancel') {
@@ -1500,7 +1511,10 @@
     const lines = raw.split(/\r?\n/);
     const duty = extractRows(lines, DUTY_HEADERS, DUTY_HEADERS.length).rows.map(r => ({ start:r[0], end:r[1], pairingId:r[2], dutyHours:r[3], flyingHours:r[4], restRequired:r[5], restAvailable:r[6] }));
     const itinRaw = extractRows(lines, ITIN_HEADERS, ITIN_HEADERS.length);
-    const itin = itinRaw.rows.map(r => ({ flightId:r[0], date:r[1], from:r[2], dep:r[3], to:r[4], arr:r[5], ac:r[6], version:r[7], acReg:r[8], flightTime:r[9], groundTime:r[10], actStart:r[11], actEnd:r[12], actLoc:r[13] }));
+const itin = itinRaw.rows
+  .filter(r => /^[A-Z]{2,3}\d{2,4}$/i.test(norm(r[0]))) // keep only real flight rows
+  .map(r => ({ flightId:r[0], date:r[1], from:r[2], dep:r[3], to:r[4], arr:r[5], ac:r[6], version:r[7], acReg:r[8], flightTime:r[9], groundTime:r[10], actStart:r[11], actEnd:r[12], actLoc:r[13] }));
+
     const crewRaw = extractRows(lines, CREW_HEADERS, CREW_HEADERS.length);
     const crew = crewRaw.rows.map(r => ({ opRank:r[0], posRank:r[1], crewId:r[2], crewName:r[3], wt:r[4], workPos:r[5], base:r[6], sdc:r[7], checkIn:r[8] })).filter(c => c.crewId);
     let dutyStart = duty.length ? duty[0].start : '';
@@ -1554,31 +1568,68 @@
 
     const itin = [];
     for(let i=0; i<flightNos.length; i++){
-      const seg = segments[i] || '';
-      const acMatch = seg.match(/\b(\d{3,4})\b/);
+      const rowStart = flightMatches[i].index + flightNos[i].length;
+      const rowEnd = (i+1 < flightMatches.length) ? flightMatches[i+1].index : tableSection.length;
+      const rawRowSpan = tableSection.slice(rowStart, rowEnd);
+
+      // Mask, in this order: dep/arr airport+time pairs (this also mops up
+      // any leaked next-row dep info sitting in this row's trailing text),
+      // then remaining dates, then remaining bare times. What's left is
+      // "real" words only — rank, hotel name (if any), aircraft code, rego.
+      const acRegoMasked = rawRowSpan
+        .replace(/\b([A-Z]{3})\b\s+(\d{2}:\d{2}(?:\(\+1\))?)/g, 'ARPTPAIR')
+        .replace(/\d{2}-[A-Za-z]{3}-\d{4}/g, 'DATE')
+        .replace(/\d{2}:\d{2}(?:\(\+1\))?/g, 'TIME');
+
+      // Aircraft type codes aren't always pure digits (e.g. "73H", "7M8"),
+      // so match any token that starts with a digit rather than requiring
+      // the whole thing to be numeric.
+      const acMatch = acRegoMasked.match(/\b([0-9][0-9A-Z]{1,3})\b/);
       const ac = acMatch ? acMatch[1] : '';
+
+      // Registration: the LAST leftover real word after the aircraft code.
+      // This is reliable even when a hotel name sits between the aircraft
+      // code and the registration — rego consistently comes at the very
+      // end of a row's data, after any hotel text, not immediately after
+      // the aircraft code.
       let acReg = '';
       if(acMatch){
-        const rest = seg.slice(acMatch.index + acMatch[0].length);
-        const tok = rest.trim().split(/\s+/).find(t => t && t !== 'DATE' && t !== 'TIME' && /^[A-Za-z0-9]{2,6}$/.test(t));
-        if(tok) acReg = tok;
+        const afterAc = acRegoMasked.slice(acMatch.index + acMatch[0].length);
+        const leftoverWords = (afterAc.match(/[A-Za-z0-9]+/g) || [])
+          .filter(w => w !== 'DATE' && w !== 'TIME' && w !== 'ARPTPAIR' && /^[A-Za-z0-9]{2,6}$/.test(w));
+        if(leftoverWords.length) acReg = leftoverWords[leftoverWords.length - 1];
       }
       const dep = depArrMatches[i*2];
       const arr = depArrMatches[i*2+1];
 
-      // FH (flight hours -> FT field): its position relative to
-      // date/flight/rank varies between report exports, but it's reliably
-      // the second-to-last bare HH:MM token that appears between this row's
-      // Arr time and its aircraft-type code (the last such token being DH).
+      // FH (flight hours -> FT field): the fields between Arr and the
+      // aircraft-type code are some subset of GT/Debrief/FH/DH — each one
+      // is independently blank or present depending on the report (e.g.
+      // GT is often absent on a duty's final leg, Debrief/DH are often
+      // absent on every leg except the final one), so a fixed position
+      // doesn't reliably land on FH. Instead: count how many bare HH:MM
+      // tokens appear between Arr and the aircraft-type code (using a
+      // locally-masked copy so an hour digit like "10" in "10:40" can't be
+      // mistaken for the aircraft code), then pick FH by how many were
+      // found — 1 present means it's FH itself, 2 means FH then DH (take
+      // the first), 3+ means Debrief, FH, DH in order (take the middle-ish
+      // one, second-to-last).
       let fh = '';
       if(arr){
         const segStart = arr.index + arr[0].length;
-        const segEnd = (i+1 < flightMatches.length) ? flightMatches[i+1].index : tableSection.length;
+        const segEnd = rowEnd;
         const rowTail = tableSection.slice(segStart, segEnd);
-        const acPos = rowTail.search(/\b\d{3,4}\b/);
-        const clusterText = acPos >= 0 ? rowTail.slice(0, acPos) : rowTail;
-        const times = clusterText.match(/\d{2}:\d{2}(?:\(\+1\))?/g) || [];
-        if(times.length >= 2) fh = times[times.length - 2];
+        const maskedRowTail = rowTail
+          .replace(/\d{2}-[A-Za-z]{3}-\d{4}/g, 'DATE')
+          .replace(/\d{2}:\d{2}(?:\(\+1\))?/g, 'TIME');
+        const acMatchLocal = maskedRowTail.match(/\b([0-9][0-9A-Z]{1,3})\b/);
+        const beforeAc = acMatchLocal ? maskedRowTail.slice(0, acMatchLocal.index) : maskedRowTail;
+        const timeCountBeforeAc = (beforeAc.match(/TIME/g) || []).length;
+        const allTimesInRowTail = rowTail.match(/\d{2}:\d{2}(?:\(\+1\))?/g) || [];
+        const times = allTimesInRowTail.slice(0, timeCountBeforeAc);
+        if(times.length === 1) fh = times[0];
+        else if(times.length === 2) fh = times[1];
+        else if(times.length >= 3) fh = times[times.length - 2];
       }
 
       itin.push({
@@ -1688,6 +1739,11 @@
       posGrid.appendChild(btn);
     });
 
+    // Update SNY toggle button state
+    const isSny = !!snyCrewIds[crewId];
+    snyToggleBtn.textContent = isSny ? 'Remove SNY' : 'Set as SNY';
+    snyToggleBtn.className = 'alt-icc-toggle-btn' + (isSny ? ' active' : '');
+
     // Update Alternate ICC toggle button state
     const isAltIcc = (altIccCrewId === crewId);
     altIccToggleBtn.textContent = isAltIcc ? 'Remove Alternate ICC' : 'Set as Alternate ICC';
@@ -1697,22 +1753,29 @@
   };
 
   window.assignPosition = function(crewId, pos){
-    // If assigning ICC, remove any existing ICC
+    // ICC still stays exclusive — only one Crew In Charge at a time.
+    // Every other position can now be shared by any number of crew.
     if (pos === 'ICC') {
       for (let id in state.positions) {
         if (state.positions[id] === 'ICC') state.positions[id] = '';
       }
     }
-    // Handle SNY
-    if (pos !== 'SNY' && pos !== 'ICC') {
-      Object.keys(state.positions).forEach(id => {
-        if (id !== crewId && state.positions[id] === pos) state.positions[id] = '';
-      });
-    }
     state.positions[crewId] = pos;
     posModalOverlay.style.display = 'none';
     buildReport();
   };
+
+  // SNY toggle button — any number of crew can be SNY at once
+  snyToggleBtn.addEventListener('click', function() {
+    if (!currentModalCrewId) return;
+    if (snyCrewIds[currentModalCrewId]) {
+      delete snyCrewIds[currentModalCrewId];
+    } else {
+      snyCrewIds[currentModalCrewId] = true;
+    }
+    posModalOverlay.style.display = 'none';
+    buildReport();
+  });
 
   // Alternate ICC toggle button
   altIccToggleBtn.addEventListener('click', function() {
@@ -1986,10 +2049,11 @@
     // Cabin Crew
     html += `<div style="margin-top:6px;font-weight:bold;font-size:9.5px;">CABIN CREW (${sortedCabin.length})</div>`;
     html += `<table class="rtab crew-table" style="font-size:9px;">
-      <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:62%;text-align:left;">Name</th><th style="width:10%;">Working Post</th><th style="width:10%;">Door</th></tr>`;
+      <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:62%;text-align:left;">Name</th><th style="width:10%;">Position</th><th style="width:10%;">Door</th></tr>`;
     sortedCabin.forEach(c => {
       const isCIC = iccDisplay && c.crewId === iccDisplay.crewId;
       const isAltIcc = altIccDisplay && c.crewId === altIccDisplay.crewId;
+      const isSny = !!snyCrewIds[c.crewId];
       const pos = state.positions[c.crewId] || '';
       let doorAssigned = '';
       for(let d in state.doors){
@@ -1998,45 +2062,43 @@
           break;
         }
       }
-      let nameDisplay = esc(c.crewName);
-      if (isAltIcc) {
-        nameDisplay += ' <span class="alt-icc-badge">alt ICC</span>';
-      }
+      const displayName = fval('crewname-'+c.crewId, c.crewName);
+      let badgesHtml = '';
+      if (isSny) badgesHtml += '<span class="alt-icc-badge">SNY</span>';
+      if (isAltIcc) badgesHtml += '<span class="alt-icc-badge">ALT ICC</span>';
       html += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
-        <td>${esc(c.crewId)}</td>
-        <td>${esc(c.opRank)}</td>
-        <td style="text-align:left;">${nameDisplay}</td>
-        <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${pos ? esc(pos) : ''}</td>
-        <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${doorAssigned ? esc(doorAssigned) : '+'}</td>
+        <td><input value="${esc(fval('crewno-'+c.crewId, c.crewId))}" oninput="updateField('crewno-${c.crewId}', this.value)" style="width:100%;border:none;text-align:center;background:transparent;font-size:9px;font-family:inherit;padding:0;"></td>
+        <td><input value="${esc(fval('crewrank-'+c.crewId, c.opRank))}" oninput="updateField('crewrank-${c.crewId}', this.value)" style="width:100%;border:none;text-align:center;background:transparent;font-size:9px;font-family:inherit;padding:0;"></td>
+        <td style="text-align:left;">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <input value="${esc(displayName)}" oninput="updateField('crewname-${c.crewId}', this.value)" style="flex:1;min-width:0;border:none;text-align:left;background:transparent;font-size:9px;font-family:inherit;padding:0;">
+            ${badgesHtml ? `<span style="flex-shrink:0;white-space:nowrap;display:flex;gap:3px;">${badgesHtml}</span>` : ''}
+          </div>
+        </td>
+        <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(displayName)}">${pos ? esc(pos) : ''}</td>
+        <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(displayName)}">${doorAssigned ? esc(doorAssigned) : '+'}</td>
       </tr>`;
     });
     html += `</table>`;
 
     // Bottom Flight Time Details
     html += `<div style="margin-top:8px;font-weight:bold;font-size:9.5px;">Flight Time Details</div>`;
+    const ftHeaderDefaults = ['Flt','LP','CB','CAT','AIC','BC','1P','BC','DC','LPO'];
     html += `<table class="ft-table">
-      <tr>
-        <th style="width:10%;">Flt</th>
-        <th style="width:10%;">LP</th>
-        <th style="width:10%;">CB</th>
-        <th style="width:10%;">CAT</th>
-        <th style="width:10%;">AIC</th>
-        <th style="width:10%;">BC</th>
-        <th style="width:10%;">1P</th>
-        <th style="width:10%;">BC</th>
-        <th style="width:10%;">DC</th>
-        <th style="width:10%;">LPO</th>
-      </tr>`;
+      <tr>`;
+    ftHeaderDefaults.forEach((label, hIdx) => {
+      html += `<th style="width:10%;"><input value="${esc(fval('ftheader-'+hIdx, label))}" oninput="updateField('ftheader-${hIdx}', this.value)" style="width:100%;border:none;background:transparent;font-size:8px;font-weight:600;text-align:center;font-family:inherit;padding:0;"></th>`;
+    });
+    html += `</tr>`;
     d.itin.forEach((l, rowIndex) => {
       const flightNo = esc(l.flightId);
-      const cats = ['LP','CB','CAT','AIC','BC','1P','BC','DC','LPO'];
       html += `<tr>`;
       html += `<td style="font-weight:bold;font-size:9px;">${flightNo}</td>`;
-      cats.forEach((cat, colIndex) => {
+      for(let colIndex = 0; colIndex < 9; colIndex++){
         const key = 'ft-' + rowIndex + '-' + colIndex;
         const val = fval(key, '');
         html += `<td class="ft-cell-clickable"><input class="ft-input" type="text" data-key="${key}" value="${esc(val)}" placeholder="" readonly></td>`;
-      });
+      }
       html += `</tr>`;
     });
     html += `</table>`;
@@ -2047,8 +2109,9 @@
     // ---- Attach event listeners ----
     // BAY input – opens letter modal
     const bayInput = document.getElementById('bayInput');
-    if (bayInput) {
-      bayInput.addEventListener('click', function(e) {
+if (bayInput) {
+  bayInput.addEventListener('mousedown', function(e) { e.preventDefault(); });
+  bayInput.addEventListener('click', function(e) {
         e.stopPropagation();
         const currentVal = this.value;
         const letterMatch = currentVal.match(/^([A-Z])/);
@@ -2063,8 +2126,9 @@
 
     // BRIEFING STATION input – opens number keypad directly
     const briefingInput = document.getElementById('briefingInput');
-    if (briefingInput) {
-      briefingInput.addEventListener('click', function(e) {
+if (briefingInput) {
+  briefingInput.addEventListener('mousedown', function(e) { e.preventDefault(); });
+  briefingInput.addEventListener('click', function(e) {
         e.stopPropagation();
         openNumberKeypad(this, 'briefing', this.value);
       });
@@ -2079,35 +2143,44 @@
       });
     }
 
-    // ---- Attach keypad event listeners to Flight Time cells ----
-    reportEl.querySelectorAll('.ft-cell-clickable').forEach(cell => {
-      const input = cell.querySelector('.ft-input');
-      if (input) {
-        cell.addEventListener('click', function(e) {
-          e.stopPropagation();
-          const currentValue = input.value;
-          openNumberKeypad(input, 'time', currentValue);
-        });
-        input.addEventListener('click', function(e) {
-          e.stopPropagation();
-          const currentValue = input.value;
-          openNumberKeypad(input, 'time', currentValue);
-        });
-        input.addEventListener('input', function() {
-          const key = this.dataset.key;
-          if (key) {
-            state.fields[key] = this.value;
-          }
-        });
-        input.addEventListener('change', function() {
-          const key = this.dataset.key;
-          if (key) {
-            state.fields[key] = this.value;
-          }
-        });
-      }
-    });
-
+ // ---- Attach keypad event listeners to Flight Time cells ----
+ reportEl.querySelectorAll('.ft-cell-clickable').forEach(cell => {
+   const input = cell.querySelector('.ft-input');
+   if (input) {
+     // Stop the input taking native focus on tap — that's what makes
+     // iOS Safari/Chrome zoom in before our modal even opens.
+     input.addEventListener('mousedown', function(e) {
+       if (this.readOnly) e.preventDefault();
+     });
+     cell.addEventListener('click', function(e) {
+       e.stopPropagation();
+       if (!input.readOnly) return; // currently in manual-typing mode
+       const currentValue = input.value;
+       openNumberKeypad(input, 'time', currentValue);
+     });
+     input.addEventListener('click', function(e) {
+       e.stopPropagation();
+       if (!input.readOnly) return; // currently in manual-typing mode
+       const currentValue = input.value;
+       openNumberKeypad(input, 'time', currentValue);
+     });
+     input.addEventListener('input', function() {
+       const key = this.dataset.key;
+       if (key) {
+         state.fields[key] = this.value;
+       }
+     });
+     input.addEventListener('change', function() {
+       const key = this.dataset.key;
+       if (key) {
+         state.fields[key] = this.value;
+       }
+     });
+     input.addEventListener('blur', function() {
+       restoreManualEdit(this);
+     });
+   }
+ });
     // Position cell clicks
     reportEl.querySelectorAll('.pos-cell').forEach(el => {
       el.addEventListener('click', () => {
@@ -2140,6 +2213,7 @@
     state.source = source || 'iflight';
     iccChosenCrew = null;
     altIccCrewId = null;
+    snyCrewIds = {};
     buildReport();
     reportCard.style.display = 'block';
     emptyCard.style.display = 'none';
