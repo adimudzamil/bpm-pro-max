@@ -671,12 +671,11 @@
   .captain-icc-table td {
     border: 1px solid #333;
     padding: 2px 4px;
-    vertical-align: top;
+    vertical-align: middle;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
   }
-  .captain-icc-table .left-col { width: 55%; }
-  .captain-icc-table .right-col { width: 45%; }
-  .captain-icc-table .label { font-weight: 600; color: #444; }
+  .captain-icc-table .role-col { width: 25%; font-weight: 600; color: #444; }
+  .captain-icc-table .name-col { width: 75%; }
   .captain-icc-table .clickable-cell {
     cursor: pointer;
     transition: background 0.15s;
@@ -717,7 +716,7 @@
   }
 
   /* ── Alternate ICC toggle button in modal ── */
-  .alt-icc-toggle-btn {
+  .alt-icc-toggle-btn, .sny-toggle-btn {
     width: 100%;
     padding: 10px;
     margin-top: 6px;
@@ -746,6 +745,25 @@
   .alt-icc-toggle-btn.active:hover {
     background: #444;
     border-color: #444;
+    color: #fff;
+  }
+
+  .sny-toggle-btn.active {
+    background: #111;
+    border-color: #111;
+    color: #fff;
+  }
+  .sny-toggle-btn.active::after {
+    content: ' ✓';
+  }
+  .sny-toggle-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .sny-toggle-btn.active:hover {
+    background: #222;
+    border-color: #222;
     color: #fff;
   }
 
@@ -792,6 +810,7 @@
   table.rtab td input.remarksTxt {
     text-align: left;
     font-size: 9px;
+    border-bottom: none; /* removed dotted line */
   }
 
   /* ── Column widths ── */
@@ -801,9 +820,8 @@
   .rtab .col-ft { width: 7%; }
   .rtab .col-atd { width: 7%; }
   .rtab .col-ata { width: 7%; }
-  .rtab .col-ac-type { width: 10%; }
-  .rtab .col-ac-reg { width: 8%; }
-  .rtab .col-remarks { width: 28%; }
+  .rtab .col-ac-reg { width: 10%; }
+  .rtab .col-remarks { width: 36%; } /* widened */
 
   .pos-cell {
     cursor: pointer;
@@ -819,7 +837,7 @@
   }
   .door-cell.unset { color: #aaa; font-weight: 400; }
 
-  .alt-icc-badge {
+  .alt-icc-badge, .sny-badge {
     display: inline-block;
     background: #111;
     color: #fff;
@@ -832,6 +850,11 @@
     letter-spacing: 0.04em;
     border: 1px solid #333;
     vertical-align: middle;
+    float: right; /* align right */
+    margin-right: 0;
+  }
+  .sny-badge {
+    background: #000;
   }
 
   /* ── Top info ── */
@@ -927,8 +950,6 @@
 
   /* ── Print styles ── */
   @media print {
-    html, body { height: auto !important; min-height: auto !important; }
-    body::before, body::after { display: none !important; }
     body { background: #fff; }
     header, .card:not(.reportcard), .noprint, .noprint-inline { display: none !important; }
     .report-card { background: none; border: none; padding: 0; margin: 0; }
@@ -945,18 +966,51 @@
     .crew-table th, .crew-table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .crew-table th:nth-child(1), .crew-table td:nth-child(1){width:10% !important;}
     .crew-table th:nth-child(2), .crew-table td:nth-child(2){width:5% !important;}
-    .crew-table th:nth-child(3), .crew-table td:nth-child(3){width:70% !important;}
+    .crew-table th:nth-child(3), .crew-table td:nth-child(3){width:65% !important;}
     .crew-table th:nth-child(4), .crew-table td:nth-child(4){width:10% !important;}
-    .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:5% !important;}
+    .crew-table th:nth-child(5), .crew-table td:nth-child(5){width:10% !important;}
     .pos-cell.unset { color: transparent !important; font-size: 0 !important; }
     .door-cell.unset { color: transparent !important; font-size: 0 !important; }
     .ft-cell-clickable:hover { background: transparent !important; }
     .toast { display: none !important; }
-    table.rtab tr, .ft-table tr, .captain-icc-table tr { page-break-inside: avoid; }
-    .alt-icc-badge { display: inline-block !important; background: #111 !important; color: #fff !important; }
+    .report-inner, #report, .rpad { page-break-after: avoid; }
+    .rpad { page-break-inside: avoid; }
+    .alt-icc-badge, .sny-badge { display: inline-block !important; background: #111 !important; color: #fff !important; float: right !important; }
     .captain-icc-table td { padding: 2px 4px; }
   }
-  @page { size: auto; margin: 8mm; }
+
+  @media print {
+    html, body {
+      height: auto !important;
+      min-height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    * {
+      page-break-after: auto !important;
+      page-break-before: auto !important;
+      page-break-inside: auto !important;
+      break-inside: auto !important;
+      -webkit-column-break-inside: auto !important;
+    }
+    [style*="100vh"], .full-height, .vh-100 {
+      height: auto !important;
+      min-height: auto !important;
+    }
+    img { max-width: 100% !important; height: auto !important; }
+    table { page-break-inside: auto !important; break-inside: auto !important; }
+    tr, thead, tbody { page-break-inside: avoid !important; page-break-after: auto !important; }
+    header, footer {
+      position: fixed;
+      left: 0;
+      right: 0;
+    }
+    body {
+      margin-top: 60px !important;
+      margin-bottom: 40px !important;
+    }
+    @page { size: auto; margin: 10mm; }
+  }
 </style>
 </head>
 <body>
@@ -1062,11 +1116,12 @@
   <div class="modal-box">
     <div class="modal-title">Working Position</div>
     <div class="modal-sub" id="modalCrewName"></div>
+
     <div class="pos-grid" id="posGrid"></div>
-    <!-- SNY toggle button -->
-    <button class="alt-icc-toggle-btn" id="snyToggleBtn">Set as SNY</button>
+        <!-- SNY toggle button (above Alt ICC) -->
+    <button class="sny-toggle-btn" id="snyToggleBtn">Toggle SNY</button>
     <!-- Alternate ICC toggle button -->
-    <button class="alt-icc-toggle-btn" id="altIccToggleBtn" style="margin-top:6px;">Set as Alternate ICC</button>
+    <button class="alt-icc-toggle-btn" id="altIccToggleBtn">Set as Alternate ICC</button>
     <button class="secondary-btn" id="modalCloseBtn" style="margin-top:8px;">Close</button>
   </div>
 </div>
@@ -1189,7 +1244,8 @@
   // ===== ICC & Alt ICC state =====
   let iccChosenCrew = null; // { crewId, crewName, opRank }
   let altIccCrewId = null;   // crewId of alternate ICC
-  let snyCrewIds = {};       // crewId -> true; unlike alt ICC, any number of crew can be SNY
+  // ===== SNY state =====
+  let snyStatus = {}; // crewId -> boolean
 
   // ===== Constants =====
   const DUTY_HEADERS = ["Start","End","Pairing Id","Duty Hours","Flying Hours","Rest Required","Rest Available"];
@@ -1197,6 +1253,7 @@
   const CREW_HEADERS = ["OP Rank","Postion Rank","Crew Id","Crew Name","WT","Work Pos.","Base","SDC","Check In"];
   const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary'];
   const COCKPIT_RANKS = ['CAPT','FO','SO','CDT'];
+  // SNY removed from position lists
   const POSITIONS_NARROW = ['ICC', 'P1','P2','P3','P4','A1','A2'];
   const POSITIONS_WIDE = ['ICC', 'IFS B', 'LSB', 'LSC', 'LSD', 'AG', 'BG1', 'BG2', 'CG', 'DG', 'BC', 'BC1', 'CC', 'DC', 'DC2'];
   const RANK_PRIORITY = { 'IFS': 1, 'LS': 2, 'FS': 3, 'FSS': 4, 'SS': 5, 'CS': 6, 'AS': 7 };
@@ -1512,69 +1569,20 @@
 
     const itin = [];
     for(let i=0; i<flightNos.length; i++){
-      const rowStart = flightMatches[i].index + flightNos[i].length;
-      const rowEnd = (i+1 < flightMatches.length) ? flightMatches[i+1].index : tableSection.length;
-      const rawRowSpan = tableSection.slice(rowStart, rowEnd);
-
-      // Mask, in this order: dep/arr airport+time pairs (this also mops up
-      // any leaked next-row dep info sitting in this row's trailing text),
-      // then remaining dates, then remaining bare times. What's left is
-      // "real" words only — rank, hotel name (if any), aircraft code, rego.
-      const acRegoMasked = rawRowSpan
-        .replace(/\b([A-Z]{3})\b\s+(\d{2}:\d{2}(?:\(\+1\))?)/g, 'ARPTPAIR')
-        .replace(/\d{2}-[A-Za-z]{3}-\d{4}/g, 'DATE')
-        .replace(/\d{2}:\d{2}(?:\(\+1\))?/g, 'TIME');
-
-      // Aircraft type codes aren't always pure digits (e.g. "73H", "7M8"),
-      // so match any token that starts with a digit rather than requiring
-      // the whole thing to be numeric.
-      const acMatch = acRegoMasked.match(/\b([0-9][0-9A-Z]{1,3})\b/);
+      const seg = segments[i] || '';
+      const acMatch = seg.match(/\b(\d{3,4})\b/);
       const ac = acMatch ? acMatch[1] : '';
-
-      // Registration: the LAST leftover real word after the aircraft code.
-      // This is reliable even when a hotel name sits between the aircraft
-      // code and the registration — rego consistently comes at the very
-      // end of a row's data, after any hotel text, not immediately after
-      // the aircraft code.
       let acReg = '';
       if(acMatch){
-        const afterAc = acRegoMasked.slice(acMatch.index + acMatch[0].length);
-        const leftoverWords = (afterAc.match(/[A-Za-z0-9]+/g) || [])
-          .filter(w => w !== 'DATE' && w !== 'TIME' && w !== 'ARPTPAIR' && /^[A-Za-z0-9]{2,6}$/.test(w));
-        if(leftoverWords.length) acReg = leftoverWords[leftoverWords.length - 1];
+        const rest = seg.slice(acMatch.index + acMatch[0].length);
+        const tok = rest.trim().split(/\s+/).find(t => t && t !== 'DATE' && t !== 'TIME' && /^[A-Za-z0-9]{2,6}$/.test(t));
+        if(tok) acReg = tok;
       }
       const dep = depArrMatches[i*2];
       const arr = depArrMatches[i*2+1];
 
-      // FH (flight hours -> FT field): the fields between Arr and the
-      // aircraft-type code are some subset of GT/Debrief/FH/DH — each one
-      // is independently blank or present depending on the report (e.g.
-      // GT is often absent on a duty's final leg, Debrief/DH are often
-      // absent on every leg except the final one), so a fixed position
-      // doesn't reliably land on FH. Instead: count how many bare HH:MM
-      // tokens appear between Arr and the aircraft-type code (using a
-      // locally-masked copy so an hour digit like "10" in "10:40" can't be
-      // mistaken for the aircraft code), then pick FH by how many were
-      // found — 1 present means it's FH itself, 2 means FH then DH (take
-      // the first), 3+ means Debrief, FH, DH in order (take the middle-ish
-      // one, second-to-last).
+      // Flight time is left blank (user will handwrite)
       let fh = '';
-      if(arr){
-        const segStart = arr.index + arr[0].length;
-        const segEnd = rowEnd;
-        const rowTail = tableSection.slice(segStart, segEnd);
-        const maskedRowTail = rowTail
-          .replace(/\d{2}-[A-Za-z]{3}-\d{4}/g, 'DATE')
-          .replace(/\d{2}:\d{2}(?:\(\+1\))?/g, 'TIME');
-        const acMatchLocal = maskedRowTail.match(/\b([0-9][0-9A-Z]{1,3})\b/);
-        const beforeAc = acMatchLocal ? maskedRowTail.slice(0, acMatchLocal.index) : maskedRowTail;
-        const timeCountBeforeAc = (beforeAc.match(/TIME/g) || []).length;
-        const allTimesInRowTail = rowTail.match(/\d{2}:\d{2}(?:\(\+1\))?/g) || [];
-        const times = allTimesInRowTail.slice(0, timeCountBeforeAc);
-        if(times.length === 1) fh = times[0];
-        else if(times.length === 2) fh = times[1];
-        else if(times.length >= 3) fh = times[times.length - 2];
-      }
 
       itin.push({
         flightId: flightNos[i] || '',
@@ -1683,10 +1691,10 @@
       posGrid.appendChild(btn);
     });
 
-    // Update SNY toggle button state
-    const isSny = !!snyCrewIds[crewId];
+    // Update SNY toggle button
+    const isSny = snyStatus[crewId] || false;
     snyToggleBtn.textContent = isSny ? 'Remove SNY' : 'Set as SNY';
-    snyToggleBtn.className = 'alt-icc-toggle-btn' + (isSny ? ' active' : '');
+    snyToggleBtn.className = 'sny-toggle-btn' + (isSny ? ' active' : '');
 
     // Update Alternate ICC toggle button state
     const isAltIcc = (altIccCrewId === crewId);
@@ -1697,26 +1705,27 @@
   };
 
   window.assignPosition = function(crewId, pos){
-    // ICC still stays exclusive — only one Crew In Charge at a time.
-    // Every other position can now be shared by any number of crew.
+    // If assigning ICC, remove any existing ICC
     if (pos === 'ICC') {
       for (let id in state.positions) {
         if (state.positions[id] === 'ICC') state.positions[id] = '';
       }
+    }
+    // For non-ICC positions, remove duplicates (but SNY is separate, so no conflict)
+    if (pos !== 'ICC') {
+      Object.keys(state.positions).forEach(id => {
+        if (id !== crewId && state.positions[id] === pos) state.positions[id] = '';
+      });
     }
     state.positions[crewId] = pos;
     posModalOverlay.style.display = 'none';
     buildReport();
   };
 
-  // SNY toggle button — any number of crew can be SNY at once
+  // SNY toggle button
   snyToggleBtn.addEventListener('click', function() {
     if (!currentModalCrewId) return;
-    if (snyCrewIds[currentModalCrewId]) {
-      delete snyCrewIds[currentModalCrewId];
-    } else {
-      snyCrewIds[currentModalCrewId] = true;
-    }
+    snyStatus[currentModalCrewId] = !snyStatus[currentModalCrewId];
     posModalOverlay.style.display = 'none';
     buildReport();
   });
@@ -1815,6 +1824,7 @@
   document.getElementById('doorModalCloseBtn').addEventListener('click', () => { doorModalOverlay.style.display = 'none'; });
   doorModalOverlay.addEventListener('click', (e) => { if(e.target === doorModalOverlay) doorModalOverlay.style.display = 'none'; });
 
+  // ===== Build Report =====
   function buildReport(){
     const d = state;
     const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
@@ -1830,10 +1840,7 @@
     const ifsCrew = sortedCabin.filter(c => c.opRank.toUpperCase() === 'IFS');
     const lsCrew = sortedCabin.filter(c => c.opRank.toUpperCase() === 'LS');
 
-    // Determine ICC based on positions and rules
     let iccDisplay = null;
-
-    // Check if any crew has "ICC" position
     let iccPositionCrew = null;
     for (let id in state.positions) {
       if (state.positions[id] === 'ICC') {
@@ -1845,28 +1852,24 @@
       }
     }
 
-    // Determine ICC automatically if not manually set
     if (!iccPositionCrew) {
       if (ifsCrew.length === 1) {
         iccDisplay = ifsCrew[0];
       } else if (ifsCrew.length === 0 && lsCrew.length === 1) {
         iccDisplay = lsCrew[0];
       } else {
-        // Multiple or none - let user choose
         iccDisplay = iccChosenCrew || null;
       }
     } else {
       iccDisplay = iccPositionCrew;
     }
 
-    // Determine Alternate ICC
     let altIccDisplay = null;
     if (altIccCrewId) {
       const crew = sortedCabin.find(c => c.crewId === altIccCrewId);
       if (crew) {
         altIccDisplay = crew;
       } else {
-        // if crew not found (e.g., removed from list), clear
         altIccCrewId = null;
       }
     }
@@ -1913,7 +1916,7 @@
       </span>
     </div>`;
 
-    // Flight table
+    // Flight table (A/C TYPE removed, FT blank)
     html += `<table class="rtab">
       <tr>
         <th class="col-flight">F.NO</th>
@@ -1923,12 +1926,12 @@
         <th class="col-ft">FT</th>
         <th class="col-atd">ATD</th>
         <th class="col-ata">ATA</th>
-        <th class="col-ac-type">A/C TYPE</th>
         <th class="col-ac-reg">A/C REG</th>
         <th class="col-remarks">REMARKS</th>
       </tr>`;
     d.itin.forEach((l, i) => {
-      const ft = l.flightTime || fval('ft-'+i, '');
+      // FT left blank
+      const ft = ''; // no auto-fill
       html += `<tr>
         <td>${esc(l.flightId)}</td>
         <td>${esc((l.from||'')+'/'+(l.to||''))}</td>
@@ -1937,7 +1940,6 @@
         <td><input value="${esc(ft)}" oninput="updateField('ft-${i}', this.value)"></td>
         <td><input value="${esc(fval('atd-'+i, ''))}" oninput="updateField('atd-${i}', this.value)"></td>
         <td><input value="${esc(fval('ata-'+i, ''))}" oninput="updateField('ata-${i}', this.value)"></td>
-        <td><input value="${esc(fval('ac-'+i, l.ac||''))}" oninput="updateField('ac-${i}', this.value)"></td>
         <td><input value="${esc(fval('acreg-'+i, l.acReg||''))}" oninput="updateField('acreg-${i}', this.value)"></td>
         <td><input class="remarksTxt" value="${esc(fval('remarks-'+i, ''))}" oninput="updateField('remarks-${i}', this.value)"></td>
       </tr>`;
@@ -1949,7 +1951,7 @@
       <input value="${esc(fval('airport', ''))}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;font-family:inherit;" placeholder="">
     </div>`;
 
-    // ---- Captain & ICC Table ----
+    // ---- Captain & ICC Table - individual rows ----
     // Determine ICC candidates for clicking
     let iccCandidates = [];
     if (ifsCrew.length > 1) {
@@ -1957,38 +1959,30 @@
     } else if (ifsCrew.length === 0 && lsCrew.length > 1) {
       iccCandidates = lsCrew;
     }
-
+html += `<table class="captain-icc-table">
+    <colgroup>
+    <col style="width:15%">
+    <col style="width:85%">
+  </colgroup> <tr> <th style="border:1px solid #333;background:#eee;font-weight:600;font-size:8.5px;text-align:left;" colspan="2">Pilots & ICC</th> </tr>`;
+    // Captains
+    captains.forEach(c => {
+      html += `<tr><td class="role-col">CAPT</td><td class="name-col">${esc(c.crewId)} · ${esc(c.crewName)}</td></tr>`;
+    });
+    // FOs
+    fos.forEach(c => {
+      html += `<tr><td class="role-col">FO</td><td class="name-col">${esc(c.crewId)} · ${esc(c.crewName)}</td></tr>`;
+    });
+    // CDTs
+    cdts.forEach(c => {
+      html += `<tr><td class="role-col">CDT</td><td class="name-col">${esc(c.crewId)} · ${esc(c.crewName)}</td></tr>`;
+    });
+    // ICC
     const iccDisplayName = iccDisplay ? esc(iccDisplay.crewId) + ' · ' + esc(iccDisplay.opRank) + ' · ' + esc(iccDisplay.crewName) : '—';
-    const altIccDisplayName = altIccDisplay ? esc(altIccDisplay.crewId) + ' · ' + esc(altIccDisplay.opRank) + ' · ' + esc(altIccDisplay.crewName) : '—';
-
-    // Captain & FO names
-    const captainNames = captains.length ? captains.map(c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName)).join('<br>') : '—';
-    const foNames = fos.length ? fos.map(c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName)).join('<br>') : '—';
-    const cdtNames = cdts.length ? cdts.map(c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName)).join('<br>') : '—';
-
-    html += `<table class="captain-icc-table">
-      <tr>
-        <td class="left-col">
-          <div><span class="label">Captain:</span><br>${captainNames}</div>
-          ${fos.length ? `<div style="margin-top:2px;"><span class="label">FO:</span><br>${foNames}</div>` : ''}
-          ${cdts.length ? `<div style="margin-top:2px;"><span class="label">CDT:</span><br>${cdtNames}</div>` : ''}
-        </td>
-        <td class="right-col">
-          <div>
-            <span class="label">ICC:</span>
-            <span class="clickable-cell" id="iccDisplayCell" style="display:inline-block;padding:0 4px;">
-              ${iccDisplayName}
-            </span>
-          </div>
-          <div style="margin-top:4px;">
-            <span class="label">Alternate ICC:</span>
-            <span id="altIccDisplayCell" style="display:inline-block;padding:0 4px;">
-              ${altIccDisplayName}
-            </span>
-          </div>
-        </td>
-      </tr>
-    </table>`;
+    html += `<tr><td class="role-col">ICC</td><td class="name-col"><span class="clickable-cell" id="iccDisplayCell">${iccDisplayName}</span></td></tr>`;
+    // Alternate ICC
+    const altIccDisplayName = altIccDisplay ? esc(altIccDisplay.crewId) + ' · ' + esc(altIccDisplay.opRank) + ' · ' + esc(altIccDisplay.crewName) : '';
+    html += `<tr><td class="role-col">Alt ICC</td><td class="name-col" id="altIccDisplayCell">${altIccDisplayName}</td></tr>`;
+    html += `</table>`;
 
     // Cabin Crew
     html += `<div style="margin-top:6px;font-weight:bold;font-size:9.5px;">CABIN CREW (${sortedCabin.length})</div>`;
@@ -1997,7 +1991,6 @@
     sortedCabin.forEach(c => {
       const isCIC = iccDisplay && c.crewId === iccDisplay.crewId;
       const isAltIcc = altIccDisplay && c.crewId === altIccDisplay.crewId;
-      const isSny = !!snyCrewIds[c.crewId];
       const pos = state.positions[c.crewId] || '';
       let doorAssigned = '';
       for(let d in state.doors){
@@ -2006,43 +1999,62 @@
           break;
         }
       }
-      const displayName = fval('crewname-'+c.crewId, c.crewName);
-      let badgesHtml = '';
-      if (isSny) badgesHtml += '<span class="alt-icc-badge">SNY</span>';
-      if (isAltIcc) badgesHtml += '<span class="alt-icc-badge">ALT ICC</span>';
+      // SNY badge
+      const isSny = snyStatus[c.crewId] || false;
+      // Staff number, rank, name editable: we use inputs
+      const staffId = fval('crew-id-'+c.crewId, c.crewId);
+      const rank = fval('crew-rank-'+c.crewId, c.opRank);
+      const name = fval('crew-name-'+c.crewId, c.crewName);
+
+      // Wrap everything in a flex container to keep them on the same line
+let nameDisplay = `<div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">`;
+
+// Reduced input width to 70% to make explicit room for the badges
+nameDisplay += `<input class="editable-crew" type="text" value="${esc(name)}" oninput="updateField('crew-name-${c.crewId}', this.value)" style="width:70%; border:none; background:transparent; font-size:9px; font-family:inherit;">`;
+
+// Container for badges to keep them grouped together on the right side
+nameDisplay += `<div style="display: flex; gap: 4px; flex-shrink: 0;">`;
+if (isAltIcc) {
+  nameDisplay += `<span class="alt-icc-badge" style="font-size:9px;">alt ICC</span>`;
+}
+if (isSny) {
+  nameDisplay += `<span class="sny-badge" style="font-size:9px;">SNY</span>`;
+}
+nameDisplay += `</div></div>`;
+
+
       html += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
-        <td><input value="${esc(fval('crewno-'+c.crewId, c.crewId))}" oninput="updateField('crewno-${c.crewId}', this.value)" style="width:100%;border:none;text-align:center;background:transparent;font-size:9px;font-family:inherit;padding:0;"></td>
-        <td><input value="${esc(fval('crewrank-'+c.crewId, c.opRank))}" oninput="updateField('crewrank-${c.crewId}', this.value)" style="width:100%;border:none;text-align:center;background:transparent;font-size:9px;font-family:inherit;padding:0;"></td>
-        <td style="text-align:left;">
-          <div style="display:flex;align-items:center;gap:4px;">
-            <input value="${esc(displayName)}" oninput="updateField('crewname-${c.crewId}', this.value)" style="flex:1;min-width:0;border:none;text-align:left;background:transparent;font-size:9px;font-family:inherit;padding:0;">
-            ${badgesHtml ? `<span style="flex-shrink:0;white-space:nowrap;display:flex;gap:3px;">${badgesHtml}</span>` : ''}
-          </div>
-        </td>
-        <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(displayName)}">${pos ? esc(pos) : ''}</td>
-        <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(displayName)}">${doorAssigned ? esc(doorAssigned) : '+'}</td>
+        <td><input class="editable-crew" type="text" value="${esc(staffId)}" oninput="updateField('crew-id-${c.crewId}', this.value)" style="width:100%;border:none;background:transparent;font-size:9px;font-family:inherit;text-align:center;"></td>
+        <td><input class="editable-crew" type="text" value="${esc(rank)}" oninput="updateField('crew-rank-${c.crewId}', this.value)" style="width:100%;border:none;background:transparent;font-size:9px;font-family:inherit;text-align:center;"></td>
+        <td style="text-align:left;position:relative;">${nameDisplay}</td>
+        <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${pos ? esc(pos) : ''}</td>
+        <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(c.crewName)}">${doorAssigned ? esc(doorAssigned) : '+'}</td>
       </tr>`;
     });
     html += `</table>`;
 
-    // Bottom Flight Time Details
+    // Bottom Flight Time Details with editable headers
     html += `<div style="margin-top:8px;font-weight:bold;font-size:9.5px;">Flight Time Details</div>`;
-    const ftHeaderDefaults = ['Flt','LP','CB','CAT','AIC','BC','1P','BC','DC','LPO'];
-    html += `<table class="ft-table">
-      <tr>`;
-    ftHeaderDefaults.forEach((label, hIdx) => {
-      html += `<th style="width:10%;"><input value="${esc(fval('ftheader-'+hIdx, label))}" oninput="updateField('ftheader-${hIdx}', this.value)" style="width:100%;border:none;background:transparent;font-size:8px;font-weight:600;text-align:center;font-family:inherit;padding:0;"></th>`;
+    html += `<table class="ft-table">`;
+    // Header row with editable inputs
+    const headerLabels = ['LP','CB','CAT','AIC','BC','1P','BC','DC','LPO'];
+    html += `<tr>`;
+    html += `<th style="width:10%;">Flt</th>`;
+    headerLabels.forEach((label, idx) => {
+      const key = 'ft-header-'+idx;
+      const val = fval(key, label);
+      html += `<th style="width:10%;padding:0;"><input class="ft-header-input" type="text" value="${esc(val)}" oninput="updateField('${key}', this.value)" style="width:100%;border:none;background:transparent;font-size:8px;font-weight:600;text-align:center;font-family:inherit;"></th>`;
     });
     html += `</tr>`;
     d.itin.forEach((l, rowIndex) => {
       const flightNo = esc(l.flightId);
       html += `<tr>`;
       html += `<td style="font-weight:bold;font-size:9px;">${flightNo}</td>`;
-      for(let colIndex = 0; colIndex < 9; colIndex++){
-        const key = 'ft-' + rowIndex + '-' + colIndex;
+      headerLabels.forEach((cat, colIndex) => {
+        const key = 'ft-'+rowIndex+'-'+colIndex;
         const val = fval(key, '');
         html += `<td class="ft-cell-clickable"><input class="ft-input" type="text" data-key="${key}" value="${esc(val)}" placeholder="" readonly></td>`;
-      }
+      });
       html += `</tr>`;
     });
     html += `</table>`;
@@ -2146,7 +2158,7 @@
     state.source = source || 'iflight';
     iccChosenCrew = null;
     altIccCrewId = null;
-    snyCrewIds = {};
+    snyStatus = {}; // reset
     buildReport();
     reportCard.style.display = 'block';
     emptyCard.style.display = 'none';
