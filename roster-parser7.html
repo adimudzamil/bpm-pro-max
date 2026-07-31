@@ -94,16 +94,20 @@
   td.date{color:var(--accent);font-weight:700}
   td.num{font-variant-numeric:tabular-nums}
 
-  /* Stats row - FIRST ROW of THEAD - black bg, white text */
+  /* ============================================================
+     STATS ROW - FIRST ROW OF THEAD - BLACK BACKGROUND, WHITE TEXT
+     Applied to BOTH screen and print
+     ============================================================ */
   #outHead tr.stats-row td {
-    background:#000 !important;
-    color:#fff !important;
-    font-weight:700 !important;
-    text-align:center !important;
-    padding:4px 3px !important;
-    border:1px solid var(--border-color) !important;
-    font-size:12px;
-    letter-spacing:0.03em;
+    background: #000 !important;
+    color: #fff !important;
+    text-align: center !important;
+    font-weight: 700 !important;
+    padding: 4px 3px !important;
+    border: 1px solid var(--border-color) !important;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    width: 20% !important;
   }
 
   /* Column widths (15 columns) */
@@ -173,16 +177,17 @@
     td.date{color:#000}
     tr.off td, tr.layover td{color:#555}
     
-    /* Stats row - FIRST ROW of THEAD - black bg, white text */
+    /* Stats row - black background, white text in print */
     #outHead tr.stats-row td {
-      background:#000 !important;
-      color:#fff !important;
-      font-weight:700 !important;
-      font-size:calc(var(--print-fs, 8pt) + 1pt);
-      text-align:center !important;
-      padding:2px 3px !important;
-      border:0.5px solid #ddd !important;
-      letter-spacing:0.02em;
+      background: #000 !important;
+      color: #fff !important;
+      font-weight: 700 !important;
+      font-size: calc(var(--print-fs, 8pt) + 1pt);
+      text-align: center !important;
+      padding: 2px 3px !important;
+      border: 0.5px solid #ddd !important;
+      letter-spacing: 0.02em;
+      width: 20% !important;
     }
     
     /* Hide any extra pages/garbage */
@@ -241,7 +246,7 @@
       <div class="tableWrap">
         <table id="outTable">
           <thead id="outHead">
-            <!-- Stats row and column headers will be inserted here by JavaScript -->
+            <!-- Stats row and column headers inserted by JavaScript -->
           </thead>
           <tbody id="outBody"></tbody>
         </table>
@@ -988,7 +993,7 @@ function buildDays(legs){
 }
 
 /* =====================================================================
-   7) RENDER — STATS ROW GOES INTO THEAD AS FIRST ROW
+   7) RENDER — STATS ROW AS FIRST ROW OF THEAD
 ===================================================================== */
 function fmtDateShort(d){
   const dd = String(d.getDate()).padStart(2,'0');
@@ -1089,18 +1094,19 @@ function render(){
   const dutyHrs = sumHrs(dutyHrsAll);
 
   // ============================================================
-  // BUILD THEAD: STATS ROW FIRST, THEN COLUMN HEADERS
+  // BUILD THEAD: STATS ROW FIRST (5 cells, each 20% width)
+  // THEN COLUMN HEADERS (15 cells)
   // ============================================================
   
   // ROW 1: STATS ROW (black background, white text)
   const statsRow = document.createElement('tr');
   statsRow.className = 'stats-row';
   statsRow.innerHTML = `
-    <td colspan="3">Act BLK: ${actBlk}</td>
-    <td colspan="3">DH: ${dutyHrs}</td>
-    <td colspan="3">OFF Base: ${offAtBase}</td>
-    <td colspan="3">OFF Away: ${offAway}</td>
-    <td colspan="3">${rangeStr}</td>
+    <td>Act BLK: ${actBlk}</td>
+    <td>DH: ${dutyHrs}</td>
+    <td>OFF Base: ${offAtBase}</td>
+    <td>OFF Away: ${offAway}</td>
+    <td>${rangeStr}</td>
   `;
   thead.appendChild(statsRow);
 
