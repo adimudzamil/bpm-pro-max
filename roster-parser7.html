@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Roster Parser · 2100551</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -14,15 +14,12 @@
     --bg:#0b0c0e; --panel:#141619; --panel2:#1b1e22; --line:#2a2e33;
     --text:#f2f3f5; --dim:#aeb4bb; --accent:#c6ff3d; --accent-dim:#7a934f;
     --warn:#ffb454; --err:#ff6b6b; --ok:#6bffb0;
-    --sans:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    --table-font:var(--sans);
-    --print-fs:9pt;
-    --border-color:#ddd;
+    --mono:'DM Mono','SF Mono',ui-monospace,Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);font-size:14px;-webkit-tap-highlight-color:transparent}
   header{padding:16px 14px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
-  header h1{margin:0;font-size:16px;letter-spacing:.03em;font-weight:600;font-family:'DM Mono',var(--sans)}
+  header h1{margin:0;font-size:16px;letter-spacing:.03em;font-weight:600}
   header h1 span{color:var(--accent)}
   header .sub{color:var(--dim);font-size:11.5px;margin-top:4px}
   main{padding:12px;max-width:100%}
@@ -32,7 +29,7 @@
   #drop b{color:var(--text)}
   #fileInput{display:none}
   .btnRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-  button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-family:var(--sans);font-size:12.5px;font-weight:500;cursor:pointer}
+  button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-family:var(--mono);font-size:12.5px;font-weight:500;cursor:pointer}
   button:active{transform:scale(.97)}
   button.primary{background:var(--accent);color:#0b0c0e;border-color:var(--accent);font-weight:600}
   button.ghost{background:transparent}
@@ -51,42 +48,16 @@
   #overrideRow{display:none;margin-top:8px}
 
   section.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-top:12px;overflow:hidden}
-  section.card h2{font-size:12.5px;margin:0;padding:10px 12px;border-bottom:1px solid var(--line);color:var(--dim);letter-spacing:.04em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;font-family:'DM Mono',var(--sans)}
+  section.card h2{font-size:12.5px;margin:0;padding:10px 12px;border-bottom:1px solid var(--line);color:var(--dim);letter-spacing:.04em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
   section.card h2 small{color:var(--dim);text-transform:none;font-weight:400}
   section.card h2 .btns{display:flex;gap:6px;flex-wrap:wrap}
 
   #resultsWrap{transform-origin:top left}
 
   .tableWrap{overflow-x:auto;background:#101215}
-  table{
-    border-collapse:collapse;
-    width:100%;
-    font-family:var(--table-font);
-    font-weight:500;
-    font-size:12px;
-    white-space:normal;
-    table-layout:fixed;
-    border:1px solid var(--border-color);
-  }
-  th,td{
-    padding:4px 4px;
-    border:1px solid var(--border-color);
-    text-align:left;
-    vertical-align:middle;
-    line-height:1.3;
-    word-break:break-word;
-    overflow-wrap:break-word;
-  }
-  th{
-    color:#cfd3d8;
-    font-weight:700;
-    position:sticky;
-    top:0;
-    background:var(--panel2);
-    font-size:10px;
-    text-transform:uppercase;
-    letter-spacing:.03em;
-  }
+  table{border-collapse:collapse;width:100%;font-size:12.5px;white-space:nowrap}
+  th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;font-weight:500}
+  th{color:#cfd3d8;font-weight:700;position:sticky;top:0;background:var(--panel2)}
   tr.off td{color:var(--dim)}
   tr.layover td{color:var(--warn)}
   tr.leg2 td{color:#cfd3d8}
@@ -94,112 +65,32 @@
   td.date{color:var(--accent);font-weight:700}
   td.num{font-variant-numeric:tabular-nums}
 
-  /* ============================================================
-     STATS ROW - FIRST ROW OF THEAD - BLACK BACKGROUND, WHITE TEXT
-     Applied to BOTH screen and print
-     ============================================================ */
-  #outHead tr.stats-row td {
-    background: #000 !important;
-    color: #fff !important;
-    text-align: center !important;
-    font-weight: 700 !important;
-    padding: 4px 3px !important;
-    border: 1px solid var(--border-color) !important;
-    font-size: 12px;
-    letter-spacing: 0.03em;
-    width: 20% !important;
-  }
-
-  /* Column widths (15 columns) */
-  th:nth-child(1), td:nth-child(1){ width:8%; }  /* DATE */
-  th:nth-child(2), td:nth-child(2){ width:4%; }  /* DAY */
-  th:nth-child(3), td:nth-child(3){ width:5%; }  /* START */
-  th:nth-child(4), td:nth-child(4){ width:10%; word-break:break-all; } /* ITEM - wrap at 8 */
-  th:nth-child(5), td:nth-child(5){ width:3%; }  /* RANK - 3 chars */
-  th:nth-child(6), td:nth-child(6){ width:4%; }  /* DEP */
-  th:nth-child(7), td:nth-child(7){ width:5%; }  /* TIME (dep) */
-  th:nth-child(8), td:nth-child(8){ width:4%; }  /* ARR */
-  th:nth-child(9), td:nth-child(9){ width:5%; }  /* TIME (arr) */
-  th:nth-child(10), td:nth-child(10){ width:5%; } /* END */
-  th:nth-child(11), td:nth-child(11){ width:5%; } /* TYPE */
-  th:nth-child(12), td:nth-child(12){ width:5%; } /* BLK */
-  th:nth-child(13), td:nth-child(13){ width:10%; } /* DUTY - wider */
-  th:nth-child(14), td:nth-child(14){ width:8%; } /* CODE */
-  th:nth-child(15), td:nth-child(15){ width:4%; } /* AC */
-
   .stats{padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:12.5px}
   .stats div b{color:var(--accent);display:block;font-size:16px}
 
   .legend{padding:8px 12px;font-size:12px}
   .legend .row{display:flex;gap:8px;padding:4px 0;border-bottom:1px dashed var(--line)}
-  .legend .row input{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:4px 6px;font-family:var(--sans);font-size:11.5px}
+  .legend .row input{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:4px 6px;font-family:var(--mono);font-size:11.5px}
   .legend .row input.code{width:90px}
   .legend .row input.desc{flex:1}
   .legend .row button{padding:3px 7px;font-size:10px}
 
   footer{padding:20px 14px 40px;color:var(--dim);font-size:10.5px;text-align:center}
 
-  /* ============================================================
-     PRINT STYLES
-     ============================================================ */
   @media print{
-    body{background:#fff;color:#000;margin:0;padding:0}
-    header, #drop, #status, #log, footer, .btnRow, 
-    section.card h2, section.card h2 .btns, #statsCard, #legendCard { display:none !important; }
-    
-    #resultsWrap{transform:none !important;width:auto !important;margin:0;padding:0}
-    section.card{border:none !important;box-shadow:none;background:#fff;margin:0;break-inside:avoid;border-radius:0}
-    .tableWrap{background:#fff;overflow-x:visible;margin:0;padding:0}
-    
-    table{
-      font-size:var(--print-fs, 8pt);
-      width:100%;
-      table-layout:fixed;
-      border-collapse:collapse;
-      font-weight:600 !important;
-      margin:0;
-      border:0.5px solid #ddd !important;
-    }
-    
-    th, td{
-      padding:1px 2px !important;
-      border:0.5px solid #ddd !important;
-      line-height:1.1 !important;
-      vertical-align:middle;
-    }
-    th{
-      background:#eee !important;
-      color:#000 !important;
-      font-weight:800 !important;
-      font-size:calc(var(--print-fs, 8pt) - 0.5pt);
-      border:0.5px solid #ddd !important;
-    }
+    body{background:#fff;color:#000}
+    header, #drop, #status, #log, footer, .btnRow, section.card h2 .btns{display:none !important}
+    #resultsWrap{transform:none !important;width:auto !important}
+    section.card{border:1px solid #999;box-shadow:none;background:#fff;margin-top:6px;break-inside:avoid}
+    section.card h2{color:#000;border-color:#000;background:#fff}
+    .tableWrap{background:#fff}
+    table{font-size:var(--print-fs, 8px)}
+    th,td{padding:2px 4px;border-color:#999}
+    th{background:#eee;color:#000}
     td.date{color:#000}
     tr.off td, tr.layover td{color:#555}
-    
-    /* Stats row - black background, white text in print */
-    #outHead tr.stats-row td {
-      background: #000 !important;
-      color: #fff !important;
-      font-weight: 700 !important;
-      font-size: calc(var(--print-fs, 8pt) + 1pt);
-      text-align: center !important;
-      padding: 2px 3px !important;
-      border: 0.5px solid #ddd !important;
-      letter-spacing: 0.02em;
-      width: 20% !important;
-    }
-    
-    /* Hide any extra pages/garbage */
-    .tableWrap, table, thead, tbody, tr, td, th {
-      page-break-inside:avoid;
-      page-break-after:avoid;
-    }
-    
-    @page{ 
-      size: A4 portrait; 
-      margin: 4mm 4mm 4mm 4mm;
-    }
+    .stats div b{color:#000}
+    @page{ size: A4 landscape; margin: 8mm; }
   }
 </style>
 </head>
@@ -236,7 +127,7 @@
     <section class="card" id="outCard" style="display:none">
       <h2>Daily Roster <small id="rangeLbl"></small>
         <span class="btns">
-          <button onclick="fitWidth()" id="fitBtn">Fit width</button>
+          <button onclick="toggleFit()" id="fitBtn">Fit screen</button>
           <button onclick="copyTSV()">Copy</button>
           <button onclick="downloadCSV()">CSV</button>
           <button onclick="exportPNG()">Image</button>
@@ -245,8 +136,12 @@
       </h2>
       <div class="tableWrap">
         <table id="outTable">
-          <thead id="outHead">
-            <!-- Stats row and column headers inserted by JavaScript -->
+          <thead>
+            <tr>
+              <th>Date</th><th>Day</th><th>Duty Start</th><th>Item</th><th>Overrd Rank</th>
+              <th>Dep Stn</th><th>Dep Time</th><th>Arr Stn</th><th>Arr Time</th><th>Duty End</th><th>Work Type</th>
+              <th>Actual Block Hours</th><th>Duty Hours</th><th>DutyCode</th><th>Ac Type</th>
+            </tr>
           </thead>
           <tbody id="outBody"></tbody>
         </table>
@@ -286,7 +181,7 @@ let LEGEND = {};
 
 let LAST_FILE_NAME = "";
 let LAST_FORMAT = "";
-let RAW_PDF_PAGES = null;
+let RAW_PDF_PAGES = null;   // cached extracted words, for re-parse / debug export
 let LAST_PARSED_ROWS = null;
 
 const HOME = "KUL";
@@ -315,6 +210,7 @@ const DEFAULT_LEGEND = {
   "DO1": "Day Off (Type 1)",
   "DO2": "Day Off (Type 2)",
   "EL": "Emergency / Annual Leave",
+  "LO": "Layover (down-route rest)",
   "S3WBA": "Cabin Crew Standby",
   "S4WBA": "Cabin Crew Standby",
   "S3NBA": "Cabin Crew Standby",
@@ -377,8 +273,8 @@ async function handleFile(file){
       render();
     } else if(name.endsWith('.pdf')){
       const buf = await file.arrayBuffer();
-      const pages = await extractPdfWords(buf);
-      RAW_PDF_PAGES = pages;
+      const pages = (await extractPdfWords(buf)).map(mergeDayHeaderTokens);
+      RAW_PDF_PAGES = pages; // cache regardless of outcome, for debug export / override
       const allWords = [].concat(...pages);
       const isCalendar = looksLikeCalendar(allWords);
       const isTable = looksLikeTableReport(allWords);
@@ -455,6 +351,9 @@ function parseDMY(str){
   if(mo===undefined) return null;
   return new Date(parseInt(m[3]), mo, parseInt(m[1]));
 }
+// Returns {time:"HH:MM", rollover:0|1} — the (+1) suffix means "+1 calendar day
+// relative to this record's own anchor/report date", NOT relative to any other
+// field on the same record. See design note in parseTablePDFRows / rowsToLegs.
 function cleanTime(t){
   if(!t) return {time:'', rollover:0};
   const m = /^(\d{1,2}):(\d{2})(\(\+1\))?$/.exec(t.trim());
@@ -494,7 +393,7 @@ function parseXLSXRows(buf){
     if(!r || r.every(c=>c==='' || c===null || c===undefined)) continue;
     const get = j => (j==null || j<0) ? '' : String(r[j]===undefined?'':r[j]).trim();
     let rawDate = r[idx.date];
-    if(get(idx.date)==='Date') continue;
+    if(get(idx.date)==='Date') continue; // repeated header row mid-sheet
 
     let dateObj = null;
     if(rawDate instanceof Date && !isNaN(rawDate)) dateObj = new Date(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate());
@@ -536,22 +435,28 @@ function splitStnTime(s){
 }
 
 /* =====================================================================
-   2) PDF TEXT EXTRACTION
+   2) PDF TEXT EXTRACTION (position-aware) + defensive re-tokenizer
+   pdf.js does not word-split the way a text-word-boundary tool would; this
+   report's PDF sometimes emits runs with no whitespace between semantically
+   distinct tokens (e.g. "REPORT:14:10Aug31"). We split on whitespace first,
+   then run every resulting chunk through a pattern tokenizer that knows the
+   shapes of tokens this report actually contains, so detection/parsing
+   downstream doesn't depend on pdf.js's arbitrary run boundaries.
 ===================================================================== */
 const TOKEN_PATTERNS = [
-  /\d{1,2}-[A-Za-z]{3}-\d{4}/,
-  /REPORT:\d{1,2}:\d{2}/,
-  /DEBRIEF:\d{1,2}:\d{2}(?:\(\+1\))?/,
-  /LO[A-Z]{3}/,
-  /MH\d{2,4}[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?-[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?/,
-  /MH\d{2,4}[A-Z]{3}-[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?/,
+  /\d{1,2}-[A-Za-z]{3}-\d{4}/,                     // 05-Aug-2026
+  /REPORT:\d{1,2}:\d{2}/,                          // REPORT:14:10
+  /DEBRIEF:\d{1,2}:\d{2}(?:\(\+1\))?/,             // DEBRIEF:23:35
+  /LO[A-Z]{3}/,                                    // LOAKL
+  /MH\d{2,4}[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?-[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?/, // MH145KUL21:30-AKL11:25(+1)
+  /MH\d{2,4}[A-Z]{3}-[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?/, // MH145KUL-AKL11:25(+1)
   /MH\d{2,4}/,
-  /[A-Za-z]{3}\d{1,2}(?![A-Za-z0-9])/,
+  /[A-Za-z]{3}\d{1,2}(?![A-Za-z0-9])/,             // Aug31 (month+day header)
   /\d{1,2}:\d{2}\(\+1\)/,
   /\d{1,2}:\d{2}/,
   /Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/,
   /January|February|March|April|May|June|July|August|September|October|November|December/,
-  /[A-Z]{3}(?=\d{1,2}:\d{2})/,
+  /[A-Z]{3}(?=\d{1,2}:\d{2})/,                     // bare station code glued to a time
   /[A-Za-z]{2,}/,
   /\d+/
 ];
@@ -570,7 +475,7 @@ function retokenize(str){
         break;
       }
     }
-    if(!matched){ s = s.slice(1); }
+    if(!matched){ s = s.slice(1); } // drop stray separator char
   }
   return out.length ? out : [str];
 }
@@ -586,9 +491,9 @@ async function extractPdfWords(buf){
     for(const item of content.items){
       if(!item.str || !item.str.trim()) continue;
       const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
-      const fontH = Math.hypot(tx[2], tx[3]) || 10;
-      const w = item.width || (item.str.length * fontH * 0.5);
-      const corners = [[0,0],[w,0],[0,fontH],[w,fontH]].map(([x,y])=>[
+      const w = item.width || (item.str.length * 5);
+      const h = item.height || 10;
+      const corners = [[0,0],[w,0],[0,h],[w,h]].map(([x,y])=>[
         tx[0]*x + tx[2]*y + tx[4],
         tx[1]*x + tx[3]*y + tx[5]
       ]);
@@ -616,6 +521,21 @@ async function extractPdfWords(buf){
   return pages;
 }
 
+function mergeDayHeaderTokens(words){
+  const out = [];
+  for(let i=0;i<words.length;i++){
+    const w = words[i], nxt = words[i+1];
+    if(nxt && MON_NAMES.includes(w.text) && /^\d{1,2}$/.test(nxt.text) &&
+       Math.abs(w.top - nxt.top) < 4 && (nxt.x0 - w.x1) < 8 && (nxt.x0 - w.x1) > -3){
+      out.push({text: w.text+nxt.text, x0:w.x0, x1:nxt.x1, top:w.top, bottom:Math.max(w.bottom,nxt.bottom), page:w.page, pageW:w.pageW, pageH:w.pageH});
+      i++; // day-number token consumed
+    } else {
+      out.push(w);
+    }
+  }
+  return out;
+}
+
 function looksLikeCalendar(words){
   const txt = words.map(w=>w.text).join('');
   const hasWeekday = /Monday/.test(txt) && /Tuesday/.test(txt) && /Sunday/.test(txt);
@@ -629,7 +549,7 @@ function looksLikeTableReport(words){
 }
 
 /* =====================================================================
-   3) PDF "ROSTER REPORT" TABLE PARSER
+   3) PDF "ROSTER REPORT" TABLE PARSER (column-position based)
 ===================================================================== */
 function parseTablePDFRows(pages){
   const rows = [];
@@ -664,6 +584,13 @@ function parseTablePDFRows(pages){
       return 'updDate';
     }
 
+    // 'Pairing/Activity' is a fixed compound header label that never appears
+    // in data rows — use it (not a fixed pixel/word offset) to find exactly
+    // where the real column-header block ends, and drop EVERYTHING above and
+    // including it: title line, staff name/ID/base line, and the date-range
+    // line all sit above this block and were previously leaking into row 1
+    // as spurious words/anchors (e.g. the title's own "01-Aug-2026" being
+    // read as a second, bogus data row).
     const pairingHdr = words.find(w => w.text === 'Pairing/Activity');
     const HEADER_WORDS = new Set(['Roster','Report','Date','Pairing/Activity','Item','ACY','Rep','Deb',
       'SDC','Hotel','Updated','By','Duty','Overridde','n','Rank','Work','Type','Dep','Stn','/','Arr.',
@@ -734,7 +661,13 @@ function parseTablePDFRows(pages){
 }
 
 /* =====================================================================
-   4) PDF "FRIDGE CALENDAR" PARSER
+   4) PDF "FRIDGE CALENDAR" PARSER (geometric cell assignment)
+   Validated against the actual fridge-view PDF: rows = weekday, columns =
+   week-of-month, and each day header sits at the RIGHT edge of its cell
+   (content lines stack leftward as more lines are added), so a content
+   word belongs to the nearest header in its row whose x0 is >= the word's
+   x0. This was checked line-by-line against a known-good transcript of a
+   full month before being ported here.
 ===================================================================== */
 function parseCalendarPDF(pages){
   const legsAll = [];
@@ -770,22 +703,31 @@ function parseCalendarPDF(pages){
     }
     Object.values(headersByRow).forEach(list=>list.sort((a,b)=>a.x0-b.x0));
 
-    const EXCLUDE = new Set(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].concat(MON_NAMES));
+    const EXCLUDE = new Set(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+      .concat(MON_NAMES)
+      .concat(['January','February','March','April','May','June','July','August','September','October','November','December']));
     const content = words.filter(w=>
       !EXCLUDE.has(w.text) &&
-      !/^\d{4}$/.test(w.text) &&
-      !/^[A-Za-z]{3}\d{1,2}$/.test(w.text) &&
-      !/ALLTIMINGS|ADIMUDZAMIL|PRINTEDON|^\|$/.test(w.text)
+      !/^[A-Za-z]{3}\d{1,2}$/.test(w.text)
     );
 
+    // Sanity thresholds derived from the real extracted data: legitimate cell
+    // content's top always sits within a few points of its row header's top
+    // (ROW_TOL), and its x0 sits at or slightly left of its matched header's
+    // x0, never more than one column-width-ish further left (X_OVERFLOW).
+    // Anything outside these bounds is boilerplate (staff name line, footer)
+    // that happened to fall inside the numeric row/column ranges — not real
+    // roster content — and is dropped rather than force-matched.
     const cellText = {};
-    const TOL = 3;
+    const TOL = 20, ROW_TOL = 25, X_OVERFLOW = 100;
     for(const w of content){
       const r = nearestRow(w.top);
+      if(Math.abs(w.top - r) > ROW_TOL) continue;
       const rowHeaders = headersByRow[r] || [];
       if(!rowHeaders.length) continue;
       let match = rowHeaders.find(h => h.x0 >= w.x0 - TOL);
-      if(!match) match = rowHeaders[rowHeaders.length-1];
+      if(!match) continue;
+      if(match.x0 - w.x0 > X_OVERFLOW) continue;
       cellText[match.text] = cellText[match.text] || [];
       cellText[match.text].push(w);
     }
@@ -799,9 +741,11 @@ function parseCalendarPDF(pages){
       const y = year || new Date().getFullYear();
       const dateObj = new Date(y, mIdx, dNum);
 
-      const lines = cellText[dayLabel].sort((a,b)=> b.x0 - a.x0);
-      const joined = lines.map(l=>l.text).join(' ');
-      legsAll.push(...calendarCellToLegs(dateObj, joined));
+      const joined = cellText[dayLabel].map(l=>l.text).join('');
+      const lines2 = calendarCellToLegs(dateObj, joined).map(l => Object.assign(l, {
+        depDate: dateObj, arrDate: dateObj, reportDate: dateObj, debriefDate: dateObj
+      }));
+      legsAll.push(...lines2);
     }
     if(month!==null) MONTH_LABEL = MON_NAMES[month] + ' ' + (year||'');
   }
@@ -816,7 +760,7 @@ function calendarCellToLegs(dateObj, text){
   const debM = /DEBRIEF:(\d{1,2}:\d{2}(?:\(\+1\))?)/.exec(text);
   if(debM) debriefTime = debM[1];
 
-  const loM = /\bLO([A-Z]{3})\b/.exec(text);
+  const loM = /LO([A-Z]{3})/.exec(text);
   const flightRe = /(MH\d{2,4})([A-Z]{3})?(\d{1,2}:\d{2}(?:\(\+1\))?)?-([A-Z]{3})(\d{1,2}:\d{2}(?:\(\+1\))?)?/g;
   let fm; let flightsFound=false;
   while((fm = flightRe.exec(text))){
@@ -836,9 +780,11 @@ function calendarCellToLegs(dateObj, text){
     return out;
   }
 
-  // LO is explicitly dismissed
   if(loM){
-    return [];
+    out.push({isGround:true, ownDate:dateObj, anchorDate:dateObj, pairing:'', item:'LO', rank:'',
+      work:'', depStn: loM[1], depTime:'', arrStn:'', arrTime:'', reportTime: reportTime, debriefTime:'',
+      flyHrs:'', dutyHrs:'', sdc:'', ac:'', hotel:''});
+    return out;
   }
 
   const groundM = /^([A-Z0-9]+?)(?:([A-Z]{3})(\d{1,2}:\d{2})-([A-Z]{3})(\d{1,2}:\d{2}))?$/.exec(text.trim());
@@ -862,6 +808,24 @@ function calendarCellToLegs(dateObj, text){
 
 /* =====================================================================
    5) ROW -> LEG NORMALIZER
+   IMPORTANT (+1) SEMANTICS — cross-checked between the table PDF and the
+   fridge calendar PDF for the same real trips:
+     · A "(+1)" suffix on ANY time field (dep, arr, report, or debrief) means
+       that field falls on the day AFTER this record's own anchor/report
+       date. It is NOT chained field-to-field — every field's rollover is
+       independently relative to the anchor date, never to a previously
+       resolved field on the same row.
+     Verified examples (05→06 Aug AKL outbound, 08→09 Aug AKL return):
+       anchor 05-Aug: report 20:00 (same day), dep KUL 21:30 (same day),
+         arr AKL 11:25(+1) -> 06-Aug, debrief 11:55(+1) -> 06-Aug.
+       anchor 08-Aug: report 23:25 (same day), dep AKL 00:25(+1) -> 09-Aug,
+         arr KUL 07:55(+1) -> 09-Aug, debrief 08:25(+1) -> 09-Aug.
+     Both resolved dates match the fridge PDF's own placement of that
+     content into the Aug06 / Aug09 cells respectively.
+   A row's "anchor date" is the most recent EXPLICIT Date value seen — it is
+   never advanced by a computed arrival date, only by the next row that
+   actually carries its own Date (same-duty continuation legs with a blank
+   Date field reuse the group's anchor).
 ===================================================================== */
 function rowsToLegs(rows){
   const legs = [];
@@ -884,9 +848,6 @@ function rowsToLegs(rows){
 
     if(r.pairing && r.pairing !== lastPairingKey){ pairingSeq++; lastPairingKey = r.pairing; }
 
-    // Truncate rank to 3 characters
-    let rank = (r.rank || '').slice(0,3);
-
     legs.push({
       isGround,
       pairingId: r.pairing || null,
@@ -896,16 +857,17 @@ function rowsToLegs(rows){
       reportDate: addDays(anchor, rep.rollover), reportTime: rep.time,
       debriefDate: addDays(anchor, deb.rollover), debriefTime: deb.time,
       item: isGround ? (r.item||r.pairing||'') : r.item,
-      rank: rank,
-      work: r.work,
+      rank: r.rank, work: r.work,
       flyHrs: r.flyHrs, dutyHrs: r.dutyHrs, sdc: r.sdc, ac: r.ac, hotel: r.hotel
     });
+    // NOTE: currentDate is deliberately NOT advanced from computed arrDate —
+    // see design note above.
   }
   return legs;
 }
 
 /* =====================================================================
-   6) BUILD FULL-MONTH DAY MODEL — LO DISMISSED
+   6) BUILD FULL-MONTH DAY MODEL (no skipped dates) + layover inference
 ===================================================================== */
 function buildDays(legs){
   if(!legs.length) throw new Error('No records parsed from this file.');
@@ -937,8 +899,6 @@ function buildDays(legs){
     const group = pairings[pid];
     group.forEach((l, li)=>{
       const isFirst = li===0, isLast = li===group.length-1;
-
-      if(l.item === 'LO') return;
 
       if(l.isGround){
         const day = ensureDay(l.depDate);
@@ -977,6 +937,20 @@ function buildDays(legs){
           block:'', dutyHrs:'', dutyCode:'', ac:''
         });
       }
+      const nextLeg = group[li+1];
+      if(nextLeg && !nextLeg.isGround){
+        let cursor = addDays(l.arrDate,1);
+        const stop = nextLeg.depDate;
+        const awayStn = l.arrStn || nextLeg.depStn;
+        while(cursor < stop){
+          const d = ensureDay(cursor);
+          if(!d.hasData){
+            d.hasData = true;
+            d.rows.push({dutyStart:'', item:'LO', rank:'', depStn: awayStn, depTime:'', arrStn:'', arrTime:'', dutyEnd:'', work:'', block:'', dutyHrs:'', dutyCode:'', ac:''});
+          }
+          cursor = addDays(cursor,1);
+        }
+      }
     });
   }
 
@@ -993,21 +967,13 @@ function buildDays(legs){
 }
 
 /* =====================================================================
-   7) RENDER — STATS ROW AS FIRST ROW OF THEAD
+   7) RENDER
 ===================================================================== */
-function fmtDateShort(d){
-  const dd = String(d.getDate()).padStart(2,'0');
-  const mmm = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()];
-  const yy = String(d.getFullYear()).slice(2);
-  return dd+'-'+mmm+'-'+yy;
-}
-
-function fmtDateLong(d){
+function fmtDate(d){
   const dd = String(d.getDate()).padStart(2,'0');
   const mmm = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()];
   return dd+'-'+mmm+'-'+d.getFullYear();
 }
-
 function hhmmToMin(s){
   if(!s) return 0;
   const m=/^(\d{1,2}):(\d{2})$/.exec(s.trim()); if(!m) return 0;
@@ -1020,154 +986,60 @@ function sumHrs(list){
   return h+':'+String(m).padStart(2,'0');
 }
 
-function wrapItem(text, maxLen){
-  if(!text) return '';
-  if(text.length <= maxLen) return text;
-  const parts = [];
-  for(let i=0;i<text.length;i+=maxLen) parts.push(text.slice(i,i+maxLen));
-  return parts.join('\n');
-}
-
 function render(){
-  const thead = document.getElementById('outHead');
   const tbody = document.getElementById('outBody');
-  thead.innerHTML = '';
-  tbody.innerHTML = '';
-  
+  tbody.innerHTML='';
   const blockHrsAll=[], dutyHrsAll=[];
   let offAtBase=0, offAway=0;
   const codesUsed = new Set();
 
-  // Determine date range for stats row
-  let rangeStr = '';
-  if(DAYS.length){
-    const start = fmtDateShort(DAYS[0].date);
-    const end = fmtDateShort(DAYS[DAYS.length-1].date);
-    rangeStr = start + ' / ' + end;
-  }
-
-  // Build data rows first
-  const dataRows = [];
   for(const day of DAYS){
     const rows = day.rows.length ? day.rows : [{dutyStart:'',item:'',rank:'',depStn:'',depTime:'',arrStn:'',arrTime:'',dutyEnd:'',work:'',block:'',dutyHrs:'',dutyCode:'',ac:''}];
     rows.forEach((r, ri)=>{
+      const tr = document.createElement('tr');
       const isOff = ri===0 && isOffCode(r.item);
       const isLayover = ri===0 && r.item==='LO';
-      const rowData = {
-        date: ri===0 ? fmtDateShort(day.date) : '',
-        day: ri===0 ? DOW[day.date.getDay()].slice(0,3) : '',
-        dutyStart: r.dutyStart,
-        item: ri===0 ? wrapItem(r.item, 8) : '',
-        rank: r.rank.slice(0,3),
-        depStn: r.depStn,
-        depTime: r.depTime,
-        arrStn: r.arrStn,
-        arrTime: r.arrTime,
-        dutyEnd: r.dutyEnd,
-        work: r.work,
-        block: r.block,
-        dutyHrs: r.dutyHrs,
-        dutyCode: r.dutyCode,
-        ac: r.ac,
-        isOff: isOff,
-        isLayover: isLayover,
-        isLeg2: ri>0
-      };
-      dataRows.push(rowData);
+      if(isOff) tr.className='off'; else if(isLayover) tr.className='layover'; else if(ri>0) tr.className='leg2';
+      const cells = [
+        ri===0 ? fmtDate(day.date) : '',
+        ri===0 ? DOW[day.date.getDay()].slice(0,3) : '',
+        r.dutyStart, r.item, r.rank, r.depStn, r.depTime, r.arrStn, r.arrTime, r.dutyEnd, r.work, r.block, r.dutyHrs, r.dutyCode, r.ac
+      ];
+      cells.forEach((c,ci)=>{
+        const td = document.createElement('td');
+        td.textContent = c || '';
+        if(ci===0) td.className='date';
+        if(ci>=11 && ci<=12) td.className='num';
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
       if(r.block) blockHrsAll.push(r.block);
       if(r.dutyHrs) dutyHrsAll.push(r.dutyHrs);
       if(r.dutyCode) codesUsed.add(r.dutyCode);
       if(r.item) codesUsed.add(r.item);
     });
 
-    if(day.rows.length === 1){
-      const only = day.rows[0];
+    // Off-day / layover-day stats are classified by the day's ITEM CODE,
+    // not by whether a row happened to exist (every date always has at
+    // least a placeholder row now) — this was the source of the previous
+    // "wrong off-day count" bug.
+    if(rows.length===1){
+      const only = rows[0];
       if(isOffCode(only.item)){
         const away = only.depStn && only.depStn !== HOME;
         if(away) offAway++; else offAtBase++;
+      } else if(only.item==='LO'){
+        offAway++;
       }
     }
   }
 
-  // Build stats values
-  const actBlk = sumHrs(blockHrsAll);
-  const dutyHrs = sumHrs(dutyHrsAll);
-
-  // ============================================================
-  // BUILD THEAD: STATS ROW FIRST (5 cells, each 20% width)
-  // THEN COLUMN HEADERS (15 cells)
-  // ============================================================
-  
-  // ROW 1: STATS ROW (black background, white text)
-  const statsRow = document.createElement('tr');
-  statsRow.className = 'stats-row';
-  statsRow.innerHTML = `
-    <td>Act BLK: ${actBlk}</td>
-    <td>DH: ${dutyHrs}</td>
-    <td>OFF Base: ${offAtBase}</td>
-    <td>OFF Away: ${offAway}</td>
-    <td>${rangeStr}</td>
-  `;
-  thead.appendChild(statsRow);
-
-  // ROW 2: COLUMN HEADERS
-  const headerRow = document.createElement('tr');
-  const headers = ['DATE','DAY','START','ITEM','RANK','DEP','TIME','ARR','TIME','END','TYPE','BLK','DUTY','CODE','AC'];
-  headers.forEach(h => {
-    const th = document.createElement('th');
-    th.textContent = h;
-    headerRow.appendChild(th);
-  });
-  thead.appendChild(headerRow);
-
-  // ============================================================
-  // BUILD TBODY: DATA ROWS
-  // ============================================================
-  for(const r of dataRows){
-    const tr = document.createElement('tr');
-    if(r.isOff) tr.className='off';
-    else if(r.isLayover) tr.className='layover';
-    else if(r.isLeg2) tr.className='leg2';
-
-    const cells = [
-      r.date,
-      r.day,
-      r.dutyStart,
-      r.item,
-      r.rank,
-      r.depStn,
-      r.depTime,
-      r.arrStn,
-      r.arrTime,
-      r.dutyEnd,
-      r.work,
-      r.block,
-      r.dutyHrs,
-      r.dutyCode,
-      r.ac
-    ];
-    cells.forEach((c,ci)=>{
-      const td = document.createElement('td');
-      if(c && c.includes('\n')){
-        td.style.whiteSpace = 'pre-wrap';
-        td.textContent = c;
-      } else {
-        td.textContent = c || '';
-      }
-      if(ci===0) td.className='date';
-      if(ci>=11 && ci<=12) td.className='num';
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  }
-
-  document.getElementById('rangeLbl').textContent = DAYS.length ? (fmtDateLong(DAYS[0].date)+' to '+fmtDateLong(DAYS[DAYS.length-1].date)) : '';
+  document.getElementById('rangeLbl').textContent = DAYS.length ? (fmtDate(DAYS[0].date)+' to '+fmtDate(DAYS[DAYS.length-1].date)) : '';
   document.getElementById('outCard').style.display='block';
 
-  // On-screen stats card (separate, still visible)
   document.getElementById('statsBody').innerHTML = `
-    <div>Actual Block Hours<b>${actBlk}</b></div>
-    <div>Duty Hours<b>${dutyHrs}</b></div>
+    <div>Actual Block Hours<b>${sumHrs(blockHrsAll)}</b></div>
+    <div>Duty Hours<b>${sumHrs(dutyHrsAll)}</b></div>
     <div>OFF Days At Base<b>${offAtBase}</b></div>
     <div>OFF Days Away From Base<b>${offAway}</b></div>
   `;
@@ -1176,7 +1048,7 @@ function render(){
   renderLegend(codesUsed);
 
   if(RAW_WARNINGS.length) RAW_WARNINGS.forEach(w=>log(w,'warn'));
-  log('Parsed '+DAYS.length+' days ('+fmtDateLong(DAYS[0].date)+' – '+fmtDateLong(DAYS[DAYS.length-1].date)+').', 'ok');
+  log('Parsed '+DAYS.length+' days ('+fmtDate(DAYS[0].date)+' – '+fmtDate(DAYS[DAYS.length-1].date)+').', 'ok');
 }
 
 function renderLegend(codesUsed){
@@ -1203,14 +1075,14 @@ function addLegendRow(code='', desc=''){
 }
 
 /* =====================================================================
-   8) EXPORT: CSV / TSV / PNG / PDF-print / Fit-width / Debug dump
+   8) EXPORT: CSV / TSV / PNG / PDF-print / Fit-to-screen / Debug dump
 ===================================================================== */
 const CSV_HEADER = ['Date','Day','Duty Start','Item','Overrd Rank','Dep Stn','Dep Time','Arr Stn','Arr Time','Duty End','Work Type','Actual Block Hours','Duty Hours','DutyCode','Ac Type'];
 
 function tableToTSV(){
   const rows = [CSV_HEADER];
   document.querySelectorAll('#outBody tr').forEach(tr=>{
-    rows.push(Array.from(tr.children).map(td=>td.textContent.replace(/\n/g,' ')));
+    rows.push(Array.from(tr.children).map(td=>td.textContent));
   });
   return rows.map(r=>r.join('\t')).join('\n');
 }
@@ -1218,7 +1090,7 @@ function copyTSV(){ navigator.clipboard.writeText(tableToTSV()).then(()=>log('Co
 function downloadCSV(){
   const rows = [CSV_HEADER];
   document.querySelectorAll('#outBody tr').forEach(tr=>{
-    rows.push(Array.from(tr.children).map(td=>'"'+td.textContent.replace(/\n/g,' ').replace(/"/g,'""')+'"'));
+    rows.push(Array.from(tr.children).map(td=>'"'+td.textContent.replace(/"/g,'""')+'"'));
   });
   const csv = rows.map(r=>r.join(',')).join('\n');
   const blob = new Blob([csv], {type:'text/csv'});
@@ -1228,17 +1100,32 @@ function downloadCSV(){
   a.click();
 }
 
-function fitWidth(){
-  document.body.style.zoom = 1;
-  document.body.style.transform = 'scale(1)';
-  document.getElementById('resultsWrap').style.transform = '';
-  document.getElementById('resultsWrap').style.width = '';
-  window.scrollTo(0,0);
-  log('View reset to fit width.', 'ok');
+// "Fit screen" — scales the whole results block down (or up) to exactly fill
+// the viewport width and remaining height, so it can be read/zoomed as one
+// screen with no scrolling.
+let fitOn = false;
+function toggleFit(){
+  const wrap = document.getElementById('resultsWrap');
+  fitOn = !fitOn;
+  document.getElementById('fitBtn').textContent = fitOn ? 'Unfit' : 'Fit screen';
+  if(!fitOn){ wrap.style.transform=''; wrap.style.width=''; return; }
+  wrap.style.transform = '';
+  wrap.style.width = '';
+  const rect = wrap.getBoundingClientRect();
+  const naturalW = wrap.scrollWidth, naturalH = wrap.scrollHeight;
+  const availW = window.innerWidth - 8;
+  const availH = window.innerHeight - rect.top - 8;
+  const scale = Math.min(availW/naturalW, availH/naturalH);
+  wrap.style.transform = `scale(${scale})`;
+  wrap.style.width = (100/scale)+'%';
 }
 
+// Image export — renders the results block to a high-resolution PNG so it
+// stays crisp when zoomed after export.
 function exportPNG(){
   const wrap = document.getElementById('resultsWrap');
+  const wasFit = fitOn;
+  if(wasFit) toggleFit(); // capture unscaled for max fidelity, html2canvas handles its own scale
   html2canvas(wrap, {scale:3, backgroundColor:'#0b0c0e'}).then(canvas=>{
     canvas.toBlob(blob=>{
       const a = document.createElement('a');
@@ -1247,21 +1134,26 @@ function exportPNG(){
       a.click();
       log('Image exported.', 'ok');
     });
+    if(wasFit) toggleFit();
   }).catch(err=>{ log('Image export failed: '+err.message, 'err'); });
 }
 
+// Print / Save-as-PDF — uses the browser's native print pipeline (works
+// fully offline) with a font size chosen to keep the whole roster on one
+// landscape A4 page.
 function exportPDF(){
   const rowCount = document.querySelectorAll('#outBody tr').length;
-  let fs = 10;
-  if (rowCount > 70) fs = 5;
-  else if (rowCount > 50) fs = 6;
-  else if (rowCount > 35) fs = 7;
-  else if (rowCount > 25) fs = 8;
-  else if (rowCount > 15) fs = 9;
-  document.documentElement.style.setProperty('--print-fs', fs + 'pt');
+  let fs = 9;
+  if(rowCount>60) fs=6; else if(rowCount>45) fs=7; else if(rowCount>35) fs=8;
+  document.documentElement.style.setProperty('--print-fs', fs+'px');
+  const wasFit = fitOn;
+  if(wasFit) toggleFit();
   window.print();
 }
 
+// Debug export — dumps everything needed to diagnose a parsing problem
+// without a screenshot: raw extracted PDF word positions, the detected
+// format, intermediate parsed rows, and the final per-day model.
 function exportDebug(){
   const payload = {
     fileName: LAST_FILE_NAME,
@@ -1270,6 +1162,7 @@ function exportDebug(){
     rawWordsByPage: RAW_PDF_PAGES ? RAW_PDF_PAGES.map(pg=>pg.map(w=>({t:w.text,x0:Math.round(w.x0),x1:Math.round(w.x1),top:Math.round(w.top),bottom:Math.round(w.bottom)}))) : null,
     parsedRows: LAST_PARSED_ROWS ? LAST_PARSED_ROWS.map(r=>{
       const c = Object.assign({}, r);
+      // dates -> ISO strings for readability
       ['ownDate','anchorDate','depDate','arrDate','reportDate','debriefDate'].forEach(k=>{
         if(c[k] instanceof Date) c[k]=ymdKey(c[k]);
       });
