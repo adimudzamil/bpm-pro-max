@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.25, maximum-scale=5">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Roster Parser · 2100551</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -81,11 +81,11 @@
   @media print{
     body{background:#fff;color:#000}
     header, #drop, #status, #log, footer, .btnRow, section.card h2 .btns{display:none !important}
-    #resultsWrap{width:auto !important;transform:scale(var(--print-scale,1)) !important;transform-origin:top left !important}
-    #outCard{width:fit-content;max-width:none}
+    #resultsWrap{transform:none !important;width:auto !important}
     section.card{border:1px solid #999;box-shadow:none;background:#fff;margin-top:5px;break-inside:avoid}
     section.card h2{color:#000;border-color:#000;background:#fff;padding:4px 8px;font-size:10px}
-    .tableWrap{background:#fff;overflow:visible}
+    .tableWrap{background:#fff}
+    table{font-size:var(--print-fs, 8px)}
     th,td{padding:2px 4px;border-color:#999}
     th{background:#eee;color:#000}
     td.date{color:#000}
@@ -106,7 +106,7 @@
     .legend .row input.code{font-weight:700;color:#000}
     .legend .row button, #legendCard > div:last-child{display:none !important}
 
-    @page{ size: portrait; margin: 8mm; }
+    @page{ size: A4 landscape; margin: 8mm; }
   }
 </style>
 </head>
@@ -139,17 +139,16 @@
 
   <div id="log"></div>
 
-  <div class="btnRow" id="toolbarRow" style="display:none;position:sticky;top:0;background:var(--bg);z-index:6;padding:6px 0;margin:0">
-    <button onclick="toggleFit()" id="fitBtn">Fit screen</button>
-    <button onclick="copyTSV()">Copy</button>
-    <button onclick="downloadCSV()">CSV</button>
-    <button onclick="exportPNG()">Image</button>
-    <button class="primary" onclick="exportPDF()">Print / PDF</button>
-    <span style="align-self:center;color:var(--warn);font-size:10.5px">↳ in the print dialog, set orientation to Portrait</span>
-  </div>
   <div id="resultsWrap">
     <section class="card" id="outCard" style="display:none">
       <h2>Daily Roster <small id="rangeLbl"></small>
+        <span class="btns">
+          <button onclick="toggleFit()" id="fitBtn">Fit screen</button>
+          <button onclick="copyTSV()">Copy</button>
+          <button onclick="downloadCSV()">CSV</button>
+          <button onclick="exportPNG()">Image</button>
+          <button class="primary" onclick="exportPDF()">Print / PDF</button>
+        </span>
       </h2>
       <div class="tableWrap">
         <table id="outTable">
@@ -275,7 +274,6 @@ async function handleFile(file){
   document.getElementById('fileNameLbl').textContent = file.name;
   document.getElementById('overrideRow').style.display = 'none';
   document.getElementById('outCard').style.display='none';
-  document.getElementById('toolbarRow').style.display='none';
   document.getElementById('statsCard').style.display='none';
   document.getElementById('legendCard').style.display='none';
   document.getElementById('debugRow').style.display='none';
@@ -1135,7 +1133,6 @@ function render(){
 
   document.getElementById('rangeLbl').textContent = DAYS.length ? (fmtDate(DAYS[0].date)+' to '+fmtDate(DAYS[DAYS.length-1].date)) : '';
   document.getElementById('outCard').style.display='block';
-  document.getElementById('toolbarRow').style.display='flex';
 
   document.getElementById('statsBody').innerHTML = `
     <div>Actual Block Hours<b>${sumHrs(blockHrsAll)}</b></div>
@@ -1209,23 +1206,18 @@ function downloadCSV(){
 let fitOn = false;
 function toggleFit(){
   const wrap = document.getElementById('resultsWrap');
-  const table = document.getElementById('outTable');
   fitOn = !fitOn;
   document.getElementById('fitBtn').textContent = fitOn ? 'Unfit' : 'Fit screen';
   if(!fitOn){ wrap.style.transform=''; wrap.style.width=''; return; }
   wrap.style.transform = '';
   wrap.style.width = '';
-  // Measure the table's true content width directly — wrap.scrollWidth is
-  // unreliable here because the table sits inside a .tableWrap with
-  // overflow-x:auto, which clips what the outer element reports as its
-  // content width to the viewport instead of the table's real full width.
-  const naturalW = table ? table.scrollWidth : wrap.scrollWidth;
-  const availW = window.innerWidth - 20;
-  const scale = Math.min(availW/naturalW, 1);
+  const rect = wrap.getBoundingClientRect();
+  const naturalW = wrap.scrollWidth, naturalH = wrap.scrollHeight;
+  const availW = window.innerWidth - 8;
+  const availH = window.innerHeight - rect.top - 8;
+  const scale = Math.min(availW/naturalW, availH/naturalH);
   wrap.style.transform = `scale(${scale})`;
-  wrap.style.transformOrigin = 'top left';
   wrap.style.width = (100/scale)+'%';
-  document.getElementById('toolbarRow').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 // Image export — renders the results block to a high-resolution PNG so it
@@ -1233,40 +1225,29 @@ function toggleFit(){
 function exportPNG(){
   const wrap = document.getElementById('resultsWrap');
   const wasFit = fitOn;
-  if(!wasFit) toggleFit(); // capture at fit-screen width so the whole table is visible in the image
-  setTimeout(()=>{
-    html2canvas(wrap, {scale:3, backgroundColor:'#0b0c0e'}).then(canvas=>{
-      canvas.toBlob(blob=>{
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'roster-'+(DAYS.length?DAYS[0].key:'export')+'.png';
-        a.click();
-        log('Image exported.', 'ok');
-      });
-      if(!wasFit) toggleFit();
-    }).catch(err=>{ log('Image export failed: '+err.message, 'err'); });
-  }, 350); // let the fit-screen smooth-scroll/transform settle before capturing
+  if(wasFit) toggleFit(); // capture unscaled for max fidelity, html2canvas handles its own scale
+  html2canvas(wrap, {scale:3, backgroundColor:'#0b0c0e'}).then(canvas=>{
+    canvas.toBlob(blob=>{
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'roster-'+(DAYS.length?DAYS[0].key:'export')+'.png';
+      a.click();
+      log('Image exported.', 'ok');
+    });
+    if(wasFit) toggleFit();
+  }).catch(err=>{ log('Image export failed: '+err.message, 'err'); });
 }
 
 // Print / Save-as-PDF — uses the browser's native print pipeline (works
 // fully offline) with a font size chosen to keep the whole roster on one
 // landscape A4 page.
 function exportPDF(){
+  const rowCount = document.querySelectorAll('#outBody tr').length;
+  let fs = 9;
+  if(rowCount>60) fs=6; else if(rowCount>45) fs=7; else if(rowCount>35) fs=8;
+  document.documentElement.style.setProperty('--print-fs', fs+'px');
   const wasFit = fitOn;
   if(wasFit) toggleFit();
-  const wrap = document.getElementById('resultsWrap');
-  const table = document.getElementById('outTable');
-  wrap.style.transform = ''; wrap.style.width = '';
-  // Measure actual rendered size rather than guessing from row count — a
-  // single very tall row (e.g. an 11-line duty-code list) was pushing the
-  // page count to 2 even though row COUNT looked fine, so a heuristic based
-  // on row count alone couldn't catch it.
-  const naturalW = table ? table.scrollWidth : wrap.scrollWidth;
-  const naturalH = wrap.scrollHeight;
-  // A4 portrait at 96dpi minus 8mm margins on each side, in CSS px
-  const targetW = 730, targetH = 1060;
-  const scale = Math.min(targetW/naturalW, targetH/naturalH, 1);
-  document.documentElement.style.setProperty('--print-scale', scale);
   window.print();
 }
 
@@ -1299,5 +1280,6 @@ function exportDebug(){
 
 loadLegend();
 </script>
+    <script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
 </body>
 </html>
