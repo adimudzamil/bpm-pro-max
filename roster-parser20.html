@@ -106,7 +106,7 @@
     .legend .row input.code{font-weight:700;color:#000}
     .legend .row button, #legendCard > div:last-child{display:none !important}
 
-    @page{ size: A4 landscape; margin: 8mm; }
+    @page{ size: portrait; margin: 8mm; }
   }
 </style>
 </head>
@@ -139,16 +139,17 @@
 
   <div id="log"></div>
 
+  <div class="btnRow" id="toolbarRow" style="display:none;position:sticky;top:0;background:var(--bg);z-index:6;padding:6px 0;margin:0">
+    <button onclick="toggleFit()" id="fitBtn">Fit screen</button>
+    <button onclick="copyTSV()">Copy</button>
+    <button onclick="downloadCSV()">CSV</button>
+    <button onclick="exportPNG()">Image</button>
+    <button class="primary" onclick="exportPDF()">Print / PDF</button>
+    <span style="align-self:center;color:var(--warn);font-size:10.5px">↳ in the print dialog, set orientation to Portrait</span>
+  </div>
   <div id="resultsWrap">
     <section class="card" id="outCard" style="display:none">
       <h2>Daily Roster <small id="rangeLbl"></small>
-        <span class="btns">
-          <button onclick="toggleFit()" id="fitBtn">Fit screen</button>
-          <button onclick="copyTSV()">Copy</button>
-          <button onclick="downloadCSV()">CSV</button>
-          <button onclick="exportPNG()">Image</button>
-          <button class="primary" onclick="exportPDF()">Print / PDF</button>
-        </span>
       </h2>
       <div class="tableWrap">
         <table id="outTable">
@@ -177,7 +178,7 @@
   </div>
 
   <div class="btnRow" id="debugRow" style="display:none">
-    <button class="ghost" onclick="exportDebug()">⬇ Export debug data</button>
+    <button class="ghost" onclick="exportDebug()">⬇ Export debug data (send this to Claude if something looks wrong)</button>
   </div>
 </main>
 
@@ -274,6 +275,7 @@ async function handleFile(file){
   document.getElementById('fileNameLbl').textContent = file.name;
   document.getElementById('overrideRow').style.display = 'none';
   document.getElementById('outCard').style.display='none';
+  document.getElementById('toolbarRow').style.display='none';
   document.getElementById('statsCard').style.display='none';
   document.getElementById('legendCard').style.display='none';
   document.getElementById('debugRow').style.display='none';
@@ -1133,6 +1135,7 @@ function render(){
 
   document.getElementById('rangeLbl').textContent = DAYS.length ? (fmtDate(DAYS[0].date)+' to '+fmtDate(DAYS[DAYS.length-1].date)) : '';
   document.getElementById('outCard').style.display='block';
+  document.getElementById('toolbarRow').style.display='flex';
 
   document.getElementById('statsBody').innerHTML = `
     <div>Actual Block Hours<b>${sumHrs(blockHrsAll)}</b></div>
@@ -1222,6 +1225,7 @@ function toggleFit(){
   wrap.style.transform = `scale(${scale})`;
   wrap.style.transformOrigin = 'top left';
   wrap.style.width = (100/scale)+'%';
+  document.getElementById('toolbarRow').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 // Image export — renders the results block to a high-resolution PNG so it
@@ -1229,17 +1233,19 @@ function toggleFit(){
 function exportPNG(){
   const wrap = document.getElementById('resultsWrap');
   const wasFit = fitOn;
-  if(wasFit) toggleFit(); // capture unscaled for max fidelity, html2canvas handles its own scale
-  html2canvas(wrap, {scale:3, backgroundColor:'#0b0c0e'}).then(canvas=>{
-    canvas.toBlob(blob=>{
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'roster-'+(DAYS.length?DAYS[0].key:'export')+'.png';
-      a.click();
-      log('Image exported.', 'ok');
-    });
-    if(wasFit) toggleFit();
-  }).catch(err=>{ log('Image export failed: '+err.message, 'err'); });
+  if(!wasFit) toggleFit(); // capture at fit-screen width so the whole table is visible in the image
+  setTimeout(()=>{
+    html2canvas(wrap, {scale:3, backgroundColor:'#0b0c0e'}).then(canvas=>{
+      canvas.toBlob(blob=>{
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'roster-'+(DAYS.length?DAYS[0].key:'export')+'.png';
+        a.click();
+        log('Image exported.', 'ok');
+      });
+      if(!wasFit) toggleFit();
+    }).catch(err=>{ log('Image export failed: '+err.message, 'err'); });
+  }, 350); // let the fit-screen smooth-scroll/transform settle before capturing
 }
 
 // Print / Save-as-PDF — uses the browser's native print pipeline (works
@@ -1257,8 +1263,8 @@ function exportPDF(){
   // on row count alone couldn't catch it.
   const naturalW = table ? table.scrollWidth : wrap.scrollWidth;
   const naturalH = wrap.scrollHeight;
-  // A4 landscape at 96dpi minus 8mm margins on each side, in CSS px
-  const targetW = 1060, targetH = 730;
+  // A4 portrait at 96dpi minus 8mm margins on each side, in CSS px
+  const targetW = 730, targetH = 1060;
   const scale = Math.min(targetW/naturalW, targetH/naturalH, 1);
   document.documentElement.style.setProperty('--print-scale', scale);
   window.print();
