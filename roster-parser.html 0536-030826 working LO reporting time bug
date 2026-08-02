@@ -178,7 +178,7 @@
   </div>
 
   <div class="btnRow" id="debugRow" style="display:none">
-    <button class="ghost" onclick="exportDebug()">⬇ Export debug data (send this to Claude if something looks wrong)</button>
+    <button class="ghost" onclick="exportDebug()">⬇ Export debug data</button>
   </div>
 </main>
 
@@ -802,7 +802,7 @@ function parseCalendarPDF(pages){
 
       const joined = cellText[dayLabel].map(l=>l.text).join('');
       const lines2 = calendarCellToLegs(dateObj, joined).map(l => Object.assign(l, {
-        depDate: dateObj, arrDate: dateObj, reportDate: dateObj, debriefDate: dateObj, standalone: true
+        depDate: dateObj, arrDate: dateObj, reportDate: dateObj, debriefDate: dateObj
       }));
       legsAll.push(...lines2);
     }
@@ -959,7 +959,34 @@ function buildDays(legs){
     return dayMap[k];
   }
 
-  legs.forEach((l, i)=>{
+  // Group by consecutive runs of flight legs, NOT by pairingId text — the
+  // pairing ID is frequently blank on continuation legs (confirmed from real
+  // xlsx/PDF data), which meant multi-day trips never linked together and
+  // the layover-gap synthesis below never fired for them. A "duty period"
+  // in this data is operationally just a run of flight legs uninterrupted
+  // by a ground-duty entry, so group on that instead.
+  const pairings = {};
+  const order = [];
+  let runIdx = -1;
+  let inRun = false;
+  legs.forEach((l)=>{
+    if(l.isGround){
+      runIdx++;
+      const pid = '_g'+runIdx;
+      pairings[pid] = [l];
+      order.push(pid);
+      inRun = false;
+    } else {
+      if(!inRun){ runIdx++; pairings['_g'+runIdx] = []; order.push('_g'+runIdx); inRun = true; }
+      pairings['_g'+runIdx].push(l);
+    }
+  });
+
+  for(const pid of order){
+    const group = pairings[pid];
+    group.forEach((l, li)=>{
+      const isFirst = li===0, isLast = li===group.length-1;
+
       if(l.isGround){
         const day = ensureDay(l.depDate);
         day.hasData = true;
@@ -977,13 +1004,13 @@ function buildDays(legs){
       const depDay = ensureDay(l.depDate);
       depDay.hasData = true;
       depDay.rows.push({
-        dutyStart: (!l.reportDate || ymdKey(l.reportDate)===ymdKey(l.depDate)) ? l.reportTime : '',
+        dutyStart: isFirst ? l.reportTime : '',
         item: l.item, rank: l.rank,
         depStn: l.depStn, depTime: l.depTime,
         arrStn: sameDay ? l.arrStn : '', arrTime: sameDay ? l.arrTime : '',
-        dutyEnd: sameDay ? l.debriefTime : '',
+        dutyEnd: sameDay ? (isLast ? l.debriefTime : '') : '',
         work: l.work,
-        block: l.flyHrs, dutyHrs: l.dutyHrs,
+        block: l.flyHrs, dutyHrs: isFirst ? l.dutyHrs : '',
         dutyCode: l.sdc, ac: l.ac
       });
       if(!sameDay){
@@ -993,11 +1020,11 @@ function buildDays(legs){
           dutyStart:'', item:'', rank:'',
           depStn:'', depTime:'',
           arrStn: l.arrStn, arrTime: l.arrTime,
-          dutyEnd: l.debriefTime, work:'',
+          dutyEnd: isLast ? l.debriefTime : '', work:'',
           block:'', dutyHrs:'', dutyCode:'', ac:''
         });
       }
-      const nextLeg = legs[i+1];
+      const nextLeg = group[li+1];
       if(nextLeg && !nextLeg.isGround){
         let cursor = addDays(l.arrDate,1);
         const stop = nextLeg.depDate;
@@ -1006,17 +1033,13 @@ function buildDays(legs){
           const d = ensureDay(cursor);
           if(!d.hasData){
             d.hasData = true;
-            // If the next leg's report happens on this gap day (report
-            // before midnight, departure after midnight), show that report
-            // time on the layover row instead of leaving it blank — matches
-            // how the calendar-source PDF already places it.
-            const showReport = nextLeg.reportTime && nextLeg.reportDate && ymdKey(cursor)===ymdKey(nextLeg.reportDate);
-            d.rows.push({dutyStart: showReport?nextLeg.reportTime:'', item:'LO', rank:'', depStn: awayStn, depTime:'', arrStn:'', arrTime:'', dutyEnd:'', work:'', block:'', dutyHrs:'', dutyCode:'', ac:''});
+            d.rows.push({dutyStart:'', item:'LO', rank:'', depStn: awayStn, depTime:'', arrStn:'', arrTime:'', dutyEnd:'', work:'', block:'', dutyHrs:'', dutyCode:'', ac:''});
           }
           cursor = addDays(cursor,1);
         }
       }
-  });
+    });
+  }
 
   if(!minDate || !maxDate) throw new Error('Could not determine date range.');
   DAYS = [];
