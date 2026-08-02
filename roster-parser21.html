@@ -34,7 +34,7 @@
   button.primary{background:var(--accent);color:#0b0c0e;border-color:var(--accent);font-weight:600}
   button.ghost{background:transparent}
   button:disabled{opacity:.4}
-  button.dating-btn{background:#7c3aed;border-color:#7c3aed;color:#fff}
+  button.dating-btn{background:#ff6b9d;color:#0b0c0e;border-color:#ff6b9d;font-weight:600}
 
   #log{margin-top:10px;font-size:12px;color:var(--dim);max-height:200px;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:none}
   #log .warn{color:var(--warn)}
@@ -80,52 +80,59 @@
   footer{padding:20px 14px 40px;color:var(--dim);font-size:10.5px;text-align:center}
 
   /* Dating Modal */
-  .dating-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;display:none;align-items:center;justify-content:center;overflow-y:auto;padding:20px}
-  .dating-overlay.open{display:flex}
-  .dating-modal{background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:900px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;position:relative}
-  .dating-modal h2{color:var(--accent);font-size:18px;margin:0 0 8px}
-  .dating-modal .close-btn{position:sticky;top:0;float:right;background:transparent;border:none;color:var(--dim);font-size:24px;cursor:pointer;padding:0 8px}
-  .dating-modal .close-btn:hover{color:var(--text)}
-  .dating-modal .sub{color:var(--dim);font-size:12px;margin-bottom:20px}
-
-  .crew-list{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
-  .crew-card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-  .crew-card .name{font-weight:600;min-width:140px}
-  .crew-card .file-status{color:var(--dim);font-size:11px;flex:1}
-  .crew-card .file-status.ok{color:var(--ok)}
-  .crew-card .file-status.err{color:var(--err)}
-  .crew-card .remove-btn{color:var(--err);background:transparent;border:1px solid var(--err);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px}
-  .crew-card .remove-btn:hover{background:var(--err);color:#fff}
-
-  .add-crew-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px;background:var(--panel2);border-radius:8px;border:1px dashed var(--line)}
-  .add-crew-row input{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;flex:1;min-width:120px}
-  .add-crew-row input::placeholder{color:var(--dim)}
-  .add-crew-row .file-input-wrap{position:relative;display:inline-block}
-  .add-crew-row .file-input-wrap input[type=file]{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer}
-  .add-crew-row .file-input-wrap button{pointer-events:none}
-
-  .timezone-row{display:flex;gap:12px;align-items:center;margin:16px 0;padding:12px;background:var(--panel2);border-radius:8px}
-  .timezone-row label{color:var(--dim);font-size:12px}
-  .timezone-row select{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 10px;color:var(--text);font-family:var(--mono);font-size:12px}
-
-  .dating-results{margin-top:16px}
-  .dating-results .result-summary{color:var(--dim);font-size:12px;margin-bottom:10px}
-  .dating-results .result-summary b{color:var(--text)}
-  .dating-results table{width:100%;font-size:11px}
-  .dating-results th{background:var(--panel2);color:var(--accent);font-weight:600;padding:6px 8px;text-align:left;border-bottom:2px solid var(--line)}
-  .dating-results td{padding:5px 8px;border-bottom:1px solid var(--line)}
-  .dating-results .duration{color:var(--accent);font-weight:600}
-  .dating-results .no-results{color:var(--dim);padding:20px;text-align:center}
-
-  .calc-btn{background:var(--accent);color:#0b0c0e;border-color:var(--accent);font-weight:600;padding:10px 24px}
-
-  @media(max-width:600px){
-    .dating-modal{padding:16px}
-    .crew-card{flex-direction:column;align-items:stretch}
-    .add-crew-row{flex-direction:column}
-    .dating-results table{font-size:9px}
-    .dating-results th,.dating-results td{padding:3px 4px}
+  .modal-overlay{
+    position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);
+    z-index:1000;display:none;justify-content:center;align-items:center;
+    backdrop-filter:blur(4px);padding:20px;
   }
+  .modal-overlay.active{display:flex}
+  .modal{
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    max-width:800px;width:100%;max-height:90vh;display:flex;flex-direction:column;
+    box-shadow:0 20px 60px rgba(0,0,0,0.8);
+  }
+  .modal-header{
+    padding:16px 20px;border-bottom:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:center;
+    flex-shrink:0;
+  }
+  .modal-header h2{margin:0;font-size:16px;color:var(--accent);display:flex;align-items:center;gap:8px}
+  .modal-header h2 span{color:var(--text);font-weight:400}
+  .modal-close{background:none;border:none;color:var(--dim);font-size:24px;cursor:pointer;padding:0 8px}
+  .modal-close:hover{color:var(--text)}
+  .modal-body{
+    padding:16px 20px;overflow-y:auto;flex:1;
+  }
+  .modal-footer{
+    padding:12px 20px;border-top:1px solid var(--line);
+    display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;
+    flex-wrap:wrap;
+  }
+  .modal .form-group{margin-bottom:14px}
+  .modal .form-group label{display:block;color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+  .modal .checkbox-group{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0}
+  .modal .checkbox-group label{
+    display:flex;align-items:center;gap:6px;
+    background:var(--panel2);padding:6px 12px;border-radius:6px;border:1px solid var(--line);
+    font-size:12px;cursor:pointer;color:var(--text);margin:0;
+  }
+  .modal .checkbox-group label:hover{border-color:var(--accent-dim)}
+  .modal .checkbox-group input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+  .modal .radio-group{display:flex;gap:16px;padding:4px 0}
+  .modal .radio-group label{
+    display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;color:var(--text)
+  }
+  .modal .radio-group input[type="radio"]{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+
+  .overlap-table-wrap{overflow-x:auto;margin-top:8px}
+  .overlap-table{width:100%;border-collapse:collapse;font-size:11px}
+  .overlap-table th,.overlap-table td{padding:6px 8px;border:1px solid var(--line);text-align:left}
+  .overlap-table th{background:var(--panel2);color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+  .overlap-table td{font-family:var(--mono);font-size:11px}
+  .overlap-table tr:hover td{background:#17191d}
+  .overlap-table .duration{color:var(--accent);font-weight:600}
+  .no-results{color:var(--dim);text-align:center;padding:30px 0;font-style:italic}
+  .result-stats{color:var(--dim);font-size:11px;margin:8px 0;padding:8px 12px;background:var(--panel2);border-radius:6px}
 
   @media print{
     body{background:#fff;color:#000}
@@ -140,22 +147,18 @@
     td.date{color:#000}
     tr.off td, tr.layover td{color:#555}
     .stats div b{color:#000}
-
-    #statsCard, #legendCard{
-      display:inline-block; vertical-align:top; box-sizing:border-box;
-      width:48%; margin-top:6px;
-    }
-    #statsCard{ margin-right:1.5%; }
-    #legendCard{ margin-left:0.5%; }
+    #statsCard,#legendCard{display:inline-block;vertical-align:top;box-sizing:border-box;width:48%;margin-top:6px}
+    #statsCard{margin-right:1.5%}
+    #legendCard{margin-left:0.5%}
     .stats{grid-template-columns:1fr 1fr;font-size:8px;padding:6px 8px;gap:4px 10px}
     .stats div b{font-size:11px}
     .legend{column-count:2;column-gap:10px;font-size:6.5px;padding:4px 8px}
     .legend .row{display:block;break-inside:avoid;border:none;padding:1px 0;gap:3px}
     .legend .row input{border:none;background:transparent;padding:0;font-size:6.5px;color:#000;width:auto}
     .legend .row input.code{font-weight:700;color:#000}
-    .legend .row button, #legendCard > div:last-child{display:none !important}
-
-    @page{ size: portrait; margin: 8mm; }
+    .legend .row button,#legendCard > div:last-child{display:none !important}
+    .modal-overlay{display:none !important}
+    @page{size:portrait;margin:8mm}
   }
 </style>
 </head>
@@ -193,7 +196,7 @@
     <button onclick="copyTSV()">Copy</button>
     <button onclick="downloadCSV()">CSV</button>
     <button onclick="exportPNG()">Image</button>
-    <button class="dating-btn" onclick="openDating()">❤ Dating</button>
+    <button class="dating-btn" onclick="openDating()">💕 Dating</button>
     <button class="primary" onclick="exportPDF()">Print / PDF</button>
     <span style="align-self:center;color:var(--warn);font-size:10.5px">↳ in the print dialog, set orientation to Portrait</span>
   </div>
@@ -233,39 +236,48 @@
 </main>
 
 <!-- DATING MODAL -->
-<div class="dating-overlay" id="datingOverlay">
-  <div class="dating-modal">
-    <button class="close-btn" onclick="closeDating()">&times;</button>
-    <h2>❤ Crew Dating Overlap</h2>
-    <div class="sub">Find when crew members are together in KUL</div>
-
-    <div class="crew-list" id="crewList"></div>
-
-    <div class="add-crew-row">
-      <input type="text" id="crewNameInput" placeholder="Crew name (e.g. AZREEN NADIYA)" />
-      <div class="file-input-wrap">
-        <button class="primary">📁 Upload Roster</button>
-        <input type="file" id="crewFileInput" accept=".xlsx,.xls,.pdf" />
+<div class="modal-overlay" id="datingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>💕 Dating <span>— Crew Overlap Calculator</span></h2>
+      <button class="modal-close" onclick="closeDating()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Select rosters to compare:</label>
+        <div class="checkbox-group" id="rosterCheckboxes">
+          <span style="color:var(--dim);font-size:12px;font-style:italic">No rosters loaded yet. Parse at least two rosters first.</span>
+        </div>
       </div>
-      <button onclick="addCrew()">+ Add Crew</button>
+      <div class="form-group">
+        <label>Time zone:</label>
+        <div class="radio-group">
+          <label><input type="radio" name="tz" value="SLT" checked> SLT (Station Local Time)</label>
+          <label><input type="radio" name="tz" value="UTC"> UTC</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Date range:</label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <label style="font-size:12px;color:var(--dim)">From: <input type="date" id="dateFrom" style="background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:4px 8px;color:var(--text);font-family:var(--mono);font-size:12px"></label>
+          <label style="font-size:12px;color:var(--dim)">To: <input type="date" id="dateTo" style="background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:4px 8px;color:var(--text);font-family:var(--mono);font-size:12px"></label>
+          <button class="primary" onclick="calculateOverlaps()" style="padding:6px 16px">🔍 Find overlaps</button>
+        </div>
+      </div>
+      <div id="overlapResults">
+        <div class="result-stats" id="overlapStats" style="display:none"></div>
+        <div class="overlap-table-wrap" id="overlapTableWrap">
+          <table class="overlap-table" id="overlapTable">
+            <thead><tr><th>Date</th><th>Day</th><th>From (KUL)</th><th>To (KUL)</th><th>Duration</th><th>Crew</th></tr></thead>
+            <tbody id="overlapBody"><tr><td colspan="6" class="no-results">Select at least two rosters and click "Find overlaps"</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
-
-    <div class="timezone-row">
-      <label>Rosters time zone:</label>
-      <select id="timezoneSelect">
-        <option value="SLT" selected>SLT (Station Local Time)</option>
-        <option value="UTC">UTC</option>
-      </select>
-      <span style="color:var(--dim);font-size:11px;margin-left:8px">Both rosters will be treated as this time zone</span>
-    </div>
-
-    <div style="display:flex;gap:10px;margin:12px 0">
-      <button class="calc-btn" onclick="calculateOverlap()">🔍 Calculate Overlap</button>
-      <button onclick="clearAllCrew()" style="color:var(--err);border-color:var(--err)">Clear All</button>
-    </div>
-
-    <div class="dating-results" id="datingResults">
-      <div class="no-results">Add at least 2 crew members and click Calculate Overlap</div>
+    <div class="modal-footer">
+      <button onclick="copyOverlapTSV()">📋 Copy TSV</button>
+      <button onclick="downloadOverlapCSV()">📥 Download CSV</button>
+      <button onclick="closeDating()">Close</button>
     </div>
   </div>
 </div>
@@ -289,10 +301,11 @@ let LAST_FORMAT = "";
 let RAW_PDF_PAGES = null;
 let LAST_PARSED_ROWS = null;
 
-const HOME = "KUL";
+// Store loaded rosters by name
+let loadedRosters = {};
+let currentRosterName = "";
 
-// Dating state
-let crewMembers = [];
+const HOME = "KUL";
 
 /* =====================================================================
    LOGGING
@@ -379,6 +392,8 @@ async function handleFile(file){
       const rows = parseXLSXRows(buf);
       LAST_PARSED_ROWS = rows;
       buildDays(rowsToLegs(rows));
+      // Extract name and store
+      extractAndStoreName(file.name);
       render();
     } else if(name.endsWith('.pdf')){
       const buf = await file.arrayBuffer();
@@ -424,12 +439,61 @@ function parseAndBuild(kind){
       LAST_PARSED_ROWS = rows;
       buildDays(rowsToLegs(rows));
     }
+    extractAndStoreName(LAST_FILE_NAME);
     render();
   } catch(err){
     console.error(err);
     log('Parse error ('+kind+'): '+err.message, 'err');
   }
 }
+
+function extractAndStoreName(fileName){
+  // Try to extract name from STAFF_LABEL or fallback to filename
+  let name = STAFF_LABEL || fileName.replace(/\.[^.]+$/, '');
+  // Clean up: remove staff ID, base, rank
+  name = name.replace(/\|\s*\d+\s*\|.*$/, '').trim();
+  name = name.replace(/\s{2,}/g, ' ');
+  if(!name || name.length < 3) name = fileName.replace(/\.[^.]+$/, '');
+  
+  // Store the roster data
+  const rosterData = {
+    name: name,
+    fileName: fileName,
+    days: DAYS.map(d => ({...d, rows: d.rows.map(r => ({...r}))})),
+    staffLabel: STAFF_LABEL,
+    monthLabel: MONTH_LABEL,
+    rawWarnings: [...RAW_WARNINGS]
+  };
+  
+  // Use a unique key based on name + first/last date
+  const key = name + '|' + (DAYS.length ? DAYS[0].key : '');
+  loadedRosters[key] = rosterData;
+  currentRosterName = name;
+  
+  updateRosterCheckboxes();
+}
+
+function updateRosterCheckboxes(){
+  const container = document.getElementById('rosterCheckboxes');
+  const keys = Object.keys(loadedRosters);
+  if(!keys.length){
+    container.innerHTML = '<span style="color:var(--dim);font-size:12px;font-style:italic">No rosters loaded yet. Parse at least two rosters first.</span>';
+    return;
+  }
+  container.innerHTML = '';
+  keys.forEach(key => {
+    const roster = loadedRosters[key];
+    const label = document.createElement('label');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = key;
+    cb.checked = keys.length <= 2; // auto-select if 2 or fewer
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(roster.name));
+    container.appendChild(label);
+  });
+}
+
 function forceParse(kind){
   if(!RAW_PDF_PAGES){ log('No cached PDF data to re-parse — re-upload the file.', 'err'); return; }
   clearLog();
@@ -466,19 +530,23 @@ function cleanTime(t){
   if(!m) return {time:t.replace('(+1)','').trim(), rollover: t.includes('(+1)')?1:0};
   return {time: m[1].padStart(2,'0')+':'+m[2], rollover: m[3]?1:0};
 }
-function hhmmToMin(s){
-  if(!s) return 0;
-  const m=/^(\d{1,2}):(\d{2})$/.exec(s.trim()); if(!m) return 0;
-  return parseInt(m[1])*60+parseInt(m[2]);
+function timeToMinutes(s){
+  if(!s) return NaN;
+  const m = /^(\d{1,2}):(\d{2})$/.exec(s.trim());
+  if(!m) return NaN;
+  return parseInt(m[1])*60 + parseInt(m[2]);
 }
-function minToHHMM(m){
-  const h=Math.floor(m/60), min=m%60;
-  return String(h).padStart(2,'0')+':'+String(min).padStart(2,'0');
+function minutesToTime(mins){
+  if(mins < 0) mins += 1440;
+  const h = Math.floor(mins/60);
+  const m = mins % 60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
 }
-function fmtDate(d){
-  const dd = String(d.getDate()).padStart(2,'0');
-  const mmm = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()];
-  return dd+'-'+mmm+'-'+d.getFullYear();
+function minutesToDuration(mins){
+  if(mins < 0) return '-';
+  const h = Math.floor(mins/60);
+  const m = mins % 60;
+  return h+'h '+String(m).padStart(2,'0')+'m';
 }
 
 /* =====================================================================
@@ -505,6 +573,17 @@ function parseXLSXRows(buf){
   };
   idx.depStn = header.findIndex(h=>h.startsWith('Dep Stn'));
   idx.arrStn = header.findIndex(h=>h.startsWith('Arr. Stn'));
+
+  // Try to extract staff name from header
+  STAFF_LABEL = '';
+  for(let i=0;i<Math.min(5, aoa.length);i++){
+    const row = aoa[i].map(c=>String(c||'').trim());
+    const joined = row.join(' ');
+    if(joined.includes('FH :') || joined.includes('DH :')){
+      STAFF_LABEL = joined.replace(/\|/g, '').trim();
+      break;
+    }
+  }
 
   const rows = [];
   let lastDate = null;
@@ -695,6 +774,14 @@ function parseTablePDFRows(pages){
     const headerCutoff = firstAnchorWord ? (firstAnchorWord.top - 1)
       : (pairingHdr ? (pairingHdr.top + 15) : (words[0].top + 80));
     const body = words.filter(w => w.top >= headerCutoff && !HEADER_WORDS.has(w.text));
+
+    // Try to extract staff name from header region
+    const headerWords = words.filter(w => w.top < headerCutoff);
+    const staffCandidates = headerWords.filter(w => /[A-Z]{2,}/.test(w.text) && w.text.length > 5);
+    if(staffCandidates.length) {
+      const nameStr = staffCandidates.map(w => w.text).join(' ');
+      if(nameStr.length > 10 && nameStr.length < 200) STAFF_LABEL = nameStr;
+    }
 
     const rowTops = [];
     for(const w of body){
@@ -1082,12 +1169,22 @@ function buildDays(legs){
     DAYS.push(existing || {date:new Date(cursor), key:k, rows:[], hasData:false});
     cursor = addDays(cursor,1);
   }
-  STAFF_LABEL = 'ADI MUDZAMIL RANI BIN MOHAMED | 2100551 | WBA LS | KUL';
+  STAFF_LABEL = STAFF_LABEL || 'Roster ' + (DAYS.length ? DAYS[0].key : '');
 }
 
 /* =====================================================================
    7) RENDER
 ===================================================================== */
+function fmtDate(d){
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mmm = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()];
+  return dd+'-'+mmm+'-'+d.getFullYear();
+}
+function hhmmToMin(s){
+  if(!s) return 0;
+  const m=/^(\d{1,2}):(\d{2})$/.exec(s.trim()); if(!m) return 0;
+  return parseInt(m[1])*60+parseInt(m[2]);
+}
 function sumHrs(list){
   let total=0;
   for(const s of list){ total += hhmmToMin(s); }
@@ -1194,7 +1291,7 @@ function addLegendRow(code='', desc=''){
 }
 
 /* =====================================================================
-   8) EXPORT FUNCTIONS
+   8) EXPORT: CSV / TSV / PNG / PDF-print / Fit-to-screen / Debug dump
 ===================================================================== */
 const CSV_HEADER = ['Date','Day','Duty Start','Item','Overrd Rank','Dep/Start','Arr/End','Duty End','Work Type','Actual Block Hours','Duty Hours','DutyCode','Ac Type'];
 
@@ -1293,400 +1390,263 @@ function exportDebug(){
 }
 
 /* =====================================================================
-   9) DATING FEATURE
+   9) DATING / OVERLAP CALCULATOR
 ===================================================================== */
 function openDating(){
-  document.getElementById('datingOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  renderCrewList();
+  const modal = document.getElementById('datingModal');
+  modal.classList.add('active');
+  updateRosterCheckboxes();
+  // Set default date range from loaded rosters
+  const allKeys = Object.keys(loadedRosters);
+  let minDate = null, maxDate = null;
+  allKeys.forEach(key => {
+    const roster = loadedRosters[key];
+    if(roster.days && roster.days.length){
+      const first = roster.days[0].date;
+      const last = roster.days[roster.days.length-1].date;
+      if(!minDate || first < minDate) minDate = first;
+      if(!maxDate || last > maxDate) maxDate = last;
+    }
+  });
+  if(minDate && maxDate){
+    document.getElementById('dateFrom').value = ymdKey(minDate);
+    document.getElementById('dateTo').value = ymdKey(maxDate);
+  }
+  // Auto-calculate if 2+ rosters loaded
+  if(allKeys.length >= 2) calculateOverlaps();
 }
 
 function closeDating(){
-  document.getElementById('datingOverlay').classList.remove('open');
-  document.body.style.overflow = '';
+  document.getElementById('datingModal').classList.remove('active');
 }
 
-// Close on overlay click
-document.getElementById('datingOverlay').addEventListener('click', function(e){
-  if(e.target === this) closeDating();
-});
-
-// Handle crew file input
-document.getElementById('crewFileInput').addEventListener('change', function(e){
-  if(e.target.files.length){
-    const nameInput = document.getElementById('crewNameInput');
-    const crewName = nameInput.value.trim() || 'Crew ' + (crewMembers.length + 1);
-    // Store the file for later processing
-    const file = e.target.files[0];
-    // We'll add the crew with the file reference
-    addCrewWithFile(crewName, file);
-    nameInput.value = '';
-    this.value = '';
-  }
-});
-
-function addCrewWithFile(name, file){
-  if(!name.trim()){ alert('Please enter a crew name.'); return; }
-  if(crewMembers.find(c=>c.name.toLowerCase() === name.trim().toLowerCase())){
-    alert('A crew member with that name already exists.');
-    return;
-  }
-  crewMembers.push({
-    name: name.trim(),
-    file: file,
-    parsedDays: null,
-    status: 'pending'
+function getSelectedRosters(){
+  const checkboxes = document.querySelectorAll('#rosterCheckboxes input[type="checkbox"]:checked');
+  const selected = [];
+  checkboxes.forEach(cb => {
+    if(loadedRosters[cb.value]) selected.push(loadedRosters[cb.value]);
   });
-  renderCrewList();
+  return selected;
 }
 
-function addCrew(){
-  const nameInput = document.getElementById('crewNameInput');
-  const name = nameInput.value.trim();
-  if(!name){ alert('Please enter a crew name.'); return; }
-  // Trigger file input
-  document.getElementById('crewFileInput').click();
-}
-
-function removeCrew(index){
-  crewMembers.splice(index, 1);
-  renderCrewList();
-  document.getElementById('datingResults').innerHTML = '<div class="no-results">Add at least 2 crew members and click Calculate Overlap</div>';
-}
-
-function clearAllCrew(){
-  if(crewMembers.length === 0) return;
-  if(confirm('Remove all crew members?')){
-    crewMembers = [];
-    renderCrewList();
-    document.getElementById('datingResults').innerHTML = '<div class="no-results">Add at least 2 crew members and click Calculate Overlap</div>';
-  }
-}
-
-async function renderCrewList(){
-  const container = document.getElementById('crewList');
-  if(crewMembers.length === 0){
-    container.innerHTML = '<div style="color:var(--dim);padding:12px;text-align:center">No crew members added yet. Add at least 2 to compare.</div>';
+function calculateOverlaps(){
+  const selected = getSelectedRosters();
+  const tz = document.querySelector('input[name="tz"]:checked').value;
+  const fromDate = document.getElementById('dateFrom').value;
+  const toDate = document.getElementById('dateTo').value;
+  
+  const overlapBody = document.getElementById('overlapBody');
+  const statsEl = document.getElementById('overlapStats');
+  
+  if(selected.length < 2){
+    overlapBody.innerHTML = '<tr><td colspan="6" class="no-results">Please select at least 2 rosters.</td></tr>';
+    statsEl.style.display = 'none';
     return;
   }
-  let html = '';
-  for(let i=0; i<crewMembers.length; i++){
-    const c = crewMembers[i];
-    const statusText = c.status === 'pending' ? '⏳ Pending upload...' :
-                       c.status === 'parsed' ? '✅ Parsed (' + (c.parsedDays ? Object.keys(c.parsedDays).length : 0) + ' days)' :
-                       '❌ Parse failed';
-    const statusClass = c.status === 'parsed' ? 'ok' : (c.status === 'error' ? 'err' : '');
-    html += `
-      <div class="crew-card">
-        <span class="name">${escapeHtml(c.name)}</span>
-        <span class="file-status ${statusClass}">${statusText}</span>
-        <button class="remove-btn" onclick="removeCrew(${i})">✕ Remove</button>
-      </div>
-    `;
-  }
-  container.innerHTML = html;
-}
 
-function escapeHtml(str){
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
+  // Build KUL presence intervals for each selected roster
+  const rosterIntervals = {};
+  selected.forEach(roster => {
+    const intervals = getKULIntervals(roster.days);
+    rosterIntervals[roster.name] = intervals;
+  });
 
-async function parseCrewRoster(file){
-  const name = file.name.toLowerCase();
-  let rows = [];
-  let pages = null;
+  // Find common dates
+  const commonDates = getCommonDates(rosterIntervals, fromDate, toDate);
   
-  try{
-    if(name.endsWith('.xlsx') || name.endsWith('.xls')){
-      const buf = await file.arrayBuffer();
-      rows = parseXLSXRows(buf);
-      const legs = rowsToLegs(rows);
-      return buildDaysForDating(legs);
-    } else if(name.endsWith('.pdf')){
-      const buf = await file.arrayBuffer();
-      pages = (await extractPdfWords(buf)).map(mergeDayHeaderTokens);
-      const allWords = [].concat(...pages);
-      const isCalendar = looksLikeCalendar(allWords);
-      const isTable = looksLikeTableReport(allWords);
-      let legs = [];
-      if(isCalendar && !isTable){
-        legs = parseCalendarPDF(pages);
+  // Calculate overlaps for each date
+  const overlaps = [];
+  commonDates.forEach(dateStr => {
+    const dayIntervals = {};
+    let hasAll = true;
+    selected.forEach(roster => {
+      const intervals = rosterIntervals[roster.name];
+      if(intervals[dateStr] && intervals[dateStr].length){
+        dayIntervals[roster.name] = intervals[dateStr];
       } else {
-        rows = parseTablePDFRows(pages);
-        legs = rowsToLegs(rows);
+        hasAll = false;
       }
-      return buildDaysForDating(legs);
-    } else {
-      throw new Error('Unsupported file type');
-    }
-  } catch(err){
-    console.error('Parse error for crew:', err);
-    throw err;
-  }
-}
-
-function buildDaysForDating(legs){
-  if(!legs.length) throw new Error('No records parsed');
-  
-  const dayMap = {};
-  for(const l of legs){
-    // For each leg, mark presence on depDate and arrDate
-    if(l.depDate){
-      const k = ymdKey(l.depDate);
-      if(!dayMap[k]) dayMap[k] = {date: new Date(l.depDate), key: k, intervals: []};
-      // Departure time - crew is in KUL until depTime on depDate if depStn is KUL
-      // They are at depStn at depTime
-      if(l.depStn === HOME && l.depTime){
-        // They are in KUL from start of day until depTime
-        dayMap[k].intervals.push({start: '00:00', end: l.depTime, location: HOME});
-      }
-    }
-    if(l.arrDate){
-      const k = ymdKey(l.arrDate);
-      if(!dayMap[k]) dayMap[k] = {date: new Date(l.arrDate), key: k, intervals: []};
-      // Arrival time - crew is in KUL from arrTime onwards if arrStn is KUL
-      if(l.arrStn === HOME && l.arrTime){
-        dayMap[k].intervals.push({start: l.arrTime, end: '23:59', location: HOME});
-      }
-    }
-    // If depStn and arrStn are both NOT KUL, they're away the whole day
-    // If it's a layover (LO), they're away
-    if(l.isGround && l.item === 'LO'){
-      const k = ymdKey(l.depDate || l.arrDate);
-      if(k && dayMap[k]){
-        // Remove any HOME intervals for this day - they're away on layover
-        dayMap[k].intervals = dayMap[k].intervals.filter(i => i.location !== HOME);
-        // They're away - no KUL interval
-      }
-    }
-    // Ground duties in KUL
-    if(l.isGround && l.depStn === HOME && l.depTime && l.arrTime){
-      const k = ymdKey(l.depDate || l.arrDate);
-      if(k){
-        if(!dayMap[k]) dayMap[k] = {date: new Date(l.depDate || l.arrDate), key: k, intervals: []};
-        dayMap[k].intervals.push({start: l.depTime, end: l.arrTime, location: HOME});
-      }
-    }
-    // For non-flight ground items with no times (D, DO, etc) - they're in KUL all day
-    if(l.isGround && !l.depTime && !l.arrTime && l.item){
-      const k = ymdKey(l.depDate || l.arrDate);
-      if(k){
-        if(!dayMap[k]) dayMap[k] = {date: new Date(l.depDate || l.arrDate), key: k, intervals: []};
-        // If it's a day off or similar, they're in KUL all day (unless it's a layover)
-        if(l.item !== 'LO' && l.item !== 'DO' && !l.item.startsWith('DO')){
-          // Only add if not already covered
-          if(dayMap[k].intervals.length === 0 || 
-              !dayMap[k].intervals.some(i => i.start === '00:00' && i.end === '23:59')){
-            dayMap[k].intervals.push({start: '00:00', end: '23:59', location: HOME});
-          }
-        }
-      }
-    }
-  }
-  
-  // Fill in days with no data - assume they're in KUL (default)
-  const keys = Object.keys(dayMap);
-  if(keys.length){
-    let minDate = null, maxDate = null;
-    for(const k of keys){
-      const d = dayMap[k].date;
-      if(!minDate || d < minDate) minDate = d;
-      if(!maxDate || d > maxDate) maxDate = d;
-    }
-    if(minDate && maxDate){
-      let cursor = new Date(minDate);
-      while(cursor <= maxDate){
-        const k = ymdKey(cursor);
-        if(!dayMap[k]){
-          dayMap[k] = {date: new Date(cursor), key: k, intervals: [{start: '00:00', end: '23:59', location: HOME}]};
-        }
-        cursor = addDays(cursor, 1);
-      }
-    }
-  }
-  
-  // Merge overlapping intervals per day
-  for(const k of Object.keys(dayMap)){
-    const day = dayMap[k];
-    if(day.intervals.length > 1){
-      // Sort by start time
-      day.intervals.sort((a,b) => a.start.localeCompare(b.start));
-      const merged = [];
-      let current = day.intervals[0];
-      for(let i=1; i<day.intervals.length; i++){
-        const next = day.intervals[i];
-        if(current.end >= next.start){
-          // Overlap or touch - merge
-          current.end = current.end > next.end ? current.end : next.end;
-        } else {
-          merged.push(current);
-          current = next;
-        }
-      }
-      merged.push(current);
-      day.intervals = merged;
-    }
-  }
-  
-  return dayMap;
-}
-
-async function calculateOverlap(){
-  if(crewMembers.length < 2){
-    document.getElementById('datingResults').innerHTML = '<div class="no-results">Please add at least 2 crew members.</div>';
-    return;
-  }
-  
-  const timezone = document.getElementById('timezoneSelect').value;
-  
-  // Parse all crew rosters
-  let allParsed = true;
-  for(let i=0; i<crewMembers.length; i++){
-    const c = crewMembers[i];
-    if(c.status === 'parsed') continue;
-    try{
-      c.parsedDays = await parseCrewRoster(c.file);
-      c.status = 'parsed';
-    } catch(err){
-      c.status = 'error';
-      c.error = err.message;
-      allParsed = false;
-    }
-  }
-  renderCrewList();
-  
-  if(!allParsed){
-    document.getElementById('datingResults').innerHTML = '<div class="no-results" style="color:var(--err)">One or more crew files failed to parse. Check the roster format.</div>';
-    return;
-  }
-  
-  // Find common days across all crew
-  const allDayKeys = new Set();
-  for(const c of crewMembers){
-    if(c.parsedDays){
-      Object.keys(c.parsedDays).forEach(k => allDayKeys.add(k));
-    }
-  }
-  
-  const results = [];
-  const sortedKeys = Array.from(allDayKeys).sort();
-  
-  for(const key of sortedKeys){
-    // Check if all crew have data for this day
-    const allHave = crewMembers.every(c => c.parsedDays && c.parsedDays[key]);
-    if(!allHave) continue;
+    });
+    if(!hasAll) return;
     
-    // Get intervals for each crew member for this day
-    const crewIntervals = crewMembers.map(c => {
-      const day = c.parsedDays[key];
-      // Filter to only intervals where they're in KUL
-      const kulIntervals = day.intervals.filter(i => i.location === HOME);
-      if(kulIntervals.length === 0){
-        // If no KUL intervals, they're away all day
-        return [];
+    // Find intersection of all intervals for this date
+    const intersection = intersectIntervals(dayIntervals);
+    if(intersection){
+      const dateObj = new Date(dateStr + 'T00:00:00');
+      overlaps.push({
+        date: dateStr,
+        day: DOW[dateObj.getDay()],
+        from: minutesToTime(intersection.start),
+        to: minutesToTime(intersection.end),
+        duration: intersection.end - intersection.start,
+        crew: Object.keys(dayIntervals).join(' + ')
+      });
+    }
+  });
+
+  // Render results
+  if(!overlaps.length){
+    overlapBody.innerHTML = '<tr><td colspan="6" class="no-results">No overlaps found for the selected date range and rosters.</td></tr>';
+    statsEl.style.display = 'none';
+    return;
+  }
+
+  // Sort by date
+  overlaps.sort((a,b) => a.date.localeCompare(b.date));
+  
+  let totalDuration = 0;
+  overlapBody.innerHTML = '';
+  overlaps.forEach(ov => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${ov.date}</td>
+      <td>${ov.day}</td>
+      <td>${ov.from}</td>
+      <td>${ov.to}</td>
+      <td class="duration">${minutesToDuration(ov.duration)}</td>
+      <td style="font-size:10px;color:var(--dim)">${ov.crew}</td>
+    `;
+    overlapBody.appendChild(tr);
+    totalDuration += ov.duration;
+  });
+
+  statsEl.style.display = 'block';
+  statsEl.innerHTML = `
+    <strong>${overlaps.length}</strong> overlap day(s) found · 
+    <strong>${selected.map(r => r.name).join(' + ')}</strong> · 
+    Total together: <strong>${minutesToDuration(totalDuration)}</strong> · 
+    Time zone: <strong>${tz}</strong>
+  `;
+}
+
+function getKULIntervals(days){
+  const intervals = {};
+  days.forEach(day => {
+    const dateKey = day.key;
+    if(!intervals[dateKey]) intervals[dateKey] = [];
+    
+    // Start with full day in KUL (00:00 - 23:59)
+    let kulStart = 0;
+    let kulEnd = 1440; // 24 hours in minutes
+    
+    // Process each row to find when they're NOT in KUL
+    day.rows.forEach(row => {
+      // Check if this is a flight departure from KUL
+      if(row.depStn === HOME && row.depTime && row.depStn && row.item && !isOffCode(row.item) && row.item !== 'LO'){
+        const depMin = timeToMinutes(row.depTime);
+        if(!isNaN(depMin) && depMin < kulEnd) kulEnd = depMin;
       }
-      return kulIntervals;
+      
+      // Check if this is a flight arrival to KUL
+      if(row.arrStn === HOME && row.arrTime && row.item && !isOffCode(row.item) && row.item !== 'LO'){
+        const arrMin = timeToMinutes(row.arrTime);
+        if(!isNaN(arrMin) && arrMin > kulStart) kulStart = arrMin;
+      }
+      
+      // If they're on a layover (LO), they're away
+      if(row.item === 'LO'){
+        kulStart = 0;
+        kulEnd = 0;
+      }
     });
     
-    // Find overlap across all crew
-    // Start with first crew's intervals
-    let overlaps = crewIntervals[0].map(i => ({start: i.start, end: i.end}));
-    
-    for(let ci=1; ci<crewIntervals.length; ci++){
-      const next = crewIntervals[ci];
-      const newOverlaps = [];
-      for(const o of overlaps){
-        for(const n of next){
-          // Find intersection of o and n
-          const start = o.start > n.start ? o.start : n.start;
-          const end = o.end < n.end ? o.end : n.end;
-          if(start < end){
-            newOverlaps.push({start, end});
-          }
-        }
-      }
-      overlaps = newOverlaps;
-      if(overlaps.length === 0) break;
+    // Only add if there's a valid interval (start < end)
+    if(kulStart < kulEnd){
+      intervals[dateKey].push({start: kulStart, end: kulEnd});
     }
-    
-    if(overlaps.length > 0){
-      for(const o of overlaps){
-        const startMin = hhmmToMin(o.start);
-        const endMin = hhmmToMin(o.end);
-        const duration = endMin - startMin;
-        if(duration > 0){
-          results.push({
-            date: key,
-            day: DOW[new Date(key).getDay()],
-            from: o.start,
-            to: o.end,
-            duration: duration,
-            durationStr: Math.floor(duration/60) + 'h ' + (duration%60) + 'm'
-          });
-        }
-      }
-    }
-  }
-  
-  // Render results
-  const container = document.getElementById('datingResults');
-  if(results.length === 0){
-    container.innerHTML = '<div class="no-results">No overlapping days in KUL found for these crew members.</div>';
-    return;
-  }
-  
-  // Sort by date
-  results.sort((a,b) => a.date.localeCompare(b.date));
-  
-  let html = `
-    <div class="result-summary">
-      Found <b>${results.length}</b> overlapping period${results.length > 1 ? 's' : ''} across <b>${crewMembers.length}</b> crew members.
-      ${timezone === 'UTC' ? '⚠️ Times are in UTC' : 'Times are in SLT (Station Local Time)'}
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Day</th>
-          <th>From</th>
-          <th>To</th>
-          <th>Duration</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-  
-  for(const r of results){
-    const dateParts = r.date.split('-');
-    const displayDate = dateParts[2] + '-' + ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][parseInt(dateParts[1])-1] + '-' + dateParts[0];
-    html += `
-      <tr>
-        <td>${displayDate}</td>
-        <td>${r.day}</td>
-        <td>${r.from}</td>
-        <td>${r.to}</td>
-        <td class="duration">${r.durationStr}</td>
-      </tr>
-    `;
-  }
-  
-  // Add total
-  const totalMinutes = results.reduce((sum, r) => sum + r.duration, 0);
-  const totalHours = Math.floor(totalMinutes / 60);
-  const totalMins = totalMinutes % 60;
-  html += `
-      <tr style="border-top:2px solid var(--accent)">
-        <td colspan="4" style="text-align:right;font-weight:700;color:var(--accent)">TOTAL:</td>
-        <td class="duration">${totalHours}h ${totalMins}m</td>
-      </tr>
-    </tbody>
-    </table>
-  `;
-  
-  container.innerHTML = html;
+  });
+  return intervals;
 }
+
+function getCommonDates(rosterIntervals, fromDate, toDate){
+  const allDates = new Set();
+  const rosterNames = Object.keys(rosterIntervals);
+  
+  // Get all dates from first roster
+  if(rosterNames.length){
+    const firstRoster = rosterIntervals[rosterNames[0]];
+    Object.keys(firstRoster).forEach(d => allDates.add(d));
+  }
+  
+  // Intersect with other rosters
+  rosterNames.forEach(name => {
+    const dates = new Set(Object.keys(rosterIntervals[name]));
+    for(const d of allDates){
+      if(!dates.has(d)) allDates.delete(d);
+    }
+  });
+  
+  // Filter by date range
+  const result = [];
+  const from = fromDate || '1970-01-01';
+  const to = toDate || '2099-12-31';
+  allDates.forEach(d => {
+    if(d >= from && d <= to) result.push(d);
+  });
+  return result.sort();
+}
+
+function intersectIntervals(dayIntervals){
+  // Get all intervals from all crew
+  const allIntervals = [];
+  Object.keys(dayIntervals).forEach(crew => {
+    dayIntervals[crew].forEach(iv => {
+      allIntervals.push({start: iv.start, end: iv.end, crew});
+    });
+  });
+  
+  if(!allIntervals.length) return null;
+  
+  // Sort by start time
+  allIntervals.sort((a,b) => a.start - b.start);
+  
+  // Find the intersection (overlap of all intervals)
+  // Start with the first interval
+  let intersection = {start: allIntervals[0].start, end: allIntervals[0].end};
+  
+  for(let i = 1; i < allIntervals.length; i++){
+    const current = allIntervals[i];
+    // Intersection of two intervals
+    const newStart = Math.max(intersection.start, current.start);
+    const newEnd = Math.min(intersection.end, current.end);
+    if(newStart >= newEnd) return null; // No overlap
+    intersection = {start: newStart, end: newEnd};
+  }
+  
+  return intersection;
+}
+
+function copyOverlapTSV(){
+  const rows = [['Date','Day','From (KUL)','To (KUL)','Duration','Crew']];
+  document.querySelectorAll('#overlapBody tr').forEach(tr => {
+    if(tr.classList.contains('no-results')) return;
+    rows.push(Array.from(tr.children).map(td => td.textContent));
+  });
+  const tsv = rows.map(r => r.join('\t')).join('\n');
+  navigator.clipboard.writeText(tsv).then(() => {
+    const stats = document.getElementById('overlapStats');
+    if(stats) stats.innerHTML += ' · ✅ Copied!';
+  });
+}
+
+function downloadOverlapCSV(){
+  const rows = [['Date','Day','From (KUL)','To (KUL)','Duration','Crew']];
+  document.querySelectorAll('#overlapBody tr').forEach(tr => {
+    if(tr.classList.contains('no-results')) return;
+    rows.push(Array.from(tr.children).map(td => '"' + td.textContent.replace(/"/g,'""') + '"'));
+  });
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'dating-overlap-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+// Click outside modal to close
+document.getElementById('datingModal').addEventListener('click', function(e){
+  if(e.target === this) closeDating();
+});
 
 loadLegend();
 </script>
