@@ -1272,7 +1272,7 @@ function exportDebug(){
   a.href = URL.createObjectURL(blob);
   a.download = 'roster-debug-'+(LAST_FILE_NAME||'file').replace(/\.[^.]+$/,'')+'.json';
   a.click();
-  log('Debug data exported — attach this file if something looks wrong.', 'ok');
+  log('Debug data exported — attach this file and tell alif or fahrin if something looks wrong.', 'ok');
 }
 
 loadLegend();
