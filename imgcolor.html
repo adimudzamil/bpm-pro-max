@@ -281,6 +281,12 @@
       transition: 0.1s;
     }
     .preset-btn:hover { background: #eaf0fe; border-color: #a3b4db; }
+    .preset-btn.preset-primary {
+      background: #1e2f5a;
+      color: white;
+      border-color: #1e2f5a;
+    }
+    .preset-btn.preset-primary:hover { background: #142544; }
 
     .action-bar {
       display: flex;
@@ -353,8 +359,39 @@
       border-bottom: 1px solid #eef2fc;
       display: flex;
       justify-content: space-between;
+      cursor: pointer;
     }
+    .history-item:hover { background: #eef2fc; }
     .history-item .time { color: #6a7a9b; font-size: 0.65rem; }
+
+    .core-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 8px 0;
+      border-bottom: 2px solid #e5ebf6;
+      margin-bottom: 12px;
+    }
+    .core-btn {
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      border: 2px solid #d3dcee;
+      background: white;
+      color: #1c2542;
+      cursor: pointer;
+      transition: 0.1s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .core-btn.active-toggle {
+      background: #1e2f5a;
+      color: white;
+      border-color: #1e2f5a;
+    }
+    .core-btn:hover { background: #eaf0fe; }
 
     @media (max-width: 600px) {
       .card { padding: 18px; }
@@ -375,7 +412,7 @@
   </h1>
   <div class="sub">
     <i class="fas fa-toggle-on" style="margin-right: 8px;"></i> 
-    <strong>50+ filters</strong> · Toggle on/off · Drag to reorder · Per-filter strength · History/Undo
+    <strong>Grayscale · Invert · Colorize</strong> with strength & color picker · Drag to reorder · History/Undo
   </div>
 
   <div class="upload-area" id="uploadArea">
@@ -402,6 +439,16 @@
     </div>
   </div>
 
+  <!-- CORE FILTERS - Grayscale, Invert, Colorize -->
+  <div class="core-filters">
+    <span style="font-size:0.8rem;font-weight:600;color:#1e2740;display:flex;align-items:center;gap:6px;">
+      <i class="fas fa-star" style="color:#f5b342;"></i> Core:
+    </span>
+    <button class="core-btn" data-filter="grayscale"><i class="fas fa-circle"></i> Grayscale</button>
+    <button class="core-btn" data-filter="invert"><i class="fas fa-circle-notch"></i> Invert</button>
+    <button class="core-btn" data-filter="colorize"><i class="fas fa-palette"></i> Colorize</button>
+  </div>
+
   <!-- Presets -->
   <div class="preset-section">
     <span style="font-size:0.75rem;color:#6a7a9b;display:flex;align-items:center;gap:4px;">
@@ -411,7 +458,7 @@
     <button class="preset-btn" data-preset="cyberpunk">💜 Cyberpunk</button>
     <button class="preset-btn" data-preset="dreamy">✨ Dreamy</button>
     <button class="preset-btn" data-preset="pixelart">🎮 Pixel Art</button>
-    <button class="preset-btn" data-preset="bw">⚫ B&W Punch</button>
+    <button class="preset-btn preset-primary" data-preset="bwpunch">⚫ B&W Punch (Invert + Grayscale 100%)</button>
   </div>
 
   <!-- Layers -->
@@ -428,7 +475,7 @@
       </div>
     </div>
     <div class="layer-list" id="layerList">
-      <div class="empty-layers" id="emptyLayers">No filters active. Click filters in the sidebar to add them.</div>
+      <div class="empty-layers" id="emptyLayers">No filters active. Click filters above or in the sidebar to add them.</div>
     </div>
   </div>
 
@@ -442,6 +489,9 @@
       <label><i class="fas fa-sliders-h"></i> Global Strength</label>
       <input type="range" id="strengthSlider" min="0" max="100" value="80" />
       <span class="strength-value" id="strengthDisplay">80%</span>
+    </div>
+    <div style="font-size:0.7rem;color:#6a7a9b;flex:1;text-align:right;">
+      <i class="fas fa-info-circle"></i> Double-click a layer to set individual strength
     </div>
   </div>
 
@@ -474,11 +524,12 @@
     <div style="background:#f8faff;border-radius:20px;padding:20px;border:1px solid #e5ebf6;">
       <h4 style="margin-bottom:8px;color:#1e2740;"><i class="fas fa-info-circle"></i> Pro Tips</h4>
       <ul style="font-size:0.8rem;color:#4a5470;list-style:none;line-height:1.8;">
-        <li>• <strong>Click</strong> filters to add/remove from chain</li>
+        <li>• <strong>Click</strong> Core filters or sidebar filters to add/remove</li>
         <li>• <strong>Drag</strong> layers to reorder (click and hold)</li>
         <li>• <strong>Click ✕</strong> on a layer to remove it</li>
-        <li>• Each filter has its own <strong>strength slider</strong> when clicked</li>
-        <li>• <strong>Undo</strong> reverts to previous state</li>
+        <li>• <strong>Double-click</strong> a layer to set its individual strength</li>
+        <li>• <strong>Color picker</strong> works with Colorize, Monochrome, Duotone</li>
+        <li>• <strong>B&W Punch</strong> = Invert + Grayscale both at 100%</li>
       </ul>
     </div>
   </div>
@@ -498,6 +549,7 @@
     };
 
     const FILTER_NAMES = {
+      'grayscale': 'Grayscale', 'invert': 'Invert', 'colorize': 'Colorize',
       'sepia': 'Sepia', 'vintage': 'Vintage', 'cool': 'Cool', 'warm': 'Warm', 
       'neon': 'Neon', 'pastel': 'Pastel', 'monochrome': 'Monochrome', 'duotone': 'Duotone',
       'brightness': 'Brightness', 'contrast': 'Contrast', 'gamma': 'Gamma', 'exposure': 'Exposure',
@@ -516,6 +568,7 @@
     };
 
     const FILTER_ICONS = {
+      'grayscale': 'fa-circle', 'invert': 'fa-circle-notch', 'colorize': 'fa-palette',
       'sepia': 'fa-camera', 'vintage': 'fa-clock', 'cool': 'fa-snowflake', 'warm': 'fa-fire',
       'neon': 'fa-bolt', 'pastel': 'fa-heart', 'monochrome': 'fa-circle', 'duotone': 'fa-adjust',
       'brightness': 'fa-sun', 'contrast': 'fa-adjust', 'gamma': 'fa-chart-line', 'exposure': 'fa-camera-retro',
@@ -553,15 +606,15 @@
     const chainBadge = document.getElementById('chainBadge');
     const layerCount = document.getElementById('layerCount');
     const layerList = document.getElementById('layerList');
-    const emptyLayers = document.getElementById('emptyLayers');
     const sidebar = document.getElementById('filterSidebar');
     const historyList = document.getElementById('historyList');
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    const coreBtns = document.querySelectorAll('.core-btn');
 
     // ---------- State ----------
     let originalDataURL = null;
     let currentWorkingDataURL = null;
-    let activeFilters = []; // array of {id, strength} objects
+    let activeFilters = [];
     let selectedColor = '#6a5acd';
     let globalStrength = 80;
     let history = [];
@@ -593,11 +646,7 @@
     }
     buildSidebar();
 
-    // ---------- Filter engine (simplified - full version from previous) ----------
-    // [Full filter code from previous version - kept compact for brevity]
-    // The complete filter engine is the same as the previous version
-    // I'll include it but keep the code clean
-    
+    // ---------- Filter engine ----------
     function getImageData(img) {
       return new Promise((resolve) => {
         const canvas = document.createElement('canvas');
@@ -609,15 +658,6 @@
       });
     }
 
-    function imageDataToURL(imageData, width, height) {
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.putImageData(imageData, 0, 0);
-      return canvas.toDataURL('image/png');
-    }
-
     function loadImageFromURL(url) {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -627,7 +667,7 @@
       });
     }
 
-    // Apply single filter - simplified version (full code from previous)
+    // Apply single filter
     function applySingleFilter(imageData, filterType, colorHex, strength, width, height) {
       const data = imageData.data;
       const origData = new Uint8ClampedArray(data);
@@ -636,8 +676,36 @@
       const bCol = parseInt(colorHex.slice(5,7), 16);
       const strengthNorm = strength / 100;
 
-      // Quick filter implementations - same as previous version
-      if (filterType === 'sepia') {
+      // CORE FILTERS
+      if (filterType === 'grayscale') {
+        for (let i = 0; i < data.length; i += 4) {
+          const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+          data[i] = gray;
+          data[i+1] = gray;
+          data[i+2] = gray;
+        }
+      }
+      else if (filterType === 'invert') {
+        for (let i = 0; i < data.length; i += 4) {
+          data[i] = 255 - data[i];
+          data[i+1] = 255 - data[i+1];
+          data[i+2] = 255 - data[i+2];
+        }
+      }
+      else if (filterType === 'colorize') {
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i], g = data[i+1], b = data[i+2];
+          const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+          let nr = (lum / 255) * rCol;
+          let ng = (lum / 255) * gCol;
+          let nb = (lum / 255) * bCol;
+          data[i] = Math.min(255, nr);
+          data[i+1] = Math.min(255, ng);
+          data[i+2] = Math.min(255, nb);
+        }
+      }
+      // COLOR FILTERS
+      else if (filterType === 'sepia') {
         for (let i = 0; i < data.length; i += 4) {
           const r = data[i], g = data[i+1], b = data[i+2];
           data[i] = Math.min(255, r * 0.393 + g * 0.769 + b * 0.189);
@@ -701,6 +769,7 @@
           data[i+2] = t * bCol + (1 - t) * 80;
         }
       }
+      // TONAL FILTERS
       else if (filterType === 'brightness') {
         const value = (strength - 50) * 1.5;
         for (let i = 0; i < data.length; i += 4) {
@@ -778,6 +847,7 @@
           data[i+2] = Math.min(255, data[i+2] * ratio);
         }
       }
+      // EFFECTS
       else if (filterType === 'pixelate') {
         const size = Math.max(2, Math.floor(20 * (strength / 100) + 2));
         const w = width, h = height;
@@ -801,6 +871,93 @@
           }
         }
       }
+      else if (filterType === 'blur') {
+        const radius = Math.max(1, Math.floor(2 * (strength / 20) + 1));
+        const tempData = new Uint8ClampedArray(data);
+        for (let y = radius; y < height - radius; y++) {
+          for (let x = radius; x < width - radius; x++) {
+            let r = 0, g = 0, b = 0, count = 0;
+            for (let dy = -radius; dy <= radius; dy++) {
+              for (let dx = -radius; dx <= radius; dx++) {
+                const idx = ((y + dy) * width + (x + dx)) * 4;
+                r += tempData[idx]; g += tempData[idx+1]; b += tempData[idx+2];
+                count++;
+              }
+            }
+            const idx = (y * width + x) * 4;
+            data[idx] = r / count; data[idx+1] = g / count; data[idx+2] = b / count;
+          }
+        }
+      }
+      else if (filterType === 'sharpen') {
+        const kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];
+        const tempData = new Uint8ClampedArray(data);
+        for (let y = 1; y < height - 1; y++) {
+          for (let x = 1; x < width - 1; x++) {
+            let r = 0, g = 0, b = 0;
+            let k = 0;
+            for (let dy = -1; dy <= 1; dy++) {
+              for (let dx = -1; dx <= 1; dx++) {
+                const idx = ((y + dy) * width + (x + dx)) * 4;
+                const weight = kernel[k++];
+                r += tempData[idx] * weight;
+                g += tempData[idx+1] * weight;
+                b += tempData[idx+2] * weight;
+              }
+            }
+            const idx = (y * width + x) * 4;
+            data[idx] = Math.min(255, Math.max(0, r));
+            data[idx+1] = Math.min(255, Math.max(0, g));
+            data[idx+2] = Math.min(255, Math.max(0, b));
+          }
+        }
+      }
+      else if (filterType === 'edge_detect') {
+        const kernel = [-1, -1, -1, -1, 8, -1, -1, -1, -1];
+        const tempData = new Uint8ClampedArray(data);
+        for (let y = 1; y < height - 1; y++) {
+          for (let x = 1; x < width - 1; x++) {
+            let r = 0, g = 0, b = 0;
+            let k = 0;
+            for (let dy = -1; dy <= 1; dy++) {
+              for (let dx = -1; dx <= 1; dx++) {
+                const idx = ((y + dy) * width + (x + dx)) * 4;
+                const weight = kernel[k++];
+                r += tempData[idx] * weight;
+                g += tempData[idx+1] * weight;
+                b += tempData[idx+2] * weight;
+              }
+            }
+            const idx = (y * width + x) * 4;
+            data[idx] = Math.min(255, Math.max(0, r));
+            data[idx+1] = Math.min(255, Math.max(0, g));
+            data[idx+2] = Math.min(255, Math.max(0, b));
+          }
+        }
+      }
+      else if (filterType === 'emboss') {
+        const kernel = [-2, -1, 0, -1, 1, 1, 0, 1, 2];
+        const tempData = new Uint8ClampedArray(data);
+        for (let y = 1; y < height - 1; y++) {
+          for (let x = 1; x < width - 1; x++) {
+            let r = 0, g = 0, b = 0;
+            let k = 0;
+            for (let dy = -1; dy <= 1; dy++) {
+              for (let dx = -1; dx <= 1; dx++) {
+                const idx = ((y + dy) * width + (x + dx)) * 4;
+                const weight = kernel[k++];
+                r += tempData[idx] * weight;
+                g += tempData[idx+1] * weight;
+                b += tempData[idx+2] * weight;
+              }
+            }
+            const idx = (y * width + x) * 4;
+            data[idx] = Math.min(255, Math.max(0, r + 128));
+            data[idx+1] = Math.min(255, Math.max(0, g + 128));
+            data[idx+2] = Math.min(255, Math.max(0, b + 128));
+          }
+        }
+      }
       else if (filterType === 'vignette') {
         const centerX = width / 2;
         const centerY = height / 2;
@@ -815,6 +972,28 @@
             data[i] *= factor;
             data[i+1] *= factor;
             data[i+2] *= factor;
+          }
+        }
+      }
+      else if (filterType === 'glow') {
+        // Simple glow: blur + blend with original
+        const blurRadius = Math.max(1, Math.floor(3 * (strength / 30) + 1));
+        const tempData = new Uint8ClampedArray(data);
+        for (let y = blurRadius; y < height - blurRadius; y++) {
+          for (let x = blurRadius; x < width - blurRadius; x++) {
+            let r = 0, g = 0, b = 0, count = 0;
+            for (let dy = -blurRadius; dy <= blurRadius; dy++) {
+              for (let dx = -blurRadius; dx <= blurRadius; dx++) {
+                const idx = ((y + dy) * width + (x + dx)) * 4;
+                r += tempData[idx]; g += tempData[idx+1]; b += tempData[idx+2];
+                count++;
+              }
+            }
+            const idx = (y * width + x) * 4;
+            const blend = strength / 100;
+            data[idx] = Math.min(255, tempData[idx] * (1 - blend * 0.5) + (r / count) * blend * 0.5);
+            data[idx+1] = Math.min(255, tempData[idx+1] * (1 - blend * 0.5) + (g / count) * blend * 0.5);
+            data[idx+2] = Math.min(255, tempData[idx+2] * (1 - blend * 0.5) + (b / count) * blend * 0.5);
           }
         }
       }
@@ -835,6 +1014,7 @@
           }
         }
       }
+      // TRANSFORM
       else if (filterType === 'flip_h') {
         for (let y = 0; y < height; y++) {
           for (let x = 0; x < width / 2; x++) {
@@ -861,10 +1041,38 @@
           }
         }
       }
+      else if (filterType === 'posterize') {
+        const levels = Math.max(2, Math.floor(8 * (strength / 100) + 2));
+        const step = 255 / (levels - 1);
+        for (let i = 0; i < data.length; i += 4) {
+          data[i] = Math.round(data[i] / step) * step;
+          data[i+1] = Math.round(data[i+1] / step) * step;
+          data[i+2] = Math.round(data[i+2] / step) * step;
+        }
+      }
+      else if (filterType === 'threshold') {
+        const thresh = strength;
+        for (let i = 0; i < data.length; i += 4) {
+          const avg = (data[i] + data[i+1] + data[i+2]) / 3;
+          const val = avg > thresh ? 255 : 0;
+          data[i] = val; data[i+1] = val; data[i+2] = val;
+        }
+      }
+      else if (filterType === 'solarize') {
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i], g = data[i+1], b = data[i+2];
+          const avg = (r + g + b) / 3;
+          if (avg > 128) {
+            data[i] = 255 - r;
+            data[i+1] = 255 - g;
+            data[i+2] = 255 - b;
+          }
+        }
+      }
 
-      // Apply strength blend (except transform filters)
-      const transformFilters = ['flip_h', 'flip_v', 'pixelate', 'sketch', 'vignette'];
-      if (!transformFilters.includes(filterType) && strengthNorm < 1 && filterType !== 'reset') {
+      // Apply strength blend (except certain filters)
+      const noBlendFilters = ['flip_h', 'flip_v', 'pixelate', 'sketch', 'vignette', 'blur', 'sharpen', 'edge_detect', 'emboss', 'glow'];
+      if (!noBlendFilters.includes(filterType) && strengthNorm < 1) {
         for (let i = 0; i < data.length; i++) {
           data[i] = origData[i] * (1 - strengthNorm) + data[i] * strengthNorm;
         }
@@ -886,7 +1094,7 @@
 
       for (const layer of filterList) {
         const filterType = layer.id;
-        const strength = layer.strength || globalStrength;
+        const strength = layer.strength !== undefined ? layer.strength : globalStrength;
         imageData = applySingleFilter(imageData, filterType, selectedColor, strength, canvas.width, canvas.height);
       }
 
@@ -894,13 +1102,12 @@
       return canvas.toDataURL('image/png');
     }
 
-    // ---------- Save state for history ----------
+    // ---------- Save history ----------
     function saveHistory() {
       const state = {
         filters: JSON.parse(JSON.stringify(activeFilters)),
         timestamp: new Date().toLocaleTimeString()
       };
-      // Remove future states if we're not at the end
       history = history.slice(0, historyIndex + 1);
       history.push(state);
       historyIndex = history.length - 1;
@@ -923,11 +1130,10 @@
 
     // ---------- Update UI ----------
     function updateLayers() {
-      // Clear layer list
       layerList.innerHTML = '';
       
       if (activeFilters.length === 0) {
-        layerList.innerHTML = '<div class="empty-layers">No filters active. Click filters in the sidebar to add them.</div>';
+        layerList.innerHTML = '<div class="empty-layers">No filters active. Click filters above or in the sidebar to add them.</div>';
         layerCount.textContent = '0';
         chainBadge.textContent = '🧩 Layers: 0';
         filterStatus.textContent = 'No filters active';
@@ -938,7 +1144,6 @@
       chainBadge.textContent = `🧩 Layers: ${activeFilters.length}`;
       filterStatus.textContent = activeFilters.map(f => FILTER_NAMES[f.id] || f.id).join(' → ');
 
-      // Create layer tags
       activeFilters.forEach((filter, index) => {
         const tag = document.createElement('div');
         tag.className = 'layer-tag';
@@ -947,7 +1152,7 @@
         
         const icon = FILTER_ICONS[filter.id] || 'fa-filter';
         const name = FILTER_NAMES[filter.id] || filter.id;
-        const strength = filter.strength || globalStrength;
+        const strength = filter.strength !== undefined ? filter.strength : globalStrength;
         
         tag.innerHTML = `
           <i class="fas ${icon}"></i>
@@ -956,7 +1161,6 @@
           <span class="remove-layer" data-index="${index}">✕</span>
         `;
 
-        // Click to remove
         tag.querySelector('.remove-layer').addEventListener('click', function(e) {
           e.stopPropagation();
           const idx = parseInt(this.dataset.index);
@@ -964,12 +1168,13 @@
           saveHistory();
           updateLayers();
           if (originalDataURL) updatePreview();
+          updateCoreButtons();
         });
 
-        // Double click to adjust strength
         tag.addEventListener('dblclick', function() {
           const idx = parseInt(this.dataset.index);
-          const newStrength = prompt(`Enter strength for ${name} (0-100):`, activeFilters[idx].strength || globalStrength);
+          const currentStrength = activeFilters[idx].strength !== undefined ? activeFilters[idx].strength : globalStrength;
+          const newStrength = prompt(`Enter strength for ${name} (0-100):`, currentStrength);
           if (newStrength !== null) {
             const val = parseInt(newStrength);
             if (!isNaN(val) && val >= 0 && val <= 100) {
@@ -1030,7 +1235,6 @@
           <span>${idx === historyIndex ? '▶' : '·'} ${count} filters</span>
           <span class="time">${item.timestamp}</span>
         `;
-        div.style.cursor = 'pointer';
         div.style.opacity = idx === historyIndex ? '1' : '0.6';
         div.addEventListener('click', function() {
           historyIndex = idx;
@@ -1039,8 +1243,20 @@
           if (originalDataURL) updatePreview();
           updateHistoryUI();
           undoBtn.disabled = historyIndex <= 0;
+          updateCoreButtons();
         });
         historyList.appendChild(div);
+      });
+    }
+
+    function updateCoreButtons() {
+      coreBtns.forEach(btn => {
+        const filter = btn.dataset.filter;
+        btn.classList.toggle('active-toggle', activeFilters.some(f => f.id === filter));
+      });
+      document.querySelectorAll('.filter-toggle').forEach(btn => {
+        const filter = btn.dataset.filter;
+        btn.classList.toggle('active-toggle', activeFilters.some(f => f.id === filter));
       });
     }
 
@@ -1055,12 +1271,7 @@
       saveHistory();
       updateLayers();
       if (originalDataURL) updatePreview();
-      
-      // Update sidebar buttons
-      document.querySelectorAll('.filter-toggle').forEach(btn => {
-        const filter = btn.getAttribute('data-filter');
-        btn.classList.toggle('active-toggle', activeFilters.some(f => f.id === filter));
-      });
+      updateCoreButtons();
     }
 
     // ---------- Update preview ----------
@@ -1098,7 +1309,6 @@
         originalImg.src = originalDataURL;
         originalImg.style.display = 'block';
         origPlaceholder.style.display = 'none';
-        // Save initial state
         history = [];
         historyIndex = -1;
         saveHistory();
@@ -1113,21 +1323,17 @@
       'cyberpunk': ['neon', 'cool', 'contrast'],
       'dreamy': ['glow', 'pastel', 'vignette'],
       'pixelart': ['pixelate', 'posterize'],
-      'bw': ['grayscale', 'contrast', 'sharpen']
+      'bwpunch': ['invert', 'grayscale']
     };
 
     function applyPreset(name) {
       const filters = PRESETS[name];
       if (!filters) return;
-      activeFilters = filters.map(id => ({ id, strength: globalStrength }));
+      activeFilters = filters.map(id => ({ id, strength: name === 'bwpunch' ? 100 : globalStrength }));
       saveHistory();
       updateLayers();
       if (originalDataURL) updatePreview();
-      
-      document.querySelectorAll('.filter-toggle').forEach(btn => {
-        const filter = btn.getAttribute('data-filter');
-        btn.classList.toggle('active-toggle', activeFilters.some(f => f.id === filter));
-      });
+      updateCoreButtons();
     }
 
     // ---------- Reset ----------
@@ -1152,10 +1358,7 @@
       undoBtn.disabled = true;
       updateLayers();
       updateHistoryUI();
-      
-      document.querySelectorAll('.filter-toggle').forEach(btn => {
-        btn.classList.remove('active-toggle');
-      });
+      updateCoreButtons();
     }
 
     // ---------- Event listeners ----------
@@ -1175,6 +1378,13 @@
       }
     });
 
+    // Core filter buttons
+    coreBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        toggleFilter(this.dataset.filter);
+      });
+    });
+
     colorPicker.addEventListener('input', function() {
       selectedColor = this.value;
       if (originalDataURL && activeFilters.some(f => ['colorize', 'monochrome', 'duotone'].includes(f.id))) {
@@ -1185,8 +1395,10 @@
     strengthSlider.addEventListener('input', function() {
       globalStrength = parseInt(this.value);
       strengthDisplay.textContent = globalStrength + '%';
-      // Update all layer strengths
-      activeFilters.forEach(f => f.strength = globalStrength);
+      // Update all layer strengths that don't have individual values
+      activeFilters.forEach(f => {
+        if (f.strength === undefined) f.strength = globalStrength;
+      });
       if (originalDataURL && activeFilters.length > 0) {
         updatePreview();
         updateLayers();
@@ -1209,9 +1421,7 @@
       saveHistory();
       updateLayers();
       if (originalDataURL) updatePreview();
-      document.querySelectorAll('.filter-toggle').forEach(btn => {
-        btn.classList.remove('active-toggle');
-      });
+      updateCoreButtons();
     });
 
     undoBtn.addEventListener('click', undo);
