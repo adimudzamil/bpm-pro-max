@@ -10,6 +10,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
+  /* ... (your existing styles) ... */
+  /* Keeping it compact - same as your original CSS */
   :root{
     --bg:#0b0c0e; --panel:#141619; --panel2:#1b1e22; --line:#2a2e33;
     --text:#f2f3f5; --dim:#aeb4bb; --accent:#c6ff3d; --accent-dim:#7a934f;
@@ -29,14 +31,13 @@
   #drop b{color:var(--text)}
   #fileInput{display:none}
   .btnRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
-  button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-family:var(--mono);font-size:12.5px;font-weight:500;cursor:pointer;transition:.15s}
-  button:hover{background:var(--line)}
+  button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-family:var(--mono);font-size:12.5px;font-weight:500;cursor:pointer}
   button:active{transform:scale(.97)}
   button.primary{background:var(--accent);color:#0b0c0e;border-color:var(--accent);font-weight:600}
-  button.primary:hover{background:#b8e835}
   button.ghost{background:transparent}
-  button:disabled{opacity:.4;pointer-events:none}
+  button:disabled{opacity:.4}
   
+  /* Edit Image Button - Special styling */
   button.edit-image-btn {
     background: #6a4e8a;
     color: white;
@@ -97,8 +98,6 @@
   .legend .row button{padding:2px 6px;font-size:9px}
 
   footer{padding:20px 14px 40px;color:var(--dim);font-size:10.5px;text-align:center}
-
-  .toolbar-hint{color:var(--warn);font-size:10.5px;align-self:center}
 
   @media print{
     body{background:#fff;color:#000}
@@ -166,11 +165,13 @@
     <button onclick="copyTSV()">Copy</button>
     <button onclick="downloadCSV()">CSV</button>
     <button onclick="exportPNG()">Image</button>
+    <!-- NEW: Edit Image Button -->
     <button onclick="editInStudio()" class="edit-image-btn" id="editImageBtn" disabled>
       ✏️ Edit Image
     </button>
     <button class="primary" onclick="exportPDF()">Print / PDF</button>
-    <span class="toolbar-hint">↳ Image → Edit → Enhance with filters</span>
+    <span style="align-self:center;color:var(--warn);font-size:10.5px">↳ Mobile view: fit screen to see the entire roster, image to download</span>
+    <span style="align-self:center;color:var(--warn);font-size:10.5px">↳ print/pdf, set orientation to Portrait</span>
   </div>
   <div id="resultsWrap">
     <section class="card" id="outCard" style="display:none">
@@ -225,7 +226,7 @@ let LAST_FILE_NAME = "";
 let LAST_FORMAT = "";
 let RAW_PDF_PAGES = null;
 let LAST_PARSED_ROWS = null;
-let CAPTURED_IMAGE_DATA = null;
+let CAPTURED_IMAGE_DATA = null; // For edit-in-studio
 
 const HOME = "KUL";
 
@@ -1062,7 +1063,7 @@ function render(){
   document.getElementById('rangeLbl').textContent = DAYS.length ? (fmtDate(DAYS[0].date)+' to '+fmtDate(DAYS[DAYS.length-1].date)) : '';
   document.getElementById('outCard').style.display='block';
   document.getElementById('toolbarRow').style.display='flex';
-  document.getElementById('editImageBtn').disabled = true;
+  document.getElementById('editImageBtn').disabled = false; // Enable Edit Image button
 
   document.getElementById('statsBody').innerHTML = `
     <div>Actual Block Hours<b>${sumHrs(blockHrsAll)}</b></div>
@@ -1155,11 +1156,11 @@ function exportPNG(){
   setTimeout(()=>{
     html2canvas(wrap, {scale:3, backgroundColor:'#0b0c0e'}).then(canvas=>{
       canvas.toBlob(blob=>{
+        // Store the image data for edit-in-studio
         const reader = new FileReader();
         reader.onload = function(e) {
           CAPTURED_IMAGE_DATA = e.target.result;
           document.getElementById('editImageBtn').disabled = false;
-          log('Image ready! Click "Edit Image" to enhance with filters.', 'ok');
         };
         reader.readAsDataURL(blob);
         
@@ -1167,6 +1168,7 @@ function exportPNG(){
         a.href = URL.createObjectURL(blob);
         a.download = 'roster-'+(DAYS.length?DAYS[0].key:'export')+'.png';
         a.click();
+        log('Image exported. You can now click "Edit Image" to enhance it with filters.', 'ok');
       });
       if(!wasFit) toggleFit();
     }).catch(err=>{ log('Image export failed: '+err.message, 'err'); });
@@ -1219,12 +1221,16 @@ function editInStudio() {
     return;
   }
   
+  // Create the filter studio HTML
   const studioHTML = generateFilterStudioHTML(CAPTURED_IMAGE_DATA);
+  
+  // Open in new tab
   const newTab = window.open('', '_blank');
   if (!newTab) {
     log('Please allow pop-ups for this site to use the Edit Image feature.', 'err');
     return;
   }
+  
   newTab.document.write(studioHTML);
   newTab.document.close();
 }
@@ -1342,73 +1348,10 @@ function generateFilterStudioHTML(imageData) {
     max-height: 400px;
     object-fit: contain;
   }
-  
-  .preset-section {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 12px 0;
-    padding: 12px;
-    background: #141619;
-    border-radius: 12px;
-    border: 1px solid #2a2e33;
-    align-items: center;
-  }
-  .preset-section .preset-label {
+  .placeholder-text {
     color: #6a7a9b;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-right: 6px;
-  }
-  .preset-btn {
-    padding: 4px 12px;
-    border-radius: 16px;
-    font-size: 0.7rem;
-    border: 1px solid #2a2e33;
-    background: #0b0c0e;
-    color: #aeb4bb;
-    cursor: pointer;
-    transition: 0.15s;
-    font-weight: 500;
-  }
-  .preset-btn:hover { background: #1b1e22; border-color: #6a4e8a; }
-  .preset-btn.bw-punch {
-    background: #222;
-    border-color: #666;
-    color: #fff;
-  }
-  .preset-btn.bw-punch:hover { background: #333; border-color: #888; }
-  .preset-btn.pop {
-    background: #1a2a1a;
-    border-color: #4a8a4a;
-    color: #8aff8a;
-  }
-  .preset-btn.pop:hover { background: #2a3a2a; border-color: #6aaa6a; }
-  
-  .filter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 6px;
-    margin: 12px 0;
-  }
-  .filter-btn {
-    padding: 6px 10px;
-    border-radius: 8px;
-    border: 1px solid #2a2e33;
-    background: #141619;
-    color: #aeb4bb;
-    cursor: pointer;
-    font-size: 0.7rem;
-    transition: 0.15s;
+    padding: 40px 20px;
     text-align: center;
-  }
-  .filter-btn:hover { background: #1b1e22; }
-  .filter-btn.active {
-    background: #6a4e8a;
-    border-color: #6a4e8a;
-    color: white;
   }
   
   .controls-row {
@@ -1419,7 +1362,7 @@ function generateFilterStudioHTML(imageData) {
     border: 1px solid #2a2e33;
     border-radius: 12px;
     padding: 16px 20px;
-    margin: 12px 0;
+    margin: 16px 0;
     align-items: center;
   }
   .control-group {
@@ -1452,6 +1395,30 @@ function generateFilterStudioHTML(imageData) {
     color: #c6ff3d;
     min-width: 38px;
     font-size: 0.9rem;
+  }
+  
+  .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin: 12px 0;
+  }
+  .filter-btn {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #2a2e33;
+    background: #141619;
+    color: #aeb4bb;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: 0.15s;
+    text-align: center;
+  }
+  .filter-btn:hover { background: #1b1e22; }
+  .filter-btn.active {
+    background: #6a4e8a;
+    border-color: #6a4e8a;
+    color: white;
   }
   
   .layers-section {
@@ -1489,9 +1456,7 @@ function generateFilterStudioHTML(imageData) {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    cursor: pointer;
   }
-  .layer-tag:hover { border-color: #6a4e8a; }
   .layer-tag .remove {
     cursor: pointer;
     color: #ff6b6b;
@@ -1503,6 +1468,25 @@ function generateFilterStudioHTML(imageData) {
     font-size: 0.8rem;
     padding: 8px;
   }
+  
+  .preset-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+  }
+  .preset-btn {
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    border: 1px solid #2a2e33;
+    background: #141619;
+    color: #aeb4bb;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  .preset-btn:hover { background: #1b1e22; }
+  .preset-btn.active { background: #6a4e8a; border-color: #6a4e8a; color: white; }
   
   .settings-panel {
     background: #141619;
@@ -1547,11 +1531,6 @@ function generateFilterStudioHTML(imageData) {
     padding: 2px;
     background: #0b0c0e;
   }
-  .setting-item .val {
-    color: #c6ff3d;
-    font-size: 0.75rem;
-    text-align: right;
-  }
   
   .action-bar {
     display: flex;
@@ -1570,12 +1549,16 @@ function generateFilterStudioHTML(imageData) {
     justify-content: space-between;
     flex-wrap: wrap;
   }
-  .quality-badge { color: #6bffb0; font-size: 0.7rem; }
+  
+  .quality-badge {
+    color: #6bffb0;
+    font-size: 0.7rem;
+  }
   
   .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.85);
+    background: rgba(0,0,0,0.8);
     display: none;
     justify-content: center;
     align-items: center;
@@ -1610,6 +1593,7 @@ function generateFilterStudioHTML(imageData) {
     </div>
   </div>
 
+  <!-- Preview -->
   <div class="preview-container">
     <div class="preview-box">
       <h3><i class="fas fa-circle" style="color:#6a4e8a;"></i> Original</h3>
@@ -1625,13 +1609,9 @@ function generateFilterStudioHTML(imageData) {
     </div>
   </div>
 
+  <!-- Presets -->
   <div class="preset-section">
-    <span class="preset-label"><i class="fas fa-bolt"></i> Presets</span>
-    <button class="preset-btn bw-punch" data-preset="bw_punch">⚫ B&W Punch</button>
-    <button class="preset-btn pop" data-preset="crystal_clear">💎 Crystal Clear</button>
-    <button class="preset-btn pop" data-preset="warm_glow">🌅 Warm Glow</button>
-    <button class="preset-btn pop" data-preset="high_impact">🎯 High Impact</button>
-    <button class="preset-btn" data-preset="dark_mode">🖤 Dark Mode</button>
+    <span style="color:#6a7a9b;font-size:0.75rem;display:flex;align-items:center;">⚡ Presets:</span>
     <button class="preset-btn" data-preset="clean_bw">⬛ Clean B&W</button>
     <button class="preset-btn" data-preset="professional">💼 Professional</button>
     <button class="preset-btn" data-preset="vintage">📷 Vintage</button>
@@ -1639,23 +1619,21 @@ function generateFilterStudioHTML(imageData) {
     <button class="preset-btn" data-preset="dreamy">✨ Dreamy</button>
   </div>
 
+  <!-- Core Filters -->
   <div class="filter-grid">
     <button class="filter-btn" data-filter="grayscale"><i class="fas fa-circle"></i> Grayscale</button>
     <button class="filter-btn" data-filter="invert"><i class="fas fa-circle-notch"></i> Invert</button>
     <button class="filter-btn" data-filter="colorize"><i class="fas fa-palette"></i> Colorize</button>
     <button class="filter-btn" data-filter="sepia"><i class="fas fa-camera"></i> Sepia</button>
     <button class="filter-btn" data-filter="vintage"><i class="fas fa-clock"></i> Vintage</button>
-    <button class="filter-btn" data-filter="warm"><i class="fas fa-fire"></i> Warm</button>
-    <button class="filter-btn" data-filter="cool"><i class="fas fa-snowflake"></i> Cool</button>
-    <button class="filter-btn" data-filter="neon"><i class="fas fa-bolt"></i> Neon</button>
     <button class="filter-btn" data-filter="contrast"><i class="fas fa-adjust"></i> Contrast</button>
     <button class="filter-btn" data-filter="brightness"><i class="fas fa-sun"></i> Brightness</button>
     <button class="filter-btn" data-filter="sharpen"><i class="fas fa-eye"></i> Sharpen</button>
     <button class="filter-btn" data-filter="vignette"><i class="fas fa-circle-half-stroke"></i> Vignette</button>
     <button class="filter-btn" data-filter="glow"><i class="fas fa-star"></i> Glow</button>
-    <button class="filter-btn" data-filter="pastel"><i class="fas fa-heart"></i> Pastel</button>
   </div>
 
+  <!-- Controls -->
   <div class="controls-row">
     <div class="control-group">
       <label><i class="fas fa-eyedropper"></i> Color</label>
@@ -1668,6 +1646,7 @@ function generateFilterStudioHTML(imageData) {
     </div>
   </div>
 
+  <!-- Layers -->
   <div class="layers-section">
     <h4><i class="fas fa-list"></i> Active Layers <span id="layerCount">0</span></h4>
     <div class="layer-list" id="layerList">
@@ -1675,6 +1654,7 @@ function generateFilterStudioHTML(imageData) {
     </div>
   </div>
 
+  <!-- Settings Panel -->
   <div class="settings-panel" id="settingsPanel">
     <h4><i class="fas fa-sliders-h"></i> <span id="settingsTitle">Filter Settings</span></h4>
     <div class="settings-grid" id="settingsGrid">
@@ -1684,6 +1664,7 @@ function generateFilterStudioHTML(imageData) {
     </div>
   </div>
 
+  <!-- Action Bar -->
   <div class="action-bar">
     <button class="btn" onclick="resetAll()"><i class="fas fa-undo-alt"></i> Reset</button>
     <button class="btn" onclick="clearFilters()"><i class="fas fa-trash"></i> Clear Filters</button>
@@ -1697,6 +1678,7 @@ function generateFilterStudioHTML(imageData) {
   </div>
 </div>
 
+<!-- Return Modal -->
 <div class="modal-overlay" id="returnModal">
   <div class="modal-box">
     <h2>✅ Image Enhanced!</h2>
@@ -1710,6 +1692,9 @@ function generateFilterStudioHTML(imageData) {
 </div>
 
 <script>
+// ============================================================
+// FILTER STUDIO ENGINE
+// ============================================================
 const state = {
   originalDataURL: '${imageData}',
   currentDataURL: '${imageData}',
@@ -1717,9 +1702,22 @@ const state = {
   selectedLayerIndex: -1,
   globalStrength: 80,
   selectedColor: '#6a5acd',
+  originalWidth: 0,
+  originalHeight: 0,
   isProcessing: false
 };
 
+// Load original image to get dimensions
+const img = new Image();
+img.onload = function() {
+  state.originalWidth = this.naturalWidth || this.width;
+  state.originalHeight = this.naturalHeight || this.height;
+};
+img.src = state.originalDataURL;
+
+// ============================================================
+// FILTER ENGINE
+// ============================================================
 function applySingleFilter(imageData, filterType, colorHex, strength) {
   const data = imageData.data;
   const origData = new Uint8ClampedArray(data);
@@ -1765,36 +1763,6 @@ function applySingleFilter(imageData, filterType, colorHex, strength) {
       data[i] = Math.min(255, gray + 30);
       data[i+1] = Math.min(255, gray + 15);
       data[i+2] = Math.min(255, gray * 0.8);
-    }
-  }
-  else if (filterType === 'warm') {
-    for (let i = 0; i < data.length; i += 4) {
-      data[i] = Math.min(255, data[i] * 1.2);
-      data[i+2] = data[i+2] * 0.8;
-    }
-  }
-  else if (filterType === 'cool') {
-    for (let i = 0; i < data.length; i += 4) {
-      data[i] = data[i] * 0.8;
-      data[i+2] = Math.min(255, data[i+2] * 1.2);
-    }
-  }
-  else if (filterType === 'neon') {
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i], g = data[i+1], b = data[i+2];
-      const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-      data[i] = Math.min(255, (r - gray) * 2 + gray);
-      data[i+1] = Math.min(255, (g - gray) * 2 + gray);
-      data[i+2] = Math.min(255, (b - gray) * 2 + gray);
-    }
-  }
-  else if (filterType === 'pastel') {
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i], g = data[i+1], b = data[i+2];
-      const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-      data[i] = Math.min(255, r * 0.6 + gray * 0.4 + 40);
-      data[i+1] = Math.min(255, g * 0.6 + gray * 0.4 + 40);
-      data[i+2] = Math.min(255, b * 0.6 + gray * 0.4 + 40);
     }
   }
   else if (filterType === 'contrast') {
@@ -1878,6 +1846,7 @@ function applySingleFilter(imageData, filterType, colorHex, strength) {
     }
   }
 
+  // Apply strength blend
   const noBlendFilters = ['vignette', 'glow', 'sharpen'];
   if (!noBlendFilters.includes(filterType) && strengthNorm < 1) {
     for (let i = 0; i < data.length; i++) {
@@ -1889,6 +1858,7 @@ function applySingleFilter(imageData, filterType, colorHex, strength) {
 
 async function applyFilterChain(imageDataURL, filterList) {
   if (!filterList || !filterList.length) return imageDataURL;
+  
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = function() {
@@ -1899,11 +1869,13 @@ async function applyFilterChain(imageDataURL, filterList) {
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(img, 0, 0);
       let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      
       for (const layer of filterList) {
         const strength = layer.strength !== undefined ? layer.strength : state.globalStrength;
         const color = layer.color || state.selectedColor;
         imageData = applySingleFilter(imageData, layer.id, color, strength);
       }
+      
       ctx.putImageData(imageData, 0, 0);
       resolve(canvas.toDataURL('image/png'));
     };
@@ -1911,16 +1883,22 @@ async function applyFilterChain(imageDataURL, filterList) {
   });
 }
 
+// ============================================================
+// UI FUNCTIONS
+// ============================================================
 function updateLayers() {
   const layerList = document.getElementById('layerList');
   const layerCount = document.getElementById('layerCount');
+  
   if (state.activeFilters.length === 0) {
     layerList.innerHTML = '<div class="empty-layers">Click filters above to add them</div>';
     layerCount.textContent = '0';
     return;
   }
+  
   layerCount.textContent = state.activeFilters.length;
   layerList.innerHTML = '';
+  
   state.activeFilters.forEach((filter, index) => {
     const tag = document.createElement('span');
     tag.className = 'layer-tag';
@@ -1930,7 +1908,7 @@ function updateLayers() {
     }
     const name = filter.id.charAt(0).toUpperCase() + filter.id.slice(1);
     const strength = filter.strength !== undefined ? filter.strength : state.globalStrength;
-    tag.innerHTML = name + ' <span style="font-size:0.6rem;opacity:0.6;">' + strength + '%</span> <span class="remove" data-index="' + index + '">✕</span>';
+    tag.innerHTML = \`\${name} <span style="font-size:0.6rem;opacity:0.6;">\${strength}%</span> <span class="remove" data-index="\${index}">✕</span>\`;
     tag.addEventListener('click', function(e) {
       if (!e.target.classList.contains('remove')) {
         state.selectedLayerIndex = (state.selectedLayerIndex === index) ? -1 : index;
@@ -1958,32 +1936,58 @@ function updateLayers() {
 function showSettings(index) {
   const grid = document.getElementById('settingsGrid');
   const title = document.getElementById('settingsTitle');
+  
   if (index === -1 || index >= state.activeFilters.length) {
-    grid.innerHTML = '<div style="color:#6a7a9b;font-size:0.8rem;grid-column:1/-1;text-align:center;padding:12px;">Click a layer above to see its settings</div>';
+    grid.innerHTML = \`
+      <div style="color:#6a7a9b;font-size:0.8rem;grid-column:1/-1;text-align:center;padding:12px;">
+        Click a layer above to see its settings
+      </div>
+    \`;
     title.textContent = 'Filter Settings';
     return;
   }
+  
   const filter = state.activeFilters[index];
   const name = filter.id.charAt(0).toUpperCase() + filter.id.slice(1);
-  title.textContent = name + ' Settings';
+  title.textContent = \`\${name} Settings\`;
+  
   const strength = filter.strength !== undefined ? filter.strength : state.globalStrength;
   const color = filter.color || state.selectedColor;
-  let html = '<div class="setting-item"><label>Strength</label><input type="range" id="layerStrength" min="0" max="100" value="' + strength + '" /><div class="val">' + strength + '%</div></div>';
+  
+  let html = \`
+    <div class="setting-item">
+      <label>Strength</label>
+      <input type="range" id="layerStrength" min="0" max="100" value="\${strength}" />
+      <div style="color:#c6ff3d;font-size:0.75rem;text-align:right;">\${strength}%</div>
+    </div>
+  \`;
+  
   if (filter.id === 'colorize') {
-    html += '<div class="setting-item"><label>Color</label><input type="color" id="layerColor" value="' + color + '" /></div>';
+    html += \`
+      <div class="setting-item">
+        <label>Color</label>
+        <input type="color" id="layerColor" value="\${color}" />
+      </div>
+    \`;
   }
+  
   grid.innerHTML = html;
+  
   document.getElementById('layerStrength')?.addEventListener('input', function() {
     const val = parseInt(this.value);
-    this.parentElement.querySelector('.val').textContent = val + '%';
+    this.parentElement.querySelector('div:last-child').textContent = val + '%';
     state.activeFilters[index].strength = val;
     updateLayers();
   });
+  
   document.getElementById('layerColor')?.addEventListener('input', function() {
     state.activeFilters[index].color = this.value;
   });
 }
 
+// ============================================================
+// FILTER TOGGLE
+// ============================================================
 function toggleFilter(filterName) {
   const existing = state.activeFilters.findIndex(f => f.id === filterName);
   if (existing > -1) {
@@ -1994,18 +1998,20 @@ function toggleFilter(filterName) {
   }
   updateLayers();
   showSettings(state.selectedLayerIndex);
+  updateFilterButtons();
+}
+
+function updateFilterButtons() {
   document.querySelectorAll('.filter-btn').forEach(btn => {
     const filter = btn.dataset.filter;
     btn.classList.toggle('active', state.activeFilters.some(f => f.id === filter));
   });
 }
 
+// ============================================================
+// PRESETS
+// ============================================================
 const PRESETS = {
-  'bw_punch': ['invert', 'grayscale', 'contrast'],
-  'crystal_clear': ['contrast', 'sharpen', 'brightness'],
-  'warm_glow': ['warm', 'glow', 'contrast'],
-  'high_impact': ['contrast', 'sharpen', 'neon'],
-  'dark_mode': ['invert', 'contrast', 'sharpen'],
   'clean_bw': ['grayscale', 'contrast', 'sharpen'],
   'professional': ['contrast', 'sharpen', 'vignette'],
   'vintage': ['sepia', 'vignette', 'warm'],
@@ -2016,17 +2022,17 @@ const PRESETS = {
 function applyPreset(name) {
   const filters = PRESETS[name];
   if (!filters) return;
-  state.activeFilters = filters.map(id => ({ id, strength: name === 'bw_punch' ? 100 : state.globalStrength }));
+  state.activeFilters = filters.map(id => ({ id, strength: state.globalStrength }));
   state.selectedLayerIndex = -1;
   updateLayers();
   showSettings(-1);
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    const filter = btn.dataset.filter;
-    btn.classList.toggle('active', state.activeFilters.some(f => f.id === filter));
-  });
+  updateFilterButtons();
   applyFilters();
 }
 
+// ============================================================
+// APPLY FILTERS
+// ============================================================
 async function applyFilters() {
   if (state.activeFilters.length === 0) {
     document.getElementById('filteredImg').src = state.originalDataURL;
@@ -2035,8 +2041,10 @@ async function applyFilters() {
     document.getElementById('statusText').textContent = 'No filters applied';
     return;
   }
+  
   state.isProcessing = true;
   document.getElementById('statusText').textContent = '⏳ Processing...';
+  
   try {
     const result = await applyFilterChain(state.originalDataURL, state.activeFilters);
     state.currentDataURL = result;
@@ -2050,6 +2058,11 @@ async function applyFilters() {
   state.isProcessing = false;
 }
 
+// ============================================================
+// DOWNLOAD & RETURN
+// ============================================================
+let downloadAndReturnFlag = false;
+
 function downloadImage() {
   if (!state.currentDataURL) return;
   const link = document.createElement('a');
@@ -2062,15 +2075,19 @@ function downloadImage() {
 
 function downloadAndReturn() {
   downloadImage();
-  setTimeout(() => { returnToRoster(); }, 500);
+  setTimeout(() => {
+    returnToRoster();
+  }, 500);
 }
 
 function returnToRoster() {
   document.getElementById('returnModal').classList.add('show');
 }
+
 function closeModal() {
   document.getElementById('returnModal').classList.remove('show');
 }
+
 function resetAll() {
   state.activeFilters = [];
   state.selectedLayerIndex = -1;
@@ -2079,50 +2096,72 @@ function resetAll() {
   document.getElementById('downloadBtn').disabled = true;
   updateLayers();
   showSettings(-1);
-  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  updateFilterButtons();
   document.getElementById('statusText').textContent = 'Reset to original';
 }
+
 function clearFilters() {
   state.activeFilters = [];
   state.selectedLayerIndex = -1;
   updateLayers();
   showSettings(-1);
-  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  updateFilterButtons();
   document.getElementById('filteredImg').src = state.originalDataURL;
   state.currentDataURL = state.originalDataURL;
   document.getElementById('downloadBtn').disabled = true;
   document.getElementById('statusText').textContent = 'All filters cleared';
 }
 
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
 document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', function() { toggleFilter(this.dataset.filter); });
+  btn.addEventListener('click', function() {
+    toggleFilter(this.dataset.filter);
+  });
 });
+
 document.querySelectorAll('.preset-btn').forEach(btn => {
-  btn.addEventListener('click', function() { applyPreset(this.dataset.preset); });
+  btn.addEventListener('click', function() {
+    applyPreset(this.dataset.preset);
+  });
 });
+
 document.getElementById('colorPicker').addEventListener('input', function() {
   state.selectedColor = this.value;
 });
+
 document.getElementById('strengthSlider').addEventListener('input', function() {
   state.globalStrength = parseInt(this.value);
   document.getElementById('strengthDisplay').textContent = state.globalStrength + '%';
 });
+
 document.getElementById('downloadBtn').addEventListener('click', function() {
   downloadImage();
-  setTimeout(() => { document.getElementById('returnModal').classList.add('show'); }, 300);
+  // Show the return modal after download
+  setTimeout(() => {
+    document.getElementById('returnModal').classList.add('show');
+  }, 300);
 });
+
+// Close modal with Escape key
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeModal();
 });
 
+// ============================================================
+// INIT
+// ============================================================
 updateLayers();
+updateFilterButtons();
 document.getElementById('statusText').textContent = 'Ready - Add filters and click Apply';
-<\/script>
+console.log('🎨 Filter Studio Pro loaded successfully!');
+</script>
 </body>
 </html>`;
 }
 
 loadLegend();
-<\/script>
+</script>
 </body>
 </html>
