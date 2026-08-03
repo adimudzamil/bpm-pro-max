@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ultimate Filter Studio Pro</title>
+  <title>Ultimate Filter Studio Pro - High Quality</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <style>
+    /* ... same styles as before ... */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: #f0f2f8;
@@ -39,7 +40,6 @@
       border-radius: 0 14px 14px 0;
       padding: 8px 16px;
     }
-
     .upload-area {
       background: #f8faff;
       border: 2px dashed #c6d0e6;
@@ -55,7 +55,6 @@
     .upload-area p { font-weight: 500; font-size: 1.1rem; color: #2d364f; }
     .upload-area span { color: #68739b; font-size: 0.9rem; }
     #fileInput { display: none; }
-
     .preview-container {
       display: flex;
       flex-wrap: wrap;
@@ -93,14 +92,12 @@
     }
     .image-wrapper img { width: 100%; height: auto; display: block; object-fit: contain; }
     .placeholder-text { color: #7f8bb0; font-size: 0.85rem; padding: 20px 8px; text-align: center; }
-
     .main-layout {
       display: grid;
       grid-template-columns: 280px 1fr;
       gap: 24px;
     }
     @media (max-width: 768px) { .main-layout { grid-template-columns: 1fr; } }
-
     .sidebar {
       background: #f8faff;
       border-radius: 20px;
@@ -111,7 +108,6 @@
     }
     .sidebar::-webkit-scrollbar { width: 6px; }
     .sidebar::-webkit-scrollbar-thumb { background: #c6d0e6; border-radius: 10px; }
-
     .category {
       margin-bottom: 16px;
     }
@@ -152,13 +148,11 @@
     }
     .filter-toggle.active-toggle i { color: #d2defa; }
     .filter-toggle i { width: 18px; color: #4f6aa5; font-size: 0.8rem; }
-
     .right-panel {
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
-
     .controls-row {
       display: flex;
       flex-wrap: wrap;
@@ -198,7 +192,6 @@
       accent-color: #3b4f88;
     }
     .strength-value { font-weight: 600; color: #1e2f5a; min-width: 38px; font-size: 0.9rem; }
-
     .layer-section {
       background: #f7f9ff;
       border-radius: 20px;
@@ -262,7 +255,6 @@
       font-weight: 400;
     }
     .empty-layers { color: #6a7a9b; font-size: 0.85rem; padding: 8px; }
-
     .preset-section {
       display: flex;
       flex-wrap: wrap;
@@ -287,7 +279,6 @@
       border-color: #1e2f5a;
     }
     .preset-btn.preset-primary:hover { background: #142544; }
-
     .action-bar {
       display: flex;
       flex-wrap: wrap;
@@ -325,7 +316,6 @@
     .btn-undo { background: #6a4e8a; border-color: #6a4e8a; color: white; }
     .btn-undo:hover { background: #543d6e; }
     .btn-undo:disabled { opacity: 0.4; pointer-events: none; }
-
     .info-row {
       font-size: 0.85rem;
       color: #4e5c7e;
@@ -343,7 +333,6 @@
       font-size: 0.75rem;
       font-weight: 500;
     }
-
     .history-section {
       background: #f7f9ff;
       border-radius: 20px;
@@ -363,7 +352,6 @@
     }
     .history-item:hover { background: #eef2fc; }
     .history-item .time { color: #6a7a9b; font-size: 0.65rem; }
-
     .core-filters {
       display: flex;
       gap: 8px;
@@ -392,7 +380,16 @@
       border-color: #1e2f5a;
     }
     .core-btn:hover { background: #eaf0fe; }
-
+    .quality-badge {
+      font-size: 0.7rem;
+      color: #1f7b4d;
+      background: #e6f5ed;
+      padding: 2px 10px;
+      border-radius: 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
     @media (max-width: 600px) {
       .card { padding: 18px; }
       .preview-box { flex: 1 1 100%; }
@@ -412,7 +409,8 @@
   </h1>
   <div class="sub">
     <i class="fas fa-toggle-on" style="margin-right: 8px;"></i> 
-    <strong>Grayscale · Invert · Colorize</strong> with strength & color picker · Drag to reorder · History/Undo
+    <strong>Grayscale · Invert · Colorize</strong> with strength & color picker · 
+    <span class="quality-badge"><i class="fas fa-check-circle"></i> Original Quality Preserved</span>
   </div>
 
   <div class="upload-area" id="uploadArea">
@@ -439,7 +437,7 @@
     </div>
   </div>
 
-  <!-- CORE FILTERS - Grayscale, Invert, Colorize -->
+  <!-- CORE FILTERS -->
   <div class="core-filters">
     <span style="font-size:0.8rem;font-weight:600;color:#1e2740;display:flex;align-items:center;gap:6px;">
       <i class="fas fa-star" style="color:#f5b342;"></i> Core:
@@ -475,7 +473,7 @@
       </div>
     </div>
     <div class="layer-list" id="layerList">
-      <div class="empty-layers" id="emptyLayers">No filters active. Click filters above or in the sidebar to add them.</div>
+      <div class="empty-layers">No filters active. Click filters above or in the sidebar to add them.</div>
     </div>
   </div>
 
@@ -522,14 +520,14 @@
   <div class="sidebar" id="filterSidebar"></div>
   <div class="right-panel">
     <div style="background:#f8faff;border-radius:20px;padding:20px;border:1px solid #e5ebf6;">
-      <h4 style="margin-bottom:8px;color:#1e2740;"><i class="fas fa-info-circle"></i> Pro Tips</h4>
+      <h4 style="margin-bottom:8px;color:#1e2740;"><i class="fas fa-info-circle"></i> Quality Tips</h4>
       <ul style="font-size:0.8rem;color:#4a5470;list-style:none;line-height:1.8;">
+        <li>• <strong>Original quality preserved</strong> - filters work at full resolution</li>
+        <li>• <strong>Download as PNG</strong> for lossless quality</li>
+        <li>• <strong>Download as JPEG</strong> for smaller files (quality slider below)</li>
         <li>• <strong>Click</strong> Core filters or sidebar filters to add/remove</li>
         <li>• <strong>Drag</strong> layers to reorder (click and hold)</li>
-        <li>• <strong>Click ✕</strong> on a layer to remove it</li>
         <li>• <strong>Double-click</strong> a layer to set its individual strength</li>
-        <li>• <strong>Color picker</strong> works with Colorize, Monochrome, Duotone</li>
-        <li>• <strong>B&W Punch</strong> = Invert + Grayscale both at 100%</li>
       </ul>
     </div>
   </div>
@@ -538,7 +536,7 @@
 
 <script>
   (function() {
-    // ---------- Filter definitions ----------
+    // ---------- Filter definitions (same as before) ----------
     const FILTER_CATEGORIES = {
       '🎨 Color': ['sepia', 'vintage', 'cool', 'warm', 'neon', 'pastel', 'monochrome', 'duotone'],
       '🌓 Tonal': ['brightness', 'contrast', 'gamma', 'exposure', 'shadows', 'highlights', 'equalize'],
@@ -613,6 +611,7 @@
 
     // ---------- State ----------
     let originalDataURL = null;
+    let originalImageData = null; // Store raw image data for quality
     let currentWorkingDataURL = null;
     let activeFilters = [];
     let selectedColor = '#6a5acd';
@@ -620,6 +619,8 @@
     let history = [];
     let historyIndex = -1;
     let dragIndex = null;
+    let originalWidth = 0;
+    let originalHeight = 0;
 
     // ---------- Build sidebar ----------
     function buildSidebar() {
@@ -646,15 +647,23 @@
     }
     buildSidebar();
 
-    // ---------- Filter engine ----------
-    function getImageData(img) {
+    // ---------- HIGH QUALITY FILTER ENGINE ----------
+    // Get image data at full resolution
+    function getFullResolutionImageData(img) {
       return new Promise((resolve) => {
         const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
+        // Use the actual image dimensions
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        resolve(ctx.getImageData(0, 0, canvas.width, canvas.height));
+        // Disable image smoothing for pixel-perfect rendering
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve({
+          imageData: ctx.getImageData(0, 0, canvas.width, canvas.height),
+          width: canvas.width,
+          height: canvas.height
+        });
       });
     }
 
@@ -667,7 +676,7 @@
       });
     }
 
-    // Apply single filter
+    // Apply single filter - preserves quality
     function applySingleFilter(imageData, filterType, colorHex, strength, width, height) {
       const data = imageData.data;
       const origData = new Uint8ClampedArray(data);
@@ -704,6 +713,7 @@
           data[i+2] = Math.min(255, nb);
         }
       }
+      // ... (all other filters from previous version - kept compact)
       // COLOR FILTERS
       else if (filterType === 'sepia') {
         for (let i = 0; i < data.length; i += 4) {
@@ -976,7 +986,6 @@
         }
       }
       else if (filterType === 'glow') {
-        // Simple glow: blur + blend with original
         const blurRadius = Math.max(1, Math.floor(3 * (strength / 30) + 1));
         const tempData = new Uint8ClampedArray(data);
         for (let y = blurRadius; y < height - blurRadius; y++) {
@@ -1080,25 +1089,35 @@
       return imageData;
     }
 
-    // Apply ALL filters
+    // Apply ALL filters at full resolution
     async function applyFilterChain(imageDataURL, filterList) {
-      if (!filterList || !filterList.length) return imageDataURL;
+      if (!filterList || !filterList.length) {
+        return imageDataURL;
+      }
 
-      let img = await loadImageFromURL(imageDataURL);
+      // Load image at full resolution
+      const img = await loadImageFromURL(imageDataURL);
       const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
+      // Use actual image dimensions
+      const width = img.naturalWidth || img.width;
+      const height = img.naturalHeight || img.height;
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, 0, 0, width, height);
+      let imageData = ctx.getImageData(0, 0, width, height);
 
+      // Apply each filter in sequence
       for (const layer of filterList) {
         const filterType = layer.id;
         const strength = layer.strength !== undefined ? layer.strength : globalStrength;
-        imageData = applySingleFilter(imageData, filterType, selectedColor, strength, canvas.width, canvas.height);
+        imageData = applySingleFilter(imageData, filterType, selectedColor, strength, width, height);
       }
 
       ctx.putImageData(imageData, 0, 0);
+      
+      // Return as PNG (lossless) with maximum quality
       return canvas.toDataURL('image/png');
     }
 
@@ -1125,6 +1144,7 @@
         if (originalDataURL) updatePreview();
         updateHistoryUI();
         undoBtn.disabled = historyIndex <= 0;
+        updateCoreButtons();
       }
     }
 
@@ -1274,7 +1294,7 @@
       updateCoreButtons();
     }
 
-    // ---------- Update preview ----------
+    // ---------- Update preview (high quality) ----------
     async function updatePreview() {
       if (!originalDataURL) {
         filteredImg.style.display = 'none';
@@ -1298,7 +1318,7 @@
       }
     }
 
-    // ---------- Load image ----------
+    // ---------- Load image (preserve original) ----------
     function loadImageFile(file) {
       if (!file) return;
       fileNameSpan.textContent = file.name;
@@ -1309,6 +1329,15 @@
         originalImg.src = originalDataURL;
         originalImg.style.display = 'block';
         origPlaceholder.style.display = 'none';
+        
+        // Store original dimensions
+        const img = new Image();
+        img.onload = function() {
+          originalWidth = img.naturalWidth || img.width;
+          originalHeight = img.naturalHeight || img.height;
+        };
+        img.src = originalDataURL;
+        
         history = [];
         historyIndex = -1;
         saveHistory();
@@ -1378,7 +1407,6 @@
       }
     });
 
-    // Core filter buttons
     coreBtns.forEach(btn => {
       btn.addEventListener('click', function() {
         toggleFilter(this.dataset.filter);
@@ -1395,7 +1423,6 @@
     strengthSlider.addEventListener('input', function() {
       globalStrength = parseInt(this.value);
       strengthDisplay.textContent = globalStrength + '%';
-      // Update all layer strengths that don't have individual values
       activeFilters.forEach(f => {
         if (f.strength === undefined) f.strength = globalStrength;
       });
@@ -1446,7 +1473,6 @@
       document.body.removeChild(link);
     });
 
-    // Preset buttons
     document.querySelectorAll('.preset-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         applyPreset(this.dataset.preset);
