@@ -1265,7 +1265,7 @@
       <div class="badge">📄 PDF Parser</div>
       <div class="badge">🔒 Offline</div>
       <div class="badge accent">v2.0</div>
-      <button class="theme-toggle" id="themeToggle">☀️ LV Light</button>
+      <button class="theme-toggle" id="themeToggle">☀️ Fieza</button>
     </div>
   </header>
 
@@ -1480,10 +1480,10 @@
   function applyTheme(theme) {
     if (theme === 'light') {
       document.documentElement.classList.add('light-mode');
-      themeToggle.textContent = '🌙 LV Dark';
+      themeToggle.textContent = '🌙 Fieza';
     } else {
       document.documentElement.classList.remove('light-mode');
-      themeToggle.textContent = '☀️ LV Light';
+      themeToggle.textContent = '☀️ Fieza';
     }
     currentTheme = theme;
     localStorage.setItem('ctr-theme', theme);
