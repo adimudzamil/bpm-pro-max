@@ -11,6 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root{
+    /* Dark Mode - Original Colors */
     --bg:#0b0c0e;
     --panel:#141619;
     --panel2:#1b1e22;
@@ -23,22 +24,22 @@
     --err:#ff6b6b;
     --ok:#6bffb0;
     --mono:'DM Mono','SF Mono',ui-monospace,Menlo,Consolas,monospace;
-    --theme-transition: 0.3s ease;
+    --theme-transition: 0.25s ease;
   }
 
-  /* ── Louis Vuitton Light Mode ── */
+  /* ── Pure Black & White Light Mode ── */
   :root.light-mode {
-    --bg: #f5f1eb;
-    --panel: #ede8e0;
-    --panel2: #e3ddd4;
-    --line: rgba(66, 55, 35, 0.15);
-    --text: #323231;
-    --dim: #9f8453;
-    --accent: #423723;
-    --accent-dim: rgba(159, 132, 83, 0.12);
-    --warn: #9f8453;
-    --ok: #bda476;
-    --err: #ff6b6b;
+    --bg: #ffffff;
+    --panel: #ffffff;
+    --panel2: #ffffff;
+    --line: #000000;
+    --text: #000000;
+    --dim: #000000;
+    --accent: #000000;
+    --accent-dim: #000000;
+    --warn: #000000;
+    --err: #000000;
+    --ok: #000000;
   }
 
   *{box-sizing:border-box}
@@ -56,7 +57,7 @@
   .theme-toggle {
     background: var(--accent);
     color: var(--bg);
-    border: 1px solid var(--accent);
+    border: 2px solid var(--accent);
     border-radius: 100px;
     padding: 6px 16px;
     font-family: var(--mono);
@@ -74,20 +75,20 @@
   }
 
   :root.light-mode .theme-toggle {
-    background: #423723;
-    color: #9f8453;
-    border-color: #423723;
+    background: #000000;
+    color: #ffffff;
+    border-color: #000000;
   }
 
   :root.light-mode .theme-toggle:hover {
-    background: #bda476;
-    border-color: #bda476;
-    color: #9f8453;
+    background: #000000;
+    color: #ffffff;
+    border-color: #000000;
   }
 
   header{
     padding:16px 14px 10px;
-    border-bottom:1px solid var(--line);
+    border-bottom:2px solid var(--line);
     position:sticky;
     top:0;
     background:var(--bg);
@@ -107,7 +108,7 @@
     transition: color var(--theme-transition);
   }
   :root.light-mode header h1 span{
-    color:#9f8453;
+    color:#000000;
   }
   header .sub{
     color:var(--dim);
@@ -116,7 +117,7 @@
     transition: color var(--theme-transition);
   }
   :root.light-mode header .sub{
-    color:#9f8453;
+    color:#000000;
   }
 
   .header-right{
@@ -138,28 +139,32 @@
     padding:4px 12px;
     border-radius:20px;
     font-size:10.5px;
-    border:1px solid var(--line);
+    border:2px solid var(--line);
     color:var(--dim);
     font-family:var(--mono);
     transition: all var(--theme-transition);
   }
   .badge.on{
     color:var(--accent);
-    border-color:var(--accent-dim);
+    border-color:var(--accent);
   }
   :root.light-mode .badge.on{
-    color:#9f8453;
-    border-color:#9f8453;
+    color:#000000;
+    border-color:#000000;
   }
   .badge.bad{
     color:var(--err);
-    border-color:#5a2a2a;
+    border-color:var(--err);
+  }
+  :root.light-mode .badge.bad{
+    color:#000000;
+    border-color:#000000;
   }
 
   main{padding:12px;max-width:100%}
 
   #drop{
-    border:1.5px dashed var(--line);
+    border:2px dashed var(--line);
     border-radius:10px;
     padding:22px 12px;
     text-align:center;
@@ -170,23 +175,23 @@
   #drop.drag{
     border-color:var(--accent);
     color:var(--accent);
-    background:#12140f;
+    background:rgba(198,255,61,0.05);
   }
   :root.light-mode #drop{
-    border-color:rgba(66,55,35,0.2);
-    color:#9f8453;
+    border-color:#000000;
+    color:#000000;
   }
   :root.light-mode #drop.drag{
-    border-color:#423723;
-    background:rgba(159,132,83,0.05);
-    color:#423723;
+    border-color:#000000;
+    background:rgba(0,0,0,0.05);
+    color:#000000;
   }
   #drop b{
     color:var(--text);
     transition: color var(--theme-transition);
   }
   :root.light-mode #drop b{
-    color:#323231;
+    color:#000000;
   }
   #fileInput{display:none}
 
@@ -201,7 +206,7 @@
   button{
     background:var(--panel2);
     color:var(--text);
-    border:1px solid var(--line);
+    border:2px solid var(--line);
     border-radius:8px;
     padding:9px 12px;
     font-family:var(--mono);
@@ -218,30 +223,32 @@
     font-weight:600;
   }
   :root.light-mode button.primary{
-    background:#423723;
-    color:#9f8453;
-    border-color:#423723;
+    background:#000000;
+    color:#ffffff;
+    border-color:#000000;
   }
   :root.light-mode button.primary:hover{
-    background:#bda476;
-    color:#9f8453;
-    border-color:#bda476;
+    background:#000000;
+    color:#ffffff;
+    border-color:#000000;
   }
   button.ghost{
     background:transparent;
+    border-color:transparent;
   }
   :root.light-mode button.ghost{
-    color:#323231;
+    color:#000000;
+    border-color:transparent;
   }
   button:disabled{opacity:.4}
 
   :root.light-mode button{
-    background:#ede8e0;
-    color:#323231;
-    border-color:rgba(66,55,35,0.15);
+    background:#ffffff;
+    color:#000000;
+    border-color:#000000;
   }
   :root.light-mode button:hover{
-    background:#e3ddd4;
+    background:#f5f5f5;
   }
 
   #log{
@@ -251,43 +258,44 @@
     max-height:200px;
     overflow:auto;
     background:var(--panel);
-    border:1px solid var(--line);
+    border:2px solid var(--line);
     border-radius:8px;
     padding:8px 10px;
     display:none;
     transition: all var(--theme-transition);
   }
   :root.light-mode #log{
-    background:#ede8e0;
-    border-color:rgba(66,55,35,0.15);
-    color:#323231;
+    background:#ffffff;
+    border-color:#000000;
+    color:#000000;
   }
   #log .warn{color:var(--warn)}
-  :root.light-mode #log .warn{color:#9f8453}
+  :root.light-mode #log .warn{color:#000000}
   #log .err{color:var(--err)}
+  :root.light-mode #log .err{color:#000000}
   #log .ok{color:var(--ok)}
-  :root.light-mode #log .ok{color:#bda476}
+  :root.light-mode #log .ok{color:#000000}
   #log div{padding:1px 0}
 
   #overrideRow{display:none;margin-top:8px}
 
   section.card{
     background:var(--panel);
-    border:1px solid var(--line);
+    border:2px solid var(--line);
     border-radius:10px;
     margin-top:12px;
     overflow:hidden;
     transition: all var(--theme-transition);
   }
   :root.light-mode section.card{
-    background:#ede8e0;
-    border-color:rgba(66,55,35,0.15);
+    background:#ffffff;
+    border-color:#000000;
   }
   section.card h2{
     font-size:12.5px;
     margin:0;
     padding:10px 12px;
-    border-bottom:1px solid var(--line);
+    border-bottom:2px solid var(--line);
     color:var(--dim);
     letter-spacing:.04em;
     text-transform:uppercase;
@@ -299,13 +307,16 @@
     transition: all var(--theme-transition);
   }
   :root.light-mode section.card h2{
-    color:#323231;
-    border-bottom-color:rgba(66,55,35,0.15);
+    color:#000000;
+    border-bottom-color:#000000;
   }
   section.card h2 small{
     color:var(--dim);
     text-transform:none;
     font-weight:400;
+  }
+  :root.light-mode section.card h2 small{
+    color:#000000;
   }
   section.card h2 .btns{
     display:flex;
@@ -317,11 +328,11 @@
 
   .tableWrap{
     overflow-x:auto;
-    background:#101215;
+    background:var(--panel);
     transition: background var(--theme-transition);
   }
   :root.light-mode .tableWrap{
-    background:#f5f1eb;
+    background:#ffffff;
   }
   table{
     border-collapse:collapse;
@@ -338,8 +349,11 @@
     vertical-align:top;
     transition: all var(--theme-transition);
   }
+  :root.light-mode th, :root.light-mode td{
+    border-bottom-color:#000000;
+  }
   th{
-    color:#cfd3d8;
+    color:var(--text);
     font-weight:700;
     position:sticky;
     top:0;
@@ -351,32 +365,33 @@
     transition: all var(--theme-transition);
   }
   :root.light-mode th{
-    background:#e3ddd4;
-    color:#323231;
+    background:#ffffff;
+    color:#000000;
+    border-bottom:2px solid #000000;
   }
   tr.off td{
     color:var(--dim);
   }
   :root.light-mode tr.off td{
-    color:#aaaaaa;
+    color:#000000;
   }
   tr.layover td{
     color:var(--warn);
   }
   :root.light-mode tr.layover td{
-    color:#9f8453;
+    color:#000000;
   }
   tr.leg2 td{
-    color:#cfd3d8;
+    color:var(--dim);
   }
   :root.light-mode tr.leg2 td{
-    color:#666;
+    color:#000000;
   }
   tr:hover td{
-    background:#17191d;
+    background:rgba(198,255,61,0.04);
   }
   :root.light-mode tr:hover td{
-    background:rgba(159,132,83,0.05);
+    background:rgba(0,0,0,0.05);
   }
   td.date{
     color:var(--accent);
@@ -384,7 +399,7 @@
     transition: color var(--theme-transition);
   }
   :root.light-mode td.date{
-    color:#9f8453;
+    color:#000000;
   }
   td.num{font-variant-numeric:tabular-nums}
 
@@ -408,7 +423,7 @@
     transition: color var(--theme-transition);
   }
   :root.light-mode .stats div b{
-    color:#423723;
+    color:#000000;
   }
 
   .legend{
@@ -420,11 +435,11 @@
     display:flex;
     gap:8px;
     padding:2px 0;
-    border-bottom:1px dashed var(--line);
+    border-bottom:1px solid var(--line);
     transition: border-color var(--theme-transition);
   }
   :root.light-mode .legend .row{
-    border-bottom-color:rgba(66,55,35,0.1);
+    border-bottom-color:#000000;
   }
   .legend .row input{
     background:transparent;
@@ -436,7 +451,7 @@
     transition: color var(--theme-transition);
   }
   :root.light-mode .legend .row input{
-    color:#323231;
+    color:#000000;
   }
   .legend .row input.code{
     width:80px;
@@ -458,7 +473,7 @@
     transition: color var(--theme-transition);
   }
   :root.light-mode footer{
-    color:#9f8453;
+    color:#000000;
   }
 
   /* ── Print Styles ── */
@@ -468,13 +483,13 @@
     .theme-toggle, .badge-group{display:none !important}
     #resultsWrap{width:auto !important;transform:scale(var(--print-scale,1)) !important;transform-origin:top left !important}
     #outCard{width:fit-content;max-width:none}
-    section.card{border:1px solid #999;box-shadow:none;background:#fff;margin-top:5px;break-inside:avoid}
+    section.card{border:2px solid #000;box-shadow:none;background:#fff;margin-top:5px;break-inside:avoid}
     section.card h2{color:#000;border-color:#000;background:#fff;padding:4px 8px;font-size:10px}
     .tableWrap{background:#fff;overflow:visible}
-    th,td{padding:2px 4px;border-color:#999}
+    th,td{padding:2px 4px;border-color:#000}
     th{background:#eee;color:#000}
     td.date{color:#000}
-    tr.off td, tr.layover td{color:#555}
+    tr.off td, tr.layover td{color:#000}
     .stats div b{color:#000}
     #statsCard, #legendCard{
       display:inline-block; vertical-align:top; box-sizing:border-box;
@@ -507,7 +522,7 @@
         <span class="badge">🔒 Offline</span>
         <span class="badge on">v2.0</span>
       </div>
-      <button class="theme-toggle" id="themeToggle">☀️ LV Light</button>
+      <button class="theme-toggle" id="themeToggle">☀️ B&W Light</button>
     </div>
   </div>
 </header>
@@ -588,10 +603,10 @@ let currentTheme = localStorage.getItem('roster-theme') || 'dark';
 function applyTheme(theme) {
   if (theme === 'light') {
     document.documentElement.classList.add('light-mode');
-    themeToggle.textContent = '🌙 LV Dark';
+    themeToggle.textContent = '🌙 B&W Dark';
   } else {
     document.documentElement.classList.remove('light-mode');
-    themeToggle.textContent = '☀️ LV Light';
+    themeToggle.textContent = '☀️ B&W Light';
   }
   currentTheme = theme;
   localStorage.setItem('roster-theme', theme);
@@ -1449,7 +1464,7 @@ function buildDays(legs){
     DAYS.push(existing || {date:new Date(cursor), key:k, rows:[], hasData:false});
     cursor = addDays(cursor,1);
   }
-  STAFF_LABEL = 'ADI MUDZAMIL RANI BIN MOHAMED | 2100551 | WBA LS | KUL';
+  STAFF_LABEL = ''
 }
 
 /* =====================================================================
@@ -1634,7 +1649,7 @@ function exportPNG(){
   const wasFit = fitOn;
   if(!wasFit) toggleFit(); // capture at fit-screen width so the whole table is visible in the image
   setTimeout(()=>{
-    html2canvas(wrap, {scale:3, backgroundColor:'#0b0c0e'}).then(canvas=>{
+    html2canvas(wrap, {scale:3, backgroundColor: currentTheme === 'light' ? '#ffffff' : '#0b0c0e' }).then(canvas=>{
       canvas.toBlob(blob=>{
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
