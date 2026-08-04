@@ -233,9 +233,9 @@ const HOME = "KUL";
    LOGGING
 ===================================================================== */
 function log(msg, cls){
-  const el = document.getElementById('log');
+  var el = document.getElementById('log');
   el.style.display = 'block';
-  const d = document.createElement('div');
+  var d = document.createElement('div');
   if(cls) d.className = cls;
   d.textContent = msg;
   el.appendChild(d);
@@ -246,7 +246,7 @@ function clearLog(){ document.getElementById('log').innerHTML=''; document.getEl
 /* =====================================================================
    DEFAULT CODE LEGEND
 ===================================================================== */
-const DEFAULT_LEGEND = {
+var DEFAULT_LEGEND = {
   "OP": "Operating",
   "D": "Day Off",
   "DO": "Day Off",
@@ -268,7 +268,7 @@ const DEFAULT_LEGEND = {
 };
 function loadLegend(){
   try{
-    const saved = JSON.parse(localStorage.getItem('rosterParserLegend')||'{}');
+    var saved = JSON.parse(localStorage.getItem('rosterParserLegend')||'{}');
     LEGEND = Object.assign({}, DEFAULT_LEGEND, saved);
   }catch(e){ LEGEND = Object.assign({}, DEFAULT_LEGEND); }
 }
@@ -286,12 +286,12 @@ function isOffCode(code){ return /^(D|DO\d*|EL)$/.test((code||'').trim()); }
 /* =====================================================================
    FILE INPUT / DRAG-DROP
 ===================================================================== */
-const dropEl = document.getElementById('drop');
-const fileInput = document.getElementById('fileInput');
-['dragenter','dragover'].forEach(ev=>dropEl.addEventListener(ev, e=>{e.preventDefault();dropEl.classList.add('drag');}));
-['dragleave','drop'].forEach(ev=>dropEl.addEventListener(ev, e=>{e.preventDefault();dropEl.classList.remove('drag');}));
-dropEl.addEventListener('drop', e=>{ if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
-fileInput.addEventListener('change', e=>{ if(e.target.files.length) handleFile(e.target.files[0]); });
+var dropEl = document.getElementById('drop');
+var fileInput = document.getElementById('fileInput');
+['dragenter','dragover'].forEach(function(ev){dropEl.addEventListener(ev, function(e){e.preventDefault();dropEl.classList.add('drag');});});
+['dragleave','drop'].forEach(function(ev){dropEl.addEventListener(ev, function(e){e.preventDefault();dropEl.classList.remove('drag');});});
+dropEl.addEventListener('drop', function(e){ if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', function(e){ if(e.target.files.length) handleFile(e.target.files[0]); });
 
 async function handleFile(file){
   clearLog();
@@ -307,22 +307,22 @@ async function handleFile(file){
   document.getElementById('debugRow').style.display='none';
   document.getElementById('editImageBtn').disabled = true;
 
-  const name = file.name.toLowerCase();
+  var name = file.name.toLowerCase();
   try{
     if(name.endsWith('.xlsx') || name.endsWith('.xls')){
       setFmt('XLSX', true);
-      const buf = await file.arrayBuffer();
-      const rows = parseXLSXRows(buf);
+      var buf = await file.arrayBuffer();
+      var rows = parseXLSXRows(buf);
       LAST_PARSED_ROWS = rows;
       buildDays(rowsToLegs(rows));
       render();
     } else if(name.endsWith('.pdf')){
-      const buf = await file.arrayBuffer();
-      const pages = (await extractPdfWords(buf)).map(mergeDayHeaderTokens);
+      var buf = await file.arrayBuffer();
+      var pages = (await extractPdfWords(buf)).map(mergeDayHeaderTokens);
       RAW_PDF_PAGES = pages;
-      const allWords = [].concat(...pages);
-      const isCalendar = looksLikeCalendar(allWords);
-      const isTable = looksLikeTableReport(allWords);
+      var allWords = [].concat.apply([], pages);
+      var isCalendar = looksLikeCalendar(allWords);
+      var isTable = looksLikeTableReport(allWords);
       document.getElementById('overrideRow').style.display = 'flex';
       if(isCalendar && !isTable){
         setFmt('PDF · Calendar', true);
@@ -352,11 +352,11 @@ async function handleFile(file){
 function parseAndBuild(kind){
   try{
     if(kind==='calendar'){
-      const legs = parseCalendarPDF(RAW_PDF_PAGES);
+      var legs = parseCalendarPDF(RAW_PDF_PAGES);
       LAST_PARSED_ROWS = legs;
       buildDays(legs);
     } else {
-      const rows = parseTablePDFRows(RAW_PDF_PAGES);
+      var rows = parseTablePDFRows(RAW_PDF_PAGES);
       LAST_PARSED_ROWS = rows;
       buildDays(rowsToLegs(rows));
     }
@@ -374,7 +374,7 @@ function forceParse(kind){
 }
 
 function setFmt(label, ok){
-  const b = document.getElementById('fmtBadge');
+  var b = document.getElementById('fmtBadge');
   b.textContent = label;
   b.className = 'badge' + (ok?' on':' bad');
   LAST_FORMAT = label;
@@ -383,22 +383,22 @@ function setFmt(label, ok){
 /* =====================================================================
    HELPERS: dates / times
 ===================================================================== */
-const MON = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
-const MON_NAMES = Object.keys(MON);
-const DOW = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var MON = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+var MON_NAMES = Object.keys(MON);
+var DOW = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
 function ymdKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function addDays(d, n){ const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+function addDays(d, n){ var r = new Date(d); r.setDate(r.getDate()+n); return r; }
 function parseDMY(str){
-  const m = /(\d{1,2})-([A-Za-z]{3})-(\d{4})/.exec(str);
+  var m = /(\d{1,2})-([A-Za-z]{3})-(\d{4})/.exec(str);
   if(!m) return null;
-  const mo = MON[m[2].slice(0,1).toUpperCase()+m[2].slice(1,3).toLowerCase()];
+  var mo = MON[m[2].slice(0,1).toUpperCase()+m[2].slice(1,3).toLowerCase()];
   if(mo===undefined) return null;
   return new Date(parseInt(m[3]), mo, parseInt(m[1]));
 }
 function cleanTime(t){
   if(!t) return {time:'', rollover:0};
-  const m = /^(\d{1,2}):(\d{2})(\(\+1\))?$/.exec(t.trim());
+  var m = /^(\d{1,2}):(\d{2})(\(\+1\))?$/.exec(t.trim());
   if(!m) return {time:t.replace('(+1)','').trim(), rollover: t.includes('(+1)')?1:0};
   return {time: m[1].padStart(2,'0')+':'+m[2], rollover: m[3]?1:0};
 }
@@ -407,47 +407,49 @@ function cleanTime(t){
    1) XLSX PARSER
 ===================================================================== */
 function parseXLSXRows(buf){
-  const wb = XLSX.read(buf, {type:'array', cellDates:true});
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const aoa = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:''});
+  var wb = XLSX.read(buf, {type:'array', cellDates:true});
+  var ws = wb.Sheets[wb.SheetNames[0]];
+  var aoa = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:''});
 
-  let headerIdx = -1;
-  for(let i=0;i<aoa.length;i++){
-    const row = aoa[i].map(c=>String(c||'').trim());
-    if(row.includes('Date') && row.some(c=>c.startsWith('Pairing'))){ headerIdx = i; break; }
+  var headerIdx = -1;
+  for(var i=0;i<aoa.length;i++){
+    var row = aoa[i].map(function(c){return String(c||'').trim();});
+    if(row.includes('Date') && row.some(function(c){return c.startsWith('Pairing');})){ headerIdx = i; break; }
   }
   if(headerIdx===-1) throw new Error('Could not locate header row in XLSX (expected "Date" / "Pairing/Activity" columns).');
-  const header = aoa[headerIdx].map(c=>String(c||'').trim());
-  const col = name => header.findIndex(h=>h===name);
-  const idx = {
+  var header = aoa[headerIdx].map(function(c){return String(c||'').trim();});
+  var col = function(name){ return header.findIndex(function(h){return h===name;}); };
+  var idx = {
     date: col('Date'), pairing: col('Pairing/Activity'), report: col('Duty Report'),
     item: col('Item'), rank: col('Overridden Rank'), work: col('Work Type'),
     debrief: col('Duty Debrief'), fly: col('Flying Hrs'), duty: col('Duty Hrs'),
     sdc: col('SDC'), ac: col('A/C Type'), hotel: col('Hotel')
   };
-  idx.depStn = header.findIndex(h=>h.startsWith('Dep Stn'));
-  idx.arrStn = header.findIndex(h=>h.startsWith('Arr. Stn'));
+  idx.depStn = header.findIndex(function(h){return h.startsWith('Dep Stn');});
+  idx.arrStn = header.findIndex(function(h){return h.startsWith('Arr. Stn');});
 
-  const rows = [];
-  let lastDate = null;
-  for(let i=headerIdx+1;i<aoa.length;i++){
-    const r = aoa[i];
-    if(!r || r.every(c=>c==='' || c===null || c===undefined)) continue;
-    const get = j => (j==null || j<0) ? '' : String(r[j]===undefined?'':r[j]).trim();
-    let rawDate = r[idx.date];
+  var rows = [];
+  var lastDate = null;
+  for(var i=headerIdx+1;i<aoa.length;i++){
+    var r = aoa[i];
+    if(!r || r.every(function(c){return c==='' || c===null || c===undefined;})) continue;
+    var get = function(j){ return (j==null || j<0) ? '' : String(r[j]===undefined?'':r[j]).trim(); };
+    var rawDate = r[idx.date];
     if(get(idx.date)==='Date') continue;
 
-    let dateObj = null;
+    var dateObj = null;
     if(rawDate instanceof Date && !isNaN(rawDate)) dateObj = new Date(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate());
     else if(typeof rawDate === 'string' && rawDate.trim()) dateObj = parseDMY(rawDate) || null;
 
     if(dateObj) lastDate = dateObj;
     if(!dateObj && !lastDate) continue;
 
-    const depRaw = get(idx.depStn);
-    const arrRaw = get(idx.arrStn);
-    const [depStn, depTime] = splitStnTime(depRaw);
-    const [arrStn, arrTime] = splitStnTime(arrRaw);
+    var depRaw = get(idx.depStn);
+    var arrRaw = get(idx.arrStn);
+    var depSplit = splitStnTime(depRaw);
+    var arrSplit = splitStnTime(arrRaw);
+    var depStn = depSplit[0], depTime = depSplit[1];
+    var arrStn = arrSplit[0], arrTime = arrSplit[1];
 
     rows.push({
       ownDate: dateObj ? dateObj : null,
@@ -457,7 +459,7 @@ function parseXLSXRows(buf){
       item: get(idx.item),
       rank: get(idx.rank),
       work: get(idx.work),
-      depStn, depTime, arrStn, arrTime,
+      depStn: depStn, depTime: depTime, arrStn: arrStn, arrTime: arrTime,
       debriefTime: get(idx.debrief),
       flyHrs: get(idx.fly),
       dutyHrs: get(idx.duty),
@@ -471,15 +473,15 @@ function parseXLSXRows(buf){
 }
 function splitStnTime(s){
   if(!s) return ['',''];
-  const m = /^([A-Z]{3})\s+(\d{1,2}:\d{2}(?:\(\+1\))?)$/.exec(s.trim());
+  var m = /^([A-Z]{3})\s+(\d{1,2}:\d{2}(?:\(\+1\))?)$/.exec(s.trim());
   if(m) return [m[1], m[2]];
   return [s.trim(), ''];
 }
 
 /* =====================================================================
-   2) PDF TEXT EXTRACTION (position-aware)
+   2) PDF TEXT EXTRACTION (position-aware) - KEPT COMPACT
 ===================================================================== */
-const TOKEN_PATTERNS = [
+var TOKEN_PATTERNS = [
   /\d{1,2}-[A-Za-z]{3}-\d{4}/,
   /REPORT:\d{1,2}:\d{2}/,
   /DEBRIEF:\d{1,2}:\d{2}(?:\(\+1\))?/,
@@ -497,13 +499,14 @@ const TOKEN_PATTERNS = [
   /\d+/
 ];
 function retokenize(str){
-  const out = [];
-  let s = str;
-  let guard = 0;
+  var out = [];
+  var s = str;
+  var guard = 0;
   while(s.length && guard++ < 200){
-    let matched = false;
-    for(const re of TOKEN_PATTERNS){
-      const m = new RegExp('^'+re.source).exec(s);
+    var matched = false;
+    for(var ri=0; ri<TOKEN_PATTERNS.length; ri++){
+      var re = TOKEN_PATTERNS[ri];
+      var m = new RegExp('^'+re.source).exec(s);
       if(m && m[0].length){
         out.push(m[0]);
         s = s.slice(m[0].length);
@@ -517,37 +520,43 @@ function retokenize(str){
 }
 
 async function extractPdfWords(buf){
-  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
-  const pages = [];
-  for(let p=1;p<=pdf.numPages;p++){
-    const page = await pdf.getPage(p);
-    const viewport = page.getViewport({scale:1});
-    const content = await page.getTextContent();
-    const words = [];
-    for(const item of content.items){
+  var pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  var pages = [];
+  for(var p=1;p<=pdf.numPages;p++){
+    var page = await pdf.getPage(p);
+    var viewport = page.getViewport({scale:1});
+    var content = await page.getTextContent();
+    var words = [];
+    for(var ci=0; ci<content.items.length; ci++){
+      var item = content.items[ci];
       if(!item.str || !item.str.trim()) continue;
-      const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
-      const w = item.width || (item.str.length * 5);
-      const h = item.height || 10;
-      const corners = [[0,0],[w,0],[0,h],[w,h]].map(([x,y])=>[
-        tx[0]*x + tx[2]*y + tx[4],
-        tx[1]*x + tx[3]*y + tx[5]
-      ]);
-      const xs = corners.map(c=>c[0]), ys = corners.map(c=>c[1]);
-      const x0 = Math.min(...xs), x1 = Math.max(...xs);
-      const top = Math.min(...ys), bottom = Math.max(...ys);
+      var tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
+      var w = item.width || (item.str.length * 5);
+      var h = item.height || 10;
+      var corners = [[0,0],[w,0],[0,h],[w,h]].map(function(c){
+        var x=c[0], y=c[1];
+        return [tx[0]*x + tx[2]*y + tx[4], tx[1]*x + tx[3]*y + tx[5]];
+      });
+      var xs = corners.map(function(c){return c[0];});
+      var ys = corners.map(function(c){return c[1];});
+      var x0 = Math.min.apply(null, xs);
+      var x1 = Math.max.apply(null, xs);
+      var top = Math.min.apply(null, ys);
+      var bottom = Math.max.apply(null, ys);
 
-      const wsParts = item.str.split(/(\s+)/).filter(s=>s.trim());
-      const totalLen = item.str.length;
-      let cursor = 0;
-      for(const wsPart of wsParts){
-        const partStart = cursor, partLen = wsPart.length;
+      var wsParts = item.str.split(/(\s+)/).filter(function(s){return s.trim();});
+      var totalLen = item.str.length;
+      var cursor = 0;
+      for(var wi=0; wi<wsParts.length; wi++){
+        var wsPart = wsParts[wi];
+        var partStart = cursor, partLen = wsPart.length;
         cursor += partLen;
-        const subTokens = retokenize(wsPart);
-        let inner = 0;
-        for(const tok of subTokens){
-          const f0 = (partStart+inner)/totalLen, f1 = (partStart+inner+tok.length)/totalLen;
-          words.push({text:tok, x0: x0+(x1-x0)*f0, x1: x0+(x1-x0)*f1, top, bottom, page:p, pageW:viewport.width, pageH:viewport.height});
+        var subTokens = retokenize(wsPart);
+        var inner = 0;
+        for(var ti=0; ti<subTokens.length; ti++){
+          var tok = subTokens[ti];
+          var f0 = (partStart+inner)/totalLen, f1 = (partStart+inner+tok.length)/totalLen;
+          words.push({text:tok, x0: x0+(x1-x0)*f0, x1: x0+(x1-x0)*f1, top:top, bottom:bottom, page:p, pageW:viewport.width, pageH:viewport.height});
           inner += tok.length;
         }
       }
@@ -558,9 +567,9 @@ async function extractPdfWords(buf){
 }
 
 function mergeDayHeaderTokens(words){
-  const out = [];
-  for(let i=0;i<words.length;i++){
-    const w = words[i], nxt = words[i+1];
+  var out = [];
+  for(var i=0;i<words.length;i++){
+    var w = words[i], nxt = words[i+1];
     if(nxt && MON_NAMES.includes(w.text) && /^\d{1,2}$/.test(nxt.text) &&
        Math.abs(w.top - nxt.top) < 4 && (nxt.x0 - w.x1) < 8 && (nxt.x0 - w.x1) > -3){
       out.push({text: w.text+nxt.text, x0:w.x0, x1:nxt.x1, top:w.top, bottom:Math.max(w.bottom,nxt.bottom), page:w.page, pageW:w.pageW, pageH:w.pageH});
@@ -580,89 +589,98 @@ function normalizeGroundCode(code){
 }
 
 function looksLikeCalendar(words){
-  const txt = words.map(w=>w.text).join('');
-  const hasWeekday = /Monday/.test(txt) && /Tuesday/.test(txt) && /Sunday/.test(txt);
-  const shortDatesStrict = words.filter(w=>/^[A-Za-z]{3}\d{1,2}$/.test(w.text)).length;
-  const shortDatesLoose = (txt.match(/[A-Za-z]{3}\d{1,2}(?!\d)/g)||[]).length;
+  var txt = words.map(function(w){return w.text;}).join('');
+  var hasWeekday = /Monday/.test(txt) && /Tuesday/.test(txt) && /Sunday/.test(txt);
+  var shortDatesStrict = words.filter(function(w){return /^[A-Za-z]{3}\d{1,2}$/.test(w.text);}).length;
+  var shortDatesLoose = (txt.match(/[A-Za-z]{3}\d{1,2}(?!\d)/g)||[]).length;
   return hasWeekday || shortDatesStrict >= 8 || shortDatesLoose >= 15;
 }
 function looksLikeTableReport(words){
-  const txt = words.map(w=>w.text).join('');
+  var txt = words.map(function(w){return w.text;}).join('');
   return /Pairing\/?Activity/.test(txt) && (/Roster/.test(txt) || /DutyReport/.test(txt) || /Report/.test(txt));
 }
 
 /* =====================================================================
-   3) PDF "ROSTER REPORT" TABLE PARSER
+   3) PDF "ROSTER REPORT" TABLE PARSER - KEPT COMPACT
 ===================================================================== */
 function parseTablePDFRows(pages){
-  const rows = [];
-  let lastDate = null;
+  var rows = [];
+  var lastDate = null;
 
-  const isTimeTok = t => /^\d{1,2}:\d{2}(\(\+1\))?$/.test(t);
-  const isStationTok = t => /^[A-Z]{3}$/.test(t) && t!=='OP' && t!=='FS';
-  const isDateTok = t => /^\d{1,2}-[A-Za-z]{3}-\d{4}$/.test(t);
-  const isFlightTokLoose = t => /^MH\d{2,4}$/.test(t);
+  var isTimeTok = function(t){ return /^\d{1,2}:\d{2}(\(\+1\))?$/.test(t); };
+  var isStationTok = function(t){ return /^[A-Z]{3}$/.test(t) && t!=='OP' && t!=='FS'; };
+  var isDateTok = function(t){ return /^\d{1,2}-[A-Za-z]{3}-\d{4}$/.test(t); };
+  var isFlightTokLoose = function(t){ return /^MH\d{2,4}$/.test(t); };
 
-  for(const words of pages){
+  for(var pi=0; pi<pages.length; pi++){
+    var words = pages[pi];
     if(!words.length) continue;
 
-    const pairingHdr = words.find(w => w.text === 'Pairing/Activity' || w.text === 'Pairing');
-    const firstAnchorWord = words.reduce((min,w)=>{
+    var pairingHdr = words.find(function(w){ return w.text === 'Pairing/Activity' || w.text === 'Pairing'; });
+    var firstAnchorWord = words.reduce(function(min,w){
       if(!(isDateTok(w.text) || isFlightTokLoose(w.text))) return min;
       return (!min || w.top < min.top) ? w : min;
     }, null);
-    const HEADER_WORDS = new Set(['Roster','Report','Date','Pairing/Activity','Item','ACY','Rep','Deb',
+    var HEADER_WORDS = new Set(['Roster','Report','Date','Pairing/Activity','Item','ACY','Rep','Deb',
       'SDC','Hotel','Updated','By','Duty','Overridde','n','Rank','Work','Type','Dep','Stn','/','Arr.',
       'Flying','Hrs','A/C','Time','Debrief','FH',':','DH','|','Pairing','Activity']);
-    const headerCutoff = firstAnchorWord ? (firstAnchorWord.top - 1)
+    var headerCutoff = firstAnchorWord ? (firstAnchorWord.top - 1)
       : (pairingHdr ? (pairingHdr.top + 15) : (words[0].top + 80));
-    const body = words.filter(w => w.top >= headerCutoff && !HEADER_WORDS.has(w.text));
+    var body = words.filter(function(w){ return w.top >= headerCutoff && !HEADER_WORDS.has(w.text); });
 
-    const rowTops = [];
-    for(const w of body){
+    var rowTops = [];
+    for(var bi=0; bi<body.length; bi++){
+      var w = body[bi];
       if(!rowTops.length || w.top - rowTops[rowTops.length-1] > 15) rowTops.push(w.top);
     }
-    const sortedTops = [...new Set(body.map(w=>w.top))].sort((a,b)=>a-b);
-    const clusterTops = [];
-    for(const t of sortedTops){ if(!clusterTops.length || t - clusterTops[clusterTops.length-1] > 15) clusterTops.push(t); }
-    function nearestClusterTop(t){ return clusterTops.reduce((b,r)=>Math.abs(t-r)<Math.abs(t-b)?r:b, clusterTops[0]); }
+    var sortedTops = body.map(function(w){return w.top;}).filter(function(v,i,a){return a.indexOf(v)===i;}).sort(function(a,b){return a-b;});
+    var clusterTops = [];
+    for(var si=0; si<sortedTops.length; si++){
+      var t = sortedTops[si];
+      if(!clusterTops.length || t - clusterTops[clusterTops.length-1] > 15) clusterTops.push(t);
+    }
+    function nearestClusterTop(t){
+      return clusterTops.reduce(function(b,r){ return Math.abs(t-r)<Math.abs(t-b)?r:b; }, clusterTops[0]);
+    }
 
-    const groups = {};
-    const order = [];
-    for(const w of body){
-      const k = nearestClusterTop(w.top);
+    var groups = {};
+    var order = [];
+    for(var bi=0; bi<body.length; bi++){
+      var w = body[bi];
+      var k = nearestClusterTop(w.top);
       if(!groups[k]){ groups[k]=[]; order.push(k); }
       groups[k].push(w);
     }
 
-    for(const k of order){
-      const toks = groups[k].map(w=>w.text);
-      const hasOwnDate = isDateTok(toks[0]);
+    for(var oi=0; oi<order.length; oi++){
+      var k = order[oi];
+      var toks = groups[k].map(function(w){return w.text;});
+      var hasOwnDate = isDateTok(toks[0]);
 
-      const itemIdx = toks.findIndex(isFlightTokLoose);
-      const isGround = itemIdx < 0;
-      const item = itemIdx>=0 ? toks[itemIdx] : '';
+      var itemIdx = toks.findIndex(isFlightTokLoose);
+      var isGround = itemIdx < 0;
+      var item = itemIdx>=0 ? toks[itemIdx] : '';
 
-      const timeIdxs = []; toks.forEach((t,i)=>{ if(isTimeTok(t)) timeIdxs.push(i); });
-      const firstTimeIdx = timeIdxs.length ? timeIdxs[0] : -1;
+      var timeIdxs = []; toks.forEach(function(t,i){ if(isTimeTok(t)) timeIdxs.push(i); });
+      var firstTimeIdx = timeIdxs.length ? timeIdxs[0] : -1;
       if(firstTimeIdx===-1 && itemIdx===-1) continue;
 
-      const searchStart = itemIdx>=0 ? itemIdx+1 : (firstTimeIdx>=0 ? firstTimeIdx : 0);
-      const stationIdxs = []; toks.forEach((t,i)=>{ if(i>=searchStart && isStationTok(t)) stationIdxs.push(i); });
-      const depIdx = stationIdxs[0], arrIdx = stationIdxs[1];
-      const depStn = depIdx!=null ? toks[depIdx] : '', arrStn = arrIdx!=null ? toks[arrIdx] : '';
+      var searchStart = itemIdx>=0 ? itemIdx+1 : (firstTimeIdx>=0 ? firstTimeIdx : 0);
+      var stationIdxs = []; toks.forEach(function(t,i){ if(i>=searchStart && isStationTok(t)) stationIdxs.push(i); });
+      var depIdx = stationIdxs[0], arrIdx = stationIdxs[1];
+      var depStn = depIdx!=null ? toks[depIdx] : '', arrStn = arrIdx!=null ? toks[arrIdx] : '';
 
-      const reportBoundary = itemIdx>=0 ? itemIdx : (firstTimeIdx>=0 ? firstTimeIdx+1 : searchStart);
-      const before = timeIdxs.filter(i=> i<reportBoundary);
-      const between = timeIdxs.filter(i=> depIdx!=null && arrIdx!=null && i>depIdx && i<arrIdx);
-      const after = timeIdxs.filter(i=> arrIdx!=null ? i>arrIdx : (depIdx!=null ? i>depIdx : (i>=searchStart && i>firstTimeIdx)));
+      var reportBoundary = itemIdx>=0 ? itemIdx : (firstTimeIdx>=0 ? firstTimeIdx+1 : searchStart);
+      var before = timeIdxs.filter(function(i){ return i<reportBoundary; });
+      var between = timeIdxs.filter(function(i){ return depIdx!=null && arrIdx!=null && i>depIdx && i<arrIdx; });
+      var after = timeIdxs.filter(function(i){ return arrIdx!=null ? i>arrIdx : (depIdx!=null ? i>depIdx : (i>=searchStart && i>firstTimeIdx)); });
 
-      const reportTime = before.length ? toks[before[before.length-1]] : '';
-      const depTime = between.length ? toks[between[0]] : '';
-      const arrTime = after.length ? toks[after[0]] : '';
-      const rest = after.slice(1);
+      var reportTime = before.length ? toks[before[before.length-1]] : '';
+      var depTime = between.length ? toks[between[0]] : '';
+      var arrTime = after.length ? toks[after[0]] : '';
+      var rest = after.slice(1);
 
-      let debriefTime='', flyHrs='', dutyHrs='';
+      var debriefTime='', flyHrs='', dutyHrs='';
       if(!isGround){
         if(rest.length>=3){ debriefTime=toks[rest[0]]; flyHrs=toks[rest[1]]; dutyHrs=toks[rest[2]]; }
         else if(rest.length===2){
@@ -674,21 +692,21 @@ function parseTablePDFRows(pages){
         else if(rest.length===1){ dutyHrs=toks[rest[0]]; }
       }
 
-      const work = toks.includes('OP') ? 'OP' : '';
-      const rank = toks.includes('FS') ? 'FS' : '';
+      var work = toks.includes('OP') ? 'OP' : '';
+      var rank = toks.includes('FS') ? 'FS' : '';
 
-      const codeEndCandidates = [itemIdx, firstTimeIdx].filter(i=>i>=0);
-      const codeEnd = codeEndCandidates.length ? Math.min(...codeEndCandidates) : toks.length;
-      const pairing = toks.slice(hasOwnDate?1:0, codeEnd).join('');
+      var codeEndCandidates = [itemIdx, firstTimeIdx].filter(function(i){return i>=0;});
+      var codeEnd = codeEndCandidates.length ? Math.min.apply(null, codeEndCandidates) : toks.length;
+      var pairing = toks.slice(hasOwnDate?1:0, codeEnd).join('');
 
-      const lastCoreIdx = [before, [depIdx,arrIdx].filter(x=>x!=null), between, after]
-        .flat().reduce((m,i)=> Math.max(m,i), Math.max(itemIdx, reportBoundary-1));
-      let metaStart = toks.length;
-      for(let i=lastCoreIdx+1;i<toks.length;i++){
-        if(/^(SYSTEM|ADOPT)$/.test(toks[i]) || /^\d{6,8}$/.test(toks[i]) || isDateTok(toks[i])){ metaStart = i; break; }
+      var lastCoreIdx = [before, [depIdx,arrIdx].filter(function(x){return x!=null;}), between, after]
+        .reduce(function(acc, arr){ return arr.reduce(function(m,i){ return Math.max(m,i); }, acc); }, Math.max(itemIdx, reportBoundary-1));
+      var metaStart = toks.length;
+      for(var mi=lastCoreIdx+1; mi<toks.length; mi++){
+        if(/^(SYSTEM|ADOPT)$/.test(toks[mi]) || /^\d{6,8}$/.test(toks[mi]) || isDateTok(toks[mi])){ metaStart = mi; break; }
       }
-      const leftover = toks.slice(lastCoreIdx+1, metaStart);
-      let sdc='', ac='', hotel='';
+      var leftover = toks.slice(lastCoreIdx+1, metaStart);
+      var sdc='', ac='', hotel='';
       if(isGround){
         sdc = leftover.join(' ');
       } else if(leftover.length){
@@ -698,17 +716,17 @@ function parseTablePDFRows(pages){
         else { hotel = leftover.join(' '); }
       }
 
-      let ownDate = null;
+      var ownDate = null;
       if(hasOwnDate){ ownDate = parseDMY(toks[0]); if(ownDate) lastDate = ownDate; }
       if(!ownDate && !lastDate) continue;
 
       rows.push({
-        ownDate,
+        ownDate: ownDate,
         anchorDate: ownDate || lastDate,
-        pairing, reportTime, item, rank, work,
-        depStn, depTime, arrStn, arrTime,
-        debriefTime, flyHrs, dutyHrs,
-        sdc, ac, hotel
+        pairing: pairing, reportTime: reportTime, item: item, rank: rank, work: work,
+        depStn: depStn, depTime: depTime, arrStn: arrStn, arrTime: arrTime,
+        debriefTime: debriefTime, flyHrs: flyHrs, dutyHrs: dutyHrs,
+        sdc: sdc, ac: ac, hotel: hotel
       });
     }
   }
@@ -717,78 +735,84 @@ function parseTablePDFRows(pages){
 }
 
 /* =====================================================================
-   4) PDF "FRIDGE CALENDAR" PARSER
+   4) PDF "FRIDGE CALENDAR" PARSER - KEPT COMPACT
 ===================================================================== */
 function parseCalendarPDF(pages){
-  const legsAll = [];
-  let year = null, month = null;
+  var legsAll = [];
+  var year = null, month = null;
 
-  for(const words of pages){
+  for(var pi=0; pi<pages.length; pi++){
+    var words = pages[pi];
     if(!words.length) continue;
-    for(const w of words){
-      const mIdx = MON_NAMES.findIndex(m=>w.text===m || w.text.startsWith(m));
+    for(var wi=0; wi<words.length; wi++){
+      var w = words[wi];
+      var mIdx = MON_NAMES.findIndex(function(m){return w.text===m || w.text.startsWith(m);});
       if(mIdx>=0 && w.text.length>3) month = mIdx;
       if(/^\d{4}$/.test(w.text)) year = parseInt(w.text);
     }
-    const headers = words.filter(w=>/^[A-Za-z]{3}\d{1,2}$/.test(w.text));
+    var headers = words.filter(function(w){return /^[A-Za-z]{3}\d{1,2}$/.test(w.text);});
     if(!headers.length) continue;
 
     function cluster(vals, tol){
-      const s = [...vals].sort((a,b)=>a-b);
-      const out = [];
-      for(const v of s){
+      var s = vals.slice().sort(function(a,b){return a-b;});
+      var out = [];
+      for(var vi=0; vi<s.length; vi++){
+        var v = s[vi];
         if(out.length && Math.abs(v-out[out.length-1].last) <= tol) { out[out.length-1].vals.push(v); out[out.length-1].last=v; }
         else out.push({vals:[v], last:v});
       }
-      return out.map(o=> o.vals.reduce((a,b)=>a+b,0)/o.vals.length );
+      return out.map(function(o){ return o.vals.reduce(function(a,b){return a+b;},0)/o.vals.length; });
     }
-    const rowTops = cluster(headers.map(w=>w.top), 8);
-    function nearestRow(t){ return rowTops.reduce((b,r)=>Math.abs(t-r)<Math.abs(t-b)?r:b, rowTops[0]); }
+    var rowTops = cluster(headers.map(function(w){return w.top;}), 8);
+    function nearestRow(t){ return rowTops.reduce(function(b,r){return Math.abs(t-r)<Math.abs(t-b)?r:b;}, rowTops[0]); }
 
-    const headersByRow = {};
-    for(const h of headers){
-      const r = nearestRow(h.top);
-      headersByRow[r] = headersByRow[r]||[];
+    var headersByRow = {};
+    for(var hi=0; hi<headers.length; hi++){
+      var h = headers[hi];
+      var r = nearestRow(h.top);
+      if(!headersByRow[r]) headersByRow[r]=[];
       headersByRow[r].push(h);
     }
-    Object.values(headersByRow).forEach(list=>list.sort((a,b)=>a.x0-b.x0));
+    Object.keys(headersByRow).forEach(function(key){ headersByRow[key].sort(function(a,b){return a.x0-b.x0;}); });
 
-    const EXCLUDE = new Set(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+    var EXCLUDE = new Set(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
       .concat(MON_NAMES)
       .concat(['January','February','March','April','May','June','July','August','September','October','November','December']));
-    const content = words.filter(w=>
-      !EXCLUDE.has(w.text) &&
-      !/^[A-Za-z]{3}\d{1,2}$/.test(w.text)
-    );
+    var content = words.filter(function(w){
+      return !EXCLUDE.has(w.text) && !/^[A-Za-z]{3}\d{1,2}$/.test(w.text);
+    });
 
-    const cellText = {};
-    const TOL = 20, ROW_TOL = 25, X_OVERFLOW = 100;
-    for(const w of content){
-      const r = nearestRow(w.top);
+    var cellText = {};
+    var TOL = 20, ROW_TOL = 25, X_OVERFLOW = 100;
+    for(var ci=0; ci<content.length; ci++){
+      var w = content[ci];
+      var r = nearestRow(w.top);
       if(Math.abs(w.top - r) > ROW_TOL) continue;
-      const rowHeaders = headersByRow[r] || [];
+      var rowHeaders = headersByRow[r] || [];
       if(!rowHeaders.length) continue;
-      let match = rowHeaders.find(h => h.x0 >= w.x0 - TOL);
+      var match = rowHeaders.find(function(h){ return h.x0 >= w.x0 - TOL; });
       if(!match) continue;
       if(match.x0 - w.x0 > X_OVERFLOW) continue;
-      cellText[match.text] = cellText[match.text] || [];
+      if(!cellText[match.text]) cellText[match.text]=[];
       cellText[match.text].push(w);
     }
 
     if(year===null || month===null){ RAW_WARNINGS.push('Could not detect month/year title on calendar PDF — dates may be wrong year/month.'); }
 
-    for(const dayLabel of Object.keys(cellText)){
-      const dm = /^([A-Za-z]{3})(\d{1,2})$/.exec(dayLabel);
-      const dNum = parseInt(dm[2]);
-      const mIdx = month!==null ? month : MON_NAMES.findIndex(m=>m===dm[1]);
-      const y = year || new Date().getFullYear();
-      const dateObj = new Date(y, mIdx, dNum);
+    var dayLabels = Object.keys(cellText);
+    for(var di=0; di<dayLabels.length; di++){
+      var dayLabel = dayLabels[di];
+      var dm = /^([A-Za-z]{3})(\d{1,2})$/.exec(dayLabel);
+      var dNum = parseInt(dm[2]);
+      var mIdx = month!==null ? month : MON_NAMES.findIndex(function(m){return m===dm[1];});
+      var y = year || new Date().getFullYear();
+      var dateObj = new Date(y, mIdx, dNum);
 
-      const joined = cellText[dayLabel].map(l=>l.text).join('');
-      const lines2 = calendarCellToLegs(dateObj, joined).map(l => Object.assign(l, {
+      var joined = cellText[dayLabel].map(function(l){return l.text;}).join('');
+      var lines2 = calendarCellToLegs(dateObj, joined).map(function(l){ return Object.assign(l, {
         depDate: dateObj, arrDate: dateObj, reportDate: dateObj, debriefDate: dateObj, standalone: true
-      }));
-      legsAll.push(...lines2);
+      });});
+      legsAll.push.apply(legsAll, lines2);
     }
     if(month!==null) MONTH_LABEL = MON_NAMES[month] + ' ' + (year||'');
   }
@@ -796,16 +820,16 @@ function parseCalendarPDF(pages){
 }
 
 function calendarCellToLegs(dateObj, text){
-  const out = [];
-  let reportTime='', debriefTime='';
-  const repM = /REPORT:(\d{1,2}:\d{2})/.exec(text);
+  var out = [];
+  var reportTime='', debriefTime='';
+  var repM = /REPORT:(\d{1,2}:\d{2})/.exec(text);
   if(repM) reportTime = repM[1];
-  const debM = /DEBRIEF:(\d{1,2}:\d{2}(?:\(\+1\))?)/.exec(text);
+  var debM = /DEBRIEF:(\d{1,2}:\d{2}(?:\(\+1\))?)/.exec(text);
   if(debM) debriefTime = debM[1];
 
-  const loM = /LO([A-Z]{3})/.exec(text);
-  const flightRe = /(MH\d{2,4})([A-Z]{3})?(\d{1,2}:\d{2}(?:\(\+1\))?)?-([A-Z]{3})(\d{1,2}:\d{2}(?:\(\+1\))?)?/g;
-  let fm; let flightsFound=false;
+  var loM = /LO([A-Z]{3})/.exec(text);
+  var flightRe = /(MH\d{2,4})([A-Z]{3})?(\d{1,2}:\d{2}(?:\(\+1\))?)?-([A-Z]{3})(\d{1,2}:\d{2}(?:\(\+1\))?)?/g;
+  var fm; var flightsFound=false;
   while((fm = flightRe.exec(text))){
     flightsFound = true;
     out.push({
@@ -830,8 +854,8 @@ function calendarCellToLegs(dateObj, text){
     return out;
   }
 
-  const groundRe = /([A-Z0-9]+?)([A-Z]{3})(\d{1,2}:\d{2})-([A-Z]{3})(\d{1,2}:\d{2})/g;
-  let gm; let groundFound=false;
+  var groundRe = /([A-Z0-9]+?)([A-Z]{3})(\d{1,2}:\d{2})-([A-Z]{3})(\d{1,2}:\d{2})/g;
+  var gm; var groundFound=false;
   while((gm = groundRe.exec(text))){
     groundFound = true;
     out.push({isGround:true, ownDate:dateObj, anchorDate:dateObj, pairing:'', item:normalizeGroundCode(gm[1]),
@@ -840,7 +864,7 @@ function calendarCellToLegs(dateObj, text){
   }
   if(groundFound) return out;
 
-  const bareM = /^[A-Z0-9]+$/.exec(text.trim());
+  var bareM = /^[A-Z0-9]+$/.exec(text.trim());
   if(bareM){
     out.push({isGround:true, ownDate:dateObj, anchorDate:dateObj, pairing:'', item:normalizeGroundCode(text.trim()),
       rank:'', work:'', depStn:'', depTime:'', arrStn:'', arrTime:'', reportTime:'', debriefTime:'',
@@ -861,30 +885,31 @@ function calendarCellToLegs(dateObj, text){
    5) ROW -> LEG NORMALIZER
 ===================================================================== */
 function rowsToLegs(rows){
-  const legs = [];
-  let currentDate = null;
-  let pairingSeq = 0;
-  let lastPairingKey = null;
+  var legs = [];
+  var currentDate = null;
+  var pairingSeq = 0;
+  var lastPairingKey = null;
 
-  for(const r of rows){
+  for(var ri=0; ri<rows.length; ri++){
+    var r = rows[ri];
     if(r.ownDate) currentDate = r.ownDate;
     if(!currentDate) continue;
-    const anchor = currentDate;
+    var anchor = currentDate;
 
-    const dep = cleanTime(r.depTime);
-    const arr = cleanTime(r.arrTime);
-    const rep = cleanTime(r.reportTime);
-    const deb = cleanTime(r.debriefTime);
+    var dep = cleanTime(r.depTime);
+    var arr = cleanTime(r.arrTime);
+    var rep = cleanTime(r.reportTime);
+    var deb = cleanTime(r.debriefTime);
 
-    const isFlight = /^[A-Z0-9]{2,3}\d{2,4}$/.test(r.item||'') || r.work==='OP';
-    const isGround = !isFlight;
+    var isFlight = /^[A-Z0-9]{2,3}\d{2,4}$/.test(r.item||'') || r.work==='OP';
+    var isGround = !isFlight;
 
     if(r.pairing && r.pairing !== lastPairingKey){ pairingSeq++; lastPairingKey = r.pairing; }
 
     legs.push({
-      isGround,
+      isGround: isGround,
       pairingId: r.pairing || null,
-      pairingSeq,
+      pairingSeq: pairingSeq,
       depDate: addDays(anchor, dep.rollover), depStn: r.depStn, depTime: dep.time,
       arrDate: addDays(anchor, arr.rollover), arrStn: r.arrStn, arrTime: arr.time,
       reportDate: addDays(anchor, rep.rollover), reportTime: rep.time,
@@ -903,82 +928,86 @@ function rowsToLegs(rows){
 function buildDays(legs){
   if(!legs.length) throw new Error('No records parsed from this file.');
 
-  let minDate=null, maxDate=null;
-  for(const l of legs){
-    for(const d of [l.depDate, l.arrDate, l.reportDate, l.debriefDate]){
+  var minDate=null, maxDate=null;
+  for(var li=0; li<legs.length; li++){
+    var l = legs[li];
+    var dates = [l.depDate, l.arrDate, l.reportDate, l.debriefDate];
+    for(var di=0; di<dates.length; di++){
+      var d = dates[di];
       if(!d) continue;
       if(!minDate || d<minDate) minDate=d;
       if(!maxDate || d>maxDate) maxDate=d;
     }
   }
-  const dayMap = {};
+  var dayMap = {};
   function ensureDay(d){
-    const k = ymdKey(d);
+    var k = ymdKey(d);
     if(!dayMap[k]) dayMap[k] = {date:d, key:k, rows:[], hasData:false};
     return dayMap[k];
   }
 
-  legs.forEach((l, i)=>{
-      if(l.isGround){
-        const day = ensureDay(l.depDate);
-        day.hasData = true;
-        day.rows.push({
-          dutyStart: l.reportTime, item: l.item, rank: l.rank,
-          depStn: l.depStn, depTime: l.depTime,
-          arrStn: l.arrStn, arrTime: l.arrTime,
-          dutyEnd: l.debriefTime, work: l.work,
-          block: '', dutyHrs: l.dutyHrs, dutyCode: l.sdc, ac: l.ac
-        });
-        return;
-      }
-
-      const sameDay = ymdKey(l.depDate)===ymdKey(l.arrDate);
-      const depDay = ensureDay(l.depDate);
-      depDay.hasData = true;
-      depDay.rows.push({
-        dutyStart: (!l.reportDate || ymdKey(l.reportDate)===ymdKey(l.depDate)) ? l.reportTime : '',
-        item: l.item, rank: l.rank,
+  for(var li=0; li<legs.length; li++){
+    var l = legs[li];
+    if(l.isGround){
+      var day = ensureDay(l.depDate);
+      day.hasData = true;
+      day.rows.push({
+        dutyStart: l.reportTime, item: l.item, rank: l.rank,
         depStn: l.depStn, depTime: l.depTime,
-        arrStn: sameDay ? l.arrStn : '', arrTime: sameDay ? l.arrTime : '',
-        dutyEnd: sameDay ? l.debriefTime : '',
-        work: l.work,
-        block: l.flyHrs, dutyHrs: l.dutyHrs,
-        dutyCode: l.sdc, ac: l.ac
+        arrStn: l.arrStn, arrTime: l.arrTime,
+        dutyEnd: l.debriefTime, work: l.work,
+        block: '', dutyHrs: l.dutyHrs, dutyCode: l.sdc, ac: l.ac
       });
-      if(!sameDay){
-        const arrDay = ensureDay(l.arrDate);
-        arrDay.hasData = true;
-        arrDay.rows.push({
-          dutyStart:'', item:'', rank:'',
-          depStn:'', depTime:'',
-          arrStn: l.arrStn, arrTime: l.arrTime,
-          dutyEnd: l.debriefTime, work:'',
-          block:'', dutyHrs:'', dutyCode:'', ac:''
-        });
-      }
-      const nextLeg = legs[i+1];
-      if(nextLeg && !nextLeg.isGround){
-        let cursor = addDays(l.arrDate,1);
-        const stop = nextLeg.depDate;
-        const awayStn = l.arrStn || nextLeg.depStn;
-        while(cursor < stop){
-          const d = ensureDay(cursor);
-          if(!d.hasData){
-            d.hasData = true;
-            const showReport = nextLeg.reportTime && nextLeg.reportDate && ymdKey(cursor)===ymdKey(nextLeg.reportDate);
-            d.rows.push({dutyStart: showReport?nextLeg.reportTime:'', item:'LO', rank:'', depStn: awayStn, depTime:'', arrStn:'', arrTime:'', dutyEnd:'', work:'', block:'', dutyHrs:'', dutyCode:'', ac:''});
-          }
-          cursor = addDays(cursor,1);
+      continue;
+    }
+
+    var sameDay = ymdKey(l.depDate)===ymdKey(l.arrDate);
+    var depDay = ensureDay(l.depDate);
+    depDay.hasData = true;
+    depDay.rows.push({
+      dutyStart: (!l.reportDate || ymdKey(l.reportDate)===ymdKey(l.depDate)) ? l.reportTime : '',
+      item: l.item, rank: l.rank,
+      depStn: l.depStn, depTime: l.depTime,
+      arrStn: sameDay ? l.arrStn : '', arrTime: sameDay ? l.arrTime : '',
+      dutyEnd: sameDay ? l.debriefTime : '',
+      work: l.work,
+      block: l.flyHrs, dutyHrs: l.dutyHrs,
+      dutyCode: l.sdc, ac: l.ac
+    });
+    if(!sameDay){
+      var arrDay = ensureDay(l.arrDate);
+      arrDay.hasData = true;
+      arrDay.rows.push({
+        dutyStart:'', item:'', rank:'',
+        depStn:'', depTime:'',
+        arrStn: l.arrStn, arrTime: l.arrTime,
+        dutyEnd: l.debriefTime, work:'',
+        block:'', dutyHrs:'', dutyCode:'', ac:''
+      });
+    }
+    var nextLeg = legs[li+1];
+    if(nextLeg && !nextLeg.isGround){
+      var cursor = addDays(l.arrDate,1);
+      var stop = nextLeg.depDate;
+      var awayStn = l.arrStn || nextLeg.depStn;
+      while(cursor < stop){
+        var d = ensureDay(cursor);
+        if(!d.hasData){
+          d.hasData = true;
+          var showReport = nextLeg.reportTime && nextLeg.reportDate && ymdKey(cursor)===ymdKey(nextLeg.reportDate);
+          d.rows.push({dutyStart: showReport?nextLeg.reportTime:'', item:'LO', rank:'', depStn: awayStn, depTime:'', arrStn:'', arrTime:'', dutyEnd:'', work:'', block:'', dutyHrs:'', dutyCode:'', ac:''});
         }
+        cursor = addDays(cursor,1);
       }
-  });
+    }
+  }
 
   if(!minDate || !maxDate) throw new Error('Could not determine date range.');
   DAYS = [];
-  let cursor = new Date(minDate);
+  var cursor = new Date(minDate);
   while(cursor <= maxDate){
-    const k = ymdKey(cursor);
-    const existing = dayMap[k];
+    var k = ymdKey(cursor);
+    var existing = dayMap[k];
     DAYS.push(existing || {date:new Date(cursor), key:k, rows:[], hasData:false});
     cursor = addDays(cursor,1);
   }
@@ -989,69 +1018,73 @@ function buildDays(legs){
    7) RENDER
 ===================================================================== */
 function fmtDate(d){
-  const dd = String(d.getDate()).padStart(2,'0');
-  const mmm = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()];
+  var dd = String(d.getDate()).padStart(2,'0');
+  var mmm = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()];
   return dd+'-'+mmm+'-'+d.getFullYear();
 }
 function hhmmToMin(s){
   if(!s) return 0;
-  const m=/^(\d{1,2}):(\d{2})$/.exec(s.trim()); if(!m) return 0;
+  var m=/^(\d{1,2}):(\d{2})$/.exec(s.trim()); if(!m) return 0;
   return parseInt(m[1])*60+parseInt(m[2]);
 }
 function sumHrs(list){
-  let total=0;
-  for(const s of list){ total += hhmmToMin(s); }
-  const h=Math.floor(total/60), m=total%60;
+  var total=0;
+  for(var li=0; li<list.length; li++){ total += hhmmToMin(list[li]); }
+  var h=Math.floor(total/60), m=total%60;
   return h+':'+String(m).padStart(2,'0');
 }
 
 function render(){
-  const tbody = document.getElementById('outBody');
+  var tbody = document.getElementById('outBody');
   tbody.innerHTML='';
-  const blockHrsAll=[], dutyHrsAll=[];
-  let offAtBase=0, offAway=0;
-  const codesUsed = new Set();
+  var blockHrsAll=[], dutyHrsAll=[];
+  var offAtBase=0, offAway=0;
+  var codesUsed = new Set();
 
-  for(const day of DAYS){
-    const rows = day.rows.length ? day.rows : [{dutyStart:'',item:'',rank:'',depStn:'',depTime:'',arrStn:'',arrTime:'',dutyEnd:'',work:'',block:'',dutyHrs:'',dutyCode:'',ac:''}];
-    rows.forEach((r, ri)=>{
-      const tr = document.createElement('tr');
-      const isOff = ri===0 && isOffCode(r.item);
-      const isLayover = ri===0 && r.item==='LO';
+  for(var di=0; di<DAYS.length; di++){
+    var day = DAYS[di];
+    var rows = day.rows.length ? day.rows : [{dutyStart:'',item:'',rank:'',depStn:'',depTime:'',arrStn:'',arrTime:'',dutyEnd:'',work:'',block:'',dutyHrs:'',dutyCode:'',ac:''}];
+    for(var ri=0; ri<rows.length; ri++){
+      var r = rows[ri];
+      var tr = document.createElement('tr');
+      var isOff = ri===0 && isOffCode(r.item);
+      var isLayover = ri===0 && r.item==='LO';
       if(isOff) tr.className='off'; else if(isLayover) tr.className='layover'; else if(ri>0) tr.className='leg2';
-      const depCombined = [r.depStn, r.depTime].filter(Boolean).join(' ');
-      const arrCombined = [r.arrStn, r.arrTime].filter(Boolean).join(' ');
-      const cells = [
+      var depCombined = [r.depStn, r.depTime].filter(Boolean).join(' ');
+      var arrCombined = [r.arrStn, r.arrTime].filter(Boolean).join(' ');
+      var cells = [
         ri===0 ? fmtDate(day.date) : '',
         ri===0 ? DOW[day.date.getDay()].slice(0,3) : '',
         r.dutyStart, r.item, r.rank, depCombined, arrCombined, r.dutyEnd, r.work, r.block, r.dutyHrs, r.dutyCode, r.ac
       ];
-      cells.forEach((c,ci)=>{
-        const td = document.createElement('td');
+      for(var ci=0; ci<cells.length; ci++){
+        var c = cells[ci];
+        var td = document.createElement('td');
         if(ci===11 && c && c.includes(',')){
-          const parts = c.split(',').map(s=>s.trim()).filter(Boolean);
-          parts.forEach((p,pi)=>{
+          var parts = c.split(',').map(function(s){return s.trim();}).filter(Boolean);
+          for(var pi=0; pi<parts.length; pi++){
+            var p = parts[pi];
             td.appendChild(document.createTextNode(p + (pi<parts.length-1 ? ',' : '')));
             if(pi<parts.length-1) td.appendChild(document.createElement('br'));
-          });
+          }
         } else {
           td.textContent = c || '';
         }
         if(ci===0) td.className='date';
         if(ci>=9 && ci<=10) td.className='num';
         tr.appendChild(td);
-      });
+      }
       tbody.appendChild(tr);
       if(r.block) blockHrsAll.push(r.block);
       if(r.dutyHrs) dutyHrsAll.push(r.dutyHrs);
-      if(r.dutyCode) r.dutyCode.split(',').map(s=>s.trim()).filter(Boolean).forEach(c=>codesUsed.add(c));
+      if(r.dutyCode) r.dutyCode.split(',').map(function(s){return s.trim();}).filter(Boolean).forEach(function(c){codesUsed.add(c);});
       if(r.item) codesUsed.add(r.item);
-    });
+    }
 
     if(rows.length===1){
-      const only = rows[0];
+      var only = rows[0];
       if(isOffCode(only.item)){
-        const away = only.depStn && only.depStn !== HOME;
+        var away = only.depStn && only.depStn !== HOME;
         if(away) offAway++; else offAtBase++;
       } else if(only.item==='LO'){
         offAway++;
@@ -1064,98 +1097,98 @@ function render(){
   document.getElementById('toolbarRow').style.display='flex';
   document.getElementById('editImageBtn').disabled = true;
 
-  document.getElementById('statsBody').innerHTML = `
-    <div>Actual Block Hours<b>${sumHrs(blockHrsAll)}</b></div>
-    <div>Duty Hours<b>${sumHrs(dutyHrsAll)}</b></div>
-    <div>OFF Days At Base<b>${offAtBase}</b></div>
-    <div>OFF Days Away From Base<b>${offAway}</b></div>
-  `;
+  document.getElementById('statsBody').innerHTML = 
+    '<div>Actual Block Hours<b>'+sumHrs(blockHrsAll)+'</b></div>'+
+    '<div>Duty Hours<b>'+sumHrs(dutyHrsAll)+'</b></div>'+
+    '<div>OFF Days At Base<b>'+offAtBase+'</b></div>'+
+    '<div>OFF Days Away From Base<b>'+offAway+'</b></div>';
   document.getElementById('statsCard').style.display='block';
 
   renderLegend(codesUsed);
 
-  if(RAW_WARNINGS.length) RAW_WARNINGS.forEach(w=>log(w,'warn'));
+  if(RAW_WARNINGS.length) RAW_WARNINGS.forEach(function(w){log(w,'warn');});
   log('Parsed '+DAYS.length+' days ('+fmtDate(DAYS[0].date)+' – '+fmtDate(DAYS[DAYS.length-1].date)+').', 'ok');
 }
 
 function renderLegend(codesUsed){
   loadLegend();
-  const body = document.getElementById('legendBody');
+  var body = document.getElementById('legendBody');
   body.innerHTML='';
-  const codes = Array.from(codesUsed).filter(Boolean).sort();
-  codes.forEach(code=>{
-    const desc = legendDescFor(code);
+  var codes = Array.from(codesUsed).filter(Boolean).sort();
+  for(var ci=0; ci<codes.length; ci++){
+    var code = codes[ci];
+    var desc = legendDescFor(code);
     if(desc) addLegendRow(code, desc);
-  });
+  }
   document.getElementById('legendCard').style.display='block';
 }
-function addLegendRow(code='', desc=''){
-  const body = document.getElementById('legendBody');
-  const row = document.createElement('div');
+function addLegendRow(code, desc){
+  var body = document.getElementById('legendBody');
+  var row = document.createElement('div');
   row.className='row';
-  row.innerHTML = `<input class="code" value="${code}" placeholder="CODE">
-                    <input class="desc" value="${desc}" placeholder="Description">
-                    <button onclick="this.parentElement.remove()">✕</button>`;
-  row.querySelectorAll('input').forEach(inp=>inp.addEventListener('change', ()=>{
-    const c = row.querySelector('.code').value.trim();
-    const d = row.querySelector('.desc').value.trim();
+  row.innerHTML = '<input class="code" value="'+code+'" placeholder="CODE">'+
+                    '<input class="desc" value="'+(desc||'')+'" placeholder="Description">'+
+                    '<button onclick="this.parentElement.remove()">✕</button>';
+  row.querySelectorAll('input').forEach(function(inp){inp.addEventListener('change', function(){
+    var c = row.querySelector('.code').value.trim();
+    var d = row.querySelector('.desc').value.trim();
     if(c){ LEGEND[c]=d; saveLegend(); }
-  }));
+  });});
   body.appendChild(row);
 }
 
 /* =====================================================================
    8) EXPORT FUNCTIONS
 ===================================================================== */
-const CSV_HEADER = ['Date','Day','Duty Start','Item','Overrd Rank','Dep/Start','Arr/End','Duty End','Work Type','Actual Block Hours','Duty Hours','DutyCode','Ac Type'];
+var CSV_HEADER = ['Date','Day','Duty Start','Item','Overrd Rank','Dep/Start','Arr/End','Duty End','Work Type','Actual Block Hours','Duty Hours','DutyCode','Ac Type'];
 
 function tableToTSV(){
-  const rows = [CSV_HEADER];
-  document.querySelectorAll('#outBody tr').forEach(tr=>{
-    rows.push(Array.from(tr.children).map(td=>td.textContent));
+  var rows = [CSV_HEADER];
+  document.querySelectorAll('#outBody tr').forEach(function(tr){
+    rows.push(Array.from(tr.children).map(function(td){return td.textContent;}));
   });
-  return rows.map(r=>r.join('\t')).join('\n');
+  return rows.map(function(r){return r.join('\t');}).join('\n');
 }
-function copyTSV(){ navigator.clipboard.writeText(tableToTSV()).then(()=>log('Copied to clipboard.','ok')); }
+function copyTSV(){ navigator.clipboard.writeText(tableToTSV()).then(function(){log('Copied to clipboard.','ok');}); }
 function downloadCSV(){
-  const rows = [CSV_HEADER];
-  document.querySelectorAll('#outBody tr').forEach(tr=>{
-    rows.push(Array.from(tr.children).map(td=>'"'+td.textContent.replace(/"/g,'""')+'"'));
+  var rows = [CSV_HEADER];
+  document.querySelectorAll('#outBody tr').forEach(function(tr){
+    rows.push(Array.from(tr.children).map(function(td){return '"'+td.textContent.replace(/"/g,'""')+'"';}));
   });
-  const csv = rows.map(r=>r.join(',')).join('\n');
-  const blob = new Blob([csv], {type:'text/csv'});
-  const a = document.createElement('a');
+  var csv = rows.map(function(r){return r.join(',');}).join('\n');
+  var blob = new Blob([csv], {type:'text/csv'});
+  var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'roster-'+(DAYS.length?DAYS[0].key:'export')+'.csv';
   a.click();
 }
 
-let fitOn = false;
+var fitOn = false;
 function toggleFit(){
-  const wrap = document.getElementById('resultsWrap');
-  const table = document.getElementById('outTable');
+  var wrap = document.getElementById('resultsWrap');
+  var table = document.getElementById('outTable');
   fitOn = !fitOn;
   document.getElementById('fitBtn').textContent = fitOn ? 'Unfit' : 'Fit screen';
   if(!fitOn){ wrap.style.transform=''; wrap.style.width=''; return; }
   wrap.style.transform = '';
   wrap.style.width = '';
-  const naturalW = table ? table.scrollWidth : wrap.scrollWidth;
-  const availW = window.innerWidth - 20;
-  const scale = Math.min(availW/naturalW, 1);
-  wrap.style.transform = `scale(${scale})`;
+  var naturalW = table ? table.scrollWidth : wrap.scrollWidth;
+  var availW = window.innerWidth - 20;
+  var scale = Math.min(availW/naturalW, 1);
+  wrap.style.transform = 'scale('+scale+')';
   wrap.style.transformOrigin = 'top left';
   wrap.style.width = (100/scale)+'%';
   document.getElementById('toolbarRow').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function exportPNG(){
-  const wrap = document.getElementById('resultsWrap');
-  const wasFit = fitOn;
+  var wrap = document.getElementById('resultsWrap');
+  var wasFit = fitOn;
   if(!wasFit) toggleFit();
-  setTimeout(()=>{
-    html2canvas(wrap, {scale:3, backgroundColor:'#0b0c0e'}).then(canvas=>{
-      canvas.toBlob(blob=>{
-        const reader = new FileReader();
+  setTimeout(function(){
+    html2canvas(wrap, {scale:3, backgroundColor:'#0b0c0e'}).then(function(canvas){
+      canvas.toBlob(function(blob){
+        var reader = new FileReader();
         reader.onload = function(e) {
           CAPTURED_IMAGE_DATA = e.target.result;
           document.getElementById('editImageBtn').disabled = false;
@@ -1163,47 +1196,47 @@ function exportPNG(){
         };
         reader.readAsDataURL(blob);
         
-        const a = document.createElement('a');
+        var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'roster-'+(DAYS.length?DAYS[0].key:'export')+'.png';
         a.click();
       });
       if(!wasFit) toggleFit();
-    }).catch(err=>{ log('Image export failed: '+err.message, 'err'); });
+    }).catch(function(err){ log('Image export failed: '+err.message, 'err'); });
   }, 350);
 }
 
 function exportPDF(){
-  const wasFit = fitOn;
+  var wasFit = fitOn;
   if(wasFit) toggleFit();
-  const wrap = document.getElementById('resultsWrap');
-  const table = document.getElementById('outTable');
+  var wrap = document.getElementById('resultsWrap');
+  var table = document.getElementById('outTable');
   wrap.style.transform = ''; wrap.style.width = '';
-  const naturalW = table ? table.scrollWidth : wrap.scrollWidth;
-  const naturalH = wrap.scrollHeight;
-  const targetW = 730, targetH = 1060;
-  const scale = Math.min(targetW/naturalW, targetH/naturalH, 1);
+  var naturalW = table ? table.scrollWidth : wrap.scrollWidth;
+  var naturalH = wrap.scrollHeight;
+  var targetW = 730, targetH = 1060;
+  var scale = Math.min(targetW/naturalW, targetH/naturalH, 1);
   document.documentElement.style.setProperty('--print-scale', scale);
   window.print();
 }
 
 function exportDebug(){
-  const payload = {
+  var payload = {
     fileName: LAST_FILE_NAME,
     detectedFormat: LAST_FORMAT,
     warnings: RAW_WARNINGS,
-    rawWordsByPage: RAW_PDF_PAGES ? RAW_PDF_PAGES.map(pg=>pg.map(w=>({t:w.text,x0:Math.round(w.x0),x1:Math.round(w.x1),top:Math.round(w.top),bottom:Math.round(w.bottom)}))) : null,
-    parsedRows: LAST_PARSED_ROWS ? LAST_PARSED_ROWS.map(r=>{
-      const c = Object.assign({}, r);
-      ['ownDate','anchorDate','depDate','arrDate','reportDate','debriefDate'].forEach(k=>{
+    rawWordsByPage: RAW_PDF_PAGES ? RAW_PDF_PAGES.map(function(pg){return pg.map(function(w){return {t:w.text,x0:Math.round(w.x0),x1:Math.round(w.x1),top:Math.round(w.top),bottom:Math.round(w.bottom)};});}) : null,
+    parsedRows: LAST_PARSED_ROWS ? LAST_PARSED_ROWS.map(function(r){
+      var c = Object.assign({}, r);
+      ['ownDate','anchorDate','depDate','arrDate','reportDate','debriefDate'].forEach(function(k){
         if(c[k] instanceof Date) c[k]=ymdKey(c[k]);
       });
       return c;
     }) : null,
-    days: DAYS.map(d=>({date:d.key, hasData:d.hasData, rows:d.rows}))
+    days: DAYS.map(function(d){return {date:d.key, hasData:d.hasData, rows:d.rows};})
   };
-  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
-  const a = document.createElement('a');
+  var blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'roster-debug-'+(LAST_FILE_NAME||'file').replace(/\.[^.]+$/,'')+'.json';
   a.click();
@@ -1219,8 +1252,8 @@ function editInStudio() {
     return;
   }
   
-  const studioHTML = generateFilterStudioHTML(CAPTURED_IMAGE_DATA);
-  const newTab = window.open('', '_blank');
+  var studioHTML = generateFilterStudioHTML(CAPTURED_IMAGE_DATA);
+  var newTab = window.open('', '_blank');
   if (!newTab) {
     log('Please allow pop-ups for this site to use the Edit Image feature.', 'err');
     return;
@@ -1230,896 +1263,10 @@ function editInStudio() {
 }
 
 /* =====================================================================
-   10) GENERATE FILTER STUDIO HTML
+   10) GENERATE FILTER STUDIO HTML - FULLY ESCAPED
 ===================================================================== */
 function generateFilterStudioHTML(imageData) {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Filter Studio Pro - Roster Editor</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: #0b0c0e;
-    font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-    padding: 20px;
-    color: #f2f3f5;
-  }
-  .container { max-width: 1400px; margin: 0 auto; }
-  
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #2a2e33;
-  }
-  .header h1 {
-    font-size: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .header h1 i { color: #6a4e8a; }
-  .header-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  
-  .btn {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: 1px solid #2a2e33;
-    background: #141619;
-    color: #f2f3f5;
-    cursor: pointer;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: 0.15s;
-  }
-  .btn:hover { background: #1b1e22; }
-  .btn-primary {
-    background: #6a4e8a;
-    border-color: #6a4e8a;
-  }
-  .btn-primary:hover { background: #543d6e; }
-  .btn-success {
-    background: #1f7b4d;
-    border-color: #1f7b4d;
-  }
-  .btn-success:hover { background: #15603b; }
-  .btn-success:disabled { opacity: 0.4; pointer-events: none; }
-  .btn-danger {
-    background: #8b1a2b;
-    border-color: #8b1a2b;
-  }
-  .btn-danger:hover { background: #6b1120; }
-  
-  .preview-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 20px;
-  }
-  @media (max-width: 768px) {
-    .preview-container { grid-template-columns: 1fr; }
-  }
-  .preview-box {
-    background: #141619;
-    border: 1px solid #2a2e33;
-    border-radius: 12px;
-    padding: 12px;
-  }
-  .preview-box h3 {
-    font-size: 0.9rem;
-    color: #aeb4bb;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .image-wrapper {
-    background: #0b0c0e;
-    border-radius: 8px;
-    overflow: hidden;
-    min-height: 200px;
-    max-height: 400px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  .image-wrapper img {
-    max-width: 100%;
-    max-height: 400px;
-    object-fit: contain;
-  }
-  
-  .preset-section {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 12px 0;
-    padding: 12px;
-    background: #141619;
-    border-radius: 12px;
-    border: 1px solid #2a2e33;
-    align-items: center;
-  }
-  .preset-section .preset-label {
-    color: #6a7a9b;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-right: 6px;
-  }
-  .preset-btn {
-    padding: 4px 12px;
-    border-radius: 16px;
-    font-size: 0.7rem;
-    border: 1px solid #2a2e33;
-    background: #0b0c0e;
-    color: #aeb4bb;
-    cursor: pointer;
-    transition: 0.15s;
-    font-weight: 500;
-  }
-  .preset-btn:hover { background: #1b1e22; border-color: #6a4e8a; }
-  .preset-btn.bw-punch {
-    background: #222;
-    border-color: #666;
-    color: #fff;
-  }
-  .preset-btn.bw-punch:hover { background: #333; border-color: #888; }
-  .preset-btn.pop {
-    background: #1a2a1a;
-    border-color: #4a8a4a;
-    color: #8aff8a;
-  }
-  .preset-btn.pop:hover { background: #2a3a2a; border-color: #6aaa6a; }
-  
-  .filter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 6px;
-    margin: 12px 0;
-  }
-  .filter-btn {
-    padding: 6px 10px;
-    border-radius: 8px;
-    border: 1px solid #2a2e33;
-    background: #141619;
-    color: #aeb4bb;
-    cursor: pointer;
-    font-size: 0.7rem;
-    transition: 0.15s;
-    text-align: center;
-  }
-  .filter-btn:hover { background: #1b1e22; }
-  .filter-btn.active {
-    background: #6a4e8a;
-    border-color: #6a4e8a;
-    color: white;
-  }
-  
-  .controls-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    background: #141619;
-    border: 1px solid #2a2e33;
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin: 12px 0;
-    align-items: center;
-  }
-  .control-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1 1 160px;
-  }
-  .control-group label {
-    font-size: 0.8rem;
-    color: #aeb4bb;
-    white-space: nowrap;
-  }
-  .control-group input[type="color"] {
-    width: 40px;
-    height: 40px;
-    border: 2px solid #2a2e33;
-    border-radius: 8px;
-    cursor: pointer;
-    padding: 2px;
-    background: #0b0c0e;
-  }
-  .control-group input[type="range"] {
-    flex: 1;
-    min-width: 80px;
-    accent-color: #6a4e8a;
-  }
-  .strength-value {
-    font-weight: 600;
-    color: #c6ff3d;
-    min-width: 38px;
-    font-size: 0.9rem;
-  }
-  
-  .layers-section {
-    background: #141619;
-    border: 1px solid #2a2e33;
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin: 12px 0;
-  }
-  .layers-section h4 {
-    color: #aeb4bb;
-    font-size: 0.85rem;
-    margin-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .layer-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    min-height: 40px;
-    padding: 8px;
-    background: #0b0c0e;
-    border-radius: 8px;
-    border: 1px dashed #2a2e33;
-  }
-  .layer-tag {
-    background: #1b1e22;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    color: #f2f3f5;
-    border: 1px solid #2a2e33;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-  }
-  .layer-tag:hover { border-color: #6a4e8a; }
-  .layer-tag .remove {
-    cursor: pointer;
-    color: #ff6b6b;
-    font-size: 0.7rem;
-  }
-  .layer-tag .remove:hover { color: #ff4444; }
-  .empty-layers {
-    color: #6a7a9b;
-    font-size: 0.8rem;
-    padding: 8px;
-  }
-  
-  .settings-panel {
-    background: #141619;
-    border: 1px solid #2a2e33;
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin: 12px 0;
-  }
-  .settings-panel h4 {
-    color: #aeb4bb;
-    font-size: 0.85rem;
-    margin-bottom: 8px;
-  }
-  .settings-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 12px;
-  }
-  .setting-item {
-    background: #0b0c0e;
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 1px solid #2a2e33;
-  }
-  .setting-item label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #aeb4bb;
-    display: block;
-    margin-bottom: 4px;
-  }
-  .setting-item input[type="range"] {
-    width: 100%;
-    accent-color: #6a4e8a;
-  }
-  .setting-item input[type="color"] {
-    width: 100%;
-    height: 36px;
-    border: 1px solid #2a2e33;
-    border-radius: 6px;
-    cursor: pointer;
-    padding: 2px;
-    background: #0b0c0e;
-  }
-  .setting-item .val {
-    color: #c6ff3d;
-    font-size: 0.75rem;
-    text-align: right;
-  }
-  
-  .action-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin: 16px 0;
-  }
-  
-  .status-bar {
-    color: #6a7a9b;
-    font-size: 0.8rem;
-    padding: 8px 0;
-    border-top: 1px solid #2a2e33;
-    margin-top: 16px;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-  }
-  .quality-badge { color: #6bffb0; font-size: 0.7rem; }
-  
-  .modal-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.85);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-  .modal-overlay.show { display: flex; }
-  .modal-box {
-    background: #141619;
-    border: 1px solid #2a2e33;
-    border-radius: 16px;
-    padding: 30px;
-    max-width: 500px;
-    width: 90%;
-    text-align: center;
-  }
-  .modal-box h2 { margin-bottom: 12px; }
-  .modal-box p { color: #aeb4bb; margin-bottom: 20px; }
-  .modal-box .btn-row {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-</style>
-</head>
-<body>
-<div class="container">
-  <div class="header">
-    <h1><i class="fas fa-wand-magic-sparkles"></i> Roster Image Editor</h1>
-    <div class="header-actions">
-      <button class="btn" onclick="window.close()"><i class="fas fa-times"></i> Close</button>
-    </div>
-  </div>
-
-  <div class="preview-container">
-    <div class="preview-box">
-      <h3><i class="fas fa-circle" style="color:#6a4e8a;"></i> Original</h3>
-      <div class="image-wrapper">
-        <img id="originalImg" src="${imageData}" />
-      </div>
-    </div>
-    <div class="preview-box">
-      <h3><i class="fas fa-layer-group"></i> Filtered Result</h3>
-      <div class="image-wrapper">
-        <img id="filteredImg" src="${imageData}" />
-      </div>
-    </div>
-  </div>
-
-  <div class="preset-section">
-    <span class="preset-label"><i class="fas fa-bolt"></i> Presets</span>
-    <button class="preset-btn bw-punch" data-preset="bw_punch">⚫ B&W Punch</button>
-    <button class="preset-btn pop" data-preset="crystal_clear">💎 Crystal Clear</button>
-    <button class="preset-btn pop" data-preset="warm_glow">🌅 Warm Glow</button>
-    <button class="preset-btn pop" data-preset="high_impact">🎯 High Impact</button>
-    <button class="preset-btn" data-preset="dark_mode">🖤 Dark Mode</button>
-    <button class="preset-btn" data-preset="clean_bw">⬛ Clean B&W</button>
-    <button class="preset-btn" data-preset="professional">💼 Professional</button>
-    <button class="preset-btn" data-preset="vintage">📷 Vintage</button>
-    <button class="preset-btn" data-preset="cyberpunk">💜 Cyberpunk</button>
-    <button class="preset-btn" data-preset="dreamy">✨ Dreamy</button>
-  </div>
-
-  <div class="filter-grid">
-    <button class="filter-btn" data-filter="grayscale"><i class="fas fa-circle"></i> Grayscale</button>
-    <button class="filter-btn" data-filter="invert"><i class="fas fa-circle-notch"></i> Invert</button>
-    <button class="filter-btn" data-filter="colorize"><i class="fas fa-palette"></i> Colorize</button>
-    <button class="filter-btn" data-filter="sepia"><i class="fas fa-camera"></i> Sepia</button>
-    <button class="filter-btn" data-filter="vintage"><i class="fas fa-clock"></i> Vintage</button>
-    <button class="filter-btn" data-filter="warm"><i class="fas fa-fire"></i> Warm</button>
-    <button class="filter-btn" data-filter="cool"><i class="fas fa-snowflake"></i> Cool</button>
-    <button class="filter-btn" data-filter="neon"><i class="fas fa-bolt"></i> Neon</button>
-    <button class="filter-btn" data-filter="contrast"><i class="fas fa-adjust"></i> Contrast</button>
-    <button class="filter-btn" data-filter="brightness"><i class="fas fa-sun"></i> Brightness</button>
-    <button class="filter-btn" data-filter="sharpen"><i class="fas fa-eye"></i> Sharpen</button>
-    <button class="filter-btn" data-filter="vignette"><i class="fas fa-circle-half-stroke"></i> Vignette</button>
-    <button class="filter-btn" data-filter="glow"><i class="fas fa-star"></i> Glow</button>
-    <button class="filter-btn" data-filter="pastel"><i class="fas fa-heart"></i> Pastel</button>
-  </div>
-
-  <div class="controls-row">
-    <div class="control-group">
-      <label><i class="fas fa-eyedropper"></i> Color</label>
-      <input type="color" id="colorPicker" value="#6a5acd" />
-    </div>
-    <div class="control-group">
-      <label><i class="fas fa-sliders-h"></i> Strength</label>
-      <input type="range" id="strengthSlider" min="0" max="100" value="80" />
-      <span class="strength-value" id="strengthDisplay">80%</span>
-    </div>
-  </div>
-
-  <div class="layers-section">
-    <h4><i class="fas fa-list"></i> Active Layers <span id="layerCount">0</span></h4>
-    <div class="layer-list" id="layerList">
-      <div class="empty-layers">Click filters above to add them</div>
-    </div>
-  </div>
-
-  <div class="settings-panel" id="settingsPanel">
-    <h4><i class="fas fa-sliders-h"></i> <span id="settingsTitle">Filter Settings</span></h4>
-    <div class="settings-grid" id="settingsGrid">
-      <div style="color:#6a7a9b;font-size:0.8rem;grid-column:1/-1;text-align:center;padding:12px;">
-        Click a layer above to see its settings
-      </div>
-    </div>
-  </div>
-
-  <div class="action-bar">
-    <button class="btn" onclick="resetAll()"><i class="fas fa-undo-alt"></i> Reset</button>
-    <button class="btn" onclick="clearFilters()"><i class="fas fa-trash"></i> Clear Filters</button>
-    <button class="btn btn-primary" onclick="applyFilters()"><i class="fas fa-check"></i> Apply</button>
-    <button class="btn btn-success" id="downloadBtn" disabled><i class="fas fa-download"></i> Download PNG</button>
-  </div>
-
-  <div class="status-bar">
-    <span><i class="fas fa-info-circle"></i> <span id="statusText">Ready</span></span>
-    <span class="quality-badge"><i class="fas fa-check-circle"></i> Lossless PNG</span>
-  </div>
-</div>
-
-<div class="modal-overlay" id="returnModal">
-  <div class="modal-box">
-    <h2>✅ Image Enhanced!</h2>
-    <p>Your roster image has been processed. What would you like to do?</p>
-    <div class="btn-row">
-      <button class="btn btn-success" onclick="downloadAndReturn()"><i class="fas fa-download"></i> Download &amp; Return</button>
-      <button class="btn btn-primary" onclick="returnToRoster()"><i class="fas fa-arrow-left"></i> Return to Roster</button>
-      <button class="btn" onclick="closeModal()"><i class="fas fa-times"></i> Keep Editing</button>
-    </div>
-  </div>
-</div>
-
-<script>
-const state = {
-  originalDataURL: '${imageData}',
-  currentDataURL: '${imageData}',
-  activeFilters: [],
-  selectedLayerIndex: -1,
-  globalStrength: 80,
-  selectedColor: '#6a5acd',
-  isProcessing: false
-};
-
-function applySingleFilter(imageData, filterType, colorHex, strength) {
-  const data = imageData.data;
-  const origData = new Uint8ClampedArray(data);
-  const rCol = parseInt(colorHex.slice(1,3), 16);
-  const gCol = parseInt(colorHex.slice(3,5), 16);
-  const bCol = parseInt(colorHex.slice(5,7), 16);
-  const strengthNorm = strength / 100;
-
-  if (filterType === 'grayscale') {
-    for (let i = 0; i < data.length; i += 4) {
-      const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-      data[i] = gray; data[i+1] = gray; data[i+2] = gray;
-    }
-  }
-  else if (filterType === 'invert') {
-    for (let i = 0; i < data.length; i += 4) {
-      data[i] = 255 - data[i];
-      data[i+1] = 255 - data[i+1];
-      data[i+2] = 255 - data[i+2];
-    }
-  }
-  else if (filterType === 'colorize') {
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i], g = data[i+1], b = data[i+2];
-      const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-      data[i] = Math.min(255, (lum / 255) * rCol);
-      data[i+1] = Math.min(255, (lum / 255) * gCol);
-      data[i+2] = Math.min(255, (lum / 255) * bCol);
-    }
-  }
-  else if (filterType === 'sepia') {
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i], g = data[i+1], b = data[i+2];
-      data[i] = Math.min(255, r * 0.393 + g * 0.769 + b * 0.189);
-      data[i+1] = Math.min(255, r * 0.349 + g * 0.686 + b * 0.168);
-      data[i+2] = Math.min(255, r * 0.272 + g * 0.534 + b * 0.131);
-    }
-  }
-  else if (filterType === 'vintage') {
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i], g = data[i+1], b = data[i+2];
-      const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-      data[i] = Math.min(255, gray + 30);
-      data[i+1] = Math.min(255, gray + 15);
-      data[i+2] = Math.min(255, gray * 0.8);
-    }
-  }
-  else if (filterType === 'warm') {
-    for (let i = 0; i < data.length; i += 4) {
-      data[i] = Math.min(255, data[i] * 1.2);
-      data[i+2] = data[i+2] * 0.8;
-    }
-  }
-  else if (filterType === 'cool') {
-    for (let i = 0; i < data.length; i += 4) {
-      data[i] = data[i] * 0.8;
-      data[i+2] = Math.min(255, data[i+2] * 1.2);
-    }
-  }
-  else if (filterType === 'neon') {
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i], g = data[i+1], b = data[i+2];
-      const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-      data[i] = Math.min(255, (r - gray) * 2 + gray);
-      data[i+1] = Math.min(255, (g - gray) * 2 + gray);
-      data[i+2] = Math.min(255, (b - gray) * 2 + gray);
-    }
-  }
-  else if (filterType === 'pastel') {
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i], g = data[i+1], b = data[i+2];
-      const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-      data[i] = Math.min(255, r * 0.6 + gray * 0.4 + 40);
-      data[i+1] = Math.min(255, g * 0.6 + gray * 0.4 + 40);
-      data[i+2] = Math.min(255, b * 0.6 + gray * 0.4 + 40);
-    }
-  }
-  else if (filterType === 'contrast') {
-    const factor = 1 + (strength - 50) / 25;
-    for (let i = 0; i < data.length; i += 4) {
-      data[i] = Math.min(255, Math.max(0, (data[i] - 128) * factor + 128));
-      data[i+1] = Math.min(255, Math.max(0, (data[i+1] - 128) * factor + 128));
-      data[i+2] = Math.min(255, Math.max(0, (data[i+2] - 128) * factor + 128));
-    }
-  }
-  else if (filterType === 'brightness') {
-    const value = (strength - 50) * 1.5;
-    for (let i = 0; i < data.length; i += 4) {
-      data[i] = Math.min(255, Math.max(0, data[i] + value));
-      data[i+1] = Math.min(255, Math.max(0, data[i+1] + value));
-      data[i+2] = Math.min(255, Math.max(0, data[i+2] + value));
-    }
-  }
-  else if (filterType === 'sharpen') {
-    const kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];
-    const tempData = new Uint8ClampedArray(data);
-    const width = imageData.width, height = imageData.height;
-    for (let y = 1; y < height - 1; y++) {
-      for (let x = 1; x < width - 1; x++) {
-        let r = 0, g = 0, b = 0;
-        let k = 0;
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            const idx = ((y + dy) * width + (x + dx)) * 4;
-            const weight = kernel[k++];
-            r += tempData[idx] * weight;
-            g += tempData[idx+1] * weight;
-            b += tempData[idx+2] * weight;
-          }
-        }
-        const idx = (y * width + x) * 4;
-        data[idx] = Math.min(255, Math.max(0, r));
-        data[idx+1] = Math.min(255, Math.max(0, g));
-        data[idx+2] = Math.min(255, Math.max(0, b));
-      }
-    }
-  }
-  else if (filterType === 'vignette') {
-    const width = imageData.width, height = imageData.height;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const radius = Math.min(width, height) / 1.5;
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const i = (y * width + x) * 4;
-        const dx = x - centerX;
-        const dy = y - centerY;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        const factor = Math.max(0, 1 - (dist / radius) * (1 - strength/100));
-        data[i] *= factor;
-        data[i+1] *= factor;
-        data[i+2] *= factor;
-      }
-    }
-  }
-  else if (filterType === 'glow') {
-    const blurRadius = Math.max(1, Math.floor(3 * (strength / 30) + 1));
-    const tempData = new Uint8ClampedArray(data);
-    const width = imageData.width, height = imageData.height;
-    for (let y = blurRadius; y < height - blurRadius; y++) {
-      for (let x = blurRadius; x < width - blurRadius; x++) {
-        let r = 0, g = 0, b = 0, count = 0;
-        for (let dy = -blurRadius; dy <= blurRadius; dy++) {
-          for (let dx = -blurRadius; dx <= blurRadius; dx++) {
-            const idx = ((y + dy) * width + (x + dx)) * 4;
-            r += tempData[idx]; g += tempData[idx+1]; b += tempData[idx+2];
-            count++;
-          }
-        }
-        const idx = (y * width + x) * 4;
-        const blend = strength / 100;
-        data[idx] = Math.min(255, tempData[idx] * (1 - blend * 0.5) + (r / count) * blend * 0.5);
-        data[idx+1] = Math.min(255, tempData[idx+1] * (1 - blend * 0.5) + (g / count) * blend * 0.5);
-        data[idx+2] = Math.min(255, tempData[idx+2] * (1 - blend * 0.5) + (b / count) * blend * 0.5);
-      }
-    }
-  }
-
-  const noBlendFilters = ['vignette', 'glow', 'sharpen'];
-  if (!noBlendFilters.includes(filterType) && strengthNorm < 1) {
-    for (let i = 0; i < data.length; i++) {
-      data[i] = origData[i] * (1 - strengthNorm) + data[i] * strengthNorm;
-    }
-  }
-  return imageData;
-}
-
-async function applyFilterChain(imageDataURL, filterList) {
-  if (!filterList || !filterList.length) return imageDataURL;
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = function() {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth || img.width;
-      canvas.height = img.naturalHeight || img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(img, 0, 0);
-      let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      for (const layer of filterList) {
-        const strength = layer.strength !== undefined ? layer.strength : state.globalStrength;
-        const color = layer.color || state.selectedColor;
-        imageData = applySingleFilter(imageData, layer.id, color, strength);
-      }
-      ctx.putImageData(imageData, 0, 0);
-      resolve(canvas.toDataURL('image/png'));
-    };
-    img.src = imageDataURL;
-  });
-}
-
-function updateLayers() {
-  const layerList = document.getElementById('layerList');
-  const layerCount = document.getElementById('layerCount');
-  if (state.activeFilters.length === 0) {
-    layerList.innerHTML = '<div class="empty-layers">Click filters above to add them</div>';
-    layerCount.textContent = '0';
-    return;
-  }
-  layerCount.textContent = state.activeFilters.length;
-  layerList.innerHTML = '';
-  state.activeFilters.forEach((filter, index) => {
-    const tag = document.createElement('span');
-    tag.className = 'layer-tag';
-    if (index === state.selectedLayerIndex) {
-      tag.style.borderColor = '#6a4e8a';
-      tag.style.borderWidth = '2px';
-    }
-    const name = filter.id.charAt(0).toUpperCase() + filter.id.slice(1);
-    const strength = filter.strength !== undefined ? filter.strength : state.globalStrength;
-    tag.innerHTML = name + ' <span style="font-size:0.6rem;opacity:0.6;">' + strength + '%</span> <span class="remove" data-index="' + index + '">✕</span>';
-    tag.addEventListener('click', function(e) {
-      if (!e.target.classList.contains('remove')) {
-        state.selectedLayerIndex = (state.selectedLayerIndex === index) ? -1 : index;
-        showSettings(state.selectedLayerIndex);
-        updateLayers();
-      }
-    });
-    tag.querySelector('.remove').addEventListener('click', function(e) {
-      e.stopPropagation();
-      state.activeFilters.splice(index, 1);
-      if (state.selectedLayerIndex === index) state.selectedLayerIndex = -1;
-      else if (state.selectedLayerIndex > index) state.selectedLayerIndex--;
-      updateLayers();
-      showSettings(state.selectedLayerIndex);
-      if (state.activeFilters.length === 0) {
-        document.getElementById('filteredImg').src = state.originalDataURL;
-        state.currentDataURL = state.originalDataURL;
-        document.getElementById('downloadBtn').disabled = true;
-      }
-    });
-    layerList.appendChild(tag);
-  });
-}
-
-function showSettings(index) {
-  const grid = document.getElementById('settingsGrid');
-  const title = document.getElementById('settingsTitle');
-  if (index === -1 || index >= state.activeFilters.length) {
-    grid.innerHTML = '<div style="color:#6a7a9b;font-size:0.8rem;grid-column:1/-1;text-align:center;padding:12px;">Click a layer above to see its settings</div>';
-    title.textContent = 'Filter Settings';
-    return;
-  }
-  const filter = state.activeFilters[index];
-  const name = filter.id.charAt(0).toUpperCase() + filter.id.slice(1);
-  title.textContent = name + ' Settings';
-  const strength = filter.strength !== undefined ? filter.strength : state.globalStrength;
-  const color = filter.color || state.selectedColor;
-  let html = '<div class="setting-item"><label>Strength</label><input type="range" id="layerStrength" min="0" max="100" value="' + strength + '" /><div class="val">' + strength + '%</div></div>';
-  if (filter.id === 'colorize') {
-    html += '<div class="setting-item"><label>Color</label><input type="color" id="layerColor" value="' + color + '" /></div>';
-  }
-  grid.innerHTML = html;
-  document.getElementById('layerStrength')?.addEventListener('input', function() {
-    const val = parseInt(this.value);
-    this.parentElement.querySelector('.val').textContent = val + '%';
-    state.activeFilters[index].strength = val;
-    updateLayers();
-  });
-  document.getElementById('layerColor')?.addEventListener('input', function() {
-    state.activeFilters[index].color = this.value;
-  });
-}
-
-function toggleFilter(filterName) {
-  const existing = state.activeFilters.findIndex(f => f.id === filterName);
-  if (existing > -1) {
-    state.activeFilters.splice(existing, 1);
-    if (state.selectedLayerIndex === existing) state.selectedLayerIndex = -1;
-  } else {
-    state.activeFilters.push({ id: filterName, strength: state.globalStrength });
-  }
-  updateLayers();
-  showSettings(state.selectedLayerIndex);
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    const filter = btn.dataset.filter;
-    btn.classList.toggle('active', state.activeFilters.some(f => f.id === filter));
-  });
-}
-
-const PRESETS = {
-  'bw_punch': ['invert', 'grayscale', 'contrast'],
-  'crystal_clear': ['contrast', 'sharpen', 'brightness'],
-  'warm_glow': ['warm', 'glow', 'contrast'],
-  'high_impact': ['contrast', 'sharpen', 'neon'],
-  'dark_mode': ['invert', 'contrast', 'sharpen'],
-  'clean_bw': ['grayscale', 'contrast', 'sharpen'],
-  'professional': ['contrast', 'sharpen', 'vignette'],
-  'vintage': ['sepia', 'vignette', 'warm'],
-  'cyberpunk': ['neon', 'cool', 'contrast'],
-  'dreamy': ['glow', 'pastel', 'vignette']
-};
-
-function applyPreset(name) {
-  const filters = PRESETS[name];
-  if (!filters) return;
-  state.activeFilters = filters.map(id => ({ id, strength: name === 'bw_punch' ? 100 : state.globalStrength }));
-  state.selectedLayerIndex = -1;
-  updateLayers();
-  showSettings(-1);
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    const filter = btn.dataset.filter;
-    btn.classList.toggle('active', state.activeFilters.some(f => f.id === filter));
-  });
-  applyFilters();
-}
-
-async function applyFilters() {
-  if (state.activeFilters.length === 0) {
-    document.getElementById('filteredImg').src = state.originalDataURL;
-    state.currentDataURL = state.originalDataURL;
-    document.getElementById('downloadBtn').disabled = true;
-    document.getElementById('statusText').textContent = 'No filters applied';
-    return;
-  }
-  state.isProcessing = true;
-  document.getElementById('statusText').textContent = '⏳ Processing...';
-  try {
-    const result = await applyFilterChain(state.originalDataURL, state.activeFilters);
-    state.currentDataURL = result;
-    document.getElementById('filteredImg').src = result;
-    document.getElementById('downloadBtn').disabled = false;
-    document.getElementById('statusText').textContent = '✅ Filters applied successfully';
-  } catch (e) {
-    console.error(e);
-    document.getElementById('statusText').textContent = '❌ Error applying filters';
-  }
-  state.isProcessing = false;
-}
-
-function downloadImage() {
-  if (!state.currentDataURL) return;
-  const link = document.createElement('a');
-  link.download = 'roster-enhanced.png';
-  link.href = state.currentDataURL;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-function downloadAndReturn() {
-  downloadImage();
-  setTimeout(() => { returnToRoster(); }, 500);
-}
-
-function returnToRoster() {
-  document.getElementById('returnModal').classList.add('show');
-}
-function closeModal() {
-  document.getElementById('returnModal').classList.remove('show');
-}
-function resetAll() {
-  state.activeFilters = [];
-  state.selectedLayerIndex = -1;
-  state.currentDataURL = state.originalDataURL;
-  document.getElementById('filteredImg').src = state.originalDataURL;
-  document.getElementById('downloadBtn').disabled = true;
-  updateLayers();
-  showSettings(-1);
-  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-  document.getElementById('statusText').textContent = 'Reset to original';
-}
-function clearFilters() {
-  state.activeFilters = [];
-  state.selectedLayerIndex = -1;
-  updateLayers();
-  showSettings(-1);
-  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-  document.getElementById('filteredImg').src = state.originalDataURL;
-  state.currentDataURL = state.originalDataURL;
-  document.getElementById('downloadBtn').disabled = true;
-  document.getElementById('statusText').textContent = 'All filters cleared';
-}
-
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', function() { toggleFilter(this.dataset.filter); });
-});
-document.querySelectorAll('.preset-btn').forEach(btn => {
-  btn.addEventListener('click', function() { applyPreset(this.dataset.preset); });
-});
-document.getElementById('colorPicker').addEventListener('input', function() {
-  state.selectedColor = this.value;
-});
-document.getElementById('strengthSlider').addEventListener('input', function() {
-  state.globalStrength = parseInt(this.value);
-  document.getElementById('strengthDisplay').textContent = state.globalStrength + '%';
-});
-document.getElementById('downloadBtn').addEventListener('click', function() {
-  downloadImage();
-  setTimeout(() => { document.getElementById('returnModal').classList.add('show'); }, 300);
-});
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeModal();
-});
-
-updateLayers();
-document.getElementById('statusText').textContent = 'Ready - Add filters and click Apply';
-<\/script>
-</body>
-</html>`;
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>Filter Studio Pro - Roster Editor</title>\n<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">\n<style>\n  * { box-sizing: border-box; margin: 0; padding: 0; }\n  body {\n    background: #0b0c0e;\n    font-family: "Segoe UI", Roboto, system-ui, sans-serif;\n    padding: 20px;\n    color: #f2f3f5;\n  }\n  .container { max-width: 1400px; margin: 0 auto; }\n  \n  .header {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    flex-wrap: wrap;\n    gap: 12px;\n    margin-bottom: 20px;\n    padding-bottom: 16px;\n    border-bottom: 1px solid #2a2e33;\n  }\n  .header h1 {\n    font-size: 1.5rem;\n    display: flex;\n    align-items: center;\n    gap: 10px;\n  }\n  .header h1 i { color: #6a4e8a; }\n  .header-actions {\n    display: flex;\n    gap: 10px;\n    flex-wrap: wrap;\n  }\n  \n  .btn {\n    padding: 10px 20px;\n    border-radius: 8px;\n    border: 1px solid #2a2e33;\n    background: #141619;\n    color: #f2f3f5;\n    cursor: pointer;\n    font-weight: 500;\n    display: inline-flex;\n    align-items: center;\n    gap: 8px;\n    transition: 0.15s;\n  }\n  .btn:hover { background: #1b1e22; }\n  .btn-primary {\n    background: #6a4e8a;\n    border-color: #6a4e8a;\n  }\n  .btn-primary:hover { background: #543d6e; }\n  .btn-success {\n    background: #1f7b4d;\n    border-color: #1f7b4d;\n  }\n  .btn-success:hover { background: #15603b; }\n  .btn-success:disabled { opacity: 0.4; pointer-events: none; }\n  .btn-danger {\n    background: #8b1a2b;\n    border-color: #8b1a2b;\n  }\n  .btn-danger:hover { background: #6b1120; }\n  \n  .preview-container {\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 20px;\n    margin-bottom: 20px;\n  }\n  @media (max-width: 768px) {\n    .preview-container { grid-template-columns: 1fr; }\n  }\n  .preview-box {\n    background: #141619;\n    border: 1px solid #2a2e33;\n    border-radius: 12px;\n    padding: 12px;\n  }\n  .preview-box h3 {\n    font-size: 0.9rem;\n    color: #aeb4bb;\n    margin-bottom: 8px;\n    display: flex;\n    align-items: center;\n    gap: 8px;\n  }\n  .image-wrapper {\n    background: #0b0c0e;\n    border-radius: 8px;\n    overflow: hidden;\n    min-height: 200px;\n    max-height: 400px;\n    display: flex;\n    justify-content: center;\n    align-items: center;\n  }\n  .image-wrapper img {\n    max-width: 100%;\n    max-height: 400px;\n    object-fit: contain;\n  }\n  \n  .preset-section {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 6px;\n    margin: 12px 0;\n    padding: 12px;\n    background: #141619;\n    border-radius: 12px;\n    border: 1px solid #2a2e33;\n    align-items: center;\n  }\n  .preset-section .preset-label {\n    color: #6a7a9b;\n    font-size: 0.7rem;\n    font-weight: 600;\n    text-transform: uppercase;\n    letter-spacing: 0.5px;\n    margin-right: 6px;\n  }\n  .preset-btn {\n    padding: 4px 12px;\n    border-radius: 16px;\n    font-size: 0.7rem;\n    border: 1px solid #2a2e33;\n    background: #0b0c0e;\n    color: #aeb4bb;\n    cursor: pointer;\n    transition: 0.15s;\n    font-weight: 500;\n  }\n  .preset-btn:hover { background: #1b1e22; border-color: #6a4e8a; }\n  .preset-btn.bw-punch {\n    background: #222;\n    border-color: #666;\n    color: #fff;\n  }\n  .preset-btn.bw-punch:hover { background: #333; border-color: #888; }\n  .preset-btn.pop {\n    background: #1a2a1a;\n    border-color: #4a8a4a;\n    color: #8aff8a;\n  }\n  .preset-btn.pop:hover { background: #2a3a2a; border-color: #6aaa6a; }\n  \n  .filter-grid {\n    display: grid;\n    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));\n    gap: 6px;\n    margin: 12px 0;\n  }\n  .filter-btn {\n    padding: 6px 10px;\n    border-radius: 8px;\n    border: 1px solid #2a2e33;\n    background: #141619;\n    color: #aeb4bb;\n    cursor: pointer;\n    font-size: 0.7rem;\n    transition: 0.15s;\n    text-align: center;\n  }\n  .filter-btn:hover { background: #1b1e22; }\n  .filter-btn.active {\n    background: #6a4e8a;\n    border-color: #6a4e8a;\n    color: white;\n  }\n  \n  .controls-row {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 16px;\n    background: #141619;\n    border: 1px solid #2a2e33;\n    border-radius: 12px;\n    padding: 16px 20px;\n    margin: 12px 0;\n    align-items: center;\n  }\n  .control-group {\n    display: flex;\n    align-items: center;\n    gap: 10px;\n    flex: 1 1 160px;\n  }\n  .control-group label {\n    font-size: 0.8rem;\n    color: #aeb4bb;\n    white-space: nowrap;\n  }\n  .control-group input[type="color"] {\n    width: 40px;\n    height: 40px;\n    border: 2px solid #2a2e33;\n    border-radius: 8px;\n    cursor: pointer;\n    padding: 2px;\n    background: #0b0c0e;\n  }\n  .control-group input[type="range"] {\n    flex: 1;\n    min-width: 80px;\n    accent-color: #6a4e8a;\n  }\n  .strength-value {\n    font-weight: 600;\n    color: #c6ff3d;\n    min-width: 38px;\n    font-size: 0.9rem;\n  }\n  \n  .layers-section {\n    background: #141619;\n    border: 1px solid #2a2e33;\n    border-radius: 12px;\n    padding: 16px 20px;\n    margin: 12px 0;\n  }\n  .layers-section h4 {\n    color: #aeb4bb;\n    font-size: 0.85rem;\n    margin-bottom: 8px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n  }\n  .layer-list {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 8px;\n    min-height: 40px;\n    padding: 8px;\n    background: #0b0c0e;\n    border-radius: 8px;\n    border: 1px dashed #2a2e33;\n  }\n  .layer-tag {\n    background: #1b1e22;\n    padding: 4px 12px;\n    border-radius: 20px;\n    font-size: 0.7rem;\n    color: #f2f3f5;\n    border: 1px solid #2a2e33;\n    display: inline-flex;\n    align-items: center;\n    gap: 6px;\n    cursor: pointer;\n  }\n  .layer-tag:hover { border-color: #6a4e8a; }\n  .layer-tag .remove {\n    cursor: pointer;\n    color: #ff6b6b;\n    font-size: 0.7rem;\n  }\n  .layer-tag .remove:hover { color: #ff4444; }\n  .empty-layers {\n    color: #6a7a9b;\n    font-size: 0.8rem;\n    padding: 8px;\n  }\n  \n  .settings-panel {\n    background: #141619;\n    border: 1px solid #2a2e33;\n    border-radius: 12px;\n    padding: 16px 20px;\n    margin: 12px 0;\n  }\n  .settings-panel h4 {\n    color: #aeb4bb;\n    font-size: 0.85rem;\n    margin-bottom: 8px;\n  }\n  .settings-grid {\n    display: grid;\n    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));\n    gap: 12px;\n  }\n  .setting-item {\n    background: #0b0c0e;\n    padding: 10px 14px;\n    border-radius: 8px;\n    border: 1px solid #2a2e33;\n  }\n  .setting-item label {\n    font-size: 0.7rem;\n    font-weight: 600;\n    color: #aeb4bb;\n    display: block;\n    margin-bottom: 4px;\n  }\n  .setting-item input[type="range"] {\n    width: 100%;\n    accent-color: #6a4e8a;\n  }\n  .setting-item input[type="color"] {\n    width: 100%;\n    height: 36px;\n    border: 1px solid #2a2e33;\n    border-radius: 6px;\n    cursor: pointer;\n    padding: 2px;\n    background: #0b0c0e;\n  }\n  .setting-item .val {\n    color: #c6ff3d;\n    font-size: 0.75rem;\n    text-align: right;\n  }\n  \n  .action-bar {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 10px;\n    margin: 16px 0;\n  }\n  \n  .status-bar {\n    color: #6a7a9b;\n    font-size: 0.8rem;\n    padding: 8px 0;\n    border-top: 1px solid #2a2e33;\n    margin-top: 16px;\n    display: flex;\n    justify-content: space-between;\n    flex-wrap: wrap;\n  }\n  .quality-badge { color: #6bffb0; font-size: 0.7rem; }\n  \n  .modal-overlay {\n    position: fixed;\n    top: 0; left: 0; right: 0; bottom: 0;\n    background: rgba(0,0,0,0.85);\n    display: none;\n    justify-content: center;\n    align-items: center;\n    z-index: 1000;\n  }\n  .modal-overlay.show { display: flex; }\n  .modal-box {\n    background: #141619;\n    border: 1px solid #2a2e33;\n    border-radius: 16px;\n    padding: 30px;\n    max-width: 500px;\n    width: 90%;\n    text-align: center;\n  }\n  .modal-box h2 { margin-bottom: 12px; }\n  .modal-box p { color: #aeb4bb; margin-bottom: 20px; }\n  .modal-box .btn-row {\n    display: flex;\n    gap: 12px;\n    justify-content: center;\n    flex-wrap: wrap;\n  }\n</style>\n</head>\n<body>\n<div class="container">\n  <div class="header">\n    <h1><i class="fas fa-wand-magic-sparkles"></i> Roster Image Editor</h1>\n    <div class="header-actions">\n      <button class="btn" onclick="window.close()"><i class="fas fa-times"></i> Close</button>\n    </div>\n  </div>\n\n  <div class="preview-container">\n    <div class="preview-box">\n      <h3><i class="fas fa-circle" style="color:#6a4e8a;"></i> Original</h3>\n      <div class="image-wrapper">\n        <img id="originalImg" src="'+imageData+'" />\n      </div>\n    </div>\n    <div class="preview-box">\n      <h3><i class="fas fa-layer-group"></i> Filtered Result</h3>\n      <div class="image-wrapper">\n        <img id="filteredImg" src="'+imageData+'" />\n      </div>\n    </div>\n  </div>\n\n  <div class="preset-section">\n    <span class="preset-label"><i class="fas fa-bolt"></i> Presets</span>\n    <button class="preset-btn bw-punch" data-preset="bw_punch">⚫ B&W Punch</button>\n    <button class="preset-btn pop" data-preset="crystal_clear">💎 Crystal Clear</button>\n    <button class="preset-btn pop" data-preset="warm_glow">🌅 Warm Glow</button>\n    <button class="preset-btn pop" data-preset="high_impact">🎯 High Impact</button>\n    <button class="preset-btn" data-preset="dark_mode">🖤 Dark Mode</button>\n    <button class="preset-btn" data-preset="clean_bw">⬛ Clean B&W</button>\n    <button class="preset-btn" data-preset="professional">💼 Professional</button>\n    <button class="preset-btn" data-preset="vintage">📷 Vintage</button>\n    <button class="preset-btn" data-preset="cyberpunk">💜 Cyberpunk</button>\n    <button class="preset-btn" data-preset="dreamy">✨ Dreamy</button>\n  </div>\n\n  <div class="filter-grid">\n    <button class="filter-btn" data-filter="grayscale"><i class="fas fa-circle"></i> Grayscale</button>\n    <button class="filter-btn" data-filter="invert"><i class="fas fa-circle-notch"></i> Invert</button>\n    <button class="filter-btn" data-filter="colorize"><i class="fas fa-palette"></i> Colorize</button>\n    <button class="filter-btn" data-filter="sepia"><i class="fas fa-camera"></i> Sepia</button>\n    <button class="filter-btn" data-filter="vintage"><i class="fas fa-clock"></i> Vintage</button>\n    <button class="filter-btn" data-filter="warm"><i class="fas fa-fire"></i> Warm</button>\n    <button class="filter-btn" data-filter="cool"><i class="fas fa-snowflake"></i> Cool</button>\n    <button class="filter-btn" data-filter="neon"><i class="fas fa-bolt"></i> Neon</button>\n    <button class="filter-btn" data-filter="contrast"><i class="fas fa-adjust"></i> Contrast</button>\n    <button class="filter-btn" data-filter="brightness"><i class="fas fa-sun"></i> Brightness</button>\n    <button class="filter-btn" data-filter="sharpen"><i class="fas fa-eye"></i> Sharpen</button>\n    <button class="filter-btn" data-filter="vignette"><i class="fas fa-circle-half-stroke"></i> Vignette</button>\n    <button class="filter-btn" data-filter="glow"><i class="fas fa-star"></i> Glow</button>\n    <button class="filter-btn" data-filter="pastel"><i class="fas fa-heart"></i> Pastel</button>\n  </div>\n\n  <div class="controls-row">\n    <div class="control-group">\n      <label><i class="fas fa-eyedropper"></i> Color</label>\n      <input type="color" id="colorPicker" value="#6a5acd" />\n    </div>\n    <div class="control-group">\n      <label><i class="fas fa-sliders-h"></i> Strength</label>\n      <input type="range" id="strengthSlider" min="0" max="100" value="80" />\n      <span class="strength-value" id="strengthDisplay">80%</span>\n    </div>\n  </div>\n\n  <div class="layers-section">\n    <h4><i class="fas fa-list"></i> Active Layers <span id="layerCount">0</span></h4>\n    <div class="layer-list" id="layerList">\n      <div class="empty-layers">Click filters above to add them</div>\n    </div>\n  </div>\n\n  <div class="settings-panel" id="settingsPanel">\n    <h4><i class="fas fa-sliders-h"></i> <span id="settingsTitle">Filter Settings</span></h4>\n    <div class="settings-grid" id="settingsGrid">\n      <div style="color:#6a7a9b;font-size:0.8rem;grid-column:1/-1;text-align:center;padding:12px;">\n        Click a layer above to see its settings\n      </div>\n    </div>\n  </div>\n\n  <div class="action-bar">\n    <button class="btn" onclick="resetAll()"><i class="fas fa-undo-alt"></i> Reset</button>\n    <button class="btn" onclick="clearFilters()"><i class="fas fa-trash"></i> Clear Filters</button>\n    <button class="btn btn-primary" onclick="applyFilters()"><i class="fas fa-check"></i> Apply</button>\n    <button class="btn btn-success" id="downloadBtn" disabled><i class="fas fa-download"></i> Download PNG</button>\n  </div>\n\n  <div class="status-bar">\n    <span><i class="fas fa-info-circle"></i> <span id="statusText">Ready</span></span>\n    <span class="quality-badge"><i class="fas fa-check-circle"></i> Lossless PNG</span>\n  </div>\n</div>\n\n<div class="modal-overlay" id="returnModal">\n  <div class="modal-box">\n    <h2>✅ Image Enhanced!</h2>\n    <p>Your roster image has been processed. What would you like to do?</p>\n    <div class="btn-row">\n      <button class="btn btn-success" onclick="downloadAndReturn()"><i class="fas fa-download"></i> Download &amp; Return</button>\n      <button class="btn btn-primary" onclick="returnToRoster()"><i class="fas fa-arrow-left"></i> Return to Roster</button>\n      <button class="btn" onclick="closeModal()"><i class="fas fa-times"></i> Keep Editing</button>\n    </div>\n  </div>\n</div>\n\n<script>\nvar state = {\n  originalDataURL: "'+imageData+'",\n  currentDataURL: "'+imageData+'",\n  activeFilters: [],\n  selectedLayerIndex: -1,\n  globalStrength: 80,\n  selectedColor: "#6a5acd",\n  isProcessing: false\n};\n\nfunction applySingleFilter(imageData, filterType, colorHex, strength) {\n  var data = imageData.data;\n  var origData = new Uint8ClampedArray(data);\n  var rCol = parseInt(colorHex.slice(1,3), 16);\n  var gCol = parseInt(colorHex.slice(3,5), 16);\n  var bCol = parseInt(colorHex.slice(5,7), 16);\n  var strengthNorm = strength / 100;\n\n  if (filterType === "grayscale") {\n    for (var i = 0; i < data.length; i += 4) {\n      var gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];\n      data[i] = gray; data[i+1] = gray; data[i+2] = gray;\n    }\n  }\n  else if (filterType === "invert") {\n    for (var i = 0; i < data.length; i += 4) {\n      data[i] = 255 - data[i];\n      data[i+1] = 255 - data[i+1];\n      data[i+2] = 255 - data[i+2];\n    }\n  }\n  else if (filterType === "colorize") {\n    for (var i = 0; i < data.length; i += 4) {\n      var r = data[i], g = data[i+1], b = data[i+2];\n      var lum = 0.299 * r + 0.587 * g + 0.114 * b;\n      data[i] = Math.min(255, (lum / 255) * rCol);\n      data[i+1] = Math.min(255, (lum / 255) * gCol);\n      data[i+2] = Math.min(255, (lum / 255) * bCol);\n    }\n  }\n  else if (filterType === "sepia") {\n    for (var i = 0; i < data.length; i += 4) {\n      var r = data[i], g = data[i+1], b = data[i+2];\n      data[i] = Math.min(255, r * 0.393 + g * 0.769 + b * 0.189);\n      data[i+1] = Math.min(255, r * 0.349 + g * 0.686 + b * 0.168);\n      data[i+2] = Math.min(255, r * 0.272 + g * 0.534 + b * 0.131);\n    }\n  }\n  else if (filterType === "vintage") {\n    for (var i = 0; i < data.length; i += 4) {\n      var r = data[i], g = data[i+1], b = data[i+2];\n      var gray = 0.299 * r + 0.587 * g + 0.114 * b;\n      data[i] = Math.min(255, gray + 30);\n      data[i+1] = Math.min(255, gray + 15);\n      data[i+2] = Math.min(255, gray * 0.8);\n    }\n  }\n  else if (filterType === "warm") {\n    for (var i = 0; i < data.length; i += 4) {\n      data[i] = Math.min(255, data[i] * 1.2);\n      data[i+2] = data[i+2] * 0.8;\n    }\n  }\n  else if (filterType === "cool") {\n    for (var i = 0; i < data.length; i += 4) {\n      data[i] = data[i] * 0.8;\n      data[i+2] = Math.min(255, data[i+2] * 1.2);\n    }\n  }\n  else if (filterType === "neon") {\n    for (var i = 0; i < data.length; i += 4) {\n      var r = data[i], g = data[i+1], b = data[i+2];\n      var gray = 0.299 * r + 0.587 * g + 0.114 * b;\n      data[i] = Math.min(255, (r - gray) * 2 + gray);\n      data[i+1] = Math.min(255, (g - gray) * 2 + gray);\n      data[i+2] = Math.min(255, (b - gray) * 2 + gray);\n    }\n  }\n  else if (filterType === "pastel") {\n    for (var i = 0; i < data.length; i += 4) {\n      var r = data[i], g = data[i+1], b = data[i+2];\n      var gray = 0.299 * r + 0.587 * g + 0.114 * b;\n      data[i] = Math.min(255, r * 0.6 + gray * 0.4 + 40);\n      data[i+1] = Math.min(255, g * 0.6 + gray * 0.4 + 40);\n      data[i+2] = Math.min(255, b * 0.6 + gray * 0.4 + 40);\n    }\n  }\n  else if (filterType === "contrast") {\n    var factor = 1 + (strength - 50) / 25;\n    for (var i = 0; i < data.length; i += 4) {\n      data[i] = Math.min(255, Math.max(0, (data[i] - 128) * factor + 128));\n      data[i+1] = Math.min(255, Math.max(0, (data[i+1] - 128) * factor + 128));\n      data[i+2] = Math.min(255, Math.max(0, (data[i+2] - 128) * factor + 128));\n    }\n  }\n  else if (filterType === "brightness") {\n    var value = (strength - 50) * 1.5;\n    for (var i = 0; i < data.length; i += 4) {\n      data[i] = Math.min(255, Math.max(0, data[i] + value));\n      data[i+1] = Math.min(255, Math.max(0, data[i+1] + value));\n      data[i+2] = Math.min(255, Math.max(0, data[i+2] + value));\n    }\n  }\n  else if (filterType === "sharpen") {\n    var kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];\n    var tempData = new Uint8ClampedArray(data);\n    var width = imageData.width, height = imageData.height;\n    for (var y = 1; y < height - 1; y++) {\n      for (var x = 1; x < width - 1; x++) {\n        var r = 0, g = 0, b = 0;\n        var k = 0;\n        for (var dy = -1; dy <= 1; dy++) {\n          for (var dx = -1; dx <= 1; dx++) {\n            var idx = ((y + dy) * width + (x + dx)) * 4;\n            var weight = kernel[k++];\n            r += tempData[idx] * weight;\n            g += tempData[idx+1] * weight;\n            b += tempData[idx+2] * weight;\n          }\n        }\n        var idx = (y * width + x) * 4;\n        data[idx] = Math.min(255, Math.max(0, r));\n        data[idx+1] = Math.min(255, Math.max(0, g));\n        data[idx+2] = Math.min(255, Math.max(0, b));\n      }\n    }\n  }\n  else if (filterType === "vignette") {\n    var width = imageData.width, height = imageData.height;\n    var centerX = width / 2;\n    var centerY = height / 2;\n    var radius = Math.min(width, height) / 1.5;\n    for (var y = 0; y < height; y++) {\n      for (var x = 0; x < width; x++) {\n        var i = (y * width + x) * 4;\n        var dx = x - centerX;\n        var dy = y - centerY;\n        var dist = Math.sqrt(dx*dx + dy*dy);\n        var factor = Math.max(0, 1 - (dist / radius) * (1 - strength/100));\n        data[i] *= factor;\n        data[i+1] *= factor;\n        data[i+2] *= factor;\n      }\n    }\n  }\n  else if (filterType === "glow") {\n    var blurRadius = Math.max(1, Math.floor(3 * (strength / 30) + 1));\n    var tempData = new Uint8ClampedArray(data);\n    var width = imageData.width, height = imageData.height;\n    for (var y = blurRadius; y < height - blurRadius; y++) {\n      for (var x = blurRadius; x < width - blurRadius; x++) {\n        var r = 0, g = 0, b = 0, count = 0;\n        for (var dy = -blurRadius; dy <= blurRadius; dy++) {\n          for (var dx = -blurRadius; dx <= blurRadius; dx++) {\n            var idx = ((y + dy) * width + (x + dx)) * 4;\n            r += tempData[idx]; g += tempData[idx+1]; b += tempData[idx+2];\n            count++;\n          }\n        }\n        var idx = (y * width + x) * 4;\n        var blend = strength / 100;\n        data[idx] = Math.min(255, tempData[idx] * (1 - blend * 0.5) + (r / count) * blend * 0.5);\n        data[idx+1] = Math.min(255, tempData[idx+1] * (1 - blend * 0.5) + (g / count) * blend * 0.5);\n        data[idx+2] = Math.min(255, tempData[idx+2] * (1 - blend * 0.5) + (b / count) * blend * 0.5);\n      }\n    }\n  }\n\n  var noBlendFilters = ["vignette", "glow", "sharpen"];\n  if (noBlendFilters.indexOf(filterType) === -1 && strengthNorm < 1) {\n    for (var i = 0; i < data.length; i++) {\n      data[i] = origData[i] * (1 - strengthNorm) + data[i] * strengthNorm;\n    }\n  }\n  return imageData;\n}\n\nasync function applyFilterChain(imageDataURL, filterList) {\n  if (!filterList || !filterList.length) return imageDataURL;\n  return new Promise(function(resolve) {\n    var img = new Image();\n    img.onload = function() {\n      var canvas = document.createElement("canvas");\n      canvas.width = img.naturalWidth || img.width;\n      canvas.height = img.naturalHeight || img.height;\n      var ctx = canvas.getContext("2d");\n      ctx.imageSmoothingEnabled = false;\n      ctx.drawImage(img, 0, 0);\n      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);\n      for (var li = 0; li < filterList.length; li++) {\n        var layer = filterList[li];\n        var strength = layer.strength !== undefined ? layer.strength : state.globalStrength;\n        var color = layer.color || state.selectedColor;\n        imageData = applySingleFilter(imageData, layer.id, color, strength);\n      }\n      ctx.putImageData(imageData, 0, 0);\n      resolve(canvas.toDataURL("image/png"));\n    };\n    img.src = imageDataURL;\n  });\n}\n\nfunction updateLayers() {\n  var layerList = document.getElementById("layerList");\n  var layerCount = document.getElementById("layerCount");\n  if (state.activeFilters.length === 0) {\n    layerList.innerHTML = "<div class=\"empty-layers\">Click filters above to add them</div>";\n    layerCount.textContent = "0";\n    return;\n  }\n  layerCount.textContent = state.activeFilters.length;\n  layerList.innerHTML = "";\n  for (var fi = 0; fi < state.activeFilters.length; fi++) {\n    var filter = state.activeFilters[fi];\n    var tag = document.createElement("span");\n    tag.className = "layer-tag";\n    if (fi === state.selectedLayerIndex) {\n      tag.style.borderColor = "#6a4e8a";\n      tag.style.borderWidth = "2px";\n    }\n    var name = filter.id.charAt(0).toUpperCase() + filter.id.slice(1);\n    var strength = filter.strength !== undefined ? filter.strength : state.globalStrength;\n    tag.innerHTML = name + " <span style=\"font-size:0.6rem;opacity:0.6;\">" + strength + "%</span> <span class=\"remove\" data-index=\"" + fi + "\">✕</span>";\n    tag.addEventListener("click", function(e) {\n      var idx = parseInt(this.dataset.index);\n      if (!e.target.classList.contains("remove")) {\n        state.selectedLayerIndex = (state.selectedLayerIndex === idx) ? -1 : idx;\n        showSettings(state.selectedLayerIndex);\n        updateLayers();\n      }\n    });\n    tag.querySelector(".remove").addEventListener("click", function(e) {\n      e.stopPropagation();\n      var idx = parseInt(this.dataset.index);\n      state.activeFilters.splice(idx, 1);\n      if (state.selectedLayerIndex === idx) state.selectedLayerIndex = -1;\n      else if (state.selectedLayerIndex > idx) state.selectedLayerIndex--;\n      updateLayers();\n      showSettings(state.selectedLayerIndex);\n      if (state.activeFilters.length === 0) {\n        document.getElementById("filteredImg").src = state.originalDataURL;\n        state.currentDataURL = state.originalDataURL;\n        document.getElementById("downloadBtn").disabled = true;\n      }\n    });\n    layerList.appendChild(tag);\n  }\n}\n\nfunction showSettings(index) {\n  var grid = document.getElementById("settingsGrid");\n  var title = document.getElementById("settingsTitle");\n  if (index === -1 || index >= state.activeFilters.length) {\n    grid.innerHTML = "<div style=\"color:#6a7a9b;font-size:0.8rem;grid-column:1/-1;text-align:center;padding:12px;\">Click a layer above to see its settings</div>";\n    title.textContent = "Filter Settings";\n    return;\n  }\n  var filter = state.activeFilters[index];\n  var name = filter.id.charAt(0).toUpperCase() + filter.id.slice(1);\n  title.textContent = name + " Settings";\n  var strength = filter.strength !== undefined ? filter.strength : state.globalStrength;\n  var color = filter.color || state.selectedColor;\n  var html = "<div class=\"setting-item\"><label>Strength</label><input type=\"range\" id=\"layerStrength\" min=\"0\" max=\"100\" value=\"" + strength + "\" /><div class=\"val\">" + strength + "%</div></div>";\n  if (filter.id === "colorize") {\n    html += "<div class=\"setting-item\"><label>Color</label><input type=\"color\" id=\"layerColor\" value=\"" + color + "\" /></div>";\n  }\n  grid.innerHTML = html;\n  var strengthInput = document.getElementById("layerStrength\");\n  if (strengthInput) {\n    strengthInput.addEventListener(\"input\", function() {\n      var val = parseInt(this.value);\n      this.parentElement.querySelector(\".val\").textContent = val + \"%\";\n      state.activeFilters[index].strength = val;\n      updateLayers();\n    });\n  }\n  var colorInput = document.getElementById(\"layerColor\");\n  if (colorInput) {\n    colorInput.addEventListener(\"input\", function() {\n      state.activeFilters[index].color = this.value;\n    });\n  }\n}\n\nfunction toggleFilter(filterName) {\n  var existing = -1;\n  for (var i = 0; i < state.activeFilters.length; i++) {\n    if (state.activeFilters[i].id === filterName) { existing = i; break; }\n  }\n  if (existing > -1) {\n    state.activeFilters.splice(existing, 1);\n    if (state.selectedLayerIndex === existing) state.selectedLayerIndex = -1;\n  } else {\n    state.activeFilters.push({ id: filterName, strength: state.globalStrength });\n  }\n  updateLayers();\n  showSettings(state.selectedLayerIndex);\n  var btns = document.querySelectorAll(\".filter-btn\");\n  for (var bi = 0; bi < btns.length; bi++) {\n    var btn = btns[bi];\n    var filter = btn.dataset.filter;\n    var found = false;\n    for (var fi = 0; fi < state.activeFilters.length; fi++) {\n      if (state.activeFilters[fi].id === filter) { found = true; break; }\n    }\n    if (found) btn.classList.add(\"active\");\n    else btn.classList.remove(\"active\");\n  }\n}\n\nvar PRESETS = {\n  "bw_punch": ["invert", "grayscale", "contrast"],\n  "crystal_clear": ["contrast", "sharpen", "brightness"],\n  "warm_glow": ["warm", "glow", "contrast"],\n  "high_impact": ["contrast", "sharpen", "neon"],\n  "dark_mode": ["invert", "contrast", "sharpen"],\n  "clean_bw": ["grayscale", "contrast", "sharpen"],\n  "professional": ["contrast", "sharpen", "vignette"],\n  "vintage": ["sepia", "vignette", "warm"],\n  "cyberpunk": ["neon", "cool", "contrast"],\n  "dreamy": ["glow", "pastel", "vignette"]\n};\n\nfunction applyPreset(name) {\n  var filters = PRESETS[name];\n  if (!filters) return;\n  state.activeFilters = [];\n  for (var fi = 0; fi < filters.length; fi++) {\n    var id = filters[fi];\n    state.activeFilters.push({ id: id, strength: name === "bw_punch" ? 100 : state.globalStrength });\n  }\n  state.selectedLayerIndex = -1;\n  updateLayers();\n  showSettings(-1);\n  var btns = document.querySelectorAll(\".filter-btn\");\n  for (var bi = 0; bi < btns.length; bi++) {\n    var btn = btns[bi];\n    var filter = btn.dataset.filter;\n    var found = false;\n    for (var fi = 0; fi < state.activeFilters.length; fi++) {\n      if (state.activeFilters[fi].id === filter) { found = true; break; }\n    }\n    if (found) btn.classList.add(\"active\");\n    else btn.classList.remove(\"active\");\n  }\n  applyFilters();\n}\n\nasync function applyFilters() {\n  if (state.activeFilters.length === 0) {\n    document.getElementById(\"filteredImg\").src = state.originalDataURL;\n    state.currentDataURL = state.originalDataURL;\n    document.getElementById(\"downloadBtn\").disabled = true;\n    document.getElementById(\"statusText\").textContent = \"No filters applied\";\n    return;\n  }\n  state.isProcessing = true;\n  document.getElementById(\"statusText\").textContent = "⏳ Processing...";\n  try {\n    var result = await applyFilterChain(state.originalDataURL, state.activeFilters);\n    state.currentDataURL = result;\n    document.getElementById(\"filteredImg\").src = result;\n    document.getElementById(\"downloadBtn\").disabled = false;\n    document.getElementById(\"statusText\").textContent = "✅ Filters applied successfully";\n  } catch (e) {\n    console.error(e);\n    document.getElementById(\"statusText\").textContent = "❌ Error applying filters";\n  }\n  state.isProcessing = false;\n}\n\nfunction downloadImage() {\n  if (!state.currentDataURL) return;\n  var link = document.createElement(\"a\");\n  link.download = \"roster-enhanced.png\";\n  link.href = state.currentDataURL;\n  document.body.appendChild(link);\n  link.click();\n  document.body.removeChild(link);\n}\n\nfunction downloadAndReturn() {\n  downloadImage();\n  setTimeout(function() { returnToRoster(); }, 500);\n}\n\nfunction returnToRoster() {\n  document.getElementById(\"returnModal\").classList.add(\"show\");\n}\nfunction closeModal() {\n  document.getElementById(\"returnModal\").classList.remove(\"show\");\n}\nfunction resetAll() {\n  state.activeFilters = [];\n  state.selectedLayerIndex = -1;\n  state.currentDataURL = state.originalDataURL;\n  document.getElementById(\"filteredImg\").src = state.originalDataURL;\n  document.getElementById(\"downloadBtn\").disabled = true;\n  updateLayers();\n  showSettings(-1);\n  var btns = document.querySelectorAll(\".filter-btn\");\n  for (var bi = 0; bi < btns.length; bi++) { btns[bi].classList.remove(\"active\"); }\n  document.getElementById(\"statusText\").textContent = \"Reset to original\";\n}\nfunction clearFilters() {\n  state.activeFilters = [];\n  state.selectedLayerIndex = -1;\n  updateLayers();\n  showSettings(-1);\n  var btns = document.querySelectorAll(\".filter-btn\");\n  for (var bi = 0; bi < btns.length; bi++) { btns[bi].classList.remove(\"active\"); }\n  document.getElementById(\"filteredImg\").src = state.originalDataURL;\n  state.currentDataURL = state.originalDataURL;\n  document.getElementById(\"downloadBtn\").disabled = true;\n  document.getElementById(\"statusText\").textContent = \"All filters cleared\";\n}\n\nvar filterBtns = document.querySelectorAll(\".filter-btn\");\nfor (var fi = 0; fi < filterBtns.length; fi++) {\n  filterBtns[fi].addEventListener(\"click\", function() { toggleFilter(this.dataset.filter); });\n}\nvar presetBtns = document.querySelectorAll(\".preset-btn\");\nfor (var pi = 0; pi < presetBtns.length; pi++) {\n  presetBtns[pi].addEventListener(\"click\", function() { applyPreset(this.dataset.preset); });\n}\ndocument.getElementById(\"colorPicker\").addEventListener(\"input\", function() {\n  state.selectedColor = this.value;\n});\ndocument.getElementById(\"strengthSlider\").addEventListener(\"input\", function() {\n  state.globalStrength = parseInt(this.value);\n  document.getElementById(\"strengthDisplay\").textContent = state.globalStrength + \"%\";\n});\ndocument.getElementById(\"downloadBtn\").addEventListener(\"click\", function() {\n  downloadImage();\n  setTimeout(function() { document.getElementById(\"returnModal\").classList.add(\"show\"); }, 300);\n});\ndocument.addEventListener(\"keydown\", function(e) {\n  if (e.key === \"Escape\") closeModal();\n});\n\nupdateLayers();\ndocument.getElementById(\"statusText\").textContent = \"Ready - Add filters and click Apply\";\n<\/script>\n</body>\n</html>';
 }
 
 loadLegend();
