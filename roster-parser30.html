@@ -116,7 +116,7 @@
 
 <header>
   <h1>ROSTER <span>PARSER</span></h1>
-  <div class="sub">xlsx / pdf table / pdf calendar → unified daily roster · by 2100551</div>
+  <div class="sub">xlsx / pdf table / pdf calendar → unified daily roster + Find time together with other CREW(s) · by 2100551</div>
 </header>
 
 <main>
@@ -125,7 +125,7 @@
     <div class="btnRow" style="justify-content:center">
       <button class="primary" onclick="document.getElementById('fileInput').click()">Choose file</button>
     </div>
-    <div style="margin-top:8px">Accepts <b>.xlsx</b>, <b>.xls</b>, or <b>.pdf</b> — any of: raw Roster Report export, PDF print of a Roster Report, or the calendar "fridge" PDF.</div>
+    <div style="margin-top:8px">Accepts <b>.xlsx(PREFERRED)</b>, <b>.xls</b>, or <b>.pdf(STILL BUGGY)</b> — any of: raw Roster Report export, PDF print of a Roster Report, or the calendar "fridge" PDF.</div>
     <input id="fileInput" type="file" accept=".xlsx,.xls,.pdf">
   </div>
 
@@ -197,7 +197,7 @@
   </section>
 
   <section class="card" id="overlapCard">
-    <h2>Find Time Together <small>select 2+ saved rosters</small></h2>
+    <h2>Find Time Together 💞 <small>select 2+ saved rosters</small></h2>
     <div style="padding:10px 12px">
       <button class="primary" onclick="computeTogetherTime()">Find overlap</button>
     </div>
@@ -205,7 +205,7 @@
   </section>
 
   <div class="btnRow" id="debugRow" style="display:none">
-    <button class="ghost" onclick="exportDebug()">⬇ Export debug data (send this to Claude if something looks wrong)</button>
+    <button class="ghost" onclick="exportDebug()">⬇ Export debug data</button>
   </div>
 </main>
 
@@ -1054,7 +1054,7 @@ function buildDays(legs){
     DAYS.push(existing || {date:new Date(cursor), key:k, rows:[], hasData:false});
     cursor = addDays(cursor,1);
   }
-  STAFF_LABEL = 'ADI MUDZAMIL RANI BIN MOHAMED | 2100551 | WBA LS | KUL';
+  STAFF_LABEL = ''
 }
 
 /* =====================================================================
