@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roster Parser Tutorial · 2100551</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+<style>
+  :root{
+    --bg:#0b0c0e; --panel:#141619; --panel2:#1b1e22; --line:#2a2e33;
+    --text:#f2f3f5; --dim:#aeb4bb; --accent:#c6ff3d; --accent-dim:#7a934f;
+    --warn:#ffb454; --err:#ff6b6b; --ok:#6bffb0;
+    --mono:'DM Mono','SF Mono',ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);font-size:14px;-webkit-tap-highlight-color:transparent;line-height:1.6}
+  
+  /* HEADER */
+  header{padding:16px 14px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+  header h1{margin:0;font-size:16px;letter-spacing:.03em;font-weight:600}
+  header h1 span{color:var(--accent)}
+  header .sub{color:var(--dim);font-size:11.5px;margin-top:4px}
+  
+  /* MAIN */
+  main{padding:12px;max-width:900px;margin:0 auto}
+  
+  /* TOC */
+  .toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-bottom:20px}
+  .toc h2{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
+  .toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 20px}
+  .toc a{color:var(--text);text-decoration:none;font-size:12px;padding:3px 0;display:block;border-bottom:1px solid transparent}
+  .toc a:hover{color:var(--accent);border-bottom-color:var(--accent-dim)}
+  .toc a .num{color:var(--accent);margin-right:6px}
+  
+  /* SECTIONS */
+  section{margin-bottom:24px}
+  .section-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .section-card h2{font-size:12.5px;margin:0;padding:10px 14px;border-bottom:1px solid var(--line);color:var(--accent);letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+  .section-card h2 .badge{font-size:9px;text-transform:none;color:var(--dim);background:var(--panel2);padding:1px 10px;border-radius:12px;border:1px solid var(--line)}
+  .section-card .body{padding:12px 14px}
+  
+  /* TYPOGRAPHY */
+  h3{font-size:13px;margin:14px 0 6px;color:var(--text);font-weight:500}
+  h4{font-size:12px;margin:10px 0 4px;color:var(--dim);font-weight:500}
+  p{font-size:12.5px;color:var(--dim);margin:4px 0 8px}
+  .note{font-size:11.5px;color:var(--warn);background:var(--panel2);padding:6px 10px;border-radius:6px;border-left:2px solid var(--warn);margin:8px 0}
+  .tip{font-size:11.5px;color:var(--ok);background:var(--panel2);padding:6px 10px;border-radius:6px;border-left:2px solid var(--ok);margin:8px 0}
+  .err-box{font-size:11.5px;color:var(--err);background:var(--panel2);padding:6px 10px;border-radius:6px;border-left:2px solid var(--err);margin:8px 0}
+  
+  /* TABLES */
+  .mini-table{width:100%;font-size:10.5px;border-collapse:collapse;margin:6px 0}
+  .mini-table th{text-align:left;color:var(--accent);font-weight:500;padding:4px 6px;border-bottom:1px solid var(--line)}
+  .mini-table td{padding:3px 6px;border-bottom:1px solid var(--line);color:var(--dim)}
+  .mini-table .code{color:var(--text);font-family:var(--mono)}
+  .mini-table .desc{color:var(--dim)}
+  
+  /* GRID LAYOUTS */
+  .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}
+  .feature-item{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+  .feature-item .label{color:var(--accent);font-size:11px;font-weight:500}
+  .feature-item .desc{color:var(--dim);font-size:10.5px;margin-top:2px}
+  
+  .step-list{counter-reset:step;padding:0}
+  .step-list li{list-style:none;counter-increment:step;padding:6px 0 6px 32px;position:relative;border-bottom:1px dashed var(--line);font-size:12px;color:var(--dim)}
+  .step-list li::before{content:counter(step);position:absolute;left:0;top:6px;background:var(--accent);color:var(--bg);width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:700;text-align:center;line-height:20px}
+  .step-list li strong{color:var(--text)}
+  .step-list li .highlight{color:var(--accent)}
+  
+  .color-demo{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:middle;margin-right:4px;border:1px solid var(--line)}
+  .color-row{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--dim);padding:4px 0}
+  
+  /* BUTTON DEMO */
+  .btn-demo{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-family:var(--mono);font-size:10.5px;cursor:default;display:inline-block;margin:2px 4px 2px 0}
+  .btn-demo.primary{background:var(--accent);color:#0b0c0e;border-color:var(--accent)}
+  .btn-demo.ghost{background:transparent}
+  
+  /* TAGS */
+  .tag{display:inline-block;padding:1px 8px;border-radius:12px;font-size:9px;border:1px solid var(--line);color:var(--dim);margin:0 2px}
+  .tag.on{color:var(--accent);border-color:var(--accent-dim)}
+  .tag.bad{color:var(--err);border-color:#5a2a2a}
+  .tag.warn{color:var(--warn);border-color:#5a442a}
+  
+  /* RESPONSIVE */
+  @media(max-width:600px){
+    .toc-grid{grid-template-columns:1fr}
+    .feature-grid{grid-template-columns:1fr}
+  }
+  
+  /* FOOTER */
+  footer{padding:20px 14px 40px;color:var(--dim);font-size:10.5px;text-align:center;border-top:1px solid var(--line);margin-top:20px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📖 ROSTER <span>PARSER</span> · TUTORIAL</h1>
+  <div class="sub">Complete user guide for the aviation crew roster tool · by 2100551</div>
+</header>
+
+<main>
+
+  <!-- ===== TABLE OF CONTENTS ===== -->
+  <div class="toc">
+    <h2>📑 Quick Navigation</h2>
+    <div class="toc-grid">
+      <a href="#sec1"><span class="num">1.</span> Getting Started</a>
+      <a href="#sec2"><span class="num">2.</span> The Roster Table</a>
+      <a href="#sec3"><span class="num">3.</span> Toolbar Buttons</a>
+      <a href="#sec4"><span class="num">4.</span> Code Legend</a>
+      <a href="#sec5"><span class="num">5.</span> Saving Rosters</a>
+      <a href="#sec6"><span class="num">6.</span> Find Time Together</a>
+      <a href="#sec7"><span class="num">7.</span> Heatmap View</a>
+      <a href="#sec8"><span class="num">8.</span> Statistics Panel</a>
+      <a href="#sec9"><span class="num">9.</span> Troubleshooting</a>
+      <a href="#sec10"><span class="num">10.</span> Quick Reference</a>
+    </div>
+  </div>
+
+  <!-- ===== SECTION 1: GETTING STARTED ===== -->
+  <section id="sec1">
+    <div class="section-card">
+      <h2>1. Getting Started <span class="badge">first use</span></h2>
+      <div class="body">
+        <h3>Loading a Roster File</h3>
+        <ol class="step-list">
+          <li><strong>Drag &amp; drop</strong> your roster file onto the dashed drop zone — or click <span class="highlight">"Choose file"</span></li>
+          <li><strong>Accepted formats:</strong>
+            <span class="tag on">.xlsx</span>
+            <span class="tag on">.xls</span>
+            <span class="tag warn">.pdf</span>
+          </li>
+          <li><strong>PDF files:</strong> The parser will auto-detect whether it's a <em>Roster Report</em> or <em>Calendar/Fridge</em> view</li>
+        </ol>
+        <div class="tip">💡 <strong>XLSX is preferred</strong> — PDF parsing is still being improved. Use the "force re-parse" buttons if auto-detection fails.</div>
+
+        <h3>What Happens After Loading</h3>
+        <p>The page will:</p>
+        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0 0">
+          <li>Parse the file and extract all flight/activity data</li>
+          <li>Build a <strong>complete daily roster</strong> for the month</li>
+          <li>Calculate <strong>monthly statistics</strong> (block hours, duty hours, off days)</li>
+          <li>Display the <strong>Code Legend</strong> with descriptions</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 2: THE ROSTER TABLE ===== -->
+  <section id="sec2">
+    <div class="section-card">
+      <h2>2. The Roster Table <span class="badge">main view</span></h2>
+      <div class="body">
+        <h3>Column Reference</h3>
+        <table class="mini-table">
+          <thead><tr><th>Column</th><th>What It Shows</th></tr></thead>
+          <tbody>
+            <tr><td class="code">Date</td><td>Calendar date (DD-MMM-YYYY)</td></tr>
+            <tr><td class="code">Day</td><td>Day of week (Mon–Sun)</td></tr>
+            <tr><td class="code">Duty Start</td><td>Report/check-in time</td></tr>
+            <tr><td class="code">Item</td><td>Flight number, duty code, or activity code</td></tr>
+            <tr><td class="code">Overrd Rank</td><td>Crew rank (e.g., FS = First Steward)</td></tr>
+            <tr><td class="code">Dep/Start</td><td>Departure station + time</td></tr>
+            <tr><td class="code">Arr/End</td><td>Arrival station + time</td></tr>
+            <tr><td class="code">Duty End</td><td>Debrief/check-out time</td></tr>
+            <tr><td class="code">Work Type</td><td>"OP" = Operating (flying), blank = ground</td></tr>
+            <tr><td class="code">Actual Block Hours</td><td>Flight hours for that sector</td></tr>
+            <tr><td class="code">Duty Hours</td><td>Total duty hours for the day</td></tr>
+            <tr><td class="code">DutyCode</td><td>Activity code (OP, D, DO, S4WBA, etc.)</td></tr>
+            <tr><td class="code">Ac Type</td><td>Aircraft type (if applicable)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Row Color Coding</h3>
+        <div class="color-row">
+          <span><span class="color-demo" style="background:var(--dim)"></span>Off day (D, DO, EL)</span>
+          <span><span class="color-demo" style="background:var(--warn)"></span>Layover (LO)</span>
+          <span><span class="color-demo" style="background:#cfd3d8;opacity:.6"></span>Second leg of multi-sector day</span>
+          <span><span class="color-demo" style="background:#ff9a9a"></span>Full-day overlap (Find Time Together)</span>
+        </div>
+        <div class="note">⚠️ Duty codes like <code>S4WBA</code> (standby) and <code>DGRCCRC1</code> (training) are explained in the Code Legend below.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 3: TOOLBAR BUTTONS ===== -->
+  <section id="sec3">
+    <div class="section-card">
+      <h2>3. Toolbar Buttons <span class="badge">actions</span></h2>
+      <div class="body">
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="label"><span class="btn-demo">Fit screen</span></div>
+            <div class="desc">Scales the roster to fit your screen width. Toggle on/off.</div>
+          </div>
+          <div class="feature-item">
+            <div class="label"><span class="btn-demo">Copy</span></div>
+            <div class="desc">Copies the entire roster as tab-separated values to your clipboard.</div>
+          </div>
+          <div class="feature-item">
+            <div class="label"><span class="btn-demo">CSV</span></div>
+            <div class="desc">Downloads the roster as a .csv file (Excel-compatible).</div>
+          </div>
+          <div class="feature-item">
+            <div class="label"><span class="btn-demo">Image</span></div>
+            <div class="desc">Exports a high-resolution screenshot as .png.</div>
+          </div>
+          <div class="feature-item" style="grid-column:span 2">
+            <div class="label"><span class="btn-demo primary">Print / PDF</span></div>
+            <div class="desc">Opens the browser print dialog → choose "Save as PDF". <strong>Set orientation to Portrait</strong> for best results.</div>
+          </div>
+        </div>
+        <div class="tip">💡 The <strong>"Fit screen"</strong> button is especially useful for taking screenshots or getting a birds-eye view of your month.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 4: CODE LEGEND ===== -->
+  <section id="sec4">
+    <div class="section-card">
+      <h2>4. Code Description Legend <span class="badge">customizable</span></h2>
+      <div class="body">
+        <h3>Purpose</h3>
+        <p>Each duty code has a description. The legend helps you understand what each code means at a glance.</p>
+
+        <h3>How to Use</h3>
+        <ol class="step-list">
+          <li><strong>Edit a description</strong> — Click any description field and type a new one</li>
+          <li><strong>Add a custom code</strong> — Click the <span class="highlight">"+ add code"</span> button</li>
+          <li><strong>Delete a code</strong> — Click the <span class="highlight">"✕"</span> button next to any row</li>
+          <li><strong>Changes are saved automatically</strong> in your browser's local storage</li>
+        </ol>
+
+        <h3>Default Codes</h3>
+        <table class="mini-table">
+          <thead><tr><th>Code</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="code">OP</td><td>Operating</td></tr>
+            <tr><td class="code">D / DO</td><td>Day Off</td></tr>
+            <tr><td class="code">EL</td><td>Emergency / Annual Leave</td></tr>
+            <tr><td class="code">LO</td><td>Layover (down-route rest)</td></tr>
+            <tr><td class="code">S3WBA / S4WBA</td><td>Cabin Crew Standby</td></tr>
+            <tr><td class="code">AS1WB</td><td>Airport Standby</td></tr>
+            <tr><td class="code">DGRCCRC1</td><td>DGRF9 Recurrent Training</td></tr>
+            <tr><td class="code">ICCRCNT1</td><td>ICC Recurrent Training</td></tr>
+            <tr><td class="code">C17SMSC1</td><td>CRM/Safety Recurrent Training</td></tr>
+          </tbody>
+        </table>
+        <div class="tip">💡 The legend is <strong>per-device</strong> — it's saved in your browser, not on any server.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 5: SAVING ROSTERS ===== -->
+  <section id="sec5">
+    <div class="section-card">
+      <h2>5. Saving Rosters <span class="badge">storage</span></h2>
+      <div class="body">
+        <h3>Why Save Rosters?</h3>
+        <p>Saved rosters are required for the <strong>"Find Time Together"</strong> feature. They also let you keep a history of your schedules.</p>
+
+        <h3>How to Save</h3>
+        <ol class="step-list">
+          <li>After parsing a roster, the <span class="highlight">"Save This Roster"</span> section appears</li>
+          <li>Enter a <strong>Crew name</strong> (your name or an identifier)</li>
+          <li>Select a <strong>Timezone</strong>:
+            <ul style="color:var(--dim);font-size:11px;margin:2px 0 0 16px">
+              <li><strong>SLT</strong> — display in home base time (KUL +8)</li>
+              <li><strong>UTC</strong> — display in Coordinated Universal Time</li>
+            </ul>
+          </li>
+          <li>Click <span class="highlight">"Save roster"</span></li>
+        </ol>
+
+        <h3>Managing Saved Rosters</h3>
+        <table class="mini-table">
+          <thead><tr><th>Action</th><th>How-To</th></tr></thead>
+          <tbody>
+            <tr><td><strong>View</strong> a saved roster</td><td>Click the <span class="tag on">View</span> button</td></tr>
+            <tr><td><strong>Delete</strong> a saved roster</td><td>Click the <span class="tag bad">Delete</span> button</td></tr>
+            <tr><td><strong>Select</strong> for overlap</td><td>Check the checkbox next to a saved roster</td></tr>
+          </tbody>
+        </table>
+        <div class="note">⚠️ Saved rosters are stored <strong>locally in your browser</strong>. Clearing your browser data will remove them.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 6: FIND TIME TOGETHER ===== -->
+  <section id="sec6">
+    <div class="section-card">
+      <h2>6. Find Time Together 💞 <span class="badge">crew coordination</span></h2>
+      <div class="body">
+        <h3>Purpose</h3>
+        <p>Finds overlapping free time between <strong>2 or more crew members</strong>. Useful for planning social activities, crew meetups, or coordinating schedules.</p>
+
+        <h3>How It Analyzes</h3>
+        <p>The system examines each crew member's saved roster and identifies:</p>
+        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+          <li><strong>Off days</strong> — completely free (D, DO, EL)</li>
+          <li><strong>Layovers</strong> — free time away from base (LO)</li>
+          <li><strong>Gaps between duties</strong> — free time before/after flights</li>
+          <li><strong>Standby duty</strong> — marked as <span class="tag warn">Maybe</span> (not confirmed free)</li>
+        </ul>
+
+        <h3>Step-by-Step</h3>
+        <ol class="step-list">
+          <li><strong>Save at least 2 rosters</strong> (see Section 5)</li>
+          <li><strong>Check the boxes</strong> next to the crew members you want to coordinate</li>
+          <li>Click <span class="highlight">"Find overlap"</span></li>
+          <li>Results appear showing:
+            <ul style="color:var(--dim);font-size:11px;margin:2px 0 0 16px">
+              <li><strong>All {N} together</strong> — time everyone is free (3+ members selected)</li>
+              <li><strong>Pairwise breakdown</strong> — overlap between each pair of crew members</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h3>Result Color Coding</h3>
+        <div class="color-row">
+          <span><span class="color-demo" style="background:var(--ok)"></span>Confirmed together</span>
+          <span><span class="color-demo" style="background:var(--warn)"></span>Maybe (standby-dependent)</span>
+          <span><span class="color-demo" style="background:#ff9a9a"></span>Everyone off all day</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 7: HEATMAP VIEW ===== -->
+  <section id="sec7">
+    <div class="section-card">
+      <h2>7. Heatmap View <span class="badge">visual calendar</span></h2>
+      <div class="body">
+        <h3>What It Shows</h3>
+        <p>A calendar-style grid where each day's cell shows free time as a <strong>horizontal bar</strong>:</p>
+        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+          <li><strong>Left edge</strong> = 00:00 (midnight)</li>
+          <li><strong>Right edge</strong> = 24:00 (next midnight)</li>
+          <li><span class="color-demo" style="background:var(--ok)"></span> <strong>Green</strong> = time everyone is free together</li>
+          <li><span class="color-demo" style="background:var(--warn)"></span> <strong>Gold</strong> = time that depends on standby availability</li>
+          <li><span class="color-demo" style="background:#800020"></span> <strong>Red</strong> = time not available</li>
+        </ul>
+        <div class="tip">💡 Consecutive-day overlaps <strong>line up at the cell boundary</strong> so a multi-day stretch reads as one continuous bar — perfect for spotting long free periods.</div>
+
+        <h3>How to Use</h3>
+        <ol class="step-list">
+          <li>After running <span class="highlight">"Find overlap"</span>, click <span class="highlight">"Heatmap view"</span></li>
+          <li>To return to the table view, click <span class="highlight">"Table view"</span></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 8: STATISTICS PANEL ===== -->
+  <section id="sec8">
+    <div class="section-card">
+      <h2>8. Statistics Panel <span class="badge">monthly summary</span></h2>
+      <div class="body">
+        <p>Automatically calculated after parsing a roster:</p>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="label">Actual Block Hours</div>
+            <div class="desc">Total flight hours for the month</div>
+          </div>
+          <div class="feature-item">
+            <div class="label">Duty Hours</div>
+            <div class="desc">Total duty hours (report to debrief)</div>
+          </div>
+          <div class="feature-item">
+            <div class="label">OFF Days At Base</div>
+            <div class="desc">Number of off days spent at home base (KUL)</div>
+          </div>
+          <div class="feature-item">
+            <div class="label">OFF Days Away From Base</div>
+            <div class="desc">Number of off days spent away from base</div>
+          </div>
+        </div>
+        <div class="tip">💡 <strong>"OFF Days Away From Base"</strong> counts both pure off days AND layovers (LO) — anywhere you're not flying but also not at home.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 9: TROUBLESHOOTING ===== -->
+  <section id="sec9">
+    <div class="section-card">
+      <h2>9. Troubleshooting <span class="badge">help</span></h2>
+      <div class="body">
+        <h3>PDF Parsing Issues</h3>
+        <ol class="step-list">
+          <li><strong>Use XLSX if possible</strong> — it's the most reliable format</li>
+          <li><strong>Force re-parse</strong> — click <span class="highlight">"Roster Report table"</span> or <span class="highlight">"Calendar / fridge"</span> below the file name</li>
+          <li><strong>Export debug data</strong> — click the <span class="tag warn">Export debug data</span> button at the bottom and share the file for bug fixes</li>
+        </ol>
+
+        <h3>"Find Time Together" Shows No Results</h3>
+        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+          <li>Crew schedules may not overlap in the date range</li>
+          <li>Check that all selected rosters cover overlapping date periods</li>
+          <li>Ensure the "station" matches (e.g., both in KUL at the same time)</li>
+        </ul>
+
+        <h3>Legend Changes Disappeared</h3>
+        <div class="err-box">⚠️ Legend changes are saved in your browser's <strong>localStorage</strong>. If you clear your browser data, the legend resets to defaults.</div>
+
+        <h3>General Tips</h3>
+        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+          <li>All parsing happens <strong>locally</strong> — nothing is uploaded</li>
+          <li>The <strong>"Fit screen"</strong> button helps with screenshots</li>
+          <li>Use <strong>"Print / PDF"</strong> for a clean printed version</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 10: QUICK REFERENCE ===== -->
+  <section id="sec10">
+    <div class="section-card">
+      <h2>10. Quick Reference <span class="badge">cheat sheet</span></h2>
+      <div class="body">
+        <table class="mini-table">
+          <thead><tr><th>I Want To...</th><th>Do This...</th></tr></thead>
+          <tbody>
+            <tr><td>Load a roster</td><td>Drag file onto drop zone or click "Choose file"</td></tr>
+            <tr><td>See my schedule</td><td>File loads automatically after upload</td></tr>
+            <tr><td>Save my schedule</td><td>Enter name + timezone, click "Save roster"</td></tr>
+            <tr><td>Find free time with crew</td><td>Select 2+ saved rosters, click "Find overlap"</td></tr>
+            <tr><td>See calendar view of overlap</td><td>After "Find overlap", click "Heatmap view"</td></tr>
+            <tr><td>Export as image</td><td>Click "Image" button</td></tr>
+            <tr><td>Save as PDF</td><td>Click "Print / PDF", then "Save as PDF"</td></tr>
+            <tr><td>Copy to clipboard</td><td>Click "Copy"</td></tr>
+            <tr><td>Download CSV</td><td>Click "CSV"</td></tr>
+            <tr><td>Fit to screen</td><td>Click "Fit screen" (toggle)</td></tr>
+            <tr><td>Fix PDF parsing</td><td>Use "force re-parse" buttons</td></tr>
+            <tr><td>Help improve the tool</td><td>Click "Export debug data" and send the file</td></tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:12px;padding:10px;background:var(--panel2);border-radius:6px;text-align:center;font-size:11px;color:var(--dim)">
+          🔐 <strong>Privacy:</strong> All parsing and processing happens <strong>locally in your browser</strong>. No files are uploaded to any server.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CREDITS ===== -->
+  <footer>
+    Roster Parser · by 2100551<br>
+    Parses locally in your browser. Nothing is uploaded.
+  </footer>
+
+</main>
+
+</body>
+</html>
