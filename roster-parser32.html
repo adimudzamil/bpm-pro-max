@@ -6,6 +6,8 @@
 <title>Roster Parser · 2100551</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- 👥 FAVICON -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👥</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -116,7 +118,7 @@
 
 <header>
   <h1>ROSTER <span>PARSER</span></h1>
-  <div class="sub">xlsx / pdf table / pdf calendar → unified daily roster · by 2100551</div>
+  <div class="sub">xlsx / pdf table / pdf calendar → unified daily roster + Find time together with other CREW(s) · by 2100551</div>
 </header>
 
 <main>
@@ -125,7 +127,7 @@
     <div class="btnRow" style="justify-content:center">
       <button class="primary" onclick="document.getElementById('fileInput').click()">Choose file</button>
     </div>
-    <div style="margin-top:8px">Accepts <b>.xlsx</b>, <b>.xls</b>, or <b>.pdf</b> — any of: raw Roster Report export, PDF print of a Roster Report, or the calendar "fridge" PDF.</div>
+    <div style="margin-top:8px">Accepts <b>.xlsx(PREFERRED)</b>, <b>.xls</b>, or <b>.pdf(STILL BUGGY)</b> — any of: raw Roster Report export, PDF print of a Roster Report, or the calendar "fridge" PDF.</div>
     <input id="fileInput" type="file" accept=".xlsx,.xls,.pdf">
   </div>
 
@@ -192,12 +194,12 @@
   </section>
 
   <section class="card" id="savedListCard">
-    <h2>Saved Rosters <small>local to this device only</small></h2>
+    <h2>Saved Rosters <small>Must save to use 'Find Time Together'. Local to this device only</small></h2>
     <div id="savedListBody" style="padding:6px 12px"></div>
   </section>
 
   <section class="card" id="overlapCard">
-    <h2>Find Time Together <small>select 2+ saved rosters</small></h2>
+    <h2>Find Time Together 💞<small>select 2+ saved rosters</small></h2>
     <div style="padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="primary" onclick="computeTogetherTime()">Find overlap</button>
       <button onclick="toggleHeatmap()" id="heatmapBtn" style="display:none">Heatmap view</button>
@@ -1055,7 +1057,7 @@ function buildDays(legs){
     DAYS.push(existing || {date:new Date(cursor), key:k, rows:[], hasData:false});
     cursor = addDays(cursor,1);
   }
-  STAFF_LABEL = 'ADI MUDZAMIL RANI BIN MOHAMED | 2100551 | WBA LS | KUL';
+  STAFF_LABEL = ''
 }
 
 /* =====================================================================
@@ -1698,5 +1700,6 @@ function renderHeatmap(){
   document.getElementById('overlapResults').innerHTML = html;
 }
 </script>
+  <script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
 </body>
 </html>
