@@ -127,7 +127,7 @@
     <div class="btnRow" style="justify-content:center">
       <button class="primary" onclick="document.getElementById('fileInput').click()">Choose file</button>
     </div>
-    <div style="margin-top:8px">Accepts <b>.xlsx(PREFERRED)</b>, <b>.xls</b>, or <b>.pdf(STILL BUGGY)</b> — any of: raw Roster Report export, PDF print of a Roster Report, or the calendar "fridge" PDF.</div>
+    <div style="margin-top:8px">Accepts <b>.xlsx(PREFERRED)</b>, <b>.xls</b>, or <b>.pdf(STILL Buggy)</b> — any of: raw Roster Report export, PDF print of a Roster Report, or the calendar "fridge" PDF.</div>
     <input id="fileInput" type="file" accept=".xlsx,.xls,.pdf">
   </div>
 
@@ -199,10 +199,9 @@
   </section>
 
   <section class="card" id="overlapCard">
-    <h2>Find Time Together 💞<small>select 2+ saved rosters</small></h2>
-    <div style="padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap">
+    <h2>Find Time Together 💞 <small>select 2+ saved rosters</small></h2>
+    <div style="padding:10px 12px">
       <button class="primary" onclick="computeTogetherTime()">Find overlap</button>
-      <button onclick="toggleHeatmap()" id="heatmapBtn" style="display:none">Heatmap view</button>
     </div>
     <div id="overlapResults" style="padding:0 12px 12px"></div>
   </section>
@@ -1555,149 +1554,9 @@ function computeTogetherTime(){
         </div>
         <div class="tableWrap"><table><thead><tr><th>Date</th><th>Day</th><th>From</th><th>To</th><th>Location</th><th>Duration</th><th>Type</th></tr></thead>
         <tbody>${rows || '<tr><td colspan="7" style="color:var(--dim)">No overlapping free time found in the shared date range.</td></tr>'}</tbody></table></div>`;
-
-      // The primary result for the heatmap: the full-group intersection when
-      // 3+ people are selected, otherwise this (the only) pair.
-      if(people.length===2){
-        LAST_OVERLAP_PRIMARY = {
-          overlaps: overlaps.map(o=>({start:o.startAbs, end:o.endAbs, maybe:o.maybe})),
-          title: people[0].name+' × '+people[1].name,
-          rangeStart: [people[0].rangeStart, people[1].rangeStart].sort().pop(),
-          rangeEnd: [people[0].rangeEnd, people[1].rangeEnd].sort()[0]
-        };
-      }
     }
-  }
-  if(people.length>=3){
-    const group = computeGroupOverlap(intervalSets);
-    LAST_OVERLAP_PRIMARY = {
-      overlaps: group.map(o=>({start:o.start, end:o.end, maybe:o.maybe})),
-      title: 'All together: '+people.map(p=>p.name).join(', '),
-      rangeStart: people.map(p=>p.rangeStart).sort().pop(),
-      rangeEnd: people.map(p=>p.rangeEnd).sort()[0]
-    };
   }
   out.innerHTML = html;
-  LAST_OVERLAP_TABLE_HTML = html;
-  document.getElementById('heatmapBtn').style.display = LAST_OVERLAP_PRIMARY ? 'inline-block' : 'none';
-  heatmapOn = false;
-  document.getElementById('heatmapBtn').textContent = 'Heatmap view';
-}
-
-/* =====================================================================
-   11) HEATMAP VIEW — calendar grid, each cell a left-to-right timeline
-   bar (left edge = 00:00, right edge = 24:00). Consecutive-day overlaps
-   deliberately line up at the cell boundary (green touching green across
-   the midnight edge) so a multi-day stretch reads as one continuous bar
-   when viewed from a distance, not as isolated colored cells.
-===================================================================== */
-let LAST_OVERLAP_PRIMARY = null;
-let LAST_OVERLAP_TABLE_HTML = '';
-let heatmapOn = false;
-
-// Converts an absolute minute value (same epoch used by intervalToAbsMinutes)
-// into {key: 'YYYY-MM-DD', minOfDay: 0-1440}, using the same +8h SLT display
-// shift as absMinutesToLabel so the two stay perfectly consistent.
-function absToDayMin(absMin){
-  const dispMin = absMin + 480;
-  const dayIdx = Math.floor(dispMin/1440);
-  const minOfDay = dispMin - dayIdx*1440;
-  const dt = new Date(dayIdx*1440*60000);
-  const key = dt.getUTCFullYear()+'-'+String(dt.getUTCMonth()+1).padStart(2,'0')+'-'+String(dt.getUTCDate()).padStart(2,'0');
-  return {key, minOfDay};
-}
-
-function splitIntoDaySegments(startAbs, endAbs, maybe){
-  const segs = [];
-  let cur = startAbs;
-  let guard = 0;
-  while(cur < endAbs && guard++ < 400){
-    const {key, minOfDay} = absToDayMin(cur);
-    const dayEndAbs = cur + (1440 - minOfDay);
-    const segEnd = Math.min(endAbs, dayEndAbs);
-    segs.push({date:key, startMin:minOfDay, endMin: minOfDay + (segEnd-cur), maybe});
-    cur = segEnd;
-  }
-  return segs;
-}
-
-function buildDayMap(overlaps){
-  const dayMap = {};
-  overlaps.forEach(o=>{
-    splitIntoDaySegments(o.start, o.end, o.maybe).forEach(seg=>{
-      dayMap[seg.date] = dayMap[seg.date] || [];
-      dayMap[seg.date].push(seg);
-    });
-  });
-  return dayMap;
-}
-
-function buildGradient(segments){
-  const RED = '#ff9a9a', GREEN = '#3f8f5a', MAYBE = '#8a7a2f';
-  if(!segments || !segments.length) return RED;
-  const sorted = [...segments].sort((a,b)=>a.startMin-b.startMin);
-  const stops = [];
-  let pos = 0;
-  const pct = m => Math.max(0, Math.min(100, m/14.4));
-  sorted.forEach(seg=>{
-    const s = Math.max(pos, seg.startMin), e = Math.max(s, seg.endMin);
-    if(s > pos){ stops.push(`${RED} ${pct(pos)}%`, `${RED} ${pct(s)}%`); }
-    const color = seg.maybe ? MAYBE : GREEN;
-    stops.push(`${color} ${pct(s)}%`, `${color} ${pct(e)}%`);
-    pos = Math.max(pos, e);
-  });
-  if(pos < 1440) stops.push(`${RED} ${pct(pos)}%`, `${RED} 100%`);
-  return `linear-gradient(to right, ${stops.join(',')})`;
-}
-
-function toggleHeatmap(){
-  if(!LAST_OVERLAP_PRIMARY) return;
-  heatmapOn = !heatmapOn;
-  document.getElementById('heatmapBtn').textContent = heatmapOn ? 'Table view' : 'Heatmap view';
-  if(!heatmapOn){ document.getElementById('overlapResults').innerHTML = LAST_OVERLAP_TABLE_HTML; return; }
-  renderHeatmap();
-}
-
-function renderHeatmap(){
-  const {overlaps, title, rangeStart, rangeEnd} = LAST_OVERLAP_PRIMARY;
-  const dayMap = buildDayMap(overlaps);
-  const MONTH_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-  let html = `<h3 style="font-size:14px;margin:10px 0 8px;color:var(--accent)">${title} — heatmap</h3>
-    <div style="font-size:10px;color:var(--dim);margin-bottom:10px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-      <span><span style="display:inline-block;width:11px;height:11px;background:#3f8f5a;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Together</span>
-      <span><span style="display:inline-block;width:11px;height:11px;background:#8a7a2f;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Maybe (standby)</span>
-      <span><span style="display:inline-block;width:11px;height:11px;background:#ff9a9a;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Not together</span>
-    </div>`;
-
-  const startD = new Date(rangeStart+'T00:00:00'), endD = new Date(rangeEnd+'T00:00:00');
-  let cursor = new Date(startD.getFullYear(), startD.getMonth(), 1);
-  while(cursor <= endD){
-    const y = cursor.getFullYear(), m = cursor.getMonth();
-    html += `<div style="font-size:12.5px;font-weight:700;margin:16px 0 6px">${MONTH_FULL[m]} ${y}</div>
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">`;
-    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d=>{
-      html += `<div style="font-size:9px;color:var(--dim);text-align:center;padding-bottom:2px">${d}</div>`;
-    });
-    const leadingBlanks = new Date(y,m,1).getDay();
-    for(let i=0;i<leadingBlanks;i++) html += `<div></div>`;
-    const daysInMonth = new Date(y,m+1,0).getDate();
-    for(let d=1; d<=daysInMonth; d++){
-      const dt = new Date(y,m,d);
-      const key = ymdKey(dt);
-      if(dt < startD || dt > endD){
-        html += `<div style="aspect-ratio:1;border-radius:5px;background:var(--panel2);opacity:.35"></div>`;
-        continue;
-      }
-      const bg = buildGradient(dayMap[key]);
-      html += `<div style="aspect-ratio:1;border-radius:5px;background:${bg};position:relative;border:1px solid var(--line)">
-        <span style="position:absolute;top:2px;right:3px;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9)">${d}</span>
-      </div>`;
-    }
-    html += `</div>`;
-    cursor = new Date(y, m+1, 1);
-  }
-  document.getElementById('overlapResults').innerHTML = html;
 }
 </script>
   <script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>

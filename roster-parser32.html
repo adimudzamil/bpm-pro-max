@@ -1633,7 +1633,7 @@ function buildDayMap(overlaps){
 }
 
 function buildGradient(segments){
-  const RED = '#4a1f22', GREEN = '#3f8f5a', MAYBE = '#8a7a2f';
+  const RED = '#ff9a9a', GREEN = '#3f8f5a', MAYBE = '#8a7a2f';
   if(!segments || !segments.length) return RED;
   const sorted = [...segments].sort((a,b)=>a.startMin-b.startMin);
   const stops = [];
@@ -1667,7 +1667,7 @@ function renderHeatmap(){
     <div style="font-size:10px;color:var(--dim);margin-bottom:10px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
       <span><span style="display:inline-block;width:11px;height:11px;background:#3f8f5a;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Together</span>
       <span><span style="display:inline-block;width:11px;height:11px;background:#8a7a2f;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Maybe (standby)</span>
-      <span><span style="display:inline-block;width:11px;height:11px;background:#4a1f22;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Not together</span>
+      <span><span style="display:inline-block;width:11px;height:11px;background:#ff9a9a;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Not together</span>
     </div>`;
 
   const startD = new Date(rangeStart+'T00:00:00'), endD = new Date(rangeEnd+'T00:00:00');
