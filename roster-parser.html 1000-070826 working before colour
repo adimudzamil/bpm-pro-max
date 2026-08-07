@@ -56,60 +56,17 @@
 
   #resultsWrap{transform-origin:top left}
 
-  .tableWrap{overflow-x:auto;background:var(--tablebg,#101215)}
+  .tableWrap{overflow-x:auto;background:#101215}
   table{border-collapse:collapse;font-size:9.5px;letter-spacing:-0.1px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
   th,td{padding:2px 4px;border-bottom:1px solid var(--line);text-align:left;font-weight:500;white-space:nowrap;vertical-align:top}
-  th{color:var(--text);font-weight:700;position:sticky;top:0;background:var(--panel2);white-space:normal;line-height:1.15;vertical-align:bottom;max-width:58px}
+  th{color:#cfd3d8;font-weight:700;position:sticky;top:0;background:var(--panel2);white-space:normal;line-height:1.15;vertical-align:bottom;max-width:58px}
   tr.off td{color:var(--dim)}
   tr.layover td{color:var(--warn)}
-  tr.fullday td{color:var(--fullday,#ff9a9a)}
-  tr.leg2 td{color:var(--leg2,#cfd3d8)}
-  tr:hover td{background:var(--panel2)}
+  tr.fullday td{color:#ff9a9a}
+  tr.leg2 td{color:#cfd3d8}
+  tr:hover td{background:#17191d}
   td.date{color:var(--accent);font-weight:700}
   td.num{font-variant-numeric:tabular-nums}
-
-  .themeCard{border:1px solid var(--line);border-radius:8px;padding:8px;cursor:pointer;background:var(--panel2)}
-  .themeCard.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
-  .themeCard .swatches{display:flex;gap:3px;margin-bottom:6px;height:22px;border-radius:4px;overflow:hidden}
-  .themeCard .swatches div{flex:1}
-  .themeCard .themeName{font-size:11px;font-weight:600;color:var(--text)}
-
-  /* ===== COLOUR THEMES (scoped to #resultsWrap only) ===== */
-  #resultsWrap.theme-bw{
-    --panel:#FFFFFF; --panel2:#FFFFFF; --line:#000000; --text:#000000; --dim:#000000;
-    --accent:#000000; --warn:#000000; --tablebg:#ffffff; --fullday:#000000; --leg2:#000000; 
-  }
-  /* Force all text to be black on white background in BW theme */
-#resultsWrap.theme-bw td,
-#resultsWrap.theme-bw th,
-#resultsWrap.theme-bw .date,
-#resultsWrap.theme-bw tr.off td,
-#resultsWrap.theme-bw tr.layover td,
-#resultsWrap.theme-bw tr.fullday td,
-#resultsWrap.theme-bw tr.leg2 td,
-#resultsWrap.theme-bw .stats div,
-#resultsWrap.theme-bw .stats div b,
-#resultsWrap.theme-bw .stats b {
-  color: #000000 !important;
-}
-
-  #resultsWrap.theme-lv{
-    --panel:#2b1d10; --panel2:#4a3320; --line:#6b5030; --text:#f3e6c8; --dim:#c2a878;
-    --accent:#d4af37; --warn:#e0b869; --tablebg:#231708; --fullday:#f4d06f; --leg2:#e6d3a8;
-  }
-  #resultsWrap.theme-gucci{
-    --panel:#0e2818; --panel2:#194028; --line:#2d5a3a; --text:#f5f0e6; --dim:#a8c4b0;
-    --accent:#c8102e; --warn:#d4af37; --tablebg:#0a2015; --fullday:#ff6b7a; --leg2:#dcecdf;
-  }
-  #resultsWrap.theme-mas{
-    --panel:#0f2a52; --panel2:#153865; --line:#2a4d7a; --text:#ffffff; --dim:#a8c0e0;
-    --accent:#f5c518; --warn:#e8383a; --tablebg:#081832; --fullday:#ffb347; --leg2:#d0e0f5;
-  }
-  
-  #resultsWrap.theme-cyberpunk{
-    --panel:#12002a; --panel2:#1a0038; --line:#5a0099; --text:#00fff9; --dim:#b088e0;
-    --accent:#ff00e6; --warn:#faff00; --tablebg:#050010; --fullday:#ff2079; --leg2:#66fff5;
-  }
 
   .stats{padding:8px 10px;font-size:9.5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
   .stats div{margin-bottom:7px}
@@ -190,7 +147,6 @@
     <button onclick="toggleFit()" id="fitBtn">Fit screen</button>
     <button onclick="copyTSV()">Copy</button>
     <button onclick="downloadCSV()">CSV</button>
-    <button onclick="openColourModal()">Colour</button>
     <button onclick="exportPNG()">Image</button>
     <button class="primary" onclick="exportPDF()">Print / PDF</button>
     <span style="align-self:center;color:var(--warn);font-size:10.5px">↳ in the print dialog, set orientation to Portrait</span>
@@ -257,18 +213,6 @@
 </main>
 
 <footer>Parses locally in your browser. Nothing is uploaded. · by 2100551</footer>
-
-<!-- COLOUR THEME MODAL -->
-<div id="colourModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;padding:16px;overflow:auto">
-  <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:520px;margin:0 auto;padding:14px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <h3 style="margin:0;font-size:14px;color:var(--text)">Choose a colour theme</h3>
-      <button class="ghost" onclick="closeColourModal()">✕</button>
-    </div>
-    <div style="font-size:11px;color:var(--dim);margin-bottom:10px">Applies to the Daily Roster view on screen and to the Image export. Tap a theme to preview it live.</div>
-    <div id="colourThemeList" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
-  </div>
-</div>
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -1299,7 +1243,7 @@ function exportPNG(){
   const wasFit = fitOn;
   if(!wasFit) toggleFit(); // capture at fit-screen width so the whole table is visible in the image
   setTimeout(()=>{
-    html2canvas(wrap, {scale:3, backgroundColor:getComputedStyle(wrap).getPropertyValue('--bg')||'#0b0c0e'}).then(canvas=>{
+    html2canvas(wrap, {scale:3, backgroundColor:'#0b0c0e'}).then(canvas=>{
       canvas.toBlob(blob=>{
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -1755,47 +1699,6 @@ function renderHeatmap(){
   }
   document.getElementById('overlapResults').innerHTML = html;
 }
-
-/* =====================================================================
-   12) COLOUR THEMES
-===================================================================== */
-const THEMES = [
-  {id:'default', name:'Default (dark)', swatches:['#0b0c0e','#1b1e22','#c6ff3d','#f2f3f5']},
-  {id:'bw', name:'Black & White', swatches:['#ffffff','#f0f0f0','#000000','#000000']},
-  {id:'lv', name:'Earthy', swatches:['#2b1d10','#4a3320','#d4af37','#f3e6c8']},
-  {id:'gucci', name:'Fields', swatches:['#0e2818','#194028','#c8102e','#f5f0e6']},
-  {id:'mas', name:'Office', swatches:['#0f2a52','#153865','#f5c518','#ffffff']},
-  {id:'cyberpunk', name:'Cyberpunk', swatches:['#12002a','#1a0038','#ff00e6','#00fff9']}
-];
-
-function applyTheme(themeId, persist){
-  const wrap = document.getElementById('resultsWrap');
-  wrap.className = wrap.className.replace(/\btheme-\S+/g, '').trim();
-  if(themeId !== 'default') wrap.classList.add('theme-'+themeId);
-  if(persist !== false) localStorage.setItem('rosterParserTheme', themeId);
-  renderColourThemeList(themeId);
-}
-
-function renderColourThemeList(activeId){
-  activeId = activeId || localStorage.getItem('rosterParserTheme') || 'default';
-  const list = document.getElementById('colourThemeList');
-  list.innerHTML = THEMES.map(t=>`
-    <div class="themeCard ${t.id===activeId?'sel':''}" onclick="applyTheme('${t.id}')">
-      <div class="swatches">${t.swatches.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
-      <div class="themeName">${t.name}</div>
-    </div>`).join('');
-}
-
-function openColourModal(){
-  renderColourThemeList();
-  document.getElementById('colourModalOverlay').style.display = 'block';
-}
-function closeColourModal(){
-  document.getElementById('colourModalOverlay').style.display = 'none';
-}
-
-// Restore whatever theme was chosen last time, on load.
-applyTheme(localStorage.getItem('rosterParserTheme') || 'default', false);
 </script>
   <script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
 </body>
