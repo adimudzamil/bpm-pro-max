@@ -109,6 +109,12 @@
     --panel:#FFFFFF; --panel2:#FFFFFF; --line:#081832; --text:#1a2c42; --dim:#5c7590;
     --accent:#b8902a; --warn:#3f7fbf; --tablebg:#ffffff; --fullday:#c98a10; --leg2:#3a5578;
   }
+  /* Force black text for specific elements in Office2 theme */
+#resultsWrap.theme-goldblue tr.fullday td,
+#resultsWrap.theme-goldblue tr.leg2 td,
+#resultsWrap.theme-goldblue .stats div {
+  color: #000000 !important;
+}
   #resultsWrap.theme-cyberpunk{
     --panel:#12002a; --panel2:#1a0038; --line:#5a0099; --text:#00fff9; --dim:#b088e0;
     --accent:#ff00e6; --warn:#faff00; --tablebg:#050010; --fullday:#ff2079; --leg2:#66fff5;
