@@ -77,8 +77,18 @@
   /* ===== COLOUR THEMES (scoped to #resultsWrap only) ===== */
   #resultsWrap.theme-bw{
     --panel:#FFFFFF; --panel2:#FFFFFF; --line:#000000; --text:#000000; --dim:#000000;
-    --accent:#000000; --warn:#000000; --tablebg:#ffffff; --fullday:#000000; --leg2:#000000;
+    --accent:#000000; --warn:#000000; --tablebg:#ffffff; --fullday:#000000; --leg2:#000000; 
   }
+  /* Force all text to be black on white background in BW theme */
+#resultsWrap.theme-bw td,
+#resultsWrap.theme-bw th,
+#resultsWrap.theme-bw .date,
+#resultsWrap.theme-bw tr.off td,
+#resultsWrap.theme-bw tr.layover td,
+#resultsWrap.theme-bw tr.fullday td,
+#resultsWrap.theme-bw tr.leg2 td {
+  color: #000000 !important;
+}
   #resultsWrap.theme-lv{
     --panel:#2b1d10; --panel2:#4a3320; --line:#6b5030; --text:#f3e6c8; --dim:#c2a878;
     --accent:#d4af37; --warn:#e0b869; --tablebg:#231708; --fullday:#f4d06f; --leg2:#e6d3a8;
