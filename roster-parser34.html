@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.25, maximum-scale=5">
+<title>Roster Parser · 2100551</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- 👥 FAVICON -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👥</text></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --bg:#0b0c0e; --panel:#141619; --panel2:#1b1e22; --line:#2a2e33;
+    --text:#f2f3f5; --dim:#aeb4bb; --accent:#c6ff3d; --accent-dim:#7a934f;
+    --warn:#ffb454; --err:#ff6b6b; --ok:#6bffb0;
+    --mono:'DM Mono','SF Mono',ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);font-size:14px;-webkit-tap-highlight-color:transparent}
+  header{padding:16px 14px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+  header h1{margin:0;font-size:16px;letter-spacing:.03em;font-weight:600}
+  header h1 span{color:var(--accent)}
+  header .sub{color:var(--dim);font-size:11.5px;margin-top:4px}
+  main{padding:12px;max-width:100%}
+
+  #drop{border:1.5px dashed var(--line);border-radius:10px;padding:22px 12px;text-align:center;color:var(--dim);margin-bottom:12px;transition:.15s}
+  #drop.drag{border-color:var(--accent);color:var(--accent);background:#12140f}
+  #drop b{color:var(--text)}
+  #fileInput{display:none}
+  .btnRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-family:var(--mono);font-size:12.5px;font-weight:500;cursor:pointer}
+  button:active{transform:scale(.97)}
+  button.primary{background:var(--accent);color:#0b0c0e;border-color:var(--accent);font-weight:600}
+  button.ghost{background:transparent}
+  button:disabled{opacity:.4}
+
+  #log{margin-top:10px;font-size:12px;color:var(--dim);max-height:200px;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:none}
+  #log .warn{color:var(--warn)}
+  #log .err{color:var(--err)}
+  #log .ok{color:var(--ok)}
+  #log div{padding:1px 0}
+
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;border:1px solid var(--line);color:var(--dim);margin-left:6px}
+  .badge.on{color:var(--accent);border-color:var(--accent-dim)}
+  .badge.bad{color:var(--err);border-color:#5a2a2a}
+
+  #overrideRow{display:none;margin-top:8px}
+
+  section.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-top:12px;overflow:hidden}
+  section.card h2{font-size:12.5px;margin:0;padding:10px 12px;border-bottom:1px solid var(--line);color:var(--dim);letter-spacing:.04em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+  section.card h2 small{color:var(--dim);text-transform:none;font-weight:400}
+  section.card h2 .btns{display:flex;gap:6px;flex-wrap:wrap}
+
+  #resultsWrap{transform-origin:top left}
+
+  .tableWrap{overflow-x:auto;background:var(--tablebg,#101215)}
+  table{border-collapse:collapse;font-size:9.5px;letter-spacing:-0.1px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+  th,td{padding:2px 4px;border-bottom:1px solid var(--line);text-align:left;font-weight:500;white-space:nowrap;vertical-align:top}
+  th{color:var(--text);font-weight:700;position:sticky;top:0;background:var(--panel2);white-space:normal;line-height:1.15;vertical-align:bottom;max-width:58px}
+  tr.off td{color:var(--dim)}
+  tr.layover td{color:var(--warn)}
+  tr.fullday td{color:var(--fullday,#ff9a9a)}
+  tr.leg2 td{color:var(--leg2,#cfd3d8)}
+  tr:hover td{background:var(--panel2)}
+  td.date{color:var(--accent);font-weight:700}
+  td.num{font-variant-numeric:tabular-nums}
+
+  .themeCard{border:1px solid var(--line);border-radius:8px;padding:8px;cursor:pointer;background:var(--panel2)}
+  .themeCard.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  .themeCard .swatches{display:flex;gap:3px;margin-bottom:6px;height:22px;border-radius:4px;overflow:hidden}
+  .themeCard .swatches div{flex:1}
+  .themeCard .themeName{font-size:11px;font-weight:600;color:var(--text)}
+
+  /* ===== COLOUR THEMES (scoped to #resultsWrap only) ===== */
+  #resultsWrap.theme-bw{
+    --panel:#ffffff; --panel2:#f0f0f0; --line:#000000; --text:#000000; --dim:#444444;
+    --accent:#000000; --warn:#000000; --tablebg:#ffffff; --fullday:#000000; --leg2:#000000;
+  }
+  #resultsWrap.theme-lv{
+    --panel:#2b1d10; --panel2:#4a3320; --line:#6b5030; --text:#f3e6c8; --dim:#c2a878;
+    --accent:#d4af37; --warn:#e0b869; --tablebg:#231708; --fullday:#f4d06f; --leg2:#e6d3a8;
+  }
+  #resultsWrap.theme-gucci{
+    --panel:#0e2818; --panel2:#194028; --line:#2d5a3a; --text:#f5f0e6; --dim:#a8c4b0;
+    --accent:#c8102e; --warn:#d4af37; --tablebg:#0a2015; --fullday:#ff6b7a; --leg2:#dcecdf;
+  }
+  #resultsWrap.theme-mas{
+    --panel:#0f2a52; --panel2:#153865; --line:#2a4d7a; --text:#ffffff; --dim:#a8c0e0;
+    --accent:#f5c518; --warn:#e8383a; --tablebg:#081832; --fullday:#ffb347; --leg2:#d0e0f5;
+  }
+  #resultsWrap.theme-goldblue{
+    --panel:#f5f9ff; --panel2:#e8f0fb; --line:#cfe0f5; --text:#1a2c42; --dim:#5c7590;
+    --accent:#b8902a; --warn:#3f7fbf; --tablebg:#ffffff; --fullday:#c98a10; --leg2:#3a5578;
+  }
+  #resultsWrap.theme-cyberpunk{
+    --panel:#12002a; --panel2:#1a0038; --line:#5a0099; --text:#00fff9; --dim:#b088e0;
+    --accent:#ff00e6; --warn:#faff00; --tablebg:#050010; --fullday:#ff2079; --leg2:#66fff5;
+  }
+
+  .stats{padding:8px 10px;font-size:9.5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+  .stats div{margin-bottom:7px}
+  .stats div b{display:block;font-weight:700;color:var(--text);font-size:9.5px;margin-top:1px}
+
+  .legend{padding:6px 10px;font-size:9.5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+  .legend .row{display:flex;gap:8px;padding:2px 0;border-bottom:1px dashed var(--line)}
+  .legend .row input{background:transparent;border:none;color:var(--text);padding:1px 2px;font-family:inherit;font-size:9.5px}
+  .legend .row input.code{width:80px;font-weight:700}
+  .legend .row input.desc{flex:1}
+  .legend .row button{padding:2px 6px;font-size:9px}
+
+  footer{padding:20px 14px 40px;color:var(--dim);font-size:10.5px;text-align:center}
+
+  @media print{
+    body{background:#fff;color:#000}
+    header, #drop, #status, #log, footer, .btnRow, section.card h2 .btns{display:none !important}
+    #resultsWrap{width:auto !important;transform:scale(var(--print-scale,1)) !important;transform-origin:top left !important}
+    #outCard{width:fit-content;max-width:none}
+    section.card{border:1px solid #999;box-shadow:none;background:#fff;margin-top:5px;break-inside:avoid}
+    section.card h2{color:#000;border-color:#000;background:#fff;padding:4px 8px;font-size:10px}
+    .tableWrap{background:#fff;overflow:visible}
+    th,td{padding:2px 4px;border-color:#999}
+    th{background:#eee;color:#000}
+    td.date{color:#000}
+    td, th{color:#000}
+    tr.off td, tr.layover td, tr.leg2 td{color:#000}
+    .stats div b{color:#000}
+
+    #statsCard, #legendCard{
+      display:inline-block; vertical-align:top; box-sizing:border-box;
+      width:48%; margin-top:6px;
+    }
+    #statsCard{ margin-right:1.5%; }
+    #legendCard{ margin-left:0.5%; }
+    .stats{grid-template-columns:1fr 1fr;font-size:8px;padding:6px 8px;gap:4px 10px}
+    .stats div b{font-size:11px}
+    .legend{column-count:2;column-gap:10px;font-size:6.5px;padding:4px 8px}
+    .legend .row{display:block;break-inside:avoid;border:none;padding:1px 0;gap:3px}
+    .legend .row input{border:none;background:transparent;padding:0;font-size:6.5px;color:#000;width:auto}
+    .legend .row input.code{font-weight:700;color:#000}
+    .legend .row button, #legendCard > div:last-child{display:none !important}
+
+    @page{ size: portrait; margin: 8mm; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ROSTER <span>PARSER</span></h1>
+  <div class="sub">xlsx / pdf table / pdf calendar → unified daily roster + Find time together with other CREW(s) · by 2100551</div>
+</header>
+
+<main>
+  <div id="drop">
+    Drop a roster file here, or
+    <div class="btnRow" style="justify-content:center">
+      <button class="primary" onclick="document.getElementById('fileInput').click()">Choose file</button>
+    </div>
+    <div style="margin-top:8px">Accepts <b>.xlsx(PREFERRED)</b>, <b>.xls</b>, or <b>.pdf(STILL BUGGY)</b> — any of: raw Roster Report export, PDF print of a Roster Report, or the calendar "fridge" PDF.</div>
+    <input id="fileInput" type="file" accept=".xlsx,.xls,.pdf">
+  </div>
+
+  <div id="status" style="color:var(--dim);font-size:12px;display:none">
+    Detected format: <span id="fmtBadge" class="badge"></span>
+    <span id="fileNameLbl" style="margin-left:8px"></span>
+    <div id="overrideRow" class="btnRow">
+      <span style="color:var(--dim);align-self:center">Not right? force re-parse as:</span>
+      <button onclick="forceParse('table')">Roster Report table</button>
+      <button onclick="forceParse('calendar')">Calendar / fridge</button>
+    </div>
+  </div>
+
+  <div id="log"></div>
+
+  <div class="btnRow" id="toolbarRow" style="display:none;position:sticky;top:0;background:var(--bg);z-index:6;padding:6px 0;margin:0">
+    <button onclick="toggleFit()" id="fitBtn">Fit screen</button>
+    <button onclick="copyTSV()">Copy</button>
+    <button onclick="downloadCSV()">CSV</button>
+    <button onclick="openColourModal()">Colour</button>
+    <button onclick="exportPNG()">Image</button>
+    <button class="primary" onclick="exportPDF()">Print / PDF</button>
+    <span style="align-self:center;color:var(--warn);font-size:10.5px">↳ in the print dialog, set orientation to Portrait</span>
+  </div>
+  <div id="resultsWrap">
+    <section class="card" id="outCard" style="display:none">
+      <h2>Daily Roster <small id="rangeLbl"></small>
+      </h2>
+      <div class="tableWrap">
+        <table id="outTable">
+          <thead>
+            <tr>
+              <th>Date</th><th>Day</th><th>Duty Start</th><th>Item</th><th>Overrd Rank</th>
+              <th>Dep/Start</th><th>Arr/End</th><th>Duty End</th><th>Work Type</th>
+              <th>Actual Block Hours</th><th>Duty Hours</th><th>DutyCode</th><th>Ac Type</th>
+            </tr>
+          </thead>
+          <tbody id="outBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="statsCard" style="display:none">
+      <h2>Monthly Statistics</h2>
+      <div class="stats" id="statsBody"></div>
+    </section>
+
+    <section class="card" id="legendCard" style="display:none">
+      <h2>Code Description <small>tap to edit — saved on this device</small></h2>
+      <div class="legend" id="legendBody"></div>
+      <div style="padding:8px 12px"><button onclick="addLegendRow()">+ add code</button></div>
+    </section>
+  </div>
+
+  <section class="card" id="saveCard" style="display:none">
+    <h2>Save This Roster</h2>
+    <div style="padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input id="saveNameInput" placeholder="Crew name" style="background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:8px 10px;font-family:var(--mono);font-size:13px;flex:1;min-width:140px">
+      <select id="saveTzInput" style="background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:8px 10px;font-family:var(--mono);font-size:13px">
+        <option value="SLT">SLT (home base time)</option>
+        <option value="UTC">UTC</option>
+      </select>
+      <button class="primary" onclick="doSaveRoster()">Save roster</button>
+    </div>
+  </section>
+
+  <section class="card" id="savedListCard">
+    <h2>Saved Rosters <small>Must save to use 'Find Time Together'. Local to this device only</small></h2>
+    <div id="savedListBody" style="padding:6px 12px"></div>
+  </section>
+
+  <section class="card" id="overlapCard">
+    <h2>Find Time Together 💞<small>select 2+ saved rosters</small></h2>
+    <div style="padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="primary" onclick="computeTogetherTime()">Find overlap</button>
+      <button onclick="toggleHeatmap()" id="heatmapBtn" style="display:none">Heatmap view</button>
+    </div>
+    <div id="overlapResults" style="padding:0 12px 12px"></div>
+  </section>
+
+  <div class="btnRow" id="debugRow" style="display:none">
+    <button class="ghost" onclick="exportDebug()">⬇ Export debug data</button>
+  </div>
+</main>
+
+<footer>Parses locally in your browser. Nothing is uploaded. · by 2100551</footer>
+
+<!-- COLOUR THEME MODAL -->
+<div id="colourModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;padding:16px;overflow:auto">
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:520px;margin:0 auto;padding:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h3 style="margin:0;font-size:14px;color:var(--text)">Choose a colour theme</h3>
+      <button class="ghost" onclick="closeColourModal()">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--dim);margin-bottom:10px">Applies to the Daily Roster view on screen and to the Image export. Tap a theme to preview it live.</div>
+    <div id="colourThemeList" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+/* =====================================================================
+   GLOBAL STATE
+===================================================================== */
+let DAYS = [];
+let MONTH_LABEL = "";
+let STAFF_LABEL = "";
+let RAW_WARNINGS = [];
+let LEGEND = {};
+
+let LAST_FILE_NAME = "";
+let LAST_FORMAT = "";
+let RAW_PDF_PAGES = null;   // cached extracted words, for re-parse / debug export
+let LAST_PARSED_ROWS = null;
+
+const HOME = "KUL";
+
+/* =====================================================================
+   LOGGING
+===================================================================== */
+function log(msg, cls){
+  const el = document.getElementById('log');
+  el.style.display = 'block';
+  const d = document.createElement('div');
+  if(cls) d.className = cls;
+  d.textContent = msg;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+function clearLog(){ document.getElementById('log').innerHTML=''; document.getElementById('log').style.display='none'; }
+
+/* =====================================================================
+   DEFAULT CODE LEGEND
+===================================================================== */
+const DEFAULT_LEGEND = {
+  "OP": "Operating",
+  "D": "Day Off",
+  "DO": "Day Off",
+  "DO1": "Day Off (Type 1)",
+  "DO2": "Day Off (Type 2)",
+  "EL": "Emergency / Annual Leave",
+  "LO": "Layover (down-route rest)",
+  "S3WBA": "Cabin Crew Standby",
+  "S4WBA": "Cabin Crew Standby",
+  "S3NBA": "Cabin Crew Standby",
+  "AS1WB": "Airport Standby",
+  "DGRCCRC1": "DGRF9 Recurrent C1",
+  "DGRF9R": "DGRF9 - CC Recurrent",
+  "ICCRCNT1": "ICC Recurrent Training",
+  "C17SMSC1": "Recurrent Training (CRM/Safety)",
+  "AVSECRP2": "Aviation Security Refresher",
+  "570SEPW2": "Recurrent Training",
+  "570SFAW2": "Recurrent Training"
+};
+function loadLegend(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('rosterParserLegend')||'{}');
+    LEGEND = Object.assign({}, DEFAULT_LEGEND, saved);
+  }catch(e){ LEGEND = Object.assign({}, DEFAULT_LEGEND); }
+}
+function saveLegend(){ localStorage.setItem('rosterParserLegend', JSON.stringify(LEGEND)); }
+function legendDescFor(code){
+  if(!code) return "";
+  if(LEGEND[code]) return LEGEND[code];
+  if(/^DO\d*$/.test(code)) return "Day Off";
+  if(/^S\d?[A-Z]{2,4}$/.test(code)) return "Standby";
+  if(/RCNT|RECUR|SM|TRNG|TRAIN/i.test(code)) return "Training / Recurrent";
+  return "";
+}
+function isOffCode(code){ return /^(D|DO\d*|EL)$/.test((code||'').trim()); }
+
+/* =====================================================================
+   FILE INPUT / DRAG-DROP
+===================================================================== */
+const dropEl = document.getElementById('drop');
+const fileInput = document.getElementById('fileInput');
+['dragenter','dragover'].forEach(ev=>dropEl.addEventListener(ev, e=>{e.preventDefault();dropEl.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dropEl.addEventListener(ev, e=>{e.preventDefault();dropEl.classList.remove('drag');}));
+dropEl.addEventListener('drop', e=>{ if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e=>{ if(e.target.files.length) handleFile(e.target.files[0]); });
+
+async function handleFile(file){
+  clearLog();
+  DAYS = []; RAW_WARNINGS = []; RAW_PDF_PAGES = null; LAST_PARSED_ROWS = null;
+  LAST_FILE_NAME = file.name;
+  document.getElementById('status').style.display='block';
+  document.getElementById('fileNameLbl').textContent = file.name;
+  document.getElementById('overrideRow').style.display = 'none';
+  document.getElementById('outCard').style.display='none';
+  document.getElementById('toolbarRow').style.display='none';
+  document.getElementById('statsCard').style.display='none';
+  document.getElementById('legendCard').style.display='none';
+  document.getElementById('debugRow').style.display='none';
+
+  const name = file.name.toLowerCase();
+  try{
+    if(name.endsWith('.xlsx') || name.endsWith('.xls')){
+      setFmt('XLSX', true);
+      const buf = await file.arrayBuffer();
+      const rows = parseXLSXRows(buf);
+      LAST_PARSED_ROWS = rows;
+      buildDays(rowsToLegs(rows));
+      render();
+    } else if(name.endsWith('.pdf')){
+      const buf = await file.arrayBuffer();
+      const pages = (await extractPdfWords(buf)).map(mergeDayHeaderTokens);
+      RAW_PDF_PAGES = pages; // cache regardless of outcome, for debug export / override
+      const allWords = [].concat(...pages);
+      const isCalendar = looksLikeCalendar(allWords);
+      const isTable = looksLikeTableReport(allWords);
+      document.getElementById('overrideRow').style.display = 'flex';
+      if(isCalendar && !isTable){
+        setFmt('PDF · Calendar', true);
+        parseAndBuild('calendar');
+      } else if(isTable && !isCalendar){
+        setFmt('PDF · Roster Report', true);
+        parseAndBuild('table');
+      } else if(isTable && isCalendar){
+        setFmt('PDF · Ambiguous (guessed Table)', true);
+        log('Both calendar and table signals detected — guessing table. Use the force-reparse buttons above if wrong.', 'warn');
+        parseAndBuild('table');
+      } else {
+        setFmt('PDF · Unknown', false);
+        log('Could not confidently detect the PDF sub-format. Try one of the "force re-parse" buttons above — and please send the debug export below so this can be fixed properly.', 'err');
+      }
+    } else {
+      log('Unsupported file type.', 'err');
+      return;
+    }
+  } catch(err){
+    console.error(err);
+    log('Fatal parse error: '+err.message, 'err');
+  }
+  document.getElementById('debugRow').style.display='block';
+}
+
+function parseAndBuild(kind){
+  try{
+    if(kind==='calendar'){
+      const legs = parseCalendarPDF(RAW_PDF_PAGES);
+      LAST_PARSED_ROWS = legs;
+      buildDays(legs);
+    } else {
+      const rows = parseTablePDFRows(RAW_PDF_PAGES);
+      LAST_PARSED_ROWS = rows;
+      buildDays(rowsToLegs(rows));
+    }
+    render();
+  } catch(err){
+    console.error(err);
+    log('Parse error ('+kind+'): '+err.message, 'err');
+  }
+}
+function forceParse(kind){
+  if(!RAW_PDF_PAGES){ log('No cached PDF data to re-parse — re-upload the file.', 'err'); return; }
+  clearLog();
+  setFmt(kind==='calendar' ? 'PDF · Calendar (forced)' : 'PDF · Roster Report (forced)', true);
+  parseAndBuild(kind);
+}
+
+function setFmt(label, ok){
+  const b = document.getElementById('fmtBadge');
+  b.textContent = label;
+  b.className = 'badge' + (ok?' on':' bad');
+  LAST_FORMAT = label;
+}
+
+/* =====================================================================
+   HELPERS: dates / times
+===================================================================== */
+const MON = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+const MON_NAMES = Object.keys(MON);
+const DOW = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+function ymdKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function addDays(d, n){ const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+function parseDMY(str){
+  const m = /(\d{1,2})-([A-Za-z]{3})-(\d{4})/.exec(str);
+  if(!m) return null;
+  const mo = MON[m[2].slice(0,1).toUpperCase()+m[2].slice(1,3).toLowerCase()];
+  if(mo===undefined) return null;
+  return new Date(parseInt(m[3]), mo, parseInt(m[1]));
+}
+// Returns {time:"HH:MM", rollover:0|1} — the (+1) suffix means "+1 calendar day
+// relative to this record's own anchor/report date", NOT relative to any other
+// field on the same record. See design note in parseTablePDFRows / rowsToLegs.
+function cleanTime(t){
+  if(!t) return {time:'', rollover:0};
+  const m = /^(\d{1,2}):(\d{2})(\(\+1\))?$/.exec(t.trim());
+  if(!m) return {time:t.replace('(+1)','').trim(), rollover: t.includes('(+1)')?1:0};
+  return {time: m[1].padStart(2,'0')+':'+m[2], rollover: m[3]?1:0};
+}
+
+/* =====================================================================
+   1) XLSX PARSER
+===================================================================== */
+function parseXLSXRows(buf){
+  const wb = XLSX.read(buf, {type:'array', cellDates:true});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const aoa = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:''});
+
+  let headerIdx = -1;
+  for(let i=0;i<aoa.length;i++){
+    const row = aoa[i].map(c=>String(c||'').trim());
+    if(row.includes('Date') && row.some(c=>c.startsWith('Pairing'))){ headerIdx = i; break; }
+  }
+  if(headerIdx===-1) throw new Error('Could not locate header row in XLSX (expected "Date" / "Pairing/Activity" columns).');
+  const header = aoa[headerIdx].map(c=>String(c||'').trim());
+  const col = name => header.findIndex(h=>h===name);
+  const idx = {
+    date: col('Date'), pairing: col('Pairing/Activity'), report: col('Duty Report'),
+    item: col('Item'), rank: col('Overridden Rank'), work: col('Work Type'),
+    debrief: col('Duty Debrief'), fly: col('Flying Hrs'), duty: col('Duty Hrs'),
+    sdc: col('SDC'), ac: col('A/C Type'), hotel: col('Hotel')
+  };
+  idx.depStn = header.findIndex(h=>h.startsWith('Dep Stn'));
+  idx.arrStn = header.findIndex(h=>h.startsWith('Arr. Stn'));
+
+  const rows = [];
+  let lastDate = null;
+  for(let i=headerIdx+1;i<aoa.length;i++){
+    const r = aoa[i];
+    if(!r || r.every(c=>c==='' || c===null || c===undefined)) continue;
+    const get = j => (j==null || j<0) ? '' : String(r[j]===undefined?'':r[j]).trim();
+    let rawDate = r[idx.date];
+    if(get(idx.date)==='Date') continue; // repeated header row mid-sheet
+
+    let dateObj = null;
+    if(rawDate instanceof Date && !isNaN(rawDate)) dateObj = new Date(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate());
+    else if(typeof rawDate === 'string' && rawDate.trim()) dateObj = parseDMY(rawDate) || null;
+
+    if(dateObj) lastDate = dateObj;
+    if(!dateObj && !lastDate) continue;
+
+    const depRaw = get(idx.depStn);
+    const arrRaw = get(idx.arrStn);
+    const [depStn, depTime] = splitStnTime(depRaw);
+    const [arrStn, arrTime] = splitStnTime(arrRaw);
+
+    rows.push({
+      ownDate: dateObj ? dateObj : null,
+      anchorDate: dateObj || lastDate,
+      pairing: get(idx.pairing),
+      reportTime: get(idx.report),
+      item: get(idx.item),
+      rank: get(idx.rank),
+      work: get(idx.work),
+      depStn, depTime, arrStn, arrTime,
+      debriefTime: get(idx.debrief),
+      flyHrs: get(idx.fly),
+      dutyHrs: get(idx.duty),
+      sdc: get(idx.sdc),
+      ac: get(idx.ac),
+      hotel: get(idx.hotel)
+    });
+  }
+  if(!rows.length) throw new Error('No data rows found under the XLSX header.');
+  return rows;
+}
+function splitStnTime(s){
+  if(!s) return ['',''];
+  const m = /^([A-Z]{3})\s+(\d{1,2}:\d{2}(?:\(\+1\))?)$/.exec(s.trim());
+  if(m) return [m[1], m[2]];
+  return [s.trim(), ''];
+}
+
+/* =====================================================================
+   2) PDF TEXT EXTRACTION (position-aware) + defensive re-tokenizer
+   pdf.js does not word-split the way a text-word-boundary tool would; this
+   report's PDF sometimes emits runs with no whitespace between semantically
+   distinct tokens (e.g. "REPORT:14:10Aug31"). We split on whitespace first,
+   then run every resulting chunk through a pattern tokenizer that knows the
+   shapes of tokens this report actually contains, so detection/parsing
+   downstream doesn't depend on pdf.js's arbitrary run boundaries.
+===================================================================== */
+const TOKEN_PATTERNS = [
+  /\d{1,2}-[A-Za-z]{3}-\d{4}/,                     // 05-Aug-2026
+  /REPORT:\d{1,2}:\d{2}/,                          // REPORT:14:10
+  /DEBRIEF:\d{1,2}:\d{2}(?:\(\+1\))?/,             // DEBRIEF:23:35
+  /LO[A-Z]{3}/,                                    // LOAKL
+  /MH\d{2,4}[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?-[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?/, // MH145KUL21:30-AKL11:25(+1)
+  /MH\d{2,4}[A-Z]{3}-[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?/, // MH145KUL-AKL11:25(+1)
+  /MH\d{2,4}/,
+  /[A-Za-z]{3}\d{1,2}(?![A-Za-z0-9])/,             // Aug31 (month+day header)
+  /\d{1,2}:\d{2}\(\+1\)/,
+  /\d{1,2}:\d{2}/,
+  /Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/,
+  /January|February|March|April|May|June|July|August|September|October|November|December/,
+  /[A-Z]{3}(?=\d{1,2}:\d{2})/,                     // bare station code glued to a time
+  /[A-Za-z]{2,}/,
+  /\d+/
+];
+function retokenize(str){
+  const out = [];
+  let s = str;
+  let guard = 0;
+  while(s.length && guard++ < 200){
+    let matched = false;
+    for(const re of TOKEN_PATTERNS){
+      const m = new RegExp('^'+re.source).exec(s);
+      if(m && m[0].length){
+        out.push(m[0]);
+        s = s.slice(m[0].length);
+        matched = true;
+        break;
+      }
+    }
+    if(!matched){ s = s.slice(1); } // drop stray separator char
+  }
+  return out.length ? out : [str];
+}
+
+async function extractPdfWords(buf){
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  const pages = [];
+  for(let p=1;p<=pdf.numPages;p++){
+    const page = await pdf.getPage(p);
+    const viewport = page.getViewport({scale:1});
+    const content = await page.getTextContent();
+    const words = [];
+    for(const item of content.items){
+      if(!item.str || !item.str.trim()) continue;
+      const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
+      const w = item.width || (item.str.length * 5);
+      const h = item.height || 10;
+      const corners = [[0,0],[w,0],[0,h],[w,h]].map(([x,y])=>[
+        tx[0]*x + tx[2]*y + tx[4],
+        tx[1]*x + tx[3]*y + tx[5]
+      ]);
+      const xs = corners.map(c=>c[0]), ys = corners.map(c=>c[1]);
+      const x0 = Math.min(...xs), x1 = Math.max(...xs);
+      const top = Math.min(...ys), bottom = Math.max(...ys);
+
+      const wsParts = item.str.split(/(\s+)/).filter(s=>s.trim());
+      const totalLen = item.str.length;
+      let cursor = 0;
+      for(const wsPart of wsParts){
+        const partStart = cursor, partLen = wsPart.length;
+        cursor += partLen;
+        const subTokens = retokenize(wsPart);
+        let inner = 0;
+        for(const tok of subTokens){
+          const f0 = (partStart+inner)/totalLen, f1 = (partStart+inner+tok.length)/totalLen;
+          words.push({text:tok, x0: x0+(x1-x0)*f0, x1: x0+(x1-x0)*f1, top, bottom, page:p, pageW:viewport.width, pageH:viewport.height});
+          inner += tok.length;
+        }
+      }
+    }
+    pages.push(words);
+  }
+  return pages;
+}
+
+function mergeDayHeaderTokens(words){
+  const out = [];
+  for(let i=0;i<words.length;i++){
+    const w = words[i], nxt = words[i+1];
+    if(nxt && MON_NAMES.includes(w.text) && /^\d{1,2}$/.test(nxt.text) &&
+       Math.abs(w.top - nxt.top) < 4 && (nxt.x0 - w.x1) < 8 && (nxt.x0 - w.x1) > -3){
+      out.push({text: w.text+nxt.text, x0:w.x0, x1:nxt.x1, top:w.top, bottom:Math.max(w.bottom,nxt.bottom), page:w.page, pageW:w.pageW, pageH:w.pageH});
+      i++; // day-number token consumed
+    } else {
+      out.push(w);
+    }
+  }
+  return out;
+}
+
+// pdf.js drops a lone leading letter immediately before a digit in certain
+// fonts used by this report (confirmed via debug export: "S4WBA" extracts as
+// "4WBA", "C17SMSC1" as "17SMSC1" — the character is simply never emitted,
+// not a filtering bug on our side). These are the known shapes where that
+// happens; anything else is left as extracted rather than guessed at.
+function normalizeGroundCode(code){
+  if(!code) return code;
+  if(/^[0-9][A-Z]{2,4}$/.test(code)) return 'S'+code;        // 3NBA -> S3NBA, 4WBA -> S4WBA
+  if(/^[0-9]+SMSC[0-9]*$/.test(code)) return 'C'+code;       // 17SMSC1 -> C17SMSC1
+  return code;
+}
+
+function looksLikeCalendar(words){
+  const txt = words.map(w=>w.text).join('');
+  const hasWeekday = /Monday/.test(txt) && /Tuesday/.test(txt) && /Sunday/.test(txt);
+  const shortDatesStrict = words.filter(w=>/^[A-Za-z]{3}\d{1,2}$/.test(w.text)).length;
+  const shortDatesLoose = (txt.match(/[A-Za-z]{3}\d{1,2}(?!\d)/g)||[]).length;
+  return hasWeekday || shortDatesStrict >= 8 || shortDatesLoose >= 15;
+}
+function looksLikeTableReport(words){
+  const txt = words.map(w=>w.text).join('');
+  return /Pairing\/?Activity/.test(txt) && (/Roster/.test(txt) || /DutyReport/.test(txt) || /Report/.test(txt));
+}
+
+/* =====================================================================
+   3) PDF "ROSTER REPORT" TABLE PARSER (column-position based)
+===================================================================== */
+function parseTablePDFRows(pages){
+  const rows = [];
+  let lastDate = null;
+
+  const isTimeTok = t => /^\d{1,2}:\d{2}(\(\+1\))?$/.test(t);
+  const isStationTok = t => /^[A-Z]{3}$/.test(t) && t!=='OP' && t!=='FS';
+  const isDateTok = t => /^\d{1,2}-[A-Za-z]{3}-\d{4}$/.test(t);
+  const isFlightTok = t => /^[A-Z]{0,2}\d{2,4}$/.test(t) && /^MH\d/.test(t);
+  const isFlightTokLoose = t => /^MH\d{2,4}$/.test(t);
+
+  for(const words of pages){
+    if(!words.length) continue;
+
+    // Column x-positions for this report turned out NOT to be stable across
+    // different exports/pages (verified against real extracted data), so
+    // rows are now parsed by TOKEN SHAPE in natural reading order instead of
+    // x-position — the same strategy validated for the calendar parser.
+    // Header/title block is still dropped via the same 'Pairing/Activity'
+    // anchor (falls back to a fixed offset from the first word if that exact
+    // compound token isn't present on this page).
+    const pairingHdr = words.find(w => w.text === 'Pairing/Activity' || w.text === 'Pairing');
+    const firstAnchorWord = words.reduce((min,w)=>{
+      if(!(isDateTok(w.text) || isFlightTokLoose(w.text))) return min;
+      return (!min || w.top < min.top) ? w : min;
+    }, null);
+    const HEADER_WORDS = new Set(['Roster','Report','Date','Pairing/Activity','Item','ACY','Rep','Deb',
+      'SDC','Hotel','Updated','By','Duty','Overridde','n','Rank','Work','Type','Dep','Stn','/','Arr.',
+      'Flying','Hrs','A/C','Time','Debrief','FH',':','DH','|','Pairing','Activity']);
+    const headerCutoff = firstAnchorWord ? (firstAnchorWord.top - 1)
+      : (pairingHdr ? (pairingHdr.top + 15) : (words[0].top + 80));
+    const body = words.filter(w => w.top >= headerCutoff && !HEADER_WORDS.has(w.text));
+
+    // Group into rows: sub-lines belonging to the same logical row (wrapped
+    // hotel names, dep/arr split onto an adjacent baseline, etc.) land within
+    // ~15pt of each other; distinct rows are further apart than that.
+    const rowTops = [];
+    for(const w of body){
+      if(!rowTops.length || w.top - rowTops[rowTops.length-1] > 15) rowTops.push(w.top);
+      else rowTops[rowTops.length-1] = rowTops[rowTops.length-1]; // keep first anchor of the cluster
+    }
+    const sortedTops = [...new Set(body.map(w=>w.top))].sort((a,b)=>a-b);
+    const clusterTops = [];
+    for(const t of sortedTops){ if(!clusterTops.length || t - clusterTops[clusterTops.length-1] > 15) clusterTops.push(t); }
+    function nearestClusterTop(t){ return clusterTops.reduce((b,r)=>Math.abs(t-r)<Math.abs(t-b)?r:b, clusterTops[0]); }
+
+    const groups = {};
+    const order = [];
+    for(const w of body){
+      const k = nearestClusterTop(w.top);
+      if(!groups[k]){ groups[k]=[]; order.push(k); }
+      groups[k].push(w);
+    }
+
+    for(const k of order){
+      const toks = groups[k].map(w=>w.text);
+      const hasOwnDate = isDateTok(toks[0]);
+
+      const itemIdx = toks.findIndex(isFlightTokLoose);
+      const isGround = itemIdx < 0;
+      const item = itemIdx>=0 ? toks[itemIdx] : '';
+
+      const timeIdxs = []; toks.forEach((t,i)=>{ if(isTimeTok(t)) timeIdxs.push(i); });
+      const firstTimeIdx = timeIdxs.length ? timeIdxs[0] : -1;
+      if(firstTimeIdx===-1 && itemIdx===-1) continue; // no usable data in this cluster
+
+      const searchStart = itemIdx>=0 ? itemIdx+1 : (firstTimeIdx>=0 ? firstTimeIdx : 0);
+      const stationIdxs = []; toks.forEach((t,i)=>{ if(i>=searchStart && isStationTok(t)) stationIdxs.push(i); });
+      const depIdx = stationIdxs[0], arrIdx = stationIdxs[1];
+      const depStn = depIdx!=null ? toks[depIdx] : '', arrStn = arrIdx!=null ? toks[arrIdx] : '';
+
+      const reportBoundary = itemIdx>=0 ? itemIdx : (firstTimeIdx>=0 ? firstTimeIdx+1 : searchStart);
+      const before = timeIdxs.filter(i=> i<reportBoundary);
+      const between = timeIdxs.filter(i=> depIdx!=null && arrIdx!=null && i>depIdx && i<arrIdx);
+      const after = timeIdxs.filter(i=> arrIdx!=null ? i>arrIdx : (depIdx!=null ? i>depIdx : (i>=searchStart && i>firstTimeIdx)));
+
+      const reportTime = before.length ? toks[before[before.length-1]] : '';
+      const depTime = between.length ? toks[between[0]] : '';
+      const arrTime = after.length ? toks[after[0]] : '';
+      const rest = after.slice(1);
+
+      let debriefTime='', flyHrs='', dutyHrs='';
+      if(!isGround){
+        if(rest.length>=3){ debriefTime=toks[rest[0]]; flyHrs=toks[rest[1]]; dutyHrs=toks[rest[2]]; }
+        else if(rest.length===2){
+          if(hasOwnDate){ flyHrs=toks[rest[0]]; dutyHrs=toks[rest[1]]; }
+          else { debriefTime=toks[rest[0]]; flyHrs=toks[rest[1]]; }
+        } else if(rest.length===1){ flyHrs=toks[rest[0]]; }
+      } else {
+        if(rest.length>=2){ debriefTime=toks[rest[0]]; dutyHrs=toks[rest[1]]; }
+        else if(rest.length===1){ dutyHrs=toks[rest[0]]; }
+      }
+
+      const work = toks.includes('OP') ? 'OP' : '';
+      const rank = toks.includes('FS') ? 'FS' : '';
+
+      const codeEndCandidates = [itemIdx, firstTimeIdx].filter(i=>i>=0);
+      const codeEnd = codeEndCandidates.length ? Math.min(...codeEndCandidates) : toks.length;
+      const pairing = toks.slice(hasOwnDate?1:0, codeEnd).join('');
+
+      // Trailing metadata (Updated By / Updated Date) always starts with a
+      // literal system marker or a long numeric staff ID — never real SDC
+      // text or a hotel name — so it's a safe boundary for where the
+      // leftover SDC/AC-type/Hotel content ends.
+      const lastCoreIdx = [before, [depIdx,arrIdx].filter(x=>x!=null), between, after]
+        .flat().reduce((m,i)=> Math.max(m,i), Math.max(itemIdx, reportBoundary-1));
+      let metaStart = toks.length;
+      for(let i=lastCoreIdx+1;i<toks.length;i++){
+        if(/^(SYSTEM|ADOPT)$/.test(toks[i]) || /^\d{6,8}$/.test(toks[i]) || isDateTok(toks[i])){ metaStart = i; break; }
+      }
+      const leftover = toks.slice(lastCoreIdx+1, metaStart);
+      let sdc='', ac='', hotel='';
+      if(isGround){
+        sdc = leftover.join(' ');
+      } else if(leftover.length){
+        if(leftover[0].length<=2 && leftover[1] && leftover[1].length<=2 && /^[A-Z0-9]+$/.test(leftover[1])){
+          ac = leftover[0]+leftover[1]; hotel = leftover.slice(2).join(' ');
+        } else if(leftover[0].length<=4){ ac = leftover[0]; hotel = leftover.slice(1).join(' '); }
+        else { hotel = leftover.join(' '); }
+      }
+
+      let ownDate = null;
+      if(hasOwnDate){ ownDate = parseDMY(toks[0]); if(ownDate) lastDate = ownDate; }
+      if(!ownDate && !lastDate) continue;
+
+      rows.push({
+        ownDate,
+        anchorDate: ownDate || lastDate,
+        pairing, reportTime, item, rank, work,
+        depStn, depTime, arrStn, arrTime,
+        debriefTime, flyHrs, dutyHrs,
+        sdc, ac, hotel
+      });
+    }
+  }
+  if(!rows.length) throw new Error('No rows detected in table PDF — could not find any date or flight-number anchors.');
+  return rows;
+}
+
+/* =====================================================================
+   4) PDF "FRIDGE CALENDAR" PARSER (geometric cell assignment)
+   Validated against the actual fridge-view PDF: rows = weekday, columns =
+   week-of-month, and each day header sits at the RIGHT edge of its cell
+   (content lines stack leftward as more lines are added), so a content
+   word belongs to the nearest header in its row whose x0 is >= the word's
+   x0. This was checked line-by-line against a known-good transcript of a
+   full month before being ported here.
+===================================================================== */
+function parseCalendarPDF(pages){
+  const legsAll = [];
+  let year = null, month = null;
+
+  for(const words of pages){
+    if(!words.length) continue;
+    for(const w of words){
+      const mIdx = MON_NAMES.findIndex(m=>w.text===m || w.text.startsWith(m));
+      if(mIdx>=0 && w.text.length>3) month = mIdx;
+      if(/^\d{4}$/.test(w.text)) year = parseInt(w.text);
+    }
+    const headers = words.filter(w=>/^[A-Za-z]{3}\d{1,2}$/.test(w.text));
+    if(!headers.length) continue;
+
+    function cluster(vals, tol){
+      const s = [...vals].sort((a,b)=>a-b);
+      const out = [];
+      for(const v of s){
+        if(out.length && Math.abs(v-out[out.length-1].last) <= tol) { out[out.length-1].vals.push(v); out[out.length-1].last=v; }
+        else out.push({vals:[v], last:v});
+      }
+      return out.map(o=> o.vals.reduce((a,b)=>a+b,0)/o.vals.length );
+    }
+    const rowTops = cluster(headers.map(w=>w.top), 8);
+    function nearestRow(t){ return rowTops.reduce((b,r)=>Math.abs(t-r)<Math.abs(t-b)?r:b, rowTops[0]); }
+
+    const headersByRow = {};
+    for(const h of headers){
+      const r = nearestRow(h.top);
+      headersByRow[r] = headersByRow[r]||[];
+      headersByRow[r].push(h);
+    }
+    Object.values(headersByRow).forEach(list=>list.sort((a,b)=>a.x0-b.x0));
+
+    const EXCLUDE = new Set(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+      .concat(MON_NAMES)
+      .concat(['January','February','March','April','May','June','July','August','September','October','November','December']));
+    const content = words.filter(w=>
+      !EXCLUDE.has(w.text) &&
+      !/^[A-Za-z]{3}\d{1,2}$/.test(w.text)
+    );
+
+    // Sanity thresholds derived from the real extracted data: legitimate cell
+    // content's top always sits within a few points of its row header's top
+    // (ROW_TOL), and its x0 sits at or slightly left of its matched header's
+    // x0, never more than one column-width-ish further left (X_OVERFLOW).
+    // Anything outside these bounds is boilerplate (staff name line, footer)
+    // that happened to fall inside the numeric row/column ranges — not real
+    // roster content — and is dropped rather than force-matched.
+    const cellText = {};
+    const TOL = 20, ROW_TOL = 25, X_OVERFLOW = 100;
+    for(const w of content){
+      const r = nearestRow(w.top);
+      if(Math.abs(w.top - r) > ROW_TOL) continue;
+      const rowHeaders = headersByRow[r] || [];
+      if(!rowHeaders.length) continue;
+      let match = rowHeaders.find(h => h.x0 >= w.x0 - TOL);
+      if(!match) continue;
+      if(match.x0 - w.x0 > X_OVERFLOW) continue;
+      cellText[match.text] = cellText[match.text] || [];
+      cellText[match.text].push(w);
+    }
+
+    if(year===null || month===null){ RAW_WARNINGS.push('Could not detect month/year title on calendar PDF — dates may be wrong year/month.'); }
+
+    for(const dayLabel of Object.keys(cellText)){
+      const dm = /^([A-Za-z]{3})(\d{1,2})$/.exec(dayLabel);
+      const dNum = parseInt(dm[2]);
+      const mIdx = month!==null ? month : MON_NAMES.findIndex(m=>m===dm[1]);
+      const y = year || new Date().getFullYear();
+      const dateObj = new Date(y, mIdx, dNum);
+
+      const joined = cellText[dayLabel].map(l=>l.text).join('');
+      const lines2 = calendarCellToLegs(dateObj, joined).map(l => Object.assign(l, {
+        depDate: dateObj, arrDate: dateObj, reportDate: dateObj, debriefDate: dateObj, standalone: true
+      }));
+      legsAll.push(...lines2);
+    }
+    if(month!==null) MONTH_LABEL = MON_NAMES[month] + ' ' + (year||'');
+  }
+  return legsAll;
+}
+
+function calendarCellToLegs(dateObj, text){
+  const out = [];
+  let reportTime='', debriefTime='';
+  const repM = /REPORT:(\d{1,2}:\d{2})/.exec(text);
+  if(repM) reportTime = repM[1];
+  const debM = /DEBRIEF:(\d{1,2}:\d{2}(?:\(\+1\))?)/.exec(text);
+  if(debM) debriefTime = debM[1];
+
+  const loM = /LO([A-Z]{3})/.exec(text);
+  const flightRe = /(MH\d{2,4})([A-Z]{3})?(\d{1,2}:\d{2}(?:\(\+1\))?)?-([A-Z]{3})(\d{1,2}:\d{2}(?:\(\+1\))?)?/g;
+  let fm; let flightsFound=false;
+  while((fm = flightRe.exec(text))){
+    flightsFound = true;
+    out.push({
+      isGround:false, ownDate: dateObj, anchorDate: dateObj,
+      pairing:'', item: fm[1], rank:'', work:'OP',
+      depStn: fm[2]||'', depTime: fm[3]||'',
+      arrStn: fm[4]||'', arrTime: fm[5]||'',
+      reportTime: out.length===0?reportTime:'', debriefTime:'',
+      flyHrs:'', dutyHrs:'', sdc:'', ac:'', hotel:''
+    });
+  }
+  if(flightsFound){
+    out[out.length-1].debriefTime = debriefTime;
+    if(out.length) out[0].reportTime = reportTime;
+    return out;
+  }
+
+  if(loM){
+    out.push({isGround:true, ownDate:dateObj, anchorDate:dateObj, pairing:'', item:'LO', rank:'',
+      work:'', depStn: loM[1], depTime:'', arrStn:'', arrTime:'', reportTime: reportTime, debriefTime:'',
+      flyHrs:'', dutyHrs:'', sdc:'', ac:'', hotel:''});
+    return out;
+  }
+
+  // A cell can hold MORE THAN ONE ground activity on the same day (e.g. a
+  // short training block followed by a security refresher) with no
+  // separator between them, so match globally rather than requiring the
+  // whole cell text to be exactly one activity.
+  const groundRe = /([A-Z0-9]+?)([A-Z]{3})(\d{1,2}:\d{2})-([A-Z]{3})(\d{1,2}:\d{2})/g;
+  let gm; let groundFound=false;
+  while((gm = groundRe.exec(text))){
+    groundFound = true;
+    out.push({isGround:true, ownDate:dateObj, anchorDate:dateObj, pairing:'', item:normalizeGroundCode(gm[1]),
+      rank:'', work:'', depStn:gm[2], depTime:gm[3], arrStn:gm[4], arrTime:gm[5],
+      reportTime:gm[3], debriefTime:gm[5], flyHrs:'', dutyHrs:'', sdc:'', ac:'', hotel:''});
+  }
+  if(groundFound) return out;
+
+  // Bare code with no times at all (D, DO, DO1, DO2, ...)
+  const bareM = /^[A-Z0-9]+$/.exec(text.trim());
+  if(bareM){
+    out.push({isGround:true, ownDate:dateObj, anchorDate:dateObj, pairing:'', item:normalizeGroundCode(text.trim()),
+      rank:'', work:'', depStn:'', depTime:'', arrStn:'', arrTime:'', reportTime:'', debriefTime:'',
+      flyHrs:'', dutyHrs:'', sdc:'', ac:'', hotel:''});
+    return out;
+  }
+
+  if(text.trim()){
+    RAW_WARNINGS.push('Unrecognised calendar cell on '+ymdKey(dateObj)+': "'+text+'"');
+    out.push({isGround:true, ownDate:dateObj, anchorDate:dateObj, pairing:'', item:text.trim(),
+      rank:'', work:'', depStn:'', depTime:'', arrStn:'', arrTime:'', reportTime:'', debriefTime:'',
+      flyHrs:'', dutyHrs:'', sdc:'', ac:'', hotel:''});
+  }
+  return out;
+}
+
+/* =====================================================================
+   5) ROW -> LEG NORMALIZER
+   IMPORTANT (+1) SEMANTICS — cross-checked between the table PDF and the
+   fridge calendar PDF for the same real trips:
+     · A "(+1)" suffix on ANY time field (dep, arr, report, or debrief) means
+       that field falls on the day AFTER this record's own anchor/report
+       date. It is NOT chained field-to-field — every field's rollover is
+       independently relative to the anchor date, never to a previously
+       resolved field on the same row.
+     Verified examples (05→06 Aug AKL outbound, 08→09 Aug AKL return):
+       anchor 05-Aug: report 20:00 (same day), dep KUL 21:30 (same day),
+         arr AKL 11:25(+1) -> 06-Aug, debrief 11:55(+1) -> 06-Aug.
+       anchor 08-Aug: report 23:25 (same day), dep AKL 00:25(+1) -> 09-Aug,
+         arr KUL 07:55(+1) -> 09-Aug, debrief 08:25(+1) -> 09-Aug.
+     Both resolved dates match the fridge PDF's own placement of that
+     content into the Aug06 / Aug09 cells respectively.
+   A row's "anchor date" is the most recent EXPLICIT Date value seen — it is
+   never advanced by a computed arrival date, only by the next row that
+   actually carries its own Date (same-duty continuation legs with a blank
+   Date field reuse the group's anchor).
+===================================================================== */
+function rowsToLegs(rows){
+  const legs = [];
+  let currentDate = null;
+  let pairingSeq = 0;
+  let lastPairingKey = null;
+
+  for(const r of rows){
+    if(r.ownDate) currentDate = r.ownDate;
+    if(!currentDate) continue;
+    const anchor = currentDate;
+
+    const dep = cleanTime(r.depTime);
+    const arr = cleanTime(r.arrTime);
+    const rep = cleanTime(r.reportTime);
+    const deb = cleanTime(r.debriefTime);
+
+    const isFlight = /^[A-Z0-9]{2,3}\d{2,4}$/.test(r.item||'') || r.work==='OP';
+    const isGround = !isFlight;
+
+    if(r.pairing && r.pairing !== lastPairingKey){ pairingSeq++; lastPairingKey = r.pairing; }
+
+    legs.push({
+      isGround,
+      pairingId: r.pairing || null,
+      pairingSeq,
+      depDate: addDays(anchor, dep.rollover), depStn: r.depStn, depTime: dep.time,
+      arrDate: addDays(anchor, arr.rollover), arrStn: r.arrStn, arrTime: arr.time,
+      reportDate: addDays(anchor, rep.rollover), reportTime: rep.time,
+      debriefDate: addDays(anchor, deb.rollover), debriefTime: deb.time,
+      item: isGround ? normalizeGroundCode(r.item||r.pairing||'') : r.item,
+      rank: r.rank, work: r.work,
+      flyHrs: r.flyHrs, dutyHrs: r.dutyHrs, sdc: r.sdc, ac: r.ac, hotel: r.hotel
+    });
+    // NOTE: currentDate is deliberately NOT advanced from computed arrDate —
+    // see design note above.
+  }
+  return legs;
+}
+
+/* =====================================================================
+   6) BUILD FULL-MONTH DAY MODEL (no skipped dates) + layover inference
+===================================================================== */
+function buildDays(legs){
+  if(!legs.length) throw new Error('No records parsed from this file.');
+
+  let minDate=null, maxDate=null;
+  for(const l of legs){
+    for(const d of [l.depDate, l.arrDate, l.reportDate, l.debriefDate]){
+      if(!d) continue;
+      if(!minDate || d<minDate) minDate=d;
+      if(!maxDate || d>maxDate) maxDate=d;
+    }
+  }
+  const dayMap = {};
+  function ensureDay(d){
+    const k = ymdKey(d);
+    if(!dayMap[k]) dayMap[k] = {date:d, key:k, rows:[], hasData:false};
+    return dayMap[k];
+  }
+
+  legs.forEach((l, i)=>{
+      if(l.isGround){
+        const day = ensureDay(l.depDate);
+        day.hasData = true;
+        day.rows.push({
+          dutyStart: l.reportTime, item: l.item, rank: l.rank,
+          depStn: l.depStn, depTime: l.depTime,
+          arrStn: l.arrStn, arrTime: l.arrTime,
+          dutyEnd: l.debriefTime, work: l.work,
+          block: '', dutyHrs: l.dutyHrs, dutyCode: l.sdc, ac: l.ac
+        });
+        return;
+      }
+
+      const sameDay = ymdKey(l.depDate)===ymdKey(l.arrDate);
+      const depDay = ensureDay(l.depDate);
+      depDay.hasData = true;
+      depDay.rows.push({
+        dutyStart: (!l.reportDate || ymdKey(l.reportDate)===ymdKey(l.depDate)) ? l.reportTime : '',
+        item: l.item, rank: l.rank,
+        depStn: l.depStn, depTime: l.depTime,
+        arrStn: sameDay ? l.arrStn : '', arrTime: sameDay ? l.arrTime : '',
+        dutyEnd: sameDay ? l.debriefTime : '',
+        work: l.work,
+        block: l.flyHrs, dutyHrs: l.dutyHrs,
+        dutyCode: l.sdc, ac: l.ac
+      });
+      if(!sameDay){
+        const arrDay = ensureDay(l.arrDate);
+        arrDay.hasData = true;
+        arrDay.rows.push({
+          dutyStart:'', item:'', rank:'',
+          depStn:'', depTime:'',
+          arrStn: l.arrStn, arrTime: l.arrTime,
+          dutyEnd: l.debriefTime, work:'',
+          block:'', dutyHrs:'', dutyCode:'', ac:''
+        });
+      }
+      const nextLeg = legs[i+1];
+      if(nextLeg && !nextLeg.isGround){
+        let cursor = addDays(l.arrDate,1);
+        const stop = nextLeg.depDate;
+        const awayStn = l.arrStn || nextLeg.depStn;
+        while(cursor < stop){
+          const d = ensureDay(cursor);
+          if(!d.hasData){
+            d.hasData = true;
+            // If the next leg's report happens on this gap day (report
+            // before midnight, departure after midnight), show that report
+            // time on the layover row instead of leaving it blank — matches
+            // how the calendar-source PDF already places it.
+            const showReport = nextLeg.reportTime && nextLeg.reportDate && ymdKey(cursor)===ymdKey(nextLeg.reportDate);
+            d.rows.push({dutyStart: showReport?nextLeg.reportTime:'', item:'LO', rank:'', depStn: awayStn, depTime:'', arrStn:'', arrTime:'', dutyEnd:'', work:'', block:'', dutyHrs:'', dutyCode:'', ac:''});
+          }
+          cursor = addDays(cursor,1);
+        }
+      }
+  });
+
+  if(!minDate || !maxDate) throw new Error('Could not determine date range.');
+  DAYS = [];
+  let cursor = new Date(minDate);
+  while(cursor <= maxDate){
+    const k = ymdKey(cursor);
+    const existing = dayMap[k];
+    DAYS.push(existing || {date:new Date(cursor), key:k, rows:[], hasData:false});
+    cursor = addDays(cursor,1);
+  }
+  STAFF_LABEL = ''
+}
+
+/* =====================================================================
+   7) RENDER
+===================================================================== */
+function fmtDate(d){
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mmm = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()];
+  return dd+'-'+mmm+'-'+d.getFullYear();
+}
+function hhmmToMin(s){
+  if(!s) return 0;
+  const m=/^(\d{1,2}):(\d{2})$/.exec(s.trim()); if(!m) return 0;
+  return parseInt(m[1])*60+parseInt(m[2]);
+}
+function sumHrs(list){
+  let total=0;
+  for(const s of list){ total += hhmmToMin(s); }
+  const h=Math.floor(total/60), m=total%60;
+  return h+':'+String(m).padStart(2,'0');
+}
+
+function render(){
+  const tbody = document.getElementById('outBody');
+  tbody.innerHTML='';
+  const blockHrsAll=[], dutyHrsAll=[];
+  let offAtBase=0, offAway=0;
+  const codesUsed = new Set();
+
+  for(const day of DAYS){
+    const rows = day.rows.length ? day.rows : [{dutyStart:'',item:'',rank:'',depStn:'',depTime:'',arrStn:'',arrTime:'',dutyEnd:'',work:'',block:'',dutyHrs:'',dutyCode:'',ac:''}];
+    rows.forEach((r, ri)=>{
+      const tr = document.createElement('tr');
+      const isOff = ri===0 && isOffCode(r.item);
+      const isLayover = ri===0 && r.item==='LO';
+      if(isOff) tr.className='off'; else if(isLayover) tr.className='layover'; else if(ri>0) tr.className='leg2';
+      const depCombined = [r.depStn, r.depTime].filter(Boolean).join(' ');
+      const arrCombined = [r.arrStn, r.arrTime].filter(Boolean).join(' ');
+      const cells = [
+        ri===0 ? fmtDate(day.date) : '',
+        ri===0 ? DOW[day.date.getDay()].slice(0,3) : '',
+        r.dutyStart, r.item, r.rank, depCombined, arrCombined, r.dutyEnd, r.work, r.block, r.dutyHrs, r.dutyCode, r.ac
+      ];
+      cells.forEach((c,ci)=>{
+        const td = document.createElement('td');
+        if(ci===11 && c && c.includes(',')){
+          // Long duty-code lists wrap onto separate lines instead of
+          // widening the table — one code per line via <br>.
+          const parts = c.split(',').map(s=>s.trim()).filter(Boolean);
+          parts.forEach((p,pi)=>{
+            td.appendChild(document.createTextNode(p + (pi<parts.length-1 ? ',' : '')));
+            if(pi<parts.length-1) td.appendChild(document.createElement('br'));
+          });
+        } else {
+          td.textContent = c || '';
+        }
+        if(ci===0) td.className='date';
+        if(ci>=9 && ci<=10) td.className='num';
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+      if(r.block) blockHrsAll.push(r.block);
+      if(r.dutyHrs) dutyHrsAll.push(r.dutyHrs);
+      if(r.dutyCode) r.dutyCode.split(',').map(s=>s.trim()).filter(Boolean).forEach(c=>codesUsed.add(c));
+      if(r.item) codesUsed.add(r.item);
+    });
+
+    // Off-day / layover-day stats are classified by the day's ITEM CODE,
+    // not by whether a row happened to exist (every date always has at
+    // least a placeholder row now) — this was the source of the previous
+    // "wrong off-day count" bug.
+    if(rows.length===1){
+      const only = rows[0];
+      if(isOffCode(only.item)){
+        const away = only.depStn && only.depStn !== HOME;
+        if(away) offAway++; else offAtBase++;
+      } else if(only.item==='LO'){
+        offAway++;
+      }
+    }
+  }
+
+  document.getElementById('rangeLbl').textContent = DAYS.length ? (fmtDate(DAYS[0].date)+' to '+fmtDate(DAYS[DAYS.length-1].date)) : '';
+  document.getElementById('outCard').style.display='block';
+  document.getElementById('toolbarRow').style.display='flex';
+  document.getElementById('saveCard').style.display='block';
+
+  document.getElementById('statsBody').innerHTML = `
+    <div>Actual Block Hours<b>${sumHrs(blockHrsAll)}</b></div>
+    <div>Duty Hours<b>${sumHrs(dutyHrsAll)}</b></div>
+    <div>OFF Days At Base<b>${offAtBase}</b></div>
+    <div>OFF Days Away From Base<b>${offAway}</b></div>
+  `;
+  document.getElementById('statsCard').style.display='block';
+
+  renderLegend(codesUsed);
+
+  if(RAW_WARNINGS.length) RAW_WARNINGS.forEach(w=>log(w,'warn'));
+  log('Parsed '+DAYS.length+' days ('+fmtDate(DAYS[0].date)+' – '+fmtDate(DAYS[DAYS.length-1].date)+').', 'ok');
+}
+
+function renderLegend(codesUsed){
+  loadLegend();
+  const body = document.getElementById('legendBody');
+  body.innerHTML='';
+  const codes = Array.from(codesUsed).filter(Boolean).sort();
+  codes.forEach(code=>{
+    const desc = legendDescFor(code);
+    if(desc) addLegendRow(code, desc);
+  });
+  document.getElementById('legendCard').style.display='block';
+}
+function addLegendRow(code='', desc=''){
+  const body = document.getElementById('legendBody');
+  const row = document.createElement('div');
+  row.className='row';
+  row.innerHTML = `<input class="code" value="${code}" placeholder="CODE">
+                    <input class="desc" value="${desc}" placeholder="Description">
+                    <button onclick="this.parentElement.remove()">✕</button>`;
+  row.querySelectorAll('input').forEach(inp=>inp.addEventListener('change', ()=>{
+    const c = row.querySelector('.code').value.trim();
+    const d = row.querySelector('.desc').value.trim();
+    if(c){ LEGEND[c]=d; saveLegend(); }
+  }));
+  body.appendChild(row);
+}
+
+/* =====================================================================
+   8) EXPORT: CSV / TSV / PNG / PDF-print / Fit-to-screen / Debug dump
+===================================================================== */
+const CSV_HEADER = ['Date','Day','Duty Start','Item','Overrd Rank','Dep/Start','Arr/End','Duty End','Work Type','Actual Block Hours','Duty Hours','DutyCode','Ac Type'];
+
+function tableToTSV(){
+  const rows = [CSV_HEADER];
+  document.querySelectorAll('#outBody tr').forEach(tr=>{
+    rows.push(Array.from(tr.children).map(td=>td.textContent));
+  });
+  return rows.map(r=>r.join('\t')).join('\n');
+}
+function copyTSV(){ navigator.clipboard.writeText(tableToTSV()).then(()=>log('Copied to clipboard.','ok')); }
+function downloadCSV(){
+  const rows = [CSV_HEADER];
+  document.querySelectorAll('#outBody tr').forEach(tr=>{
+    rows.push(Array.from(tr.children).map(td=>'"'+td.textContent.replace(/"/g,'""')+'"'));
+  });
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'roster-'+(DAYS.length?DAYS[0].key:'export')+'.csv';
+  a.click();
+}
+
+// "Fit screen" — scales the whole results block down (or up) to exactly fill
+// the viewport width and remaining height, so it can be read/zoomed as one
+// screen with no scrolling.
+let fitOn = false;
+function toggleFit(){
+  const wrap = document.getElementById('resultsWrap');
+  const table = document.getElementById('outTable');
+  fitOn = !fitOn;
+  document.getElementById('fitBtn').textContent = fitOn ? 'Unfit' : 'Fit screen';
+  if(!fitOn){ wrap.style.transform=''; wrap.style.width=''; return; }
+  wrap.style.transform = '';
+  wrap.style.width = '';
+  // Measure the table's true content width directly — wrap.scrollWidth is
+  // unreliable here because the table sits inside a .tableWrap with
+  // overflow-x:auto, which clips what the outer element reports as its
+  // content width to the viewport instead of the table's real full width.
+  const naturalW = table ? table.scrollWidth : wrap.scrollWidth;
+  const availW = window.innerWidth - 20;
+  const scale = Math.min(availW/naturalW, 1);
+  wrap.style.transform = `scale(${scale})`;
+  wrap.style.transformOrigin = 'top left';
+  wrap.style.width = (100/scale)+'%';
+  document.getElementById('toolbarRow').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// Image export — renders the results block to a high-resolution PNG so it
+// stays crisp when zoomed after export.
+function exportPNG(){
+  const wrap = document.getElementById('resultsWrap');
+  const wasFit = fitOn;
+  if(!wasFit) toggleFit(); // capture at fit-screen width so the whole table is visible in the image
+  setTimeout(()=>{
+    html2canvas(wrap, {scale:3, backgroundColor:getComputedStyle(wrap).getPropertyValue('--bg')||'#0b0c0e'}).then(canvas=>{
+      canvas.toBlob(blob=>{
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'roster-'+(DAYS.length?DAYS[0].key:'export')+'.png';
+        a.click();
+        log('Image exported.', 'ok');
+      });
+      if(!wasFit) toggleFit();
+    }).catch(err=>{ log('Image export failed: '+err.message, 'err'); });
+  }, 350); // let the fit-screen smooth-scroll/transform settle before capturing
+}
+
+// Print / Save-as-PDF — uses the browser's native print pipeline (works
+// fully offline) with a font size chosen to keep the whole roster on one
+// landscape A4 page.
+function exportPDF(){
+  const wasFit = fitOn;
+  if(wasFit) toggleFit();
+  const wrap = document.getElementById('resultsWrap');
+  const table = document.getElementById('outTable');
+  wrap.style.transform = ''; wrap.style.width = '';
+  // Measure actual rendered size rather than guessing from row count — a
+  // single very tall row (e.g. an 11-line duty-code list) was pushing the
+  // page count to 2 even though row COUNT looked fine, so a heuristic based
+  // on row count alone couldn't catch it.
+  const naturalW = table ? table.scrollWidth : wrap.scrollWidth;
+  const naturalH = wrap.scrollHeight;
+  // A4 portrait at 96dpi minus 8mm margins on each side, in CSS px
+  const targetW = 730, targetH = 1060;
+  const scale = Math.min(targetW/naturalW, targetH/naturalH, 1);
+  document.documentElement.style.setProperty('--print-scale', scale);
+  window.print();
+}
+
+// Debug export — dumps everything needed to diagnose a parsing problem
+// without a screenshot: raw extracted PDF word positions, the detected
+// format, intermediate parsed rows, and the final per-day model.
+function exportDebug(){
+  const payload = {
+    fileName: LAST_FILE_NAME,
+    detectedFormat: LAST_FORMAT,
+    warnings: RAW_WARNINGS,
+    rawWordsByPage: RAW_PDF_PAGES ? RAW_PDF_PAGES.map(pg=>pg.map(w=>({t:w.text,x0:Math.round(w.x0),x1:Math.round(w.x1),top:Math.round(w.top),bottom:Math.round(w.bottom)}))) : null,
+    parsedRows: LAST_PARSED_ROWS ? LAST_PARSED_ROWS.map(r=>{
+      const c = Object.assign({}, r);
+      // dates -> ISO strings for readability
+      ['ownDate','anchorDate','depDate','arrDate','reportDate','debriefDate'].forEach(k=>{
+        if(c[k] instanceof Date) c[k]=ymdKey(c[k]);
+      });
+      return c;
+    }) : null,
+    days: DAYS.map(d=>({date:d.key, hasData:d.hasData, rows:d.rows}))
+  };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'roster-debug-'+(LAST_FILE_NAME||'file').replace(/\.[^.]+$/,'')+'.json';
+  a.click();
+  log('Debug data exported — attach this file if something looks wrong.', 'ok');
+}
+
+/* =====================================================================
+   9) SAVED ROSTERS (local device storage, for the crew-overlap feature)
+===================================================================== */
+function loadSavedRosters(){
+  try{ return JSON.parse(localStorage.getItem('rosterParserSaved')||'[]'); }
+  catch(e){ return []; }
+}
+function persistSavedRosters(list){
+  localStorage.setItem('rosterParserSaved', JSON.stringify(list));
+}
+function doSaveRoster(){
+  const name = document.getElementById('saveNameInput').value.trim();
+  const tz = document.getElementById('saveTzInput').value;
+  if(!name){ log('Enter a crew name before saving.', 'err'); return; }
+  if(!DAYS.length){ log('Nothing parsed yet to save.', 'err'); return; }
+  localStorage.setItem('rosterParserLastName', name);
+
+  const rangeStart = DAYS[0].key, rangeEnd = DAYS[DAYS.length-1].key;
+  const list = loadSavedRosters();
+  const overlapIdx = list.findIndex(r => r.name===name && !(rangeEnd < r.rangeStart || rangeStart > r.rangeEnd));
+  const entry = {
+    id: (overlapIdx>=0 ? list[overlapIdx].id : 'r'+Date.now()),
+    name, tz, sourceFile: LAST_FILE_NAME || '', format: LAST_FORMAT || '',
+    rangeStart, rangeEnd, savedAt: new Date().toISOString(),
+    days: DAYS.map(d=>({date:d.key, hasData:d.hasData, rows:d.rows}))
+  };
+  if(overlapIdx>=0){
+    if(!confirm(`${name} already has a saved roster covering an overlapping date range (${list[overlapIdx].rangeStart} to ${list[overlapIdx].rangeEnd}). Replace it?`)) return;
+    list[overlapIdx] = entry;
+  } else {
+    list.push(entry);
+  }
+  persistSavedRosters(list);
+  renderSavedList();
+  log('Saved roster for '+name+'.', 'ok');
+}
+function deleteSavedRoster(id){
+  if(!confirm('Delete this saved roster?')) return;
+  persistSavedRosters(loadSavedRosters().filter(r=>r.id!==id));
+  renderSavedList();
+}
+function viewSavedRoster(id){
+  const entry = loadSavedRosters().find(r=>r.id===id);
+  if(!entry) return;
+  DAYS = entry.days.map(d=>({
+    date: new Date(d.date+'T00:00:00'), key: d.date, hasData: d.hasData, rows: d.rows
+  }));
+  LAST_FILE_NAME = entry.sourceFile;
+  render();
+  document.getElementById('toolbarRow').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function renderSavedList(){
+  const body = document.getElementById('savedListBody');
+  const list = loadSavedRosters().sort((a,b)=> (a.name+a.rangeStart).localeCompare(b.name+b.rangeStart));
+  if(!list.length){
+    body.innerHTML = '<div style="color:var(--dim);font-size:12px;padding:6px 0">No rosters saved yet — parse one above, then tap "Save roster".</div>';
+    return;
+  }
+  body.innerHTML = '';
+  const byName = {};
+  list.forEach(r=>{ byName[r.name]=byName[r.name]||[]; byName[r.name].push(r); });
+  Object.keys(byName).sort().forEach(name=>{
+    const nameHeader = document.createElement('div');
+    nameHeader.style.cssText = 'font-weight:700;color:var(--accent);margin-top:10px;font-size:13px';
+    nameHeader.textContent = name;
+    body.appendChild(nameHeader);
+    byName[name].forEach(r=>{
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px dashed var(--line);font-size:12px';
+      row.innerHTML = `<input type="checkbox" class="overlapPick" data-id="${r.id}" style="width:16px;height:16px">
+        <span style="flex:1">${r.rangeStart} to ${r.rangeEnd} <span style="color:var(--dim)">· ${r.tz} · ${r.format||''}</span></span>
+        <button onclick="viewSavedRoster('${r.id}')">View</button>
+        <button class="ghost" onclick="deleteSavedRoster('${r.id}')">Delete</button>`;
+      body.appendChild(row);
+    });
+  });
+}
+
+loadLegend();
+renderSavedList();
+
+/* =====================================================================
+   10) FIND TIME TOGETHER (crew overlap engine)
+===================================================================== */
+function isStandbyCode(code){
+  return /standby/i.test(legendDescFor(code)||'');
+}
+
+// Turns one saved roster's DAYS into a flat list of free (or maybe-free)
+// intervals: {date, startMin, endMin, station, type}. type is 'off',
+// 'layover', or 'standby' (standby is real duty the person is on call for,
+// so it's kept separate and never counted as confirmed free time).
+function extractFreeIntervals(entry){
+  const out = [];
+  const homeBase = 'KUL';
+  let lastStation = homeBase;
+  for(const day of entry.days){
+    const rows = (day.rows||[]).filter(r=>r.item || r.depStn || r.arrStn);
+    if(!day.hasData || rows.length===0){
+      out.push({date:day.date, startMin:0, endMin:1440, station:lastStation, type:'off'});
+      continue;
+    }
+    const first = rows[0];
+    if(rows.length===1 && isOffCode(first.item)){
+      const stn = first.depStn || homeBase;
+      out.push({date:day.date, startMin:0, endMin:1440, station:stn, type:'off'});
+      lastStation = stn;
+      continue;
+    }
+    if(rows.length===1 && first.item==='LO'){
+      const stn = first.depStn || lastStation;
+      out.push({date:day.date, startMin:0, endMin:1440, station:stn, type:'layover'});
+      lastStation = stn;
+      continue;
+    }
+    if(rows.length===1 && isStandbyCode(first.item)){
+      const stn = first.depStn || lastStation;
+      const sMin = hhmmToMin(first.dutyStart), eMin = hhmmToMin(first.dutyEnd) || 1440;
+      if(sMin>0) out.push({date:day.date, startMin:0, endMin:sMin, station:stn, type:'off'});
+      out.push({date:day.date, startMin:sMin, endMin:eMin, station:stn, type:'standby'});
+      if(eMin<1440) out.push({date:day.date, startMin:eMin, endMin:1440, station:stn, type:'off'});
+      lastStation = stn;
+      continue;
+    }
+    // duty day: free only before first report and after last debrief
+    const withStart = rows.find(r=>r.dutyStart);
+    const withEndRow = [...rows].reverse().find(r=>r.dutyEnd);
+    const sMin = withStart ? hhmmToMin(withStart.dutyStart) : null;
+    const eMin = withEndRow ? hhmmToMin(withEndRow.dutyEnd) : null;
+    const morningStn = rows[0].depStn || lastStation;
+    if(sMin && sMin>0) out.push({date:day.date, startMin:0, endMin:sMin, station:morningStn, type:'off'});
+    if(eMin!=null && eMin<1440){
+      const eveningStn = withEndRow.arrStn || withEndRow.depStn || morningStn;
+      out.push({date:day.date, startMin:eMin, endMin:1440, station:eveningStn, type:'off'});
+      lastStation = eveningStn;
+    } else if(rows[rows.length-1].arrStn){
+      lastStation = rows[rows.length-1].arrStn;
+    }
+  }
+  return out;
+}
+
+function intervalToAbsMinutes(iv, tz){
+  const [y,m,d] = iv.date.split('-').map(Number);
+  const dayBaseMin = Date.UTC(y, m-1, d, 0, 0) / 60000;
+  const offset = tz==='SLT' ? -480 : 0; // SLT clock time - 8h = UTC
+  return { start: dayBaseMin + iv.startMin + offset, end: dayBaseMin + iv.endMin + offset };
+}
+
+function absMinutesToLabel(absMin){
+  const ms = absMin*60000 + 8*3600*1000; // display in SLT for readability
+  const dt = new Date(ms);
+  const dd = String(dt.getUTCDate()).padStart(2,'0');
+  const mmm = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][dt.getUTCMonth()];
+  const hh = String(dt.getUTCHours()).padStart(2,'0'), mi = String(dt.getUTCMinutes()).padStart(2,'0');
+  return { date: `${dd}-${mmm}-${dt.getUTCFullYear()}`, time: `${hh}:${mi}`, day: DOW[dt.getUTCDay()].slice(0,3) };
+}
+
+function computePairOverlap(personA, personB){
+  const results = [];
+  for(const a of personA){
+    if(!a.station) continue;
+    const aAbs = intervalToAbsMinutes(a, personA.tz);
+    for(const b of personB){
+      if(b.station !== a.station) continue;
+      const bAbs = intervalToAbsMinutes(b, personB.tz);
+      const start = Math.max(aAbs.start, bAbs.start), end = Math.min(aAbs.end, bAbs.end);
+      if(end - start >= 30){
+        results.push({startAbs:start, endAbs:end, station:a.station, maybe:(a.type==='standby'||b.type==='standby')});
+      }
+    }
+  }
+  results.sort((x,y)=>x.startAbs-y.startAbs);
+  return results;
+}
+
+function computeGroupOverlap(intervalSets){
+  let current = intervalSets[0].map(iv=>{
+    const abs = intervalToAbsMinutes(iv, intervalSets[0].tz);
+    return {start:abs.start, end:abs.end, station:iv.station, maybe: iv.type==='standby'};
+  }).filter(iv=>iv.station);
+  for(let k=1;k<intervalSets.length;k++){
+    const setK = intervalSets[k];
+    const next = [];
+    for(const cur of current){
+      for(const iv of setK){
+        if(!iv.station || iv.station !== cur.station) continue;
+        const abs = intervalToAbsMinutes(iv, setK.tz);
+        const start = Math.max(cur.start, abs.start), end = Math.min(cur.end, abs.end);
+        if(end - start >= 30){
+          next.push({start, end, station:cur.station, maybe: cur.maybe || iv.type==='standby'});
+        }
+      }
+    }
+    current = next;
+  }
+  current.sort((a,b)=>a.start-b.start);
+  return current;
+}
+
+function computeTogetherTime(){
+  const ids = Array.from(document.querySelectorAll('.overlapPick:checked')).map(el=>el.dataset.id);
+  const out = document.getElementById('overlapResults');
+  if(ids.length < 2){ out.innerHTML = '<div style="color:var(--err);font-size:12px;padding:8px 0">Select at least 2 saved rosters (tap their checkboxes above).</div>'; return; }
+
+  const all = loadSavedRosters();
+  const people = ids.map(id => all.find(r=>r.id===id)).filter(Boolean);
+  const intervalSets = people.map(p => { const s = extractFreeIntervals(p); s.tz = p.tz; return s; });
+
+  let html = '';
+
+  if(people.length >= 3){
+    const group = computeGroupOverlap(intervalSets);
+    let gConfirmed=0, gMaybe=0;
+    const gRows = group.map(o=>{
+      const s = absMinutesToLabel(o.start), e = absMinutesToLabel(o.end);
+      const dur = o.end - o.start;
+      const isFullDay = dur >= 1439;
+      if(o.maybe) gMaybe += dur; else gConfirmed += dur;
+      const cls = isFullDay ? 'fullday' : (o.maybe?'layover':'');
+      return `<tr class="${cls}"><td class="date">${s.date}</td><td>${s.day}</td><td>${s.time}</td><td>${e.date!==s.date? e.date+' ':''}${e.time}</td><td>${o.station}</td><td>${Math.floor(dur/60)}h ${dur%60}m</td><td>${o.maybe?'Maybe (standby)':(isFullDay?'Everyone off all day':'Confirmed')}</td></tr>`;
+    }).join('');
+    html += `
+      <h3 style="font-size:14px;margin:6px 0 6px;color:var(--accent)">All ${people.length} together: ${people.map(p=>p.name).join(', ')}</h3>
+      <div style="font-size:11.5px;color:var(--dim);margin-bottom:6px">
+        Confirmed all together: ${Math.floor(gConfirmed/60)}h ${gConfirmed%60}m &nbsp; · &nbsp; Maybe (standby-dependent): ${Math.floor(gMaybe/60)}h ${gMaybe%60}m
+      </div>
+      <div class="tableWrap"><table><thead><tr><th>Date</th><th>Day</th><th>From</th><th>To</th><th>Location</th><th>Duration</th><th>Type</th></tr></thead>
+      <tbody>${gRows || '<tr><td colspan="7" style="color:var(--dim)">No time found where everyone selected is free together.</td></tr>'}</tbody></table></div>
+      <div style="font-size:11.5px;color:var(--dim);margin:14px 0 4px">Pairwise breakdown, in case only two of you need to sync up:</div>`;
+  }
+  for(let i=0;i<people.length;i++){
+    for(let j=i+1;j<people.length;j++){
+      const overlaps = computePairOverlap(intervalSets[i], intervalSets[j]);
+      let confirmedMin = 0, maybeMin = 0;
+      const rows = overlaps.map(o=>{
+        const s = absMinutesToLabel(o.startAbs), e = absMinutesToLabel(o.endAbs);
+        const dur = o.endAbs - o.startAbs;
+        const isFullDay = dur >= 1439;
+        if(o.maybe) maybeMin += dur; else confirmedMin += dur;
+        const cls = isFullDay ? 'fullday' : (o.maybe?'layover':'');
+        return `<tr class="${cls}"><td class="date">${s.date}</td><td>${s.day}</td><td>${s.time}</td><td>${e.date!==s.date? e.date+' ':''}${e.time}</td><td>${o.station}</td><td>${Math.floor(dur/60)}h ${dur%60}m</td><td>${o.maybe?'Maybe (standby)':(isFullDay?'Both off all day':'Confirmed')}</td></tr>`;
+      }).join('');
+      html += `
+        <h3 style="font-size:13px;margin:14px 0 6px;color:var(--accent)">${people[i].name} × ${people[j].name}</h3>
+        <div style="font-size:11.5px;color:var(--dim);margin-bottom:6px">
+          Confirmed together: ${Math.floor(confirmedMin/60)}h ${confirmedMin%60}m &nbsp; · &nbsp; Maybe (standby-dependent): ${Math.floor(maybeMin/60)}h ${maybeMin%60}m
+        </div>
+        <div class="tableWrap"><table><thead><tr><th>Date</th><th>Day</th><th>From</th><th>To</th><th>Location</th><th>Duration</th><th>Type</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="7" style="color:var(--dim)">No overlapping free time found in the shared date range.</td></tr>'}</tbody></table></div>`;
+
+      // The primary result for the heatmap: the full-group intersection when
+      // 3+ people are selected, otherwise this (the only) pair.
+      if(people.length===2){
+        LAST_OVERLAP_PRIMARY = {
+          overlaps: overlaps.map(o=>({start:o.startAbs, end:o.endAbs, maybe:o.maybe})),
+          title: people[0].name+' × '+people[1].name,
+          rangeStart: [people[0].rangeStart, people[1].rangeStart].sort().pop(),
+          rangeEnd: [people[0].rangeEnd, people[1].rangeEnd].sort()[0]
+        };
+      }
+    }
+  }
+  if(people.length>=3){
+    const group = computeGroupOverlap(intervalSets);
+    LAST_OVERLAP_PRIMARY = {
+      overlaps: group.map(o=>({start:o.start, end:o.end, maybe:o.maybe})),
+      title: 'All together: '+people.map(p=>p.name).join(', '),
+      rangeStart: people.map(p=>p.rangeStart).sort().pop(),
+      rangeEnd: people.map(p=>p.rangeEnd).sort()[0]
+    };
+  }
+  out.innerHTML = html;
+  LAST_OVERLAP_TABLE_HTML = html;
+  document.getElementById('heatmapBtn').style.display = LAST_OVERLAP_PRIMARY ? 'inline-block' : 'none';
+  heatmapOn = false;
+  document.getElementById('heatmapBtn').textContent = 'Heatmap view';
+}
+
+/* =====================================================================
+   11) HEATMAP VIEW — calendar grid, each cell a left-to-right timeline
+   bar (left edge = 00:00, right edge = 24:00). Consecutive-day overlaps
+   deliberately line up at the cell boundary (green touching green across
+   the midnight edge) so a multi-day stretch reads as one continuous bar
+   when viewed from a distance, not as isolated colored cells.
+===================================================================== */
+let LAST_OVERLAP_PRIMARY = null;
+let LAST_OVERLAP_TABLE_HTML = '';
+let heatmapOn = false;
+
+// Converts an absolute minute value (same epoch used by intervalToAbsMinutes)
+// into {key: 'YYYY-MM-DD', minOfDay: 0-1440}, using the same +8h SLT display
+// shift as absMinutesToLabel so the two stay perfectly consistent.
+function absToDayMin(absMin){
+  const dispMin = absMin + 480;
+  const dayIdx = Math.floor(dispMin/1440);
+  const minOfDay = dispMin - dayIdx*1440;
+  const dt = new Date(dayIdx*1440*60000);
+  const key = dt.getUTCFullYear()+'-'+String(dt.getUTCMonth()+1).padStart(2,'0')+'-'+String(dt.getUTCDate()).padStart(2,'0');
+  return {key, minOfDay};
+}
+
+function splitIntoDaySegments(startAbs, endAbs, maybe){
+  const segs = [];
+  let cur = startAbs;
+  let guard = 0;
+  while(cur < endAbs && guard++ < 400){
+    const {key, minOfDay} = absToDayMin(cur);
+    const dayEndAbs = cur + (1440 - minOfDay);
+    const segEnd = Math.min(endAbs, dayEndAbs);
+    segs.push({date:key, startMin:minOfDay, endMin: minOfDay + (segEnd-cur), maybe});
+    cur = segEnd;
+  }
+  return segs;
+}
+
+function buildDayMap(overlaps){
+  const dayMap = {};
+  overlaps.forEach(o=>{
+    splitIntoDaySegments(o.start, o.end, o.maybe).forEach(seg=>{
+      dayMap[seg.date] = dayMap[seg.date] || [];
+      dayMap[seg.date].push(seg);
+    });
+  });
+  return dayMap;
+}
+
+function buildGradient(segments){
+  const RED = '#800020', GREEN = '#3eb489', MAYBE = '#c39953';
+  if(!segments || !segments.length) return RED;
+  const sorted = [...segments].sort((a,b)=>a.startMin-b.startMin);
+  const stops = [];
+  let pos = 0;
+  const pct = m => Math.max(0, Math.min(100, m/14.4));
+  sorted.forEach(seg=>{
+    const s = Math.max(pos, seg.startMin), e = Math.max(s, seg.endMin);
+    if(s > pos){ stops.push(`${RED} ${pct(pos)}%`, `${RED} ${pct(s)}%`); }
+    const color = seg.maybe ? MAYBE : GREEN;
+    stops.push(`${color} ${pct(s)}%`, `${color} ${pct(e)}%`);
+    pos = Math.max(pos, e);
+  });
+  if(pos < 1440) stops.push(`${RED} ${pct(pos)}%`, `${RED} 100%`);
+  return `linear-gradient(to right, ${stops.join(',')})`;
+}
+
+function toggleHeatmap(){
+  if(!LAST_OVERLAP_PRIMARY) return;
+  heatmapOn = !heatmapOn;
+  document.getElementById('heatmapBtn').textContent = heatmapOn ? 'Table view' : 'Heatmap view';
+  if(!heatmapOn){ document.getElementById('overlapResults').innerHTML = LAST_OVERLAP_TABLE_HTML; return; }
+  renderHeatmap();
+}
+
+function renderHeatmap(){
+  const {overlaps, title, rangeStart, rangeEnd} = LAST_OVERLAP_PRIMARY;
+  const dayMap = buildDayMap(overlaps);
+  const MONTH_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  let html = `<h3 style="font-size:14px;margin:10px 0 8px;color:var(--accent)">${title} — heatmap</h3>
+    <div style="font-size:10px;color:var(--dim);margin-bottom:10px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <span><span style="display:inline-block;width:11px;height:11px;background:#3eb489;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Together</span>
+      <span><span style="display:inline-block;width:11px;height:11px;background:#c39953;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Maybe (standby)</span>
+      <span><span style="display:inline-block;width:11px;height:11px;background:#800020;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Not together</span>
+    </div>`;
+
+  const startD = new Date(rangeStart+'T00:00:00'), endD = new Date(rangeEnd+'T00:00:00');
+  let cursor = new Date(startD.getFullYear(), startD.getMonth(), 1);
+  while(cursor <= endD){
+    const y = cursor.getFullYear(), m = cursor.getMonth();
+    html += `<div style="font-size:12.5px;font-weight:700;margin:16px 0 6px">${MONTH_FULL[m]} ${y}</div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">`;
+    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d=>{
+      html += `<div style="font-size:9px;color:var(--dim);text-align:center;padding-bottom:2px">${d}</div>`;
+    });
+    const leadingBlanks = new Date(y,m,1).getDay();
+    for(let i=0;i<leadingBlanks;i++) html += `<div></div>`;
+    const daysInMonth = new Date(y,m+1,0).getDate();
+    for(let d=1; d<=daysInMonth; d++){
+      const dt = new Date(y,m,d);
+      const key = ymdKey(dt);
+      if(dt < startD || dt > endD){
+        html += `<div style="aspect-ratio:1;border-radius:5px;background:var(--panel2);opacity:.35"></div>`;
+        continue;
+      }
+      const bg = buildGradient(dayMap[key]);
+      html += `<div style="aspect-ratio:1;border-radius:5px;background:${bg};position:relative;border:1px solid var(--line)">
+        <span style="position:absolute;top:2px;right:3px;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9)">${d}</span>
+      </div>`;
+    }
+    html += `</div>`;
+    cursor = new Date(y, m+1, 1);
+  }
+  document.getElementById('overlapResults').innerHTML = html;
+}
+
+/* =====================================================================
+   12) COLOUR THEMES
+===================================================================== */
+const THEMES = [
+  {id:'default', name:'Default (dark)', swatches:['#0b0c0e','#1b1e22','#c6ff3d','#f2f3f5']},
+  {id:'bw', name:'Black & White', swatches:['#ffffff','#f0f0f0','#000000','#000000']},
+  {id:'lv', name:'LV Inspired', swatches:['#2b1d10','#4a3320','#d4af37','#f3e6c8']},
+  {id:'gucci', name:'Gucci Inspired', swatches:['#0e2818','#194028','#c8102e','#f5f0e6']},
+  {id:'mas', name:'Malaysia Airlines Blue', swatches:['#0f2a52','#153865','#f5c518','#ffffff']},
+  {id:'goldblue', name:'Light Blue Gold White', swatches:['#f5f9ff','#e8f0fb','#b8902a','#1a2c42']},
+  {id:'cyberpunk', name:'Cyberpunk Inspired', swatches:['#12002a','#1a0038','#ff00e6','#00fff9']}
+];
+
+function applyTheme(themeId, persist){
+  const wrap = document.getElementById('resultsWrap');
+  wrap.className = wrap.className.replace(/\btheme-\S+/g, '').trim();
+  if(themeId !== 'default') wrap.classList.add('theme-'+themeId);
+  if(persist !== false) localStorage.setItem('rosterParserTheme', themeId);
+  renderColourThemeList(themeId);
+}
+
+function renderColourThemeList(activeId){
+  activeId = activeId || localStorage.getItem('rosterParserTheme') || 'default';
+  const list = document.getElementById('colourThemeList');
+  list.innerHTML = THEMES.map(t=>`
+    <div class="themeCard ${t.id===activeId?'sel':''}" onclick="applyTheme('${t.id}')">
+      <div class="swatches">${t.swatches.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
+      <div class="themeName">${t.name}</div>
+    </div>`).join('');
+}
+
+function openColourModal(){
+  renderColourThemeList();
+  document.getElementById('colourModalOverlay').style.display = 'block';
+}
+function closeColourModal(){
+  document.getElementById('colourModalOverlay').style.display = 'none';
+}
+
+// Restore whatever theme was chosen last time, on load.
+applyTheme(localStorage.getItem('rosterParserTheme') || 'default', false);
+</script>
+  <script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
+</body>
+</html>
