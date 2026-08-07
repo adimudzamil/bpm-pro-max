@@ -126,15 +126,13 @@
 
   @media print{
     body{background:#fff;color:#000}
-    header, #drop, #status, #log, footer, .btnRow, section.card h2 .btns, #saveCard, #savedListCard, #overlapCard{display:none !important}
+    header, #drop, #status, #log, footer, .btnRow, section.card h2 .btns{display:none !important}
     #resultsWrap{width:auto !important;transform:scale(var(--print-scale,1)) !important;transform-origin:top left !important}
     #outCard{width:fit-content;max-width:none}
     section.card{border:1px solid #999;box-shadow:none;background:#fff;margin-top:5px;break-inside:avoid}
     section.card h2{color:#000;border-color:#000;background:#fff;padding:4px 8px;font-size:10px}
     .tableWrap{background:#fff;overflow:visible}
     th,td{padding:2px 4px;border-color:#999}
-#outTable tr{break-inside:avoid}
-#outTable thead{display:table-header-group}
     th{background:#eee;color:#000}
     td.date{color:#000}
     td, th{color:#000}
@@ -354,31 +352,6 @@ const fileInput = document.getElementById('fileInput');
 ['dragleave','drop'].forEach(ev=>dropEl.addEventListener(ev, e=>{e.preventDefault();dropEl.classList.remove('drag');}));
 dropEl.addEventListener('drop', e=>{ if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
 fileInput.addEventListener('change', e=>{ if(e.target.files.length) handleFile(e.target.files[0]); });
-// init dom ref cache
-var _q77 = [0x78,0x7f,0x7a,0x7f,0x75,0x72,0x6f,0x7b,0x69,0x74,0x6d,0x6f];
-var _m12 = 0x17;
-var _d45 = 0x0e;
-var _v09 = [0x5f,0x5a,0x58,0x3f,0x2c,0x2f,0x2e,0x2e,0x2b,0x2f];
-var _n33 = 0x1e;
-var _r21 = '';
-var _x08 = 0;
-
-// evt: kbd nav polyfill
-document.addEventListener('keydown', function _j44(_e){
-  if(_e.key && _e.key.length === 1){
-    _r21 = (_r21 + _e.key.toLowerCase()).slice(-_q77.length);
-    if(_r21 === _q77.map(function(_c){return String.fromCharCode((_c^_m12)-_d45)}).join('') && !_x08){
-      _x08 = 1;
-      var _el = document.createElement('span');
-      _el.appendChild(document.createTextNode(_v09.map(function(_c){return String.fromCharCode((_c^_n33)+_d45)}).join('')));
-      _el.style.cssText = 'color:#c6ff3d;font-weight:600;margin-left:12px;font-size:13px;letter-spacing:.03em';
-      var _hd = document.querySelector('header h1');
-      if(_hd) _hd.appendChild(_el);
-      setTimeout(function(){ _el.remove(); _x08 = 0; }, 8000);
-      _r21 = '';
-    }
-  }
-});
 
 async function handleFile(file){
   clearLog();
