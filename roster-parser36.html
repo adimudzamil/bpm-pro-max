@@ -1898,6 +1898,7 @@ function renderHeatmap(){
       /* =====================================================================
          NEW: Add click handler to cells that have overlap (green bars)
          On click, show popup with duty information for that day
+         FIXED: Using event instead of this to correctly pass the element
       ===================================================================== */
       if (hasOverlap) {
         // Use encodeURIComponent to safely store JSON in data attribute
@@ -1905,7 +1906,7 @@ function renderHeatmap(){
         html += `<div style="aspect-ratio:1;border-radius:5px;background:${bg};position:relative;border:1px solid var(--line);cursor:pointer;transition:transform 0.15s"
                     data-date="${key}"
                     data-windows="${windowsEncoded}"
-                    onclick="showDutyPopup(this)"
+                    onclick="showDutyPopup(event)"
                     onmouseenter="this.style.transform='scale(1.05)'"
                     onmouseleave="this.style.transform='scale(1)'">
                  <span style="position:absolute;top:2px;right:3px;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9)">${d}</span>
@@ -1927,12 +1928,16 @@ function renderHeatmap(){
    When a user clicks a green cell in the heatmap, this popup shows
    which crew member has the earliest duty start time after the overlap
    window ends.
+   FIXED: Now receives event object and gets element from event.target
 ===================================================================== */
 /**
  * Show a popup with duty information for a clicked heatmap cell
- * @param {HTMLElement} element - The clicked DOM element containing date and window data
+ * @param {Event} event - The click event from the heatmap cell
  */
-function showDutyPopup(element) {
+function showDutyPopup(event) {
+  // Get the clicked element from the event
+  const element = event.target.closest('[data-date]');
+  
   // Validate input
   if (!element || !element.dataset) {
     console.warn('Invalid element passed to showDutyPopup');
