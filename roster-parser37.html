@@ -2092,7 +2092,7 @@ function showDutyPopup(element) {
     } else {
       const first = dutyInfo[0];
       const timeStr = formatTime(first.startTime);
-      html += `<div class="leaves-first">🚶 <strong>${first.name}</strong> leaves at <strong>${timeStr}</strong></div>`;
+      html += `<div class="leaves-first">🚶 <strong>${first.name}</strong> working at <strong>${timeStr}</strong></div>`;
 
       if (dutyInfo.length > 1) {
         const others = dutyInfo.slice(1).map(c =>
