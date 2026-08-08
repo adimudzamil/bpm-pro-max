@@ -223,9 +223,79 @@
     text-align: center;
   }
 
+  /* ===== DEBUG CONSOLE ===== */
+  #debugConsole {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--panel);
+    border-top: 2px solid var(--accent);
+    z-index: 9999;
+    max-height: 200px;
+    overflow: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 8px 12px;
+    color: var(--text);
+    display: none;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+  }
+
+  #debugConsole::-webkit-scrollbar {
+    width: 4px;
+  }
+  #debugConsole::-webkit-scrollbar-track {
+    background: var(--panel);
+  }
+  #debugConsole::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 4px;
+  }
+
+  .debug-entry {
+    padding: 1px 0;
+    border-bottom: 1px solid rgba(42,46,51,0.3);
+  }
+  .debug-entry .timestamp {
+    color: var(--dim);
+    font-size: 9px;
+    margin-right: 8px;
+  }
+  .debug-entry .ok {
+    color: var(--ok);
+  }
+  .debug-entry .err {
+    color: var(--err);
+  }
+  .debug-entry .warn {
+    color: var(--warn);
+  }
+  .debug-entry .info {
+    color: var(--accent);
+  }
+
+  #debugToggleBtn {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background: var(--accent);
+    color: #0b0c0e;
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 10000;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+    font-weight: 700;
+    display: none;
+  }
+
   @media print{
     body{background:#fff;color:#000}
-    header, #drop, #status, #log, footer, .btnRow, section.card h2 .btns, #saveCard, #savedListCard, #overlapCard{display:none !important}
+    header, #drop, #status, #log, footer, .btnRow, section.card h2 .btns, #saveCard, #savedListCard, #overlapCard, #debugConsole, #debugToggleBtn{display:none !important}
     #resultsWrap{width:auto !important;transform:scale(var(--print-scale,1)) !important;transform-origin:top left !important}
     #outCard{width:fit-content;max-width:none}
     section.card{border:1px solid #999;box-shadow:none;background:#fff;margin-top:5px;break-inside:avoid}
@@ -371,6 +441,21 @@
   </div>
 </div>
 
+<!-- ===== DEBUG CONSOLE ===== -->
+<div id="debugConsole">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;position:sticky;top:0;background:var(--panel);padding-bottom:4px;z-index:1">
+    <span style="color:var(--accent);font-weight:700">🐛 DEBUG CONSOLE</span>
+    <div>
+      <button onclick="clearDebugLog()" style="background:transparent;border:1px solid var(--line);color:var(--text);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;margin-right:6px">Clear</button>
+      <button onclick="toggleDebugConsole()" style="background:transparent;border:1px solid var(--line);color:var(--text);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer">✕</button>
+    </div>
+  </div>
+  <div id="debugLog" style="font-size:10.5px;line-height:1.6;color:var(--dim)"></div>
+</div>
+
+<!-- Debug toggle button (floating) -->
+<button onclick="toggleDebugConsole()" id="debugToggleBtn">🐛</button>
+
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
@@ -395,6 +480,66 @@ let LAST_PARSED_ROWS = null;
 let LAST_OVERLAP_PEOPLE = [];
 
 const HOME = "KUL";
+
+/* =====================================================================
+   DEBUG CONSOLE - Visible logging for debugging
+   Remove this entire section once debugging is complete
+===================================================================== */
+
+let debugLogCount = 0;
+
+/**
+ * Log a message to both the browser console and the visible debug console
+ * @param {string} msg - The message to log
+ * @param {string} type - 'ok', 'err', 'warn', or 'info'
+ */
+function debugLog(msg, type) {
+  // Log to browser console
+  const consoleMethod = type === 'err' ? 'error' : (type === 'warn' ? 'warn' : 'log');
+  console[consoleMethod]('[DEBUG] ' + msg);
+  
+  // Log to visible console
+  debugLogCount++;
+  const timestamp = new Date().toLocaleTimeString();
+  const entry = document.createElement('div');
+  entry.className = 'debug-entry';
+  entry.innerHTML = `<span class="timestamp">[${timestamp}]</span><span class="${type || 'info'}">${msg}</span>`;
+  const logEl = document.getElementById('debugLog');
+  if (logEl) {
+    logEl.appendChild(entry);
+    const consoleEl = document.getElementById('debugConsole');
+    if (consoleEl) consoleEl.scrollTop = consoleEl.scrollHeight;
+  }
+}
+
+function clearDebugLog() {
+  const logEl = document.getElementById('debugLog');
+  if (logEl) logEl.innerHTML = '';
+  debugLogCount = 0;
+}
+
+function toggleDebugConsole() {
+  const consoleEl = document.getElementById('debugConsole');
+  const btn = document.getElementById('debugToggleBtn');
+  if (!consoleEl || !btn) return;
+  if (consoleEl.style.display === 'block') {
+    consoleEl.style.display = 'none';
+    btn.textContent = '🐛';
+  } else {
+    consoleEl.style.display = 'block';
+    btn.textContent = '✕';
+    debugLog('Debug console opened', 'info');
+  }
+}
+
+// Show the debug toggle button
+document.addEventListener('DOMContentLoaded', function() {
+  const btn = document.getElementById('debugToggleBtn');
+  if (btn) {
+    btn.style.display = 'block';
+    debugLog('Debug console ready - click 🐛 to open', 'ok');
+  }
+});
 
 /* =====================================================================
    LOGGING
@@ -1267,6 +1412,11 @@ function sumHrs(list){
   const h=Math.floor(total/60), m=total%60;
   return h+':'+String(m).padStart(2,'0');
 }
+function formatTime(minutes) {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
 
 function render(){
   const tbody = document.getElementById('outBody');
@@ -1898,7 +2048,7 @@ function renderHeatmap(){
       /* =====================================================================
          NEW: Add click handler to cells that have overlap (green bars)
          On click, show popup with duty information for that day
-         FIXED: Using event instead of this to correctly pass the element
+         FIXED: Using this to correctly pass the element
       ===================================================================== */
       if (hasOverlap) {
         // Use encodeURIComponent to safely store JSON in data attribute
@@ -1906,7 +2056,7 @@ function renderHeatmap(){
         html += `<div style="aspect-ratio:1;border-radius:5px;background:${bg};position:relative;border:1px solid var(--line);cursor:pointer;transition:transform 0.15s"
                     data-date="${key}"
                     data-windows="${windowsEncoded}"
-                    onclick="showDutyPopup(event)"
+                    onclick="showDutyPopup(this)"
                     onmouseenter="this.style.transform='scale(1.05)'"
                     onmouseleave="this.style.transform='scale(1)'">
                  <span style="position:absolute;top:2px;right:3px;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9)">${d}</span>
@@ -1928,50 +2078,73 @@ function renderHeatmap(){
    When a user clicks a green cell in the heatmap, this popup shows
    which crew member has the earliest duty start time after the overlap
    window ends.
-   FIXED: Now receives event object and gets element from event.target
+   FIXED: Using this instead of event - this correctly refers to the element
 ===================================================================== */
 /**
  * Show a popup with duty information for a clicked heatmap cell
- * @param {Event} event - The click event from the heatmap cell
+ * @param {HTMLElement} element - The clicked DOM element
  */
-function showDutyPopup(event) {
-  // Get the clicked element from the event
-  const element = event.target.closest('[data-date]');
+function showDutyPopup(element) {
+  debugLog('🔍 showDutyPopup() called', 'info');
   
-  // Validate input
-  if (!element || !element.dataset) {
-    console.warn('Invalid element passed to showDutyPopup');
+  // Validate input - element is the clicked DOM element
+  if (!element) {
+    debugLog('❌ element is null or undefined', 'err');
+    return;
+  }
+  
+  debugLog('  element.tagName: ' + element.tagName, 'info');
+  debugLog('  element.className: ' + element.className, 'info');
+  
+  if (!element.dataset) {
+    debugLog('❌ element has no dataset property', 'err');
     return;
   }
 
-  // Get and decode data from element
+  // Get data from element
   const dateKey = element.dataset.date;
+  debugLog('  dateKey: ' + dateKey, 'info');
+  
   let overlapWindows;
   try {
     const windowsEncoded = element.dataset.windows;
-    if (!windowsEncoded) return;
+    debugLog('  windowsEncoded: ' + windowsEncoded, 'info');
+    if (!windowsEncoded) {
+      debugLog('❌ windowsEncoded is empty', 'err');
+      return;
+    }
     overlapWindows = JSON.parse(decodeURIComponent(windowsEncoded));
+    debugLog('  overlapWindows: ' + JSON.stringify(overlapWindows), 'info');
   } catch (e) {
-    console.warn('Failed to parse overlap windows:', e);
+    debugLog('❌ Failed to parse overlap windows: ' + e.message, 'err');
     return;
   }
 
   // Validate data
   if (!LAST_OVERLAP_PEOPLE || !LAST_OVERLAP_PEOPLE.length) {
-    console.warn('No crew data available for popup');
+    debugLog('❌ LAST_OVERLAP_PEOPLE is empty or undefined', 'err');
+    debugLog('  LAST_OVERLAP_PEOPLE: ' + JSON.stringify(LAST_OVERLAP_PEOPLE), 'err');
     return;
+  }
+  
+  debugLog('  LAST_OVERLAP_PEOPLE has ' + LAST_OVERLAP_PEOPLE.length + ' crew members', 'ok');
+  for (const crew of LAST_OVERLAP_PEOPLE) {
+    debugLog('    👤 ' + crew.name + ' (' + crew.tz + ') - ' + (crew.days ? crew.days.length + ' days' : 'no days'), 'info');
   }
 
   if (!overlapWindows || !overlapWindows.length) {
+    debugLog('❌ overlapWindows is empty', 'err');
     return;
   }
 
   // Validate date
   const dateObj = new Date(dateKey + 'T00:00:00');
   if (isNaN(dateObj.getTime())) {
-    console.warn('Invalid date key:', dateKey);
+    debugLog('❌ Invalid date key: ' + dateKey, 'err');
     return;
   }
+  
+  debugLog('✅ All validations passed! Building popup...', 'ok');
 
   // Build popup
   const dateDisplay = fmtDate(dateObj) + ' (' + DOW[dateObj.getDay()] + ')';
@@ -2055,10 +2228,12 @@ function showDutyPopup(event) {
       }
     }
 
-    html += `</div>`;
+    html += `</div>`;  // Close overlap-window
   }
 
+  // Close popup-body and popup-content
   html += `</div></div>`;
+
   overlay.innerHTML = html;
 
   // Close handlers
@@ -2067,12 +2242,14 @@ function showDutyPopup(event) {
     closeBtn.onclick = function(e) {
       e.stopPropagation();
       overlay.remove();
+      debugLog('Popup closed by close button', 'info');
     };
   }
 
   overlay.onclick = function(e) {
     if (e.target === overlay) {
       overlay.remove();
+      debugLog('Popup closed by clicking overlay', 'info');
     }
   };
 
@@ -2081,6 +2258,7 @@ function showDutyPopup(event) {
     if (e.key === 'Escape') {
       overlay.remove();
       document.removeEventListener('keydown', keyHandler);
+      debugLog('Popup closed by ESC key', 'info');
     }
   };
   document.addEventListener('keydown', keyHandler);
@@ -2095,6 +2273,7 @@ function showDutyPopup(event) {
   observer.observe(document.body, { childList: true });
 
   document.body.appendChild(overlay);
+  debugLog('✅ Popup built and displayed', 'ok');
 }
 
 /* =====================================================================
