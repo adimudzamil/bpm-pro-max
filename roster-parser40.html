@@ -6,7 +6,6 @@
 <title>Roster Parser · 2100551</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<!-- 👥 FAVICON -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👥</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -547,7 +546,7 @@ function log(msg, cls){
 function clearLog(){ document.getElementById('log').innerHTML=''; document.getElementById('log').style.display='none'; }
 
 /* =====================================================================
-   SDC CODE COLLECTION - CONFIDENCE SCORING APPROACH (Approach 4)
+   SDC CODE COLLECTION - FIXED: Simple day-off filtering (Approach 1)
 ===================================================================== */
 
 /**
@@ -584,50 +583,32 @@ function isSDCToken(token, toks, idx) {
 }
 
 /**
- * Calculate confidence score for assigning an SDC token to a row
+ * Find the nearest non-day-off row by vertical position (top)
+ * This is the key fix: we exclude day-offs entirely.
  */
-function calculateConfidenceScore(row, tokenTop, token, allTokens) {
-  if (!row || row._top === undefined) return -Infinity;
+function findNearestNonDayOffRow(rows, targetTop) {
+  let nearestRow = null;
+  let minDist = Infinity;
   
-  let score = 0;
-  
-  // 1. Distance score: closer = higher (normalized by 10px units)
-  const distance = Math.abs(row._top - tokenTop);
-  const distanceScore = 1 / (1 + distance / 10);
-  score += distanceScore * 0.40; // 40% weight
-  
-  // 2. Date score: rows with a date get a bonus
-  if (row.ownDate !== null) {
-    score += 0.30; // 30% weight
+  for (const row of rows) {
+    // Only consider rows that have a date, a _top, and are NOT day-offs
+    if (row._top !== undefined && row.ownDate !== null && !isOffCode(row.item)) {
+      const dist = Math.abs(row._top - targetTop);
+      if (dist < minDist) {
+        minDist = dist;
+        nearestRow = row;
+      }
+    }
   }
   
-  // 3. Vertical score: token below row is more likely
-  if (tokenTop > row._top) {
-    score += 0.20; // 20% weight
-  }
-  
-  // 4. Keyword score: if row's item relates to SDC (weak signal)
-  if (row.item && isSDCKeyword(row.item)) {
-    score += 0.10; // 10% weight
-  }
-  
-  // 5. Day-off penalty: strongly penalize day-off rows (D, DO, DO1, DO2, etc.)
-  if (row.item && isOffCode(row.item)) {
-    score -= 1.0; // Heavy penalty
-  }
-  
-  // Also penalize rows with no date (should not happen but safety)
-  if (row.ownDate === null) {
-    score -= 0.5;
-  }
-  
-  return score;
+  // Only attach if within a reasonable distance (100px)
+  return minDist < 100 ? nearestRow : null;
 }
 
 /**
- * Clean up and format SDC string (with sorting and deduplication)
+ * Clean up and format SDC string (with sorting, deduplication, and pairing-code filtering)
  */
-function cleanupSDCString(sdc) {
+function cleanupSDCString(sdc, itemCode) {
   if (!sdc) return sdc;
   
   // Split into tokens
@@ -636,7 +617,12 @@ function cleanupSDCString(sdc) {
   // Remove duplicates
   tokens = [...new Set(tokens)];
   
-  // Filter out common pairing codes (tokens that are actually the row's item)
+  // Filter out pairing codes (tokens that exactly match the row's item)
+  if (itemCode) {
+    tokens = tokens.filter(t => t !== itemCode);
+  }
+  
+  // Filter out known pairing codes (additional safety)
   const excludeList = ['ICCRCNT1', 'AVSECRP3', '570SFAW3', '570SEPW2', '17SMSC1', 'S4WBA', 'S3NBA'];
   tokens = tokens.filter(t => !excludeList.includes(t));
   
@@ -655,7 +641,6 @@ function cleanupSDCString(sdc) {
   text.sort((a, b) => {
     const aIdx = priority.findIndex(p => a.includes(p));
     const bIdx = priority.findIndex(p => b.includes(p));
-    // If both found, use priority; otherwise alphabetical
     if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
     if (aIdx !== -1) return -1;
     if (bIdx !== -1) return 1;
@@ -1095,7 +1080,7 @@ function looksLikeTableReport(words){
 }
 
 /* =====================================================================
-   3) PDF "ROSTER REPORT" TABLE PARSER - VERSION 7 (Confidence Scoring)
+   3) PDF "ROSTER REPORT" TABLE PARSER - FIXED with day-off filtering
 ===================================================================== */
 function parseTablePDFRows(pages){
   const rows = [];
@@ -1140,7 +1125,6 @@ function parseTablePDFRows(pages){
       groups[k].push(w);
     }
 
-    // Store rows with their top position for confidence scoring
     const parsedRows = [];
     
     for(const k of order){
@@ -1199,7 +1183,6 @@ function parseTablePDFRows(pages){
       
       let sdc = '', ac = '', hotel = '';
       
-      // Basic parsing for the main row (SDC will be collected later via confidence scoring)
       if (isGround) {
         sdc = ''; // Will be filled by post-processing
       } else if (leftover.length) {
@@ -1225,15 +1208,14 @@ function parseTablePDFRows(pages){
         depStn, depTime, arrStn, arrTime,
         debriefTime, flyHrs, dutyHrs,
         sdc, ac, hotel,
-        _top: k // Store the cluster top for confidence scoring
+        _top: k
       };
       
       parsedRows.push(rowObj);
     }
     
     // ================================================================
-    // POST-PROCESSING: Confidence Scoring for SDC codes
-    // This assigns each SDC token to the row with the highest score
+    // POST-PROCESSING: Simple day-off filtering (Approach 1)
     // ================================================================
     
     // 1. Collect all SDC tokens from all clusters
@@ -1256,41 +1238,23 @@ function parseTablePDFRows(pages){
       }
     }
     
-    // 2. For each SDC token, find the best row using confidence scoring
+    // 2. Assign each SDC token to the nearest non-day-off row
     for (const sdcItem of allSDCTokens) {
-      let bestRow = null;
-      let bestScore = -Infinity;
-      
-      for (const row of parsedRows) {
-        const score = calculateConfidenceScore(
-          row,
-          sdcItem.top,
-          sdcItem.token,
-          sdcItem.allTokens
-        );
-        
-        if (score > bestScore) {
-          bestScore = score;
-          bestRow = row;
-        }
-      }
-      
-      // Only assign if score is above a minimum threshold
-      if (bestRow && bestScore > 0) {
-        if (bestRow.sdc) {
-          bestRow.sdc += ' ' + sdcItem.token;
+      const targetRow = findNearestNonDayOffRow(parsedRows, sdcItem.top);
+      if (targetRow) {
+        if (targetRow.sdc) {
+          targetRow.sdc += ' ' + sdcItem.token;
         } else {
-          bestRow.sdc = sdcItem.token;
+          targetRow.sdc = sdcItem.token;
         }
       }
     }
     
-    // 3. Clean up all SDC strings
+    // 3. Clean up all SDC strings, passing the row's item for pairing-code filtering
     for (const row of parsedRows) {
       if (row.sdc) {
-        row.sdc = cleanupSDCString(row.sdc);
+        row.sdc = cleanupSDCString(row.sdc, row.item);
       }
-      // Remove the _top property before pushing to final rows
       const { _top, ...cleanRow } = row;
       rows.push(cleanRow);
     }
