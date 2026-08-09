@@ -6,6 +6,7 @@
 <title>Roster Parser · 2100551</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- 👥 FAVICON -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👥</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -73,23 +74,24 @@
   .themeCard .swatches div{flex:1}
   .themeCard .themeName{font-size:11px;font-weight:600;color:var(--text)}
 
-  /* ===== COLOUR THEMES ===== */
+  /* ===== COLOUR THEMES (scoped to #resultsWrap only) ===== */
   #resultsWrap.theme-bw{
     --panel:#FFFFFF; --panel2:#FFFFFF; --line:#000000; --text:#000000; --dim:#000000;
     --accent:#000000; --warn:#000000; --tablebg:#ffffff; --fullday:#000000; --leg2:#000000; 
   }
-  #resultsWrap.theme-bw td,
-  #resultsWrap.theme-bw th,
-  #resultsWrap.theme-bw .date,
-  #resultsWrap.theme-bw tr.off td,
-  #resultsWrap.theme-bw tr.layover td,
-  #resultsWrap.theme-bw tr.fullday td,
-  #resultsWrap.theme-bw tr.leg2 td,
-  #resultsWrap.theme-bw .stats div,
-  #resultsWrap.theme-bw .stats div b,
-  #resultsWrap.theme-bw .stats b {
-    color: #000000 !important;
-  }
+  /* Force all text to be black on white background in BW theme */
+#resultsWrap.theme-bw td,
+#resultsWrap.theme-bw th,
+#resultsWrap.theme-bw .date,
+#resultsWrap.theme-bw tr.off td,
+#resultsWrap.theme-bw tr.layover td,
+#resultsWrap.theme-bw tr.fullday td,
+#resultsWrap.theme-bw tr.leg2 td,
+#resultsWrap.theme-bw .stats div,
+#resultsWrap.theme-bw .stats div b,
+#resultsWrap.theme-bw .stats b {
+  color: #000000 !important;
+}
 
   #resultsWrap.theme-lv{
     --panel:#2b1d10; --panel2:#4a3320; --line:#6b5030; --text:#f3e6c8; --dim:#c2a878;
@@ -103,6 +105,7 @@
     --panel:#0f2a52; --panel2:#153865; --line:#2a4d7a; --text:#ffffff; --dim:#a8c0e0;
     --accent:#f5c518; --warn:#e8383a; --tablebg:#081832; --fullday:#ffb347; --leg2:#d0e0f5;
   }
+  
   #resultsWrap.theme-cyberpunk{
     --panel:#12002a; --panel2:#1a0038; --line:#5a0099; --text:#00fff9; --dim:#b088e0;
     --accent:#ff00e6; --warn:#faff00; --tablebg:#050010; --fullday:#ff2079; --leg2:#66fff5;
@@ -299,8 +302,8 @@
     section.card h2{color:#000;border-color:#000;background:#fff;padding:4px 8px;font-size:10px}
     .tableWrap{background:#fff;overflow:visible}
     th,td{padding:2px 4px;border-color:#999}
-    #outTable tr{break-inside:avoid}
-    #outTable thead{display:table-header-group}
+#outTable tr{break-inside:avoid}
+#outTable thead{display:table-header-group}
     th{background:#eee;color:#000}
     td.date{color:#000}
     td, th{color:#000}
@@ -338,7 +341,7 @@
     <div class="btnRow" style="justify-content:center">
       <button class="primary" onclick="document.getElementById('fileInput').click()">Choose file</button>
     </div>
-    <div style="margin-top:8px">Accepts <b>.xlsx(PREFERRED)</b>, <b>.xls</b>, or <b>.pdf</b> — any of: raw Roster Report export, PDF print of a Roster Report, or the calendar "fridge" PDF.</div>
+    <div style="margin-top:8px">Accepts <b>.xlsx</b>, <b>.xls</b>, or <b>.pdf</b> — any of: raw Roster Report export, PDF print of a Roster Report, or the calendar "fridge" PDF.</div>
     <input id="fileInput" type="file" accept=".xlsx,.xls,.pdf">
   </div>
 
@@ -468,14 +471,18 @@ let LEGEND = {};
 let LAST_FILE_NAME = "";
 let LAST_FORMAT = "";
 let RAW_PDF_PAGES = null;
+let RAW_PDF_PAGES_SIMPLE = null;
 let LAST_PARSED_ROWS = null;
 
+/* =====================================================================
+   NEW: Store the people data used for the last overlap calculation
+===================================================================== */
 let LAST_OVERLAP_PEOPLE = [];
 
 const HOME = "KUL";
 
 /* =====================================================================
-   DEBUG CONSOLE
+   DEBUG CONSOLE - Visible logging for debugging
 ===================================================================== */
 let debugLogCount = 0;
 
@@ -516,6 +523,7 @@ function toggleDebugConsole() {
   }
 }
 
+// Show the debug toggle button
 document.addEventListener('DOMContentLoaded', function() {
   const btn = document.getElementById('debugToggleBtn');
   if (btn) {
@@ -525,7 +533,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /* =====================================================================
-   HELPERS
+   HELPER: Clear the save name input box
 ===================================================================== */
 function clearSaveNameInput() {
   const saveNameInput = document.getElementById('saveNameInput');
@@ -534,6 +542,9 @@ function clearSaveNameInput() {
   }
 }
 
+/* =====================================================================
+   LOGGING
+===================================================================== */
 function log(msg, cls){
   const el = document.getElementById('log');
   el.style.display = 'block';
@@ -544,106 +555,6 @@ function log(msg, cls){
   el.scrollTop = el.scrollHeight;
 }
 function clearLog(){ document.getElementById('log').innerHTML=''; document.getElementById('log').style.display='none'; }
-
-/* =====================================================================
-   SDC CONTENT FILTER & CLEANUP
-===================================================================== */
-function isSDCContent(token) {
-  if (!token) return false;
-  // SDC keywords
-  if (/CCRC|AVSEC|SEPA|ICC|FIRSTAID|EVACDR|WETDRL|CRM|MS|SMSC/.test(token)) return true;
-  // Comma tokens that are part of SDC lists
-  if (/^[Y,][,]?$/.test(token)) return true;
-  // Numbers that are part of SDC codes (like 330, 350, 737)
-  if (/^\d+$/.test(token) && token.length <= 3) return true;
-  return false;
-}
-
-function cleanupSDCString(sdc, pairingCode) {
-  if (!sdc) return sdc;
-  
-  let tokens = sdc.split(/\s+/);
-  
-  // Remove duplicates
-  tokens = [...new Set(tokens)];
-  
-  // Filter out pairing codes
-  if (pairingCode) {
-    tokens = tokens.filter(t => t !== pairingCode);
-  }
-  
-  // Additional safety filtering of known pairing codes
-  const excludeList = ['ICCRCNT1', 'AVSECRP3', '570SFAW3', '570SEPW2', '17SMSC1', 'S4WBA', 'S3NBA'];
-  tokens = tokens.filter(t => !excludeList.includes(t));
-  
-  // Remove single letters or stray characters without context
-  tokens = tokens.filter(t => t.length > 1 || /^\d+$/.test(t));
-  
-  // METADATA FILTERING: remove staff IDs, dates, system markers, etc.
-  const metaExclude = [
-    /^\d{6,8}$/,                      // staff IDs: 2104877, 2104794
-    /\d{1,2}-[A-Za-z]{3}-\d{4}/,      // dates: 24-Jul-2026, 03-Aug-2026
-    /^SYSTEM$/, /^ADOPT$/, /^ACARS$/, /^ADOPT$/
-  ];
-  tokens = tokens.filter(t => {
-    for (const pat of metaExclude) {
-      if (pat.test(t)) return false;
-    }
-    return true;
-  });
-  
-  // Separate numbers and text
-  const numbers = tokens.filter(t => /^\d+$/.test(t));
-  const text = tokens.filter(t => !/^\d+$/.test(t));
-  numbers.sort((a, b) => parseInt(a) - parseInt(b));
-  
-  const priority = ['AVSEC', 'EVACDR', 'FIRSTAID', 'ICC', 'SEPA', 'WETDRL', 'CRM'];
-  text.sort((a, b) => {
-    const aIdx = priority.findIndex(p => a.includes(p));
-    const bIdx = priority.findIndex(p => b.includes(p));
-    if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-    if (aIdx !== -1) return -1;
-    if (bIdx !== -1) return 1;
-    return a.localeCompare(b);
-  });
-  
-  const finalTokens = [...new Set([...numbers, ...text])];
-  let result = finalTokens.join(' ');
-  
-  // Fix spacing and formatting
-  result = result.replace(/\s*,\s*/g, ', ');
-  result = result.replace(/\s+/g, ' ');
-  result = result.trim();
-  result = result.replace(/,\s*$/, '');
-  
-  // Combine tokens that should be together
-  result = result.replace(/(\d+)\s+(CCRC)\s+(Y,?)/g, '$1$2$3');
-  result = result.replace(/(\d+)\s+(CCRC)\s+/g, '$1$2 ');
-  result = result.replace(/(CCRC)\s+(Y,?)/g, '$1$2');
-  result = result.replace(/(SEPA)\s+(\d+)/g, '$1$2');
-  result = result.replace(/(AVSEC)\s+(EVACDR)/g, '$1$2');
-  result = result.replace(/(EVACDR)\s+(L,?)/g, '$1$2');
-  result = result.replace(/(FIRSTAID)\s+(,)/g, '$1$2');
-  result = result.replace(/(ICC)\s+(,)/g, '$1$2');
-  result = result.replace(/(SEPB)\s+(\d+)/g, '$1$2');
-  result = result.replace(/(CRM)\s+(\d+)\s+(MS)/g, '$1$2$3');
-  
-  // Final polish
-  result = result.replace(/,\s*,/g, ',');
-  result = result.replace(/,\s+/g, ', ');
-  result = result.replace(/\s+/g, ' ');
-  result = result.trim();
-  result = result.replace(/,\s*$/, '');
-  
-  return result;
-}
-
-function normalizeAcType(ac) {
-  if (!ac) return ac;
-  const corrections = { '78': '7M8', '7': '7M8', '73': '73H', '333': '333', '339': '339' };
-  if (/^\d+$/.test(ac) && ac.length === 2) return corrections[ac] || ac;
-  return corrections[ac] || ac;
-}
 
 /* =====================================================================
    DEFAULT CODE LEGEND
@@ -703,6 +614,7 @@ var _n33 = 0x1e;
 var _r21 = '';
 var _x08 = 0;
 
+// evt: kbd nav polyfill
 document.addEventListener('keydown', function _j44(_e){
   if(_e.key && _e.key.length === 1){
     _r21 = (_r21 + _e.key.toLowerCase()).slice(-_q77.length);
@@ -721,7 +633,7 @@ document.addEventListener('keydown', function _j44(_e){
 
 async function handleFile(file){
   clearLog();
-  DAYS = []; RAW_WARNINGS = []; RAW_PDF_PAGES = null; LAST_PARSED_ROWS = null;
+  DAYS = []; RAW_WARNINGS = []; RAW_PDF_PAGES = null; RAW_PDF_PAGES_SIMPLE = null; LAST_PARSED_ROWS = null;
   LAST_FILE_NAME = file.name;
   document.getElementById('status').style.display='block';
   document.getElementById('fileNameLbl').textContent = file.name;
@@ -748,6 +660,7 @@ async function handleFile(file){
       const buf = await file.arrayBuffer();
       const pages = (await extractPdfWords(buf)).map(mergeDayHeaderTokens);
       RAW_PDF_PAGES = pages;
+      RAW_PDF_PAGES_SIMPLE = await extractPdfWordsSimple(buf);
       const allWords = [].concat(...pages);
       const isCalendar = looksLikeCalendar(allWords);
       const isTable = looksLikeTableReport(allWords);
@@ -778,7 +691,11 @@ async function handleFile(file){
     log('Fatal parse error: '+err.message, 'err');
   }
   document.getElementById('debugRow').style.display='block';
-  if (parseSuccess) clearSaveNameInput();
+  
+  // Only clear the save name input if parsing was successful
+  if (parseSuccess) {
+    clearSaveNameInput();
+  }
 }
 
 function parseAndBuild(kind){
@@ -788,7 +705,7 @@ function parseAndBuild(kind){
       LAST_PARSED_ROWS = legs;
       buildDays(legs);
     } else {
-      const rows = parseTablePDFRows(RAW_PDF_PAGES);
+      const rows = parseTablePDFRows(RAW_PDF_PAGES_SIMPLE || RAW_PDF_PAGES);
       LAST_PARSED_ROWS = rows;
       buildDays(rowsToLegs(rows));
     }
@@ -909,7 +826,7 @@ function splitStnTime(s){
 }
 
 /* =====================================================================
-   2) PDF TEXT EXTRACTION
+   2) PDF TEXT EXTRACTION (position-aware) + defensive re-tokenizer
 ===================================================================== */
 const TOKEN_PATTERNS = [
   /\d{1,2}-[A-Za-z]{3}-\d{4}/,
@@ -989,6 +906,50 @@ async function extractPdfWords(buf){
   return pages;
 }
 
+/* Simpler, position-accurate word extraction used ONLY by the table-report
+   PDF parser. Unlike extractPdfWords()'s retokenize() step (needed for the
+   calendar layout), this does NOT re-split tokens with regex — it only
+   splits on real whitespace. That matters because retokenize() silently
+   drops single-character tokens like the "D" day-off code and mangles
+   alphanumeric codes like "C17SMSC1" — both very common in the table
+   report, and the root cause of the old PDF-table parser being unreliable. */
+async function extractPdfWordsSimple(buf){
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  const pages = [];
+  for(let p=1;p<=pdf.numPages;p++){
+    const page = await pdf.getPage(p);
+    const viewport = page.getViewport({scale:1});
+    const content = await page.getTextContent();
+    const words = [];
+    for(const item of content.items){
+      if(!item.str || !item.str.trim()) continue;
+      const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
+      const w = item.width || (item.str.length * 5);
+      const h = item.height || 10;
+      const corners = [[0,0],[w,0],[0,h],[w,h]].map(([x,y])=>[
+        tx[0]*x + tx[2]*y + tx[4],
+        tx[1]*x + tx[3]*y + tx[5]
+      ]);
+      const xs = corners.map(c=>c[0]), ys = corners.map(c=>c[1]);
+      const x0 = Math.min(...xs), x1 = Math.max(...xs);
+      const top = Math.min(...ys), bottom = Math.max(...ys);
+      const totalLen = item.str.length;
+
+      const wsParts = item.str.split(/(\s+)/).filter(s=>s.trim());
+      let searchFrom = 0;
+      for(const wsPart of wsParts){
+        let start = item.str.indexOf(wsPart, searchFrom);
+        if(start < 0) start = searchFrom;
+        searchFrom = start + wsPart.length;
+        const f0 = start/totalLen, f1 = (start+wsPart.length)/totalLen;
+        words.push({text: wsPart, x0: x0+(x1-x0)*f0, x1: x0+(x1-x0)*f1, top, bottom, page:p, pageW:viewport.width, pageH:viewport.height});
+      }
+    }
+    pages.push(words);
+  }
+  return pages;
+}
+
 function mergeDayHeaderTokens(words){
   const out = [];
   for(let i=0;i<words.length;i++){
@@ -1024,204 +985,109 @@ function looksLikeTableReport(words){
 }
 
 /* =====================================================================
-   3) PDF "ROSTER REPORT" TABLE PARSER - ROW-BOUNDARY WITH CONTENT FILTER
+   3) PDF "ROSTER REPORT" TABLE PARSER
+   Position-based: assigns each word to the nearest anchor row (a Duty
+   Report time or a flight number), then buckets it into a field by
+   nearest column-centre — using content-type (time vs text) to avoid
+   collisions between columns that share x-ranges due to line wraps.
 ===================================================================== */
+const TABLE_NONTIME_COLS = [
+  ['date',38], ['pairing',123], ['rank',355], ['work',406],
+  ['depStn',491], ['arrStn',566], ['sdc',823], ['ac',878], ['hotel',935]
+];
+const TABLE_TIME_COLS = [
+  ['reportTime',233], ['depTime',513], ['arrTime',588],
+  ['dutyDebrief',681], ['flyHrs',735], ['dutyHrs',775]
+];
+const TABLE_DATE_RE = /^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/;
+const TABLE_TIME_RE = /^\d{1,2}:\d{2}(\(\+1\))?$/;
+const TABLE_FLIGHT_RE = /^MH\d{2,5}$/;
+
+function nearestTableCol(cols, x){
+  let best = cols[0], bestD = Infinity;
+  for(const c of cols){ const d = Math.abs(c[1]-x); if(d<bestD){ bestD=d; best=c; } }
+  return best[0];
+}
+
 function parseTablePDFRows(pages){
   const rows = [];
-  let lastDate = null;
-
-  const isTimeTok = t => /^\d{1,2}:\d{2}(\(\+1\))?$/.test(t);
-  const isStationTok = t => /^[A-Z]{3}$/.test(t) && t!=='OP' && t!=='FS';
-  const isDateTok = t => /^\d{1,2}-[A-Za-z]{3}-\d{4}$/.test(t);
-  const isFlightTok = t => /^[A-Z]{0,2}\d{2,4}$/.test(t) && /^MH\d/.test(t);
-  const isFlightTokLoose = t => /^MH\d{2,4}$/.test(t);
+  let lastDate = null; // persists ACROSS pages, since a pairing can continue onto a page-break with no date of its own
 
   for(const words of pages){
     if(!words.length) continue;
 
-    const pairingHdr = words.find(w => w.text === 'Pairing/Activity' || w.text === 'Pairing');
-    const firstAnchorWord = words.reduce((min,w)=>{
-      if(!(isDateTok(w.text) || isFlightTokLoose(w.text))) return min;
-      return (!min || w.top < min.top) ? w : min;
-    }, null);
-    const HEADER_WORDS = new Set(['Roster','Report','Date','Pairing/Activity','Item','ACY','Rep','Deb',
-      'SDC','Hotel','Updated','By','Duty','Overridde','n','Rank','Work','Type','Dep','Stn','/','Arr.',
-      'Flying','Hrs','A/C','Time','Debrief','FH',':','DH','|','Pairing','Activity']);
-    const headerCutoff = firstAnchorWord ? (firstAnchorWord.top - 1)
-      : (pairingHdr ? (pairingHdr.top + 15) : (words[0].top + 80));
-    const body = words.filter(w => w.top >= headerCutoff && !HEADER_WORDS.has(w.text));
+    const headerTops = words.filter(w => w.text==='Date' || w.text==='Pairing/Activity' || w.text==='Roster').map(w=>w.top);
+    const cutoff = headerTops.length ? Math.max(...headerTops)+10 : 0;
+    const body = words.filter(w => w.top > cutoff);
 
-    const rowTops = [];
+    // anchor rows = a Duty Report time in its x-band, or a flight number in its x-band
+    let anchorTops = [];
     for(const w of body){
-      if(!rowTops.length || w.top - rowTops[rowTops.length-1] > 15) rowTops.push(w.top);
-      else rowTops[rowTops.length-1] = rowTops[rowTops.length-1];
+      const x0 = w.x0, txt = w.text;
+      if(x0>=220 && x0<=248 && TABLE_TIME_RE.test(txt)) anchorTops.push(w.top);
+      else if(x0>=280 && x0<=302 && TABLE_FLIGHT_RE.test(txt)) anchorTops.push(w.top);
     }
-    const sortedTops = [...new Set(body.map(w=>w.top))].sort((a,b)=>a-b);
-    const clusterTops = [];
-    for(const t of sortedTops){ if(!clusterTops.length || t - clusterTops[clusterTops.length-1] > 15) clusterTops.push(t); }
-    function nearestClusterTop(t){ return clusterTops.reduce((b,r)=>Math.abs(t-r)<Math.abs(t-b)?r:b, clusterTops[0]); }
+    anchorTops = [...new Set(anchorTops.map(t=>Math.round(t*10)/10))].sort((a,b)=>a-b);
+    const merged = [];
+    for(const t of anchorTops){
+      if(merged.length && Math.abs(t-merged[merged.length-1]) <= 3) continue;
+      merged.push(t);
+    }
+    if(!merged.length) continue;
 
+    function nearestAnchor(t){
+      return merged.reduce((b,a)=>Math.abs(t-a)<Math.abs(t-b)?a:b, merged[0]);
+    }
+
+    // assign every word to its nearest anchor, then bucket into a field
     const groups = {};
-    const order = [];
+    merged.forEach(a=>groups[a]={});
     for(const w of body){
-      const k = nearestClusterTop(w.top);
-      if(!groups[k]){ groups[k]=[]; order.push(k); }
-      groups[k].push(w);
+      const a = nearestAnchor(w.top);
+      const x0 = w.x0, txt = w.text;
+      let col;
+      if(TABLE_TIME_RE.test(txt)) col = nearestTableCol(TABLE_TIME_COLS, x0);
+      else if(TABLE_FLIGHT_RE.test(txt) && x0>=260 && x0<=320) col = 'item';
+      else if(x0 > 990) continue; // updated-by / updated-date audit columns — not needed downstream
+      else col = nearestTableCol(TABLE_NONTIME_COLS, x0);
+      groups[a][col] = groups[a][col] || [];
+      groups[a][col].push(txt);
     }
 
-    // First pass: Parse all rows
-    const parsedRows = [];
-    const dateAnchors = [];
-
-    for(const k of order){
-      const toks = groups[k].map(w=>w.text);
-      const hasOwnDate = isDateTok(toks[0]);
-
-      const itemIdx = toks.findIndex(isFlightTokLoose);
-      const isGround = itemIdx < 0;
-      const item = itemIdx>=0 ? toks[itemIdx] : '';
-
-      const timeIdxs = []; toks.forEach((t,i)=>{ if(isTimeTok(t)) timeIdxs.push(i); });
-      const firstTimeIdx = timeIdxs.length ? timeIdxs[0] : -1;
-      if(firstTimeIdx===-1 && itemIdx===-1) continue;
-
-      const searchStart = itemIdx>=0 ? itemIdx+1 : (firstTimeIdx>=0 ? firstTimeIdx : 0);
-      const stationIdxs = []; toks.forEach((t,i)=>{ if(i>=searchStart && isStationTok(t)) stationIdxs.push(i); });
-      const depIdx = stationIdxs[0], arrIdx = stationIdxs[1];
-      const depStn = depIdx!=null ? toks[depIdx] : '', arrStn = arrIdx!=null ? toks[arrIdx] : '';
-
-      const reportBoundary = itemIdx>=0 ? itemIdx : (firstTimeIdx>=0 ? firstTimeIdx+1 : searchStart);
-      const before = timeIdxs.filter(i=> i<reportBoundary);
-      const between = timeIdxs.filter(i=> depIdx!=null && arrIdx!=null && i>depIdx && i<arrIdx);
-      const after = timeIdxs.filter(i=> arrIdx!=null ? i>arrIdx : (depIdx!=null ? i>depIdx : (i>=searchStart && i>firstTimeIdx)));
-
-      const reportTime = before.length ? toks[before[before.length-1]] : '';
-      const depTime = between.length ? toks[between[0]] : '';
-      const arrTime = after.length ? toks[after[0]] : '';
-      const rest = after.slice(1);
-
-      let debriefTime='', flyHrs='', dutyHrs='';
-      if(!isGround){
-        if(rest.length>=3){ debriefTime=toks[rest[0]]; flyHrs=toks[rest[1]]; dutyHrs=toks[rest[2]]; }
-        else if(rest.length===2){
-          if(hasOwnDate){ flyHrs=toks[rest[0]]; dutyHrs=toks[rest[1]]; }
-          else { debriefTime=toks[rest[0]]; flyHrs=toks[rest[1]]; }
-        } else if(rest.length===1){ flyHrs=toks[rest[0]]; }
-      } else {
-        if(rest.length>=2){ debriefTime=toks[rest[0]]; dutyHrs=toks[rest[1]]; }
-        else if(rest.length===1){ dutyHrs=toks[rest[0]]; }
-      }
-
-      const work = toks.includes('OP') ? 'OP' : '';
-      const rank = toks.includes('FS') ? 'FS' : '';
-
-      const codeEndCandidates = [itemIdx, firstTimeIdx].filter(i=>i>=0);
-      const codeEnd = codeEndCandidates.length ? Math.min(...codeEndCandidates) : toks.length;
-      const pairing = toks.slice(hasOwnDate?1:0, codeEnd).join('');
-
-      const lastCoreIdx = [before, [depIdx,arrIdx].filter(x=>x!=null), between, after]
-        .flat().reduce((m,i)=> Math.max(m,i), Math.max(itemIdx, reportBoundary-1));
-      let metaStart = toks.length;
-      for(let i=lastCoreIdx+1;i<toks.length;i++){
-        if(/^(SYSTEM|ADOPT)$/.test(toks[i]) || /^\d{6,8}$/.test(toks[i]) || isDateTok(toks[i])){ metaStart = i; break; }
-      }
-      const leftover = toks.slice(lastCoreIdx+1, metaStart);
-
-      let sdc = '', ac = '', hotel = '';
-
-      // For ground rows, SDC will be collected later
-      if (isGround) {
-        sdc = '';
-      } else if (leftover.length) {
-        if (leftover[0].length <= 2 && leftover[1] && leftover[1].length <= 2 && /^[A-Z0-9]+$/.test(leftover[1])) {
-          ac = normalizeAcType(leftover[0] + leftover[1]);
-          hotel = leftover.slice(2).join(' ');
-        } else if (leftover[0].length <= 4) {
-          ac = normalizeAcType(leftover[0]);
-          hotel = leftover.slice(1).join(' ');
-        } else {
-          hotel = leftover.join(' ');
-        }
-      }
+    for(const a of merged){
+      const g = groups[a];
+      const get = (k) => g[k] ? (k==='hotel'||k==='sdc' ? g[k].join(' ') : g[k][0]) : '';
 
       let ownDate = null;
-      if(hasOwnDate){ ownDate = parseDMY(toks[0]); if(ownDate) lastDate = ownDate; }
+      const dm = TABLE_DATE_RE.exec(get('date'));
+      if(dm){
+        const mo = MON[dm[2].slice(0,1).toUpperCase()+dm[2].slice(1,3).toLowerCase()];
+        if(mo!==undefined){ ownDate = new Date(parseInt(dm[3]), mo, parseInt(dm[1])); lastDate = ownDate; }
+      }
       if(!ownDate && !lastDate) continue;
 
-      const rowObj = {
+      rows.push({
         ownDate,
         anchorDate: ownDate || lastDate,
-        pairing, reportTime, item, rank, work,
-        depStn, depTime, arrStn, arrTime,
-        debriefTime, flyHrs, dutyHrs,
-        sdc, ac, hotel,
-        _top: k
-      };
-
-      parsedRows.push(rowObj);
-      if (hasOwnDate && ownDate) {
-        dateAnchors.push({ date: ownDate, top: k });
-      }
-    }
-
-    // ================================================================
-    // ROW-BOUNDARY SDC COLLECTION with content filtering
-    // ================================================================
-    const SDC_COLUMN_X0_MIN = 800;
-    const SDC_COLUMN_X0_MAX = 1000; // Narrowed to avoid metadata
-
-    // Collect only tokens that pass content filter AND are in the SDC column
-    const sdcColumnTokens = [];
-    for (const clusterTop of order) {
-      const clusterTokens = groups[clusterTop];
-      for (const w of clusterTokens) {
-        if (w.x0 >= SDC_COLUMN_X0_MIN && w.x0 <= SDC_COLUMN_X0_MAX && isSDCContent(w.text)) {
-          sdcColumnTokens.push({
-            text: w.text,
-            top: w.top,
-            x0: w.x0
-          });
-        }
-      }
-    }
-
-    sdcColumnTokens.sort((a, b) => a.top - b.top);
-
-    if (sdcColumnTokens.length > 0 && parsedRows.length > 0) {
-      parsedRows.sort((a, b) => a._top - b._top);
-
-      for (let i = 0; i < parsedRows.length; i++) {
-        const row = parsedRows[i];
-        const rowTop = row._top;
-        const nextTop = i + 1 < parsedRows.length ? parsedRows[i + 1]._top : Infinity;
-
-        const tokensInZone = sdcColumnTokens.filter(t => t.top >= rowTop && t.top < nextTop);
-
-        if (tokensInZone.length > 0) {
-          if (!isOffCode(row.pairing)) {
-            const sdcString = tokensInZone.map(t => t.text).join(' ');
-            row.sdc = sdcString;
-          }
-        }
-      }
-    }
-
-    // Clean up all SDC strings
-    for (const row of parsedRows) {
-      if (row.sdc) {
-        row.sdc = cleanupSDCString(row.sdc, row.pairing);
-      }
-      const { _top, ...cleanRow } = row;
-      rows.push(cleanRow);
+        pairing: get('pairing'),
+        reportTime: get('reportTime'),
+        item: get('item'),
+        rank: get('rank'),
+        work: get('work'),
+        depStn: get('depStn'), depTime: get('depTime'),
+        arrStn: get('arrStn'), arrTime: get('arrTime'),
+        debriefTime: get('dutyDebrief'),
+        flyHrs: get('flyHrs'), dutyHrs: get('dutyHrs'),
+        sdc: get('sdc'), ac: get('ac'), hotel: get('hotel')
+      });
     }
   }
-
-  if(!rows.length) throw new Error('No rows detected in table PDF — could not find any date or flight-number anchors.');
+  if(!rows.length) throw new Error('No rows detected in table PDF — could not find any duty-report time or flight-number anchors.');
   return rows;
 }
 
 /* =====================================================================
-   4) PDF "FRIDGE CALENDAR" PARSER (unchanged)
+   4) PDF "FRIDGE CALENDAR" PARSER
 ===================================================================== */
 function parseCalendarPDF(pages){
   const legsAll = [];
@@ -1362,7 +1228,7 @@ function calendarCellToLegs(dateObj, text){
 }
 
 /* =====================================================================
-   5) ROW -> LEG NORMALIZER (unchanged)
+   5) ROW -> LEG NORMALIZER
 ===================================================================== */
 function rowsToLegs(rows){
   const legs = [];
@@ -1614,7 +1480,7 @@ function addLegendRow(code='', desc=''){
 }
 
 /* =====================================================================
-   8) EXPORT FUNCTIONS (unchanged)
+   8) EXPORT: CSV / TSV / PNG / PDF-print / Fit-to-screen / Debug dump
 ===================================================================== */
 const CSV_HEADER = ['Date','Day','Duty Start','Item','Overrd Rank','Dep/Start','Arr/End','Duty End','Work Type','Actual Block Hours','Duty Hours','DutyCode','Ac Type'];
 
@@ -1695,6 +1561,7 @@ function exportDebug(){
     detectedFormat: LAST_FORMAT,
     warnings: RAW_WARNINGS,
     rawWordsByPage: RAW_PDF_PAGES ? RAW_PDF_PAGES.map(pg=>pg.map(w=>({t:w.text,x0:Math.round(w.x0),x1:Math.round(w.x1),top:Math.round(w.top),bottom:Math.round(w.bottom)}))) : null,
+    rawWordsByPageSimple: RAW_PDF_PAGES_SIMPLE ? RAW_PDF_PAGES_SIMPLE.map(pg=>pg.map(w=>({t:w.text,x0:Math.round(w.x0),top:Math.round(w.top)}))) : null,
     parsedRows: LAST_PARSED_ROWS ? LAST_PARSED_ROWS.map(r=>{
       const c = Object.assign({}, r);
       ['ownDate','anchorDate','depDate','arrDate','reportDate','debriefDate'].forEach(k=>{
@@ -1713,7 +1580,7 @@ function exportDebug(){
 }
 
 /* =====================================================================
-   9) SAVED ROSTERS (unchanged)
+   9) SAVED ROSTERS
 ===================================================================== */
 function loadSavedRosters(){
   try{ return JSON.parse(localStorage.getItem('rosterParserSaved')||'[]'); }
@@ -1762,6 +1629,8 @@ function viewSavedRoster(id){
   LAST_FILE_NAME = entry.sourceFile;
   render();
   document.getElementById('toolbarRow').scrollIntoView({behavior:'smooth', block:'start'});
+  
+  // Clear the save name input when viewing a saved roster
   clearSaveNameInput();
 }
 function renderSavedList(){
@@ -1797,7 +1666,6 @@ renderSavedList();
 /* =====================================================================
    10) FIND TIME TOGETHER
 ===================================================================== */
-// ... (unchanged) ...
 function isStandbyCode(code){
   return /standby/i.test(legendDescFor(code)||'');
 }
@@ -2121,11 +1989,183 @@ function renderHeatmap(){
 }
 
 /* =====================================================================
-   12) HEATMAP POPUP
+   12) HEATMAP POPUP - Shows who has to leave first
 ===================================================================== */
 function showDutyPopup(element) {
-  // ... unchanged ...
-  // (same as previous version – omitted for brevity but present in actual code)
+  debugLog('🔍 showDutyPopup() called', 'info');
+  
+  if (!element) {
+    debugLog('❌ element is null or undefined', 'err');
+    return;
+  }
+  
+  debugLog('  element.tagName: ' + element.tagName, 'info');
+  debugLog('  element.className: ' + element.className, 'info');
+  
+  if (!element.dataset) {
+    debugLog('❌ element has no dataset property', 'err');
+    return;
+  }
+
+  const dateKey = element.dataset.date;
+  debugLog('  dateKey: ' + dateKey, 'info');
+  
+  let overlapWindows;
+  try {
+    const windowsEncoded = element.dataset.windows;
+    debugLog('  windowsEncoded: ' + windowsEncoded, 'info');
+    if (!windowsEncoded) {
+      debugLog('❌ windowsEncoded is empty', 'err');
+      return;
+    }
+    overlapWindows = JSON.parse(decodeURIComponent(windowsEncoded));
+    debugLog('  overlapWindows: ' + JSON.stringify(overlapWindows), 'info');
+  } catch (e) {
+    debugLog('❌ Failed to parse overlap windows: ' + e.message, 'err');
+    return;
+  }
+
+  if (!LAST_OVERLAP_PEOPLE || !LAST_OVERLAP_PEOPLE.length) {
+    debugLog('❌ LAST_OVERLAP_PEOPLE is empty or undefined', 'err');
+    debugLog('  LAST_OVERLAP_PEOPLE: ' + JSON.stringify(LAST_OVERLAP_PEOPLE), 'err');
+    return;
+  }
+  
+  debugLog('  LAST_OVERLAP_PEOPLE has ' + LAST_OVERLAP_PEOPLE.length + ' crew members', 'ok');
+  for (const crew of LAST_OVERLAP_PEOPLE) {
+    debugLog('    👤 ' + crew.name + ' (' + crew.tz + ') - ' + (crew.days ? crew.days.length + ' days' : 'no days'), 'info');
+  }
+
+  if (!overlapWindows || !overlapWindows.length) {
+    debugLog('❌ overlapWindows is empty', 'err');
+    return;
+  }
+
+  const dateObj = new Date(dateKey + 'T00:00:00');
+  if (isNaN(dateObj.getTime())) {
+    debugLog('❌ Invalid date key: ' + dateKey, 'err');
+    return;
+  }
+  
+  debugLog('✅ All validations passed! Building popup...', 'ok');
+
+  const dateDisplay = fmtDate(dateObj) + ' (' + DOW[dateObj.getDay()] + ')';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'popup-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-label', 'Duty information for ' + dateDisplay);
+
+  let html = `
+    <div class="popup-content">
+      <div class="popup-header">
+        <span>📅 ${dateDisplay}</span>
+        <button class="popup-close" aria-label="Close popup">✕</button>
+      </div>
+      <div class="popup-body">
+  `;
+
+  for (const overlapWindow of overlapWindows) {
+    const windowEnd = overlapWindow.end;
+    const windowStart = overlapWindow.start;
+    const startStr = formatTime(windowStart);
+    const endStr = formatTime(windowEnd);
+    const dur = Math.floor((windowEnd - windowStart) / 60);
+
+    const dutyInfo = [];
+
+    for (const crew of LAST_OVERLAP_PEOPLE) {
+      const dayData = crew.days.find(d => d.date === dateKey);
+      if (!dayData || !dayData.rows || !dayData.rows.length) {
+        continue;
+      }
+
+      let earliestDutyStart = null;
+
+      const sortedRows = [...dayData.rows].sort((a, b) =>
+        (hhmmToMin(a.dutyStart) || 0) - (hhmmToMin(b.dutyStart) || 0)
+      );
+
+      for (const row of sortedRows) {
+        const dutyStart = hhmmToMin(row.dutyStart) || 0;
+        if (dutyStart >= windowEnd) {
+          if (earliestDutyStart === null || dutyStart < earliestDutyStart) {
+            earliestDutyStart = dutyStart;
+          }
+        }
+      }
+
+      if (earliestDutyStart !== null) {
+        dutyInfo.push({
+          name: crew.name,
+          startTime: earliestDutyStart
+        });
+      }
+    }
+
+    dutyInfo.sort((a, b) => a.startTime - b.startTime);
+
+    html += `<div class="overlap-window">
+      <div class="window-time">${startStr} - ${endStr} (${dur}h)</div>
+    `;
+
+    if (dutyInfo.length === 0) {
+      html += `<div class="no-duty">🎉 No one has duty after this session!</div>`;
+    } else {
+      const first = dutyInfo[0];
+      const timeStr = formatTime(first.startTime);
+      html += `<div class="leaves-first">🚶 <strong>${first.name}</strong> working at <strong>${timeStr}</strong></div>`;
+
+      if (dutyInfo.length > 1) {
+        const others = dutyInfo.slice(1).map(c =>
+          `${c.name} at ${formatTime(c.startTime)}`
+        ).join(', ');
+        html += `<div class="others">Also: ${others}</div>`;
+      }
+    }
+
+    html += `</div>`;
+  }
+
+  html += `</div></div>`;
+
+  overlay.innerHTML = html;
+
+  const closeBtn = overlay.querySelector('.popup-close');
+  if (closeBtn) {
+    closeBtn.onclick = function(e) {
+      e.stopPropagation();
+      overlay.remove();
+      debugLog('Popup closed by close button', 'info');
+    };
+  }
+
+  overlay.onclick = function(e) {
+    if (e.target === overlay) {
+      overlay.remove();
+      debugLog('Popup closed by clicking overlay', 'info');
+    }
+  };
+
+  const keyHandler = function(e) {
+    if (e.key === 'Escape') {
+      overlay.remove();
+      document.removeEventListener('keydown', keyHandler);
+      debugLog('Popup closed by ESC key', 'info');
+    }
+  };
+  document.addEventListener('keydown', keyHandler);
+
+  const observer = new MutationObserver(function() {
+    if (!document.contains(overlay)) {
+      document.removeEventListener('keydown', keyHandler);
+      observer.disconnect();
+    }
+  });
+  observer.observe(document.body, { childList: true });
+
+  document.body.appendChild(overlay);
+  debugLog('✅ Popup built and displayed', 'ok');
 }
 
 /* =====================================================================

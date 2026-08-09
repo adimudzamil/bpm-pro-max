@@ -254,7 +254,6 @@ function downloadXLSX(){
       dep, arr, '', r.dutyDebrief, r.flyHrs, r.dutyHrs, r.sdc, r.ac, r.hotel, null, '', null, null]);
   });
 
-  const ws = XLSX.utils.aoa_to_sheet(aoa, {cellDates:true});
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Roster');
   const firstDate = rows.find(r=>DATE_RE.test(r.date));
