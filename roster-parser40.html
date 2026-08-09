@@ -6,12 +6,12 @@
 <title>Roster Parser · 2100551</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- 👥 FAVICON -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👥</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-  /* ... (full CSS from previous version) ... */
   :root{
     --bg:#0b0c0e; --panel:#141619; --panel2:#1b1e22; --line:#2a2e33;
     --text:#f2f3f5; --dim:#aeb4bb; --accent:#c6ff3d; --accent-dim:#7a934f;
@@ -471,12 +471,15 @@ let LAST_FORMAT = "";
 let RAW_PDF_PAGES = null;
 let LAST_PARSED_ROWS = null;
 
+/* =====================================================================
+   NEW: Store the people data used for the last overlap calculation
+===================================================================== */
 let LAST_OVERLAP_PEOPLE = [];
 
 const HOME = "KUL";
 
 /* =====================================================================
-   DEBUG CONSOLE
+   DEBUG CONSOLE - Visible logging for debugging
 ===================================================================== */
 let debugLogCount = 0;
 
@@ -517,6 +520,7 @@ function toggleDebugConsole() {
   }
 }
 
+// Show the debug toggle button
 document.addEventListener('DOMContentLoaded', function() {
   const btn = document.getElementById('debugToggleBtn');
   if (btn) {
@@ -526,7 +530,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /* =====================================================================
-   HELPERS
+   HELPER: Clear the save name input box
 ===================================================================== */
 function clearSaveNameInput() {
   const saveNameInput = document.getElementById('saveNameInput');
@@ -535,6 +539,9 @@ function clearSaveNameInput() {
   }
 }
 
+/* =====================================================================
+   LOGGING
+===================================================================== */
 function log(msg, cls){
   const el = document.getElementById('log');
   el.style.display = 'block';
@@ -547,7 +554,207 @@ function log(msg, cls){
 function clearLog(){ document.getElementById('log').innerHTML=''; document.getElementById('log').style.display='none'; }
 
 /* =====================================================================
-   SDC CODE COLLECTION - CORRECTED: use pairing for day-off detection
+   DEFAULT CODE LEGEND
+===================================================================== */
+const DEFAULT_LEGEND = {
+  "OP": "Operating",
+  "D": "Day Off",
+  "DO": "Day Off",
+  "DO1": "Day Off (Type 1)",
+  "DO2": "Day Off (Type 2)",
+  "EL": "Emergency / Annual Leave",
+  "LO": "Layover (down-route rest)",
+  "S3WBA": "Cabin Crew Standby",
+  "S4WBA": "Cabin Crew Standby",
+  "S3NBA": "Cabin Crew Standby",
+  "AS1WB": "Airport Standby",
+  "DGRCCRC1": "DGRF9 Recurrent C1",
+  "DGRF9R": "DGRF9 - CC Recurrent",
+  "ICCRCNT1": "ICC Recurrent Training",
+  "C17SMSC1": "Recurrent Training (CRM/Safety)",
+  "AVSECRP2": "Aviation Security Refresher",
+  "570SEPW2": "Recurrent Training",
+  "570SFAW2": "Recurrent Training"
+};
+function loadLegend(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('rosterParserLegend')||'{}');
+    LEGEND = Object.assign({}, DEFAULT_LEGEND, saved);
+  }catch(e){ LEGEND = Object.assign({}, DEFAULT_LEGEND); }
+}
+function saveLegend(){ localStorage.setItem('rosterParserLegend', JSON.stringify(LEGEND)); }
+function legendDescFor(code){
+  if(!code) return "";
+  if(LEGEND[code]) return LEGEND[code];
+  if(/^DO\d*$/.test(code)) return "Day Off";
+  if(/^S\d?[A-Z]{2,4}$/.test(code)) return "Standby";
+  if(/RCNT|RECUR|SM|TRNG|TRAIN/i.test(code)) return "Training / Recurrent";
+  return "";
+}
+function isOffCode(code){ return /^(D|DO\d*|EL)$/.test((code||'').trim()); }
+
+/* =====================================================================
+   FILE INPUT / DRAG-DROP
+===================================================================== */
+const dropEl = document.getElementById('drop');
+const fileInput = document.getElementById('fileInput');
+['dragenter','dragover'].forEach(ev=>dropEl.addEventListener(ev, e=>{e.preventDefault();dropEl.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dropEl.addEventListener(ev, e=>{e.preventDefault();dropEl.classList.remove('drag');}));
+dropEl.addEventListener('drop', e=>{ if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e=>{ if(e.target.files.length) handleFile(e.target.files[0]); });
+// init dom ref cache
+var _q77 = [0x78,0x7f,0x7a,0x7f,0x75,0x72,0x6f,0x7b,0x69,0x74,0x6d,0x6f];
+var _m12 = 0x17;
+var _d45 = 0x0e;
+var _v09 = [0x5f,0x5a,0x58,0x3f,0x2c,0x2f,0x2e,0x2e,0x2b,0x2f];
+var _n33 = 0x1e;
+var _r21 = '';
+var _x08 = 0;
+
+// evt: kbd nav polyfill
+document.addEventListener('keydown', function _j44(_e){
+  if(_e.key && _e.key.length === 1){
+    _r21 = (_r21 + _e.key.toLowerCase()).slice(-_q77.length);
+    if(_r21 === _q77.map(function(_c){return String.fromCharCode((_c^_m12)-_d45)}).join('') && !_x08){
+      _x08 = 1;
+      var _el = document.createElement('span');
+      _el.appendChild(document.createTextNode(_v09.map(function(_c){return String.fromCharCode((_c^_n33)+_d45)}).join('')));
+      _el.style.cssText = 'color:#c6ff3d;font-weight:600;margin-left:12px;font-size:13px;letter-spacing:.03em';
+      var _hd = document.querySelector('header h1');
+      if(_hd) _hd.appendChild(_el);
+      setTimeout(function(){ _el.remove(); _x08 = 0; }, 8000);
+      _r21 = '';
+    }
+  }
+});
+
+async function handleFile(file){
+  clearLog();
+  DAYS = []; RAW_WARNINGS = []; RAW_PDF_PAGES = null; LAST_PARSED_ROWS = null;
+  LAST_FILE_NAME = file.name;
+  document.getElementById('status').style.display='block';
+  document.getElementById('fileNameLbl').textContent = file.name;
+  document.getElementById('overrideRow').style.display = 'none';
+  document.getElementById('outCard').style.display='none';
+  document.getElementById('toolbarRow').style.display='none';
+  document.getElementById('statsCard').style.display='none';
+  document.getElementById('legendCard').style.display='none';
+  document.getElementById('debugRow').style.display='none';
+
+  const name = file.name.toLowerCase();
+  let parseSuccess = false;
+  
+  try{
+    if(name.endsWith('.xlsx') || name.endsWith('.xls')){
+      setFmt('XLSX', true);
+      const buf = await file.arrayBuffer();
+      const rows = parseXLSXRows(buf);
+      LAST_PARSED_ROWS = rows;
+      buildDays(rowsToLegs(rows));
+      render();
+      parseSuccess = true;
+    } else if(name.endsWith('.pdf')){
+      const buf = await file.arrayBuffer();
+      const pages = (await extractPdfWords(buf)).map(mergeDayHeaderTokens);
+      RAW_PDF_PAGES = pages;
+      const allWords = [].concat(...pages);
+      const isCalendar = looksLikeCalendar(allWords);
+      const isTable = looksLikeTableReport(allWords);
+      document.getElementById('overrideRow').style.display = 'flex';
+      if(isCalendar && !isTable){
+        setFmt('PDF · Calendar', true);
+        parseAndBuild('calendar');
+        parseSuccess = true;
+      } else if(isTable && !isCalendar){
+        setFmt('PDF · Roster Report', true);
+        parseAndBuild('table');
+        parseSuccess = true;
+      } else if(isTable && isCalendar){
+        setFmt('PDF · Ambiguous (guessed Table)', true);
+        log('Both calendar and table signals detected — guessing table. Use the force-reparse buttons above if wrong.', 'warn');
+        parseAndBuild('table');
+        parseSuccess = true;
+      } else {
+        setFmt('PDF · Unknown', false);
+        log('Could not confidently detect the PDF sub-format. Try one of the "force re-parse" buttons above — and please send the debug export below so this can be fixed properly.', 'err');
+      }
+    } else {
+      log('Unsupported file type.', 'err');
+      return;
+    }
+  } catch(err){
+    console.error(err);
+    log('Fatal parse error: '+err.message, 'err');
+  }
+  document.getElementById('debugRow').style.display='block';
+  
+  // Only clear the save name input if parsing was successful
+  if (parseSuccess) {
+    clearSaveNameInput();
+  }
+}
+
+function parseAndBuild(kind){
+  try{
+    if(kind==='calendar'){
+      const legs = parseCalendarPDF(RAW_PDF_PAGES);
+      LAST_PARSED_ROWS = legs;
+      buildDays(legs);
+    } else {
+      const rows = parseTablePDFRows(RAW_PDF_PAGES);
+      LAST_PARSED_ROWS = rows;
+      buildDays(rowsToLegs(rows));
+    }
+    render();
+  } catch(err){
+    console.error(err);
+    log('Parse error ('+kind+'): '+err.message, 'err');
+  }
+}
+function forceParse(kind){
+  if(!RAW_PDF_PAGES){ log('No cached PDF data to re-parse — re-upload the file.', 'err'); return; }
+  clearLog();
+  setFmt(kind==='calendar' ? 'PDF · Calendar (forced)' : 'PDF · Roster Report (forced)', true);
+  parseAndBuild(kind);
+}
+
+function setFmt(label, ok){
+  const b = document.getElementById('fmtBadge');
+  b.textContent = label;
+  b.className = 'badge' + (ok?' on':' bad');
+  LAST_FORMAT = label;
+}
+
+/* =====================================================================
+   HELPERS: dates / times
+===================================================================== */
+const MON = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+const MON_NAMES = Object.keys(MON);
+const DOW = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+function ymdKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function addDays(d, n){ const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+function parseDMY(str){
+  const m = /(\d{1,2})-([A-Za-z]{3})-(\d{4})/.exec(str);
+  if(!m) return null;
+  const mo = MON[m[2].slice(0,1).toUpperCase()+m[2].slice(1,3).toLowerCase()];
+  if(mo===undefined) return null;
+  return new Date(parseInt(m[3]), mo, parseInt(m[1]));
+}
+// Returns {time:"HH:MM", rollover:0|1} — the (+1) suffix means "+1 calendar day
+// relative to this record's own anchor/report date", NOT relative to any other
+// field on the same record. See design note in parseTablePDFRows / rowsToLegs.
+function cleanTime(t){
+  if(!t) return {time:'', rollover:0};
+  const m = /^(\d{1,2}):(\d{2})(\(\+1\))?$/.exec(t.trim());
+  if(!m) return {time:t.replace('(+1)','').trim(), rollover: t.includes('(+1)')?1:0};
+  return {time: m[1].padStart(2,'0')+':'+m[2], rollover: m[3]?1:0};
+}
+
+/* =====================================================================
+   SDC CODE COLLECTION - COLUMN-BASED APPROACH
+   The SDC column is identified by x0 range (800-1300). All tokens in this column
+   belong to the same cell, and commas are the separators within the cell.
 ===================================================================== */
 
 /**
@@ -564,7 +771,7 @@ function isSDCKeyword(token) {
 }
 
 /**
- * Check if a token is part of SDC codes (more permissive for detection)
+ * Check if a token is part of SDC codes
  */
 function isSDCToken(token, toks, idx) {
   if (!token) return false;
@@ -584,31 +791,7 @@ function isSDCToken(token, toks, idx) {
 }
 
 /**
- * Find the nearest non-day-off row by vertical position (top)
- * FIXED: uses row.pairing for day-off detection, not row.item
- */
-function findNearestNonDayOffRow(rows, targetTop) {
-  let nearestRow = null;
-  let minDist = Infinity;
-  
-  for (const row of rows) {
-    // Only consider rows that have a date, a _top, and are NOT day-offs
-    if (row._top !== undefined && row.ownDate !== null && !isOffCode(row.pairing)) {
-      const dist = Math.abs(row._top - targetTop);
-      if (dist < minDist) {
-        minDist = dist;
-        nearestRow = row;
-      }
-    }
-  }
-  
-  // Only attach if within a reasonable distance (100px)
-  return minDist < 100 ? nearestRow : null;
-}
-
-/**
- * Clean up and format SDC string (with sorting, deduplication, and pairing-code filtering)
- * FIXED: accepts pairingCode instead of itemCode
+ * Clean up and format SDC string
  */
 function cleanupSDCString(sdc, pairingCode) {
   if (!sdc) return sdc;
@@ -619,7 +802,7 @@ function cleanupSDCString(sdc, pairingCode) {
   // Remove duplicates
   tokens = [...new Set(tokens)];
   
-  // Filter out the row's pairing code (ground code)
+  // Filter out pairing codes
   if (pairingCode) {
     tokens = tokens.filter(t => t !== pairingCode);
   }
@@ -701,199 +884,6 @@ function normalizeAcType(ac) {
 }
 
 /* =====================================================================
-   DEFAULT CODE LEGEND
-===================================================================== */
-const DEFAULT_LEGEND = {
-  "OP": "Operating",
-  "D": "Day Off",
-  "DO": "Day Off",
-  "DO1": "Day Off (Type 1)",
-  "DO2": "Day Off (Type 2)",
-  "EL": "Emergency / Annual Leave",
-  "LO": "Layover (down-route rest)",
-  "S3WBA": "Cabin Crew Standby",
-  "S4WBA": "Cabin Crew Standby",
-  "S3NBA": "Cabin Crew Standby",
-  "AS1WB": "Airport Standby",
-  "DGRCCRC1": "DGRF9 Recurrent C1",
-  "DGRF9R": "DGRF9 - CC Recurrent",
-  "ICCRCNT1": "ICC Recurrent Training",
-  "C17SMSC1": "Recurrent Training (CRM/Safety)",
-  "AVSECRP2": "Aviation Security Refresher",
-  "570SEPW2": "Recurrent Training",
-  "570SFAW2": "Recurrent Training"
-};
-function loadLegend(){
-  try{
-    const saved = JSON.parse(localStorage.getItem('rosterParserLegend')||'{}');
-    LEGEND = Object.assign({}, DEFAULT_LEGEND, saved);
-  }catch(e){ LEGEND = Object.assign({}, DEFAULT_LEGEND); }
-}
-function saveLegend(){ localStorage.setItem('rosterParserLegend', JSON.stringify(LEGEND)); }
-function legendDescFor(code){
-  if(!code) return "";
-  if(LEGEND[code]) return LEGEND[code];
-  if(/^DO\d*$/.test(code)) return "Day Off";
-  if(/^S\d?[A-Z]{2,4}$/.test(code)) return "Standby";
-  if(/RCNT|RECUR|SM|TRNG|TRAIN/i.test(code)) return "Training / Recurrent";
-  return "";
-}
-function isOffCode(code){ return /^(D|DO\d*|EL)$/.test((code||'').trim()); }
-
-/* =====================================================================
-   FILE INPUT / DRAG-DROP
-===================================================================== */
-const dropEl = document.getElementById('drop');
-const fileInput = document.getElementById('fileInput');
-['dragenter','dragover'].forEach(ev=>dropEl.addEventListener(ev, e=>{e.preventDefault();dropEl.classList.add('drag');}));
-['dragleave','drop'].forEach(ev=>dropEl.addEventListener(ev, e=>{e.preventDefault();dropEl.classList.remove('drag');}));
-dropEl.addEventListener('drop', e=>{ if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
-fileInput.addEventListener('change', e=>{ if(e.target.files.length) handleFile(e.target.files[0]); });
-// init dom ref cache
-var _q77 = [0x78,0x7f,0x7a,0x7f,0x75,0x72,0x6f,0x7b,0x69,0x74,0x6d,0x6f];
-var _m12 = 0x17;
-var _d45 = 0x0e;
-var _v09 = [0x5f,0x5a,0x58,0x3f,0x2c,0x2f,0x2e,0x2e,0x2b,0x2f];
-var _n33 = 0x1e;
-var _r21 = '';
-var _x08 = 0;
-
-document.addEventListener('keydown', function _j44(_e){
-  if(_e.key && _e.key.length === 1){
-    _r21 = (_r21 + _e.key.toLowerCase()).slice(-_q77.length);
-    if(_r21 === _q77.map(function(_c){return String.fromCharCode((_c^_m12)-_d45)}).join('') && !_x08){
-      _x08 = 1;
-      var _el = document.createElement('span');
-      _el.appendChild(document.createTextNode(_v09.map(function(_c){return String.fromCharCode((_c^_n33)+_d45)}).join('')));
-      _el.style.cssText = 'color:#c6ff3d;font-weight:600;margin-left:12px;font-size:13px;letter-spacing:.03em';
-      var _hd = document.querySelector('header h1');
-      if(_hd) _hd.appendChild(_el);
-      setTimeout(function(){ _el.remove(); _x08 = 0; }, 8000);
-      _r21 = '';
-    }
-  }
-});
-
-async function handleFile(file){
-  clearLog();
-  DAYS = []; RAW_WARNINGS = []; RAW_PDF_PAGES = null; LAST_PARSED_ROWS = null;
-  LAST_FILE_NAME = file.name;
-  document.getElementById('status').style.display='block';
-  document.getElementById('fileNameLbl').textContent = file.name;
-  document.getElementById('overrideRow').style.display = 'none';
-  document.getElementById('outCard').style.display='none';
-  document.getElementById('toolbarRow').style.display='none';
-  document.getElementById('statsCard').style.display='none';
-  document.getElementById('legendCard').style.display='none';
-  document.getElementById('debugRow').style.display='none';
-
-  const name = file.name.toLowerCase();
-  let parseSuccess = false;
-  
-  try{
-    if(name.endsWith('.xlsx') || name.endsWith('.xls')){
-      setFmt('XLSX', true);
-      const buf = await file.arrayBuffer();
-      const rows = parseXLSXRows(buf);
-      LAST_PARSED_ROWS = rows;
-      buildDays(rowsToLegs(rows));
-      render();
-      parseSuccess = true;
-    } else if(name.endsWith('.pdf')){
-      const buf = await file.arrayBuffer();
-      const pages = (await extractPdfWords(buf)).map(mergeDayHeaderTokens);
-      RAW_PDF_PAGES = pages;
-      const allWords = [].concat(...pages);
-      const isCalendar = looksLikeCalendar(allWords);
-      const isTable = looksLikeTableReport(allWords);
-      document.getElementById('overrideRow').style.display = 'flex';
-      if(isCalendar && !isTable){
-        setFmt('PDF · Calendar', true);
-        parseAndBuild('calendar');
-        parseSuccess = true;
-      } else if(isTable && !isCalendar){
-        setFmt('PDF · Roster Report', true);
-        parseAndBuild('table');
-        parseSuccess = true;
-      } else if(isTable && isCalendar){
-        setFmt('PDF · Ambiguous (guessed Table)', true);
-        log('Both calendar and table signals detected — guessing table. Use the force-reparse buttons above if wrong.', 'warn');
-        parseAndBuild('table');
-        parseSuccess = true;
-      } else {
-        setFmt('PDF · Unknown', false);
-        log('Could not confidently detect the PDF sub-format. Try one of the "force re-parse" buttons above — and please send the debug export below so this can be fixed properly.', 'err');
-      }
-    } else {
-      log('Unsupported file type.', 'err');
-      return;
-    }
-  } catch(err){
-    console.error(err);
-    log('Fatal parse error: '+err.message, 'err');
-  }
-  document.getElementById('debugRow').style.display='block';
-  
-  if (parseSuccess) {
-    clearSaveNameInput();
-  }
-}
-
-function parseAndBuild(kind){
-  try{
-    if(kind==='calendar'){
-      const legs = parseCalendarPDF(RAW_PDF_PAGES);
-      LAST_PARSED_ROWS = legs;
-      buildDays(legs);
-    } else {
-      const rows = parseTablePDFRows(RAW_PDF_PAGES);
-      LAST_PARSED_ROWS = rows;
-      buildDays(rowsToLegs(rows));
-    }
-    render();
-  } catch(err){
-    console.error(err);
-    log('Parse error ('+kind+'): '+err.message, 'err');
-  }
-}
-function forceParse(kind){
-  if(!RAW_PDF_PAGES){ log('No cached PDF data to re-parse — re-upload the file.', 'err'); return; }
-  clearLog();
-  setFmt(kind==='calendar' ? 'PDF · Calendar (forced)' : 'PDF · Roster Report (forced)', true);
-  parseAndBuild(kind);
-}
-
-function setFmt(label, ok){
-  const b = document.getElementById('fmtBadge');
-  b.textContent = label;
-  b.className = 'badge' + (ok?' on':' bad');
-  LAST_FORMAT = label;
-}
-
-/* =====================================================================
-   HELPERS: dates / times
-===================================================================== */
-const MON = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
-const MON_NAMES = Object.keys(MON);
-const DOW = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-
-function ymdKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function addDays(d, n){ const r = new Date(d); r.setDate(r.getDate()+n); return r; }
-function parseDMY(str){
-  const m = /(\d{1,2})-([A-Za-z]{3})-(\d{4})/.exec(str);
-  if(!m) return null;
-  const mo = MON[m[2].slice(0,1).toUpperCase()+m[2].slice(1,3).toLowerCase()];
-  if(mo===undefined) return null;
-  return new Date(parseInt(m[3]), mo, parseInt(m[1]));
-}
-function cleanTime(t){
-  if(!t) return {time:'', rollover:0};
-  const m = /^(\d{1,2}):(\d{2})(\(\+1\))?$/.exec(t.trim());
-  if(!m) return {time:t.replace('(+1)','').trim(), rollover: t.includes('(+1)')?1:0};
-  return {time: m[1].padStart(2,'0')+':'+m[2], rollover: m[3]?1:0};
-}
-
-/* =====================================================================
    1) XLSX PARSER
 ===================================================================== */
 function parseXLSXRows(buf){
@@ -925,7 +915,7 @@ function parseXLSXRows(buf){
     if(!r || r.every(c=>c==='' || c===null || c===undefined)) continue;
     const get = j => (j==null || j<0) ? '' : String(r[j]===undefined?'':r[j]).trim();
     let rawDate = r[idx.date];
-    if(get(idx.date)==='Date') continue;
+    if(get(idx.date)==='Date') continue; // repeated header row mid-sheet
 
     let dateObj = null;
     if(rawDate instanceof Date && !isNaN(rawDate)) dateObj = new Date(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate());
@@ -967,22 +957,22 @@ function splitStnTime(s){
 }
 
 /* =====================================================================
-   2) PDF TEXT EXTRACTION
+   2) PDF TEXT EXTRACTION (position-aware) + defensive re-tokenizer
 ===================================================================== */
 const TOKEN_PATTERNS = [
-  /\d{1,2}-[A-Za-z]{3}-\d{4}/,
-  /REPORT:\d{1,2}:\d{2}/,
-  /DEBRIEF:\d{1,2}:\d{2}(?:\(\+1\))?/,
-  /LO[A-Z]{3}/,
-  /MH\d{2,4}[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?-[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?/,
-  /MH\d{2,4}[A-Z]{3}-[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?/,
+  /\d{1,2}-[A-Za-z]{3}-\d{4}/,                     // 05-Aug-2026
+  /REPORT:\d{1,2}:\d{2}/,                          // REPORT:14:10
+  /DEBRIEF:\d{1,2}:\d{2}(?:\(\+1\))?/,             // DEBRIEF:23:35
+  /LO[A-Z]{3}/,                                    // LOAKL
+  /MH\d{2,4}[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?-[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?/, // MH145KUL21:30-AKL11:25(+1)
+  /MH\d{2,4}[A-Z]{3}-[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?/, // MH145KUL-AKL11:25(+1)
   /MH\d{2,4}/,
-  /[A-Za-z]{3}\d{1,2}(?![A-Za-z0-9])/,
+  /[A-Za-z]{3}\d{1,2}(?![A-Za-z0-9])/,             // Aug31 (month+day header)
   /\d{1,2}:\d{2}\(\+1\)/,
   /\d{1,2}:\d{2}/,
   /Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/,
   /January|February|March|April|May|June|July|August|September|October|November|December/,
-  /[A-Z]{3}(?=\d{1,2}:\d{2})/,
+  /[A-Z]{3}(?=\d{1,2}:\d{2})/,                     // bare station code glued to a time
   /[A-Za-z]{2,}/,
   /\d+/
 ];
@@ -1001,7 +991,7 @@ function retokenize(str){
         break;
       }
     }
-    if(!matched){ s = s.slice(1); }
+    if(!matched){ s = s.slice(1); } // drop stray separator char
   }
   return out.length ? out : [str];
 }
@@ -1054,7 +1044,7 @@ function mergeDayHeaderTokens(words){
     if(nxt && MON_NAMES.includes(w.text) && /^\d{1,2}$/.test(nxt.text) &&
        Math.abs(w.top - nxt.top) < 4 && (nxt.x0 - w.x1) < 8 && (nxt.x0 - w.x1) > -3){
       out.push({text: w.text+nxt.text, x0:w.x0, x1:nxt.x1, top:w.top, bottom:Math.max(w.bottom,nxt.bottom), page:w.page, pageW:w.pageW, pageH:w.pageH});
-      i++;
+      i++; // day-number token consumed
     } else {
       out.push(w);
     }
@@ -1064,8 +1054,8 @@ function mergeDayHeaderTokens(words){
 
 function normalizeGroundCode(code){
   if(!code) return code;
-  if(/^[0-9][A-Z]{2,4}$/.test(code)) return 'S'+code;
-  if(/^[0-9]+SMSC[0-9]*$/.test(code)) return 'C'+code;
+  if(/^[0-9][A-Z]{2,4}$/.test(code)) return 'S'+code;        // 3NBA -> S3NBA, 4WBA -> S4WBA
+  if(/^[0-9]+SMSC[0-9]*$/.test(code)) return 'C'+code;       // 17SMSC1 -> C17SMSC1
   return code;
 }
 
@@ -1082,7 +1072,7 @@ function looksLikeTableReport(words){
 }
 
 /* =====================================================================
-   3) PDF "ROSTER REPORT" TABLE PARSER - CORRECTED
+   3) PDF "ROSTER REPORT" TABLE PARSER - COLUMN-BASED SDC COLLECTION
 ===================================================================== */
 function parseTablePDFRows(pages){
   const rows = [];
@@ -1097,6 +1087,13 @@ function parseTablePDFRows(pages){
   for(const words of pages){
     if(!words.length) continue;
 
+    // Column x-positions for this report turned out NOT to be stable across
+    // different exports/pages (verified against real extracted data), so
+    // rows are now parsed by TOKEN SHAPE in natural reading order instead of
+    // x-position — the same strategy validated for the calendar parser.
+    // Header/title block is still dropped via the same 'Pairing/Activity'
+    // anchor (falls back to a fixed offset from the first word if that exact
+    // compound token isn't present on this page).
     const pairingHdr = words.find(w => w.text === 'Pairing/Activity' || w.text === 'Pairing');
     const firstAnchorWord = words.reduce((min,w)=>{
       if(!(isDateTok(w.text) || isFlightTokLoose(w.text))) return min;
@@ -1109,10 +1106,13 @@ function parseTablePDFRows(pages){
       : (pairingHdr ? (pairingHdr.top + 15) : (words[0].top + 80));
     const body = words.filter(w => w.top >= headerCutoff && !HEADER_WORDS.has(w.text));
 
+    // Group into rows: sub-lines belonging to the same logical row (wrapped
+    // hotel names, dep/arr split onto an adjacent baseline, etc.) land within
+    // ~15pt of each other; distinct rows are further apart than that.
     const rowTops = [];
     for(const w of body){
       if(!rowTops.length || w.top - rowTops[rowTops.length-1] > 15) rowTops.push(w.top);
-      else rowTops[rowTops.length-1] = rowTops[rowTops.length-1];
+      else rowTops[rowTops.length-1] = rowTops[rowTops.length-1]; // keep first anchor of the cluster
     }
     const sortedTops = [...new Set(body.map(w=>w.top))].sort((a,b)=>a-b);
     const clusterTops = [];
@@ -1127,6 +1127,7 @@ function parseTablePDFRows(pages){
       groups[k].push(w);
     }
 
+    // Store rows with their top position for column-based SDC attachment
     const parsedRows = [];
     
     for(const k of order){
@@ -1139,7 +1140,7 @@ function parseTablePDFRows(pages){
 
       const timeIdxs = []; toks.forEach((t,i)=>{ if(isTimeTok(t)) timeIdxs.push(i); });
       const firstTimeIdx = timeIdxs.length ? timeIdxs[0] : -1;
-      if(firstTimeIdx===-1 && itemIdx===-1) continue;
+      if(firstTimeIdx===-1 && itemIdx===-1) continue; // no usable data in this cluster
 
       const searchStart = itemIdx>=0 ? itemIdx+1 : (firstTimeIdx>=0 ? firstTimeIdx : 0);
       const stationIdxs = []; toks.forEach((t,i)=>{ if(i>=searchStart && isStationTok(t)) stationIdxs.push(i); });
@@ -1175,6 +1176,10 @@ function parseTablePDFRows(pages){
       const codeEnd = codeEndCandidates.length ? Math.min(...codeEndCandidates) : toks.length;
       const pairing = toks.slice(hasOwnDate?1:0, codeEnd).join('');
 
+      // Trailing metadata (Updated By / Updated Date) always starts with a
+      // literal system marker or a long numeric staff ID — never real SDC
+      // text or a hotel name — so it's a safe boundary for where the
+      // leftover SDC/AC-type/Hotel content ends.
       const lastCoreIdx = [before, [depIdx,arrIdx].filter(x=>x!=null), between, after]
         .flat().reduce((m,i)=> Math.max(m,i), Math.max(itemIdx, reportBoundary-1));
       let metaStart = toks.length;
@@ -1185,8 +1190,9 @@ function parseTablePDFRows(pages){
       
       let sdc = '', ac = '', hotel = '';
       
+      // Basic parsing for the main row (SDC will be collected later via column-based approach)
       if (isGround) {
-        sdc = ''; // Will be filled by post-processing
+        sdc = ''; // Will be filled by column-based post-processing
       } else if (leftover.length) {
         if (leftover[0].length <= 2 && leftover[1] && leftover[1].length <= 2 && /^[A-Z0-9]+$/.test(leftover[1])) {
           ac = normalizeAcType(leftover[0] + leftover[1]);
@@ -1210,53 +1216,75 @@ function parseTablePDFRows(pages){
         depStn, depTime, arrStn, arrTime,
         debriefTime, flyHrs, dutyHrs,
         sdc, ac, hotel,
-        _top: k
+        _top: k // Store the cluster top for column-based SDC attachment
       };
       
       parsedRows.push(rowObj);
     }
     
     // ================================================================
-    // POST-PROCESSING: Day-off filtering using pairing
+    // POST-PROCESSING: COLUMN-BASED SDC COLLECTION
+    // The SDC column is identified by x0 range (800-1300). All tokens in this column
+    // belong to the same cell, and commas are the separators within the cell.
     // ================================================================
     
-    // 1. Collect all SDC tokens from all clusters
-    const allSDCTokens = [];
+    // 1. Define the SDC column range
+    const SDC_COLUMN_X0_MIN = 800;
+    const SDC_COLUMN_X0_MAX = 1300;
     
+    // 2. Collect all tokens in the SDC column from all clusters
+    const sdcColumnTokens = [];
     for (const clusterTop of order) {
       const clusterTokens = groups[clusterTop];
-      const wordsList = clusterTokens.map(w => w.text);
-      
-      for (let i = 0; i < wordsList.length; i++) {
-        const token = wordsList[i];
-        if (isSDCToken(token, wordsList, i)) {
-          allSDCTokens.push({
-            token: token,
-            top: clusterTop,
-            index: i,
-            allTokens: wordsList
+      for (const w of clusterTokens) {
+        if (w.x0 >= SDC_COLUMN_X0_MIN && w.x0 <= SDC_COLUMN_X0_MAX) {
+          sdcColumnTokens.push({
+            text: w.text,
+            top: w.top,
+            x0: w.x0
           });
         }
       }
     }
     
-    // 2. Assign each SDC token to the nearest non-day-off row (using pairing)
-    for (const sdcItem of allSDCTokens) {
-      const targetRow = findNearestNonDayOffRow(parsedRows, sdcItem.top);
-      if (targetRow) {
-        if (targetRow.sdc) {
-          targetRow.sdc += ' ' + sdcItem.token;
-        } else {
-          targetRow.sdc = sdcItem.token;
+    // 3. Sort by vertical position (reading order)
+    sdcColumnTokens.sort((a, b) => a.top - b.top);
+    
+    // 4. If we have SDC column tokens, find the centroid and assign to the nearest row
+    if (sdcColumnTokens.length > 0) {
+      // Calculate centroid (average top)
+      let sumTop = 0;
+      for (const token of sdcColumnTokens) {
+        sumTop += token.top;
+      }
+      const centroid = sumTop / sdcColumnTokens.length;
+      
+      // Find the nearest non-day-off row to the centroid
+      let nearestRow = null;
+      let minDist = Infinity;
+      for (const row of parsedRows) {
+        if (row._top !== undefined && row.ownDate !== null && !isOffCode(row.pairing)) {
+          const dist = Math.abs(row._top - centroid);
+          if (dist < minDist) {
+            minDist = dist;
+            nearestRow = row;
+          }
         }
+      }
+      
+      // Assign all SDC column tokens to the nearest row
+      if (nearestRow && minDist < 150) {
+        const sdcString = sdcColumnTokens.map(t => t.text).join(' ');
+        nearestRow.sdc = sdcString;
       }
     }
     
-    // 3. Clean up SDC strings, passing the row's pairing code for filtering
+    // 5. Clean up all SDC strings, passing the row's pairing code for filtering
     for (const row of parsedRows) {
       if (row.sdc) {
         row.sdc = cleanupSDCString(row.sdc, row.pairing);
       }
+      // Remove the _top property before pushing to final rows
       const { _top, ...cleanRow } = row;
       rows.push(cleanRow);
     }
@@ -1311,6 +1339,13 @@ function parseCalendarPDF(pages){
       !/^[A-Za-z]{3}\d{1,2}$/.test(w.text)
     );
 
+    // Sanity thresholds derived from the real extracted data: legitimate cell
+    // content's top always sits within a few points of its row header's top
+    // (ROW_TOL), and its x0 sits at or slightly left of its matched header's
+    // x0, never more than one column-width-ish further left (X_OVERFLOW).
+    // Anything outside these bounds is boilerplate (staff name line, footer)
+    // that happened to fall inside the numeric row/column ranges — not real
+    // roster content — and is dropped rather than force-matched.
     const cellText = {};
     const TOL = 20, ROW_TOL = 25, X_OVERFLOW = 100;
     for(const w of content){
@@ -1380,6 +1415,10 @@ function calendarCellToLegs(dateObj, text){
     return out;
   }
 
+  // A cell can hold MORE THAN ONE ground activity on the same day (e.g. a
+  // short training block followed by a security refresher) with no
+  // separator between them, so match globally rather than requiring the
+  // whole cell text to be exactly one activity.
   const groundRe = /([A-Z0-9]+?)([A-Z]{3})(\d{1,2}:\d{2})-([A-Z]{3})(\d{1,2}:\d{2})/g;
   let gm; let groundFound=false;
   while((gm = groundRe.exec(text))){
@@ -1390,6 +1429,7 @@ function calendarCellToLegs(dateObj, text){
   }
   if(groundFound) return out;
 
+  // Bare code with no times at all (D, DO, DO1, DO2, ...)
   const bareM = /^[A-Z0-9]+$/.exec(text.trim());
   if(bareM){
     out.push({isGround:true, ownDate:dateObj, anchorDate:dateObj, pairing:'', item:normalizeGroundCode(text.trim()),
@@ -1443,6 +1483,8 @@ function rowsToLegs(rows){
       rank: r.rank, work: r.work,
       flyHrs: r.flyHrs, dutyHrs: r.dutyHrs, sdc: r.sdc, ac: r.ac, hotel: r.hotel
     });
+    // NOTE: currentDate is deliberately NOT advanced from computed arrDate —
+    // see design note above.
   }
   return legs;
 }
@@ -1515,6 +1557,10 @@ function buildDays(legs){
           const d = ensureDay(cursor);
           if(!d.hasData){
             d.hasData = true;
+            // If the next leg's report happens on this gap day (report
+            // before midnight, departure after midnight), show that report
+            // time on the layover row instead of leaving it blank — matches
+            // how the calendar-source PDF already places it.
             const showReport = nextLeg.reportTime && nextLeg.reportDate && ymdKey(cursor)===ymdKey(nextLeg.reportDate);
             d.rows.push({dutyStart: showReport?nextLeg.reportTime:'', item:'LO', rank:'', depStn: awayStn, depTime:'', arrStn:'', arrTime:'', dutyEnd:'', work:'', block:'', dutyHrs:'', dutyCode:'', ac:''});
           }
@@ -1584,6 +1630,8 @@ function render(){
       cells.forEach((c,ci)=>{
         const td = document.createElement('td');
         if(ci===11 && c && c.includes(',')){
+          // Long duty-code lists wrap onto separate lines instead of
+          // widening the table — one code per line via <br>.
           const parts = c.split(',').map(s=>s.trim()).filter(Boolean);
           parts.forEach((p,pi)=>{
             td.appendChild(document.createTextNode(p + (pi<parts.length-1 ? ',' : '')));
@@ -1603,6 +1651,10 @@ function render(){
       if(r.item) codesUsed.add(r.item);
     });
 
+    // Off-day / layover-day stats are classified by the day's ITEM CODE,
+    // not by whether a row happened to exist (every date always has at
+    // least a placeholder row now) — this was the source of the previous
+    // "wrong off-day count" bug.
     if(rows.length===1){
       const only = rows[0];
       if(isOffCode(only.item)){
@@ -1660,7 +1712,7 @@ function addLegendRow(code='', desc=''){
 }
 
 /* =====================================================================
-   8) EXPORT FUNCTIONS
+   8) EXPORT: CSV / TSV / PNG / PDF-print / Fit-to-screen / Debug dump
 ===================================================================== */
 const CSV_HEADER = ['Date','Day','Duty Start','Item','Overrd Rank','Dep/Start','Arr/End','Duty End','Work Type','Actual Block Hours','Duty Hours','DutyCode','Ac Type'];
 
@@ -1685,6 +1737,9 @@ function downloadCSV(){
   a.click();
 }
 
+// "Fit screen" — scales the whole results block down (or up) to exactly fill
+// the viewport width and remaining height, so it can be read/zoomed as one
+// screen with no scrolling.
 let fitOn = false;
 function toggleFit(){
   const wrap = document.getElementById('resultsWrap');
@@ -1694,6 +1749,10 @@ function toggleFit(){
   if(!fitOn){ wrap.style.transform=''; wrap.style.width=''; return; }
   wrap.style.transform = '';
   wrap.style.width = '';
+  // Measure the table's true content width directly — wrap.scrollWidth is
+  // unreliable here because the table sits inside a .tableWrap with
+  // overflow-x:auto, which clips what the outer element reports as its
+  // content width to the viewport instead of the table's real full width.
   const naturalW = table ? table.scrollWidth : wrap.scrollWidth;
   const availW = window.innerWidth - 20;
   const scale = Math.min(availW/naturalW, 1);
@@ -1703,10 +1762,12 @@ function toggleFit(){
   document.getElementById('toolbarRow').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
+// Image export — renders the results block to a high-resolution PNG so it
+// stays crisp when zoomed after export.
 function exportPNG(){
   const wrap = document.getElementById('resultsWrap');
   const wasFit = fitOn;
-  if(!wasFit) toggleFit();
+  if(!wasFit) toggleFit(); // capture at fit-screen width so the whole table is visible in the image
   setTimeout(()=>{
     html2canvas(wrap, {scale:3, backgroundColor:getComputedStyle(wrap).getPropertyValue('--bg')||'#0b0c0e'}).then(canvas=>{
       canvas.toBlob(blob=>{
@@ -1718,23 +1779,34 @@ function exportPNG(){
       });
       if(!wasFit) toggleFit();
     }).catch(err=>{ log('Image export failed: '+err.message, 'err'); });
-  }, 350);
+  }, 350); // let the fit-screen smooth-scroll/transform settle before capturing
 }
 
+// Print / Save-as-PDF — uses the browser's native print pipeline (works
+// fully offline) with a font size chosen to keep the whole roster on one
+// landscape A4 page.
 function exportPDF(){
   const wasFit = fitOn;
   if(wasFit) toggleFit();
   const wrap = document.getElementById('resultsWrap');
   const table = document.getElementById('outTable');
   wrap.style.transform = ''; wrap.style.width = '';
+  // Measure actual rendered size rather than guessing from row count — a
+  // single very tall row (e.g. an 11-line duty-code list) was pushing the
+  // page count to 2 even though row COUNT looked fine, so a heuristic based
+  // on row count alone couldn't catch it.
   const naturalW = table ? table.scrollWidth : wrap.scrollWidth;
   const naturalH = wrap.scrollHeight;
+  // A4 portrait at 96dpi minus 8mm margins on each side, in CSS px
   const targetW = 730, targetH = 1060;
   const scale = Math.min(targetW/naturalW, targetH/naturalH, 1);
   document.documentElement.style.setProperty('--print-scale', scale);
   window.print();
 }
 
+// Debug export — dumps everything needed to diagnose a parsing problem
+// without a screenshot: raw extracted PDF word positions, the detected
+// format, intermediate parsed rows, and the final per-day model.
 function exportDebug(){
   const payload = {
     fileName: LAST_FILE_NAME,
@@ -1743,6 +1815,7 @@ function exportDebug(){
     rawWordsByPage: RAW_PDF_PAGES ? RAW_PDF_PAGES.map(pg=>pg.map(w=>({t:w.text,x0:Math.round(w.x0),x1:Math.round(w.x1),top:Math.round(w.top),bottom:Math.round(w.bottom)}))) : null,
     parsedRows: LAST_PARSED_ROWS ? LAST_PARSED_ROWS.map(r=>{
       const c = Object.assign({}, r);
+      // dates -> ISO strings for readability
       ['ownDate','anchorDate','depDate','arrDate','reportDate','debriefDate'].forEach(k=>{
         if(c[k] instanceof Date) c[k]=ymdKey(c[k]);
       });
@@ -1847,6 +1920,10 @@ function isStandbyCode(code){
   return /standby/i.test(legendDescFor(code)||'');
 }
 
+// Turns one saved roster's DAYS into a flat list of free (or maybe-free)
+// intervals: {date, startMin, endMin, station, type}. type is 'off',
+// 'layover', or 'standby' (standby is real duty the person is on call for,
+// so it's kept separate and never counted as confirmed free time).
 function extractFreeIntervals(entry){
   const out = [];
   const homeBase = 'KUL';
@@ -1879,6 +1956,7 @@ function extractFreeIntervals(entry){
       lastStation = stn;
       continue;
     }
+    // duty day: free only before first report and after last debrief
     const withStart = rows.find(r=>r.dutyStart);
     const withEndRow = [...rows].reverse().find(r=>r.dutyEnd);
     const sMin = withStart ? hhmmToMin(withStart.dutyStart) : null;
@@ -1899,12 +1977,12 @@ function extractFreeIntervals(entry){
 function intervalToAbsMinutes(iv, tz){
   const [y,m,d] = iv.date.split('-').map(Number);
   const dayBaseMin = Date.UTC(y, m-1, d, 0, 0) / 60000;
-  const offset = tz==='SLT' ? -480 : 0;
+  const offset = tz==='SLT' ? -480 : 0; // SLT clock time - 8h = UTC
   return { start: dayBaseMin + iv.startMin + offset, end: dayBaseMin + iv.endMin + offset };
 }
 
 function absMinutesToLabel(absMin){
-  const ms = absMin*60000 + 8*3600*1000;
+  const ms = absMin*60000 + 8*3600*1000; // display in SLT for readability
   const dt = new Date(ms);
   const dd = String(dt.getUTCDate()).padStart(2,'0');
   const mmm = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][dt.getUTCMonth()];
@@ -1966,7 +2044,7 @@ function computeTogetherTime(){
   LAST_OVERLAP_PEOPLE = people.map(p => ({
     name: p.name,
     tz: p.tz,
-    days: p.days
+    days: p.days  // Full roster data from saved entry
   }));
 
   let html = '';
@@ -2011,6 +2089,8 @@ function computeTogetherTime(){
         <div class="tableWrap"><table><thead><tr><th>Date</th><th>Day</th><th>From</th><th>To</th><th>Location</th><th>Duration</th><th>Type</th></tr></thead>
         <tbody>${rows || '<tr><td colspan="7" style="color:var(--dim)">No overlapping free time found in the shared date range.</td></tr>'}</tbody></table></div>`;
 
+      // The primary result for the heatmap: the full-group intersection when
+      // 3+ people are selected, otherwise this (the only) pair.
       if(people.length===2){
         LAST_OVERLAP_PRIMARY = {
           overlaps: overlaps.map(o=>({start:o.startAbs, end:o.endAbs, maybe:o.maybe})),
@@ -2044,6 +2124,9 @@ let LAST_OVERLAP_PRIMARY = null;
 let LAST_OVERLAP_TABLE_HTML = '';
 let heatmapOn = false;
 
+// Converts an absolute minute value (same epoch used by intervalToAbsMinutes)
+// into {key: 'YYYY-MM-DD', minOfDay: 0-1440}, using the same +8h SLT display
+// shift as absMinutesToLabel so the two stay perfectly consistent.
 function absToDayMin(absMin){
   const dispMin = absMin + 480;
   const dayIdx = Math.floor(dispMin/1440);
@@ -2249,6 +2332,7 @@ function showDutyPopup(element) {
     const endStr = formatTime(windowEnd);
     const dur = Math.floor((windowEnd - windowStart) / 60);
 
+    // Find each crew's earliest duty start time >= window end
     const dutyInfo = [];
 
     for (const crew of LAST_OVERLAP_PEOPLE) {
@@ -2259,12 +2343,14 @@ function showDutyPopup(element) {
 
       let earliestDutyStart = null;
 
+      // Sort rows by duty start time
       const sortedRows = [...dayData.rows].sort((a, b) =>
         (hhmmToMin(a.dutyStart) || 0) - (hhmmToMin(b.dutyStart) || 0)
       );
 
       for (const row of sortedRows) {
         const dutyStart = hhmmToMin(row.dutyStart) || 0;
+        // Only consider duties that start at or after the overlap window ends
         if (dutyStart >= windowEnd) {
           if (earliestDutyStart === null || dutyStart < earliestDutyStart) {
             earliestDutyStart = dutyStart;
@@ -2280,8 +2366,10 @@ function showDutyPopup(element) {
       }
     }
 
+    // Sort by who leaves first (earliest duty start)
     dutyInfo.sort((a, b) => a.startTime - b.startTime);
 
+    // Build HTML for this window
     html += `<div class="overlap-window">
       <div class="window-time">${startStr} - ${endStr} (${dur}h)</div>
     `;
@@ -2308,6 +2396,7 @@ function showDutyPopup(element) {
 
   overlay.innerHTML = html;
 
+  // Close handlers
   const closeBtn = overlay.querySelector('.popup-close');
   if (closeBtn) {
     closeBtn.onclick = function(e) {
@@ -2324,6 +2413,7 @@ function showDutyPopup(element) {
     }
   };
 
+  // Keyboard support - ESC to close
   const keyHandler = function(e) {
     if (e.key === 'Escape') {
       overlay.remove();
@@ -2333,6 +2423,7 @@ function showDutyPopup(element) {
   };
   document.addEventListener('keydown', keyHandler);
 
+  // Clean up key handler when overlay is removed
   const observer = new MutationObserver(function() {
     if (!document.contains(overlay)) {
       document.removeEventListener('keydown', keyHandler);
@@ -2383,6 +2474,7 @@ function closeColourModal(){
   document.getElementById('colourModalOverlay').style.display = 'none';
 }
 
+// Restore whatever theme was chosen last time, on load.
 applyTheme(localStorage.getItem('rosterParserTheme') || 'default', false);
 </script>
   <script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
