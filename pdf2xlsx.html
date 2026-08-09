@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.25, maximum-scale=5">
+<title>PDF → XLSX · Roster Report</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{ --bg:#0b0c0e; --panel:#141619; --panel2:#1b1e22; --line:#2a2e33; --text:#f2f3f5; --dim:#aeb4bb;
+    --accent:#c6ff3d; --warn:#ffb454; --err:#ff6b6b; --ok:#6bffb0; --mono:'DM Mono','SF Mono',ui-monospace,Menlo,Consolas,monospace; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);font-size:14px;-webkit-tap-highlight-color:transparent}
+  header{padding:16px 14px 10px;border-bottom:1px solid var(--line)}
+  header h1{margin:0;font-size:16px;letter-spacing:.03em;font-weight:600}
+  header h1 span{color:var(--accent)}
+  header .sub{color:var(--dim);font-size:11.5px;margin-top:4px}
+  main{padding:12px;max-width:640px;margin:0 auto}
+  #drop{border:1.5px dashed var(--line);border-radius:10px;padding:26px 12px;text-align:center;color:var(--dim);margin-bottom:12px;transition:.15s}
+  #drop.drag{border-color:var(--accent);color:var(--accent);background:#12140f}
+  #drop b{color:var(--text)}
+  input[type=file]{display:none}
+  .btnRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+  button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:13px;font-weight:500;cursor:pointer}
+  button:active{transform:scale(.97)}
+  button.primary{background:var(--accent);color:#0b0c0e;border-color:var(--accent);font-weight:600}
+  button:disabled{opacity:.4}
+  #log{margin-top:12px;font-size:12px;color:var(--dim);max-height:260px;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:none}
+  #log div{padding:2px 0}
+  #log .warn{color:var(--warn)}
+  #log .err{color:var(--err)}
+  #log .ok{color:var(--ok)}
+  section.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-top:12px;display:none;overflow:hidden}
+  section.card h2{font-size:12.5px;margin:0;padding:10px 12px;border-bottom:1px solid var(--line);color:var(--dim);letter-spacing:.04em;text-transform:uppercase}
+  .tableWrap{overflow-x:auto}
+  table{border-collapse:collapse;font-size:10px;width:100%}
+  th,td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+  th{color:var(--dim);font-weight:600}
+  td.date{color:var(--accent)}
+  footer{padding:20px 14px 40px;color:var(--dim);font-size:10.5px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <h1>PDF <span>→</span> XLSX</h1>
+  <div class="sub">Converts an iFlight Roster Report PDF into the same XLSX layout as the native export, ready for Roster Parser · by 2100551</div>
+</header>
+<main>
+  <div id="drop">
+    Drop a Roster Report PDF here, or
+    <div class="btnRow"><button class="primary" onclick="document.getElementById('fileInput').click()">Choose PDF</button></div>
+    <input id="fileInput" type="file" accept=".pdf">
+  </div>
+  <div id="log"></div>
+
+  <section class="card" id="previewCard">
+    <h2>Preview <span id="rowCount" style="color:var(--dim);font-weight:400;text-transform:none"></span></h2>
+    <div class="tableWrap"><table id="previewTable"><thead><tr>
+      <th>Date</th><th>Pairing/Activity</th><th>Item</th><th>Work</th><th>Dep</th><th>Arr</th><th>Deb</th><th>Fly</th><th>Duty</th><th>SDC</th><th>A/C</th><th>Hotel</th>
+    </tr></thead><tbody id="previewBody"></tbody></table></div>
+  </section>
+
+  <div class="btnRow" id="downloadRow" style="display:none">
+    <button class="primary" onclick="downloadXLSX()">Download .xlsx</button>
+  </div>
+</main>
+<footer>Parses locally in your browser. Nothing is uploaded. · by 2100551</footer>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const MON = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
+const DATE_RE = /^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/;
+const TIME_RE = /^\d{1,2}:\d{2}(\(\+1\))?$/;
+const FLIGHT_RE = /^MH\d{2,5}$/;
+
+const NONTIME_COLS = [['date',38],['pairing',123],['rank',355],['work',406],['depStn',491],['arrStn',566],['sdc',823],['ac',878],['hotel',935]];
+const TIME_COLS = [['reportTime',233],['depTime',513],['arrTime',588],['dutyDebrief',681],['flyHrs',735],['dutyHrs',775]];
+
+function nearest(cols, x){
+  let best = cols[0], bestD = Infinity;
+  for(const c of cols){ const d = Math.abs(c[1]-x); if(d<bestD){bestD=d; best=c;} }
+  return best[0];
+}
+
+let LAST_ROWS = [];
+let LAST_STAFF = '';
+
+function log(msg, cls){
+  const el = document.getElementById('log');
+  el.style.display='block';
+  const d = document.createElement('div');
+  if(cls) d.className = cls;
+  d.textContent = msg;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+function clearLog(){ document.getElementById('log').innerHTML=''; document.getElementById('log').style.display='none'; }
+
+const dropEl = document.getElementById('drop');
+const fileInput = document.getElementById('fileInput');
+['dragenter','dragover'].forEach(ev=>dropEl.addEventListener(ev,e=>{e.preventDefault();dropEl.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dropEl.addEventListener(ev,e=>{e.preventDefault();dropEl.classList.remove('drag');}));
+dropEl.addEventListener('drop', e=>{ if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e=>{ if(e.target.files.length) handleFile(e.target.files[0]); });
+
+async function extractWordsPerPage(buf){
+  const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+  const pages = [];
+  for(let p=1;p<=pdf.numPages;p++){
+    const page = await pdf.getPage(p);
+    const viewport = page.getViewport({scale:1});
+    const content = await page.getTextContent();
+    const words = [];
+    for(const item of content.items){
+      if(!item.str || !item.str.trim()) continue;
+      const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
+      const w = item.width || (item.str.length*5);
+      const h = item.height || 10;
+      const corners = [[0,0],[w,0],[0,h],[w,h]].map(([x,y])=>[tx[0]*x+tx[2]*y+tx[4], tx[1]*x+tx[3]*y+tx[5]]);
+      const xs = corners.map(c=>c[0]), ys = corners.map(c=>c[1]);
+      const x0 = Math.min(...xs), top = Math.min(...ys);
+      // split on whitespace only (preserve tokens like MH145, 21:32(+1), 145-01/05082026/C)
+      const parts = item.str.split(/(\s+)/);
+      let curX = x0;
+      const totalLen = item.str.length;
+      const fullW = Math.max(...xs) - x0;
+      let charPos = 0;
+      for(const part of parts){
+        const partW = fullW * (part.length/totalLen);
+        if(part.trim()){
+          words.push({text: part, x0: curX, top});
+        }
+        curX += partW;
+        charPos += part.length;
+      }
+    }
+    pages.push(words);
+  }
+  return pages;
+}
+
+function extractRows(pages){
+  const rows = [];
+  for(const words of pages){
+    const headerTops = words.filter(w=> w.text==='Date' || w.text==='Pairing/Activity' || w.text==='Roster').map(w=>w.top);
+    const cutoff = headerTops.length ? Math.max(...headerTops)+10 : 0;
+    const body = words.filter(w=> w.top > cutoff);
+
+    let anchorTops = [];
+    for(const w of body){
+      const x0 = w.x0, txt = w.text;
+      if(x0>=220 && x0<=248 && TIME_RE.test(txt)) anchorTops.push(w.top);
+      else if(x0>=280 && x0<=302 && FLIGHT_RE.test(txt)) anchorTops.push(w.top);
+    }
+    anchorTops = [...new Set(anchorTops.map(t=>Math.round(t*10)/10))].sort((a,b)=>a-b);
+    const merged = [];
+    for(const t of anchorTops){ if(merged.length && Math.abs(t-merged[merged.length-1])<=3) continue; merged.push(t); }
+    if(!merged.length) continue;
+
+    function nearestAnchor(t){ return merged.reduce((b,a)=>Math.abs(t-a)<Math.abs(t-b)?a:b, merged[0]); }
+
+    const groups = {}; merged.forEach(a=>groups[a]={});
+    for(const w of body){
+      const a = nearestAnchor(w.top);
+      const x0 = w.x0, txt = w.text;
+      let col;
+      if(TIME_RE.test(txt)) col = nearest(TIME_COLS, x0);
+      else if(FLIGHT_RE.test(txt) && x0>=260 && x0<=320) col = 'item';
+      else if(x0 > 990) continue; // updated-by / updated-date, not needed
+      else col = nearest(NONTIME_COLS, x0);
+      groups[a][col] = groups[a][col] || [];
+      groups[a][col].push(txt);
+    }
+
+    for(const a of merged){
+      const g = groups[a];
+      const row = {};
+      ['date','pairing','item','rank','work','depStn','depTime','arrStn','arrTime','reportTime','dutyDebrief','flyHrs','dutyHrs','sdc','ac','hotel'].forEach(k=>{
+        row[k] = g[k] ? (k==='hotel'||k==='sdc' ? g[k].join(' ') : g[k][0]) : '';
+      });
+      rows.push(row);
+    }
+  }
+  return rows;
+}
+
+async function handleFile(file){
+  clearLog();
+  document.getElementById('previewCard').style.display='none';
+  document.getElementById('downloadRow').style.display='none';
+  if(!file.name.toLowerCase().endsWith('.pdf')){ log('Please choose a PDF file.', 'err'); return; }
+  try{
+    const buf = await file.arrayBuffer();
+    log('Reading PDF…');
+    const pages = await extractWordsPerPage(buf);
+    const rows = extractRows(pages);
+    if(!rows.length) throw new Error('No roster rows detected — this may not be a Roster Report PDF.');
+    LAST_ROWS = rows;
+    // try to grab staff label from page 1 words
+    const flat = pages[0]||[];
+    const idIdx = flat.findIndex(w=>/^\d{6,8}$/.test(w.text) && w.top < 60);
+    LAST_STAFF = idIdx>=0 ? flat.slice(Math.max(0,idIdx-8), idIdx+6).map(w=>w.text).join(' ') : (file.name.replace(/\.pdf$/i,''));
+    renderPreview(rows);
+    log('Parsed '+rows.length+' rows.', 'ok');
+    document.getElementById('downloadRow').style.display='flex';
+  }catch(err){
+    console.error(err);
+    log('Error: '+err.message, 'err');
+  }
+}
+
+function renderPreview(rows){
+  const tbody = document.getElementById('previewBody');
+  tbody.innerHTML = '';
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    const dep = [r.depStn, r.depTime].filter(Boolean).join(' ');
+    const arr = [r.arrStn, r.arrTime].filter(Boolean).join(' ');
+    const cells = [r.date, r.pairing, r.item, r.work, dep, arr, r.dutyDebrief, r.flyHrs, r.dutyHrs, r.sdc, r.ac, r.hotel];
+    cells.forEach((c,i)=>{
+      const td = document.createElement('td');
+      td.textContent = c||'';
+      if(i===0) td.className='date';
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  document.getElementById('rowCount').textContent = '('+rows.length+' rows)';
+  document.getElementById('previewCard').style.display='block';
+}
+
+function downloadXLSX(){
+  const rows = LAST_ROWS;
+  const aoa = [];
+  aoa.push([null,'Roster Report',null,null,null,null,null,null,null,LAST_STAFF||'Roster Report',null,null,null,null,null,null,null,null,null,null,null,null,null]);
+  aoa.push([null,'Date','Pairing/Activity',null,'Duty Report ','Item','Overridden Rank','Work Type','ACY Rep',null,'Dep Stn / Dep Time','Arr. Stn / Arr. Time','ACY Deb','Duty Debrief ','Flying Hrs','Duty Hrs','SDC','A/C Type','Hotel',null,'Updated By','Updated Date',null]);
+
+  rows.forEach(r=>{
+    let dateVal = null;
+    const m = DATE_RE.exec(r.date);
+    if(m){
+      const d = parseInt(m[1]), mo = MON[m[2].slice(0,1).toUpperCase()+m[2].slice(1,3).toLowerCase()]-1, y = parseInt(m[3]);
+      let hh=0, mm=0;
+      const tm = /^(\d{1,2}):(\d{2})/.exec(r.reportTime||'');
+      if(tm){ hh=parseInt(tm[1]); mm=parseInt(tm[2]); }
+      dateVal = new Date(y, mo, d, hh, mm);
+    }
+    const dep = [r.depStn, r.depTime].filter(Boolean).join(' ');
+    const arr = [r.arrStn, r.arrTime].filter(Boolean).join(' ');
+    aoa.push([null, dateVal, r.pairing, null, r.reportTime, r.item, r.rank, r.work, '', null,
+      dep, arr, '', r.dutyDebrief, r.flyHrs, r.dutyHrs, r.sdc, r.ac, r.hotel, null, '', null, null]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa, {cellDates:true});
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Roster');
+  const firstDate = rows.find(r=>DATE_RE.test(r.date));
+  const fname = 'roster-converted' + (firstDate ? '-'+firstDate.date.replace(/[^\dA-Za-z]/g,'') : '') + '.xlsx';
+  XLSX.writeFile(wb, fname, {cellDates:true});
+  log('Downloaded '+fname+' — upload this into Roster Parser (Choose file → .xlsx).', 'ok');
+}
+</script>
+</body>
+</html>
