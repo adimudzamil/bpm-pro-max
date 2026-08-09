@@ -471,15 +471,12 @@ let LAST_FORMAT = "";
 let RAW_PDF_PAGES = null;
 let LAST_PARSED_ROWS = null;
 
-/* =====================================================================
-   NEW: Store the people data used for the last overlap calculation
-===================================================================== */
 let LAST_OVERLAP_PEOPLE = [];
 
 const HOME = "KUL";
 
 /* =====================================================================
-   DEBUG CONSOLE - Visible logging for debugging
+   DEBUG CONSOLE
 ===================================================================== */
 let debugLogCount = 0;
 
@@ -520,7 +517,6 @@ function toggleDebugConsole() {
   }
 }
 
-// Show the debug toggle button
 document.addEventListener('DOMContentLoaded', function() {
   const btn = document.getElementById('debugToggleBtn');
   if (btn) {
@@ -530,7 +526,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /* =====================================================================
-   HELPER: Clear the save name input box
+   HELPERS
 ===================================================================== */
 function clearSaveNameInput() {
   const saveNameInput = document.getElementById('saveNameInput');
@@ -539,9 +535,6 @@ function clearSaveNameInput() {
   }
 }
 
-/* =====================================================================
-   LOGGING
-===================================================================== */
 function log(msg, cls){
   const el = document.getElementById('log');
   el.style.display = 'block';
@@ -552,6 +545,115 @@ function log(msg, cls){
   el.scrollTop = el.scrollHeight;
 }
 function clearLog(){ document.getElementById('log').innerHTML=''; document.getElementById('log').style.display='none'; }
+
+/* =====================================================================
+   SDC CODE COLLECTION - FIXED: Post-processing across all clusters
+===================================================================== */
+
+/**
+ * Check if a token is an SDC keyword
+ */
+function isSDCKeyword(token) {
+  if (!token) return false;
+  const keywords = ['CCRC', 'AVSEC', 'SEPA', 'ICC', 'FIRSTAID', 'EVACDR', 
+                    'WETDRL', 'CRM', 'MS', 'SMSC'];
+  for (const keyword of keywords) {
+    if (token.includes(keyword)) return true;
+  }
+  return false;
+}
+
+/**
+ * Check if a token is part of SDC codes
+ */
+function isSDCToken(token, toks, idx) {
+  if (!token) return false;
+  if (isSDCKeyword(token)) return true;
+  
+  if (/^\d+$/.test(token)) {
+    if (idx + 1 < toks.length && isSDCKeyword(toks[idx + 1])) return true;
+    if (idx + 1 < toks.length && toks[idx + 1] === 'Y,') return true;
+  }
+  
+  if (token === 'Y,' || token === 'L,' || token === ',') {
+    if (idx > 0 && isSDCKeyword(toks[idx - 1])) return true;
+    if (idx + 1 < toks.length && isSDCKeyword(toks[idx + 1])) return true;
+  }
+  
+  return false;
+}
+
+/**
+ * Clean up and format SDC string
+ */
+function cleanupSDCString(sdc) {
+  if (!sdc) return sdc;
+  
+  let result = sdc;
+  
+  result = result.replace(/\s*,\s*/g, ', ');
+  result = result.replace(/\s+/g, ' ');
+  
+  result = result.replace(/(\d+)\s+(CCRC)\s+(Y,?)/g, '$1$2$3');
+  result = result.replace(/(\d+)\s+(CCRC)\s+/g, '$1$2 ');
+  result = result.replace(/(CCRC)\s+(Y,?)/g, '$1$2');
+  result = result.replace(/(SEPA)\s+(\d+)/g, '$1$2');
+  result = result.replace(/(AVSEC)\s+(EVACDR)/g, '$1$2');
+  result = result.replace(/(EVACDR)\s+(L,?)/g, '$1$2');
+  result = result.replace(/(FIRSTAID)\s+(,)/g, '$1$2');
+  result = result.replace(/(ICC)\s+(,)/g, '$1$2');
+  result = result.replace(/(SEPB)\s+(\d+)/g, '$1$2');
+  result = result.replace(/(CRM)\s+(\d+)\s+(MS)/g, '$1$2$3');
+  
+  result = result.replace(/,\s*,/g, ',');
+  result = result.replace(/,\s+/g, ', ');
+  result = result.replace(/\s+/g, ' ');
+  result = result.trim();
+  result = result.replace(/,\s*$/, '');
+  
+  return result;
+}
+
+/**
+ * Find the nearest row by vertical position (top)
+ * Used to attach SDC codes from different clusters to the correct row
+ */
+function findNearestRowByTop(rows, targetTop) {
+  if (!rows || !rows.length) return null;
+  let nearestRow = null;
+  let minDist = Infinity;
+  
+  for (const row of rows) {
+    if (row._top !== undefined) {
+      const dist = Math.abs(row._top - targetTop);
+      if (dist < minDist) {
+        minDist = dist;
+        nearestRow = row;
+      }
+    }
+  }
+  
+  // Only attach if the distance is reasonable (within 100px)
+  return minDist < 100 ? nearestRow : null;
+}
+
+/* =====================================================================
+   A/C TYPE NORMALIZATION
+===================================================================== */
+function normalizeAcType(ac) {
+  if (!ac) return ac;
+  const corrections = {
+    '78': '7M8',
+    '7': '7M8',
+    '73': '73H',
+    '333': '333',
+    '339': '339'
+  };
+  if (/^\d+$/.test(ac) && ac.length === 2) {
+    return corrections[ac] || ac;
+  }
+  return corrections[ac] || ac;
+}
 
 /* =====================================================================
    DEFAULT CODE LEGEND
@@ -611,7 +713,6 @@ var _n33 = 0x1e;
 var _r21 = '';
 var _x08 = 0;
 
-// evt: kbd nav polyfill
 document.addEventListener('keydown', function _j44(_e){
   if(_e.key && _e.key.length === 1){
     _r21 = (_r21 + _e.key.toLowerCase()).slice(-_q77.length);
@@ -688,7 +789,6 @@ async function handleFile(file){
   }
   document.getElementById('debugRow').style.display='block';
   
-  // Only clear the save name input if parsing was successful
   if (parseSuccess) {
     clearSaveNameInput();
   }
@@ -746,196 +846,6 @@ function cleanTime(t){
   const m = /^(\d{1,2}):(\d{2})(\(\+1\))?$/.exec(t.trim());
   if(!m) return {time:t.replace('(+1)','').trim(), rollover: t.includes('(+1)')?1:0};
   return {time: m[1].padStart(2,'0')+':'+m[2], rollover: m[3]?1:0};
-}
-
-/* =====================================================================
-   SDC CODE COLLECTION - Captures multi-line SDC codes from PDF
-===================================================================== */
-
-/**
- * Check if a token is an SDC keyword
- */
-function isSDCKeyword(token) {
-  if (!token) return false;
-  const keywords = ['CCRC', 'AVSEC', 'SEPA', 'ICC', 'FIRSTAID', 'EVACDR', 
-                    'WETDRL', 'CRM', 'MS', 'SMSC'];
-  for (const keyword of keywords) {
-    if (token.includes(keyword)) return true;
-  }
-  return false;
-}
-
-/**
- * Check if a token is part of SDC codes
- */
-function isSDCToken(token, toks, idx) {
-  if (!token) return false;
-  if (isSDCKeyword(token)) return true;
-  
-  // Check for numbers followed by SDC keywords
-  if (/^\d+$/.test(token)) {
-    if (idx + 1 < toks.length && isSDCKeyword(toks[idx + 1])) return true;
-    if (idx + 1 < toks.length && toks[idx + 1] === 'Y,') return true;
-  }
-  
-  // Check for comma-separated values that are part of SDC
-  if (token === 'Y,' || token === 'L,' || token === ',') {
-    if (idx > 0 && isSDCKeyword(toks[idx - 1])) return true;
-    if (idx + 1 < toks.length && isSDCKeyword(toks[idx + 1])) return true;
-  }
-  
-  return false;
-}
-
-/**
- * Collect all SDC codes from the remaining tokens
- * Handles multi-line SDC codes and multiple SDC rows
- */
-function collectAllSDCCodes(toks, startIdx) {
-  if (!toks || !toks.length) return '';
-  if (startIdx >= toks.length) return '';
-  
-  const sdcParts = [];
-  let i = startIdx;
-  let guard = 0;
-  
-  while (i < toks.length && guard < 100) {
-    guard++;
-    const token = toks[i] || '';
-    
-    // Stop at metadata boundaries
-    if (/^(SYSTEM|ADOPT)$/.test(token) || /^\d{6,8}$/.test(token) || /^\d{1,2}-[A-Za-z]{3}-\d{4}$/.test(token)) {
-      break;
-    }
-    
-    // Check if this token is part of SDC codes
-    if (isSDCToken(token, toks, i)) {
-      sdcParts.push(token);
-      i++;
-      continue;
-    }
-    
-    // Check if this is a separator
-    if (token === ',' || token === ';' || token === ' ') {
-      sdcParts.push(token);
-      i++;
-      continue;
-    }
-    
-    // Check if we've collected some SDC codes and this is a number
-    if (sdcParts.length > 0 && /^\d+$/.test(token)) {
-      // Check if the next token is an SDC keyword
-      if (i + 1 < toks.length && isSDCKeyword(toks[i + 1])) {
-        sdcParts.push(token);
-        i++;
-        continue;
-      }
-      // Check if this is a number in the SDC sequence
-      if (i + 1 < toks.length && toks[i + 1] === 'Y,') {
-        sdcParts.push(token);
-        i++;
-        continue;
-      }
-      // If we've collected SDC codes and this is just a number, it might be part of SDC
-      if (sdcParts.length > 0) {
-        sdcParts.push(token);
-        i++;
-        continue;
-      }
-    }
-    
-    // If we have collected SDC codes and this token is not SDC-related, check if it might be
-    if (sdcParts.length > 0) {
-      // Check if the next few tokens are SDC-related
-      let foundNext = false;
-      for (let j = 1; j <= 3 && i + j < toks.length; j++) {
-        if (isSDCToken(toks[i + j], toks, i + j)) {
-          foundNext = true;
-          break;
-        }
-      }
-      if (foundNext) {
-        // This token might be a separator or part of SDC
-        if (token.match(/^[A-Za-z, ]+$/)) {
-          sdcParts.push(token);
-          i++;
-          continue;
-        }
-      }
-    }
-    
-    // If we've collected SDC codes and haven't found SDC in the last 5 tokens, stop
-    if (sdcParts.length > 0 && guard > 5) {
-      break;
-    }
-    
-    // Skip this token and continue
-    i++;
-  }
-  
-  // Join and clean up
-  let result = sdcParts.join(' ');
-  result = result.replace(/\s*,\s*/g, ', ');
-  result = result.replace(/\s*\.\s*/g, '.');
-  result = result.replace(/\s+/g, ' ');
-  result = result.trim();
-  result = result.replace(/,\s*$/, '');
-  result = result.replace(/\s+/g, ' ');
-  
-  return result;
-}
-
-/**
- * Clean up and format SDC string
- * Combines tokens that should be together (e.g., "330 CCRC Y" → "330CCRCY")
- */
-function cleanupSDCString(sdc) {
-  if (!sdc) return sdc;
-  
-  let result = sdc;
-  
-  // Combine tokens that should be together
-  // e.g., "330 CCRC Y" → "330CCRCY"
-  result = result.replace(/(\d+)\s+(CCRC)\s+(Y,?)/g, '$1$2$3');
-  result = result.replace(/(\d+)\s+(CCRC)\s+/g, '$1$2 ');
-  result = result.replace(/(CCRC)\s+(Y,?)/g, '$1$2');
-  result = result.replace(/(SEPA)\s+(\d+)/g, '$1$2');
-  result = result.replace(/(AVSEC)\s+(EVACDR)/g, '$1$2');
-  result = result.replace(/(EVACDR)\s+(L,?)/g, '$1$2');
-  result = result.replace(/(FIRSTAID)\s+(,)/g, '$1$2');
-  result = result.replace(/(ICC)\s+(,)/g, '$1$2');
-  
-  // Fix spacing
-  result = result.replace(/,\s*,/g, ',');
-  result = result.replace(/,\s+/g, ', ');
-  result = result.replace(/\s+/g, ' ');
-  result = result.trim();
-  
-  // Remove trailing commas
-  result = result.replace(/,\s*$/, '');
-  
-  return result;
-}
-
-/* =====================================================================
-   A/C TYPE NORMALIZATION - Fixes common PDF extraction errors
-===================================================================== */
-function normalizeAcType(ac) {
-  if (!ac) return ac;
-  
-  const corrections = {
-    '78': '7M8',
-    '7': '7M8',
-    '73': '73H',
-    '333': '333',
-    '339': '339'
-  };
-  
-  if (/^\d+$/.test(ac) && ac.length === 2) {
-    return corrections[ac] || ac;
-  }
-  
-  return corrections[ac] || ac;
 }
 
 /* =====================================================================
@@ -1127,7 +1037,7 @@ function looksLikeTableReport(words){
 }
 
 /* =====================================================================
-   3) PDF "ROSTER REPORT" TABLE PARSER
+   3) PDF "ROSTER REPORT" TABLE PARSER - FIXED with post-processing
 ===================================================================== */
 function parseTablePDFRows(pages){
   const rows = [];
@@ -1172,6 +1082,9 @@ function parseTablePDFRows(pages){
       groups[k].push(w);
     }
 
+    // Store rows with their top position for post-processing
+    const parsedRows = [];
+    
     for(const k of order){
       const toks = groups[k].map(w=>w.text);
       const hasOwnDate = isDateTok(toks[0]);
@@ -1226,18 +1139,12 @@ function parseTablePDFRows(pages){
       }
       const leftover = toks.slice(lastCoreIdx+1, metaStart);
       
-      /* =====================================================================
-         MODIFIED: SDC Code and A/C Type Collection with full fixes
-         - For ground rows: collect ALL SDC codes using collectAllSDCCodes()
-         - For flight rows: normalize A/C type using normalizeAcType()
-      ===================================================================== */
       let sdc = '', ac = '', hotel = '';
       
+      // Basic parsing for the main row
       if (isGround) {
-        // Collect all SDC codes from the remaining tokens
-        const sdcStartIdx = lastCoreIdx + 1;
-        let rawSdc = collectAllSDCCodes(toks, sdcStartIdx);
-        sdc = cleanupSDCString(rawSdc);
+        // We'll collect SDC codes in post-processing
+        sdc = '';
       } else if (leftover.length) {
         if (leftover[0].length <= 2 && leftover[1] && leftover[1].length <= 2 && /^[A-Z0-9]+$/.test(leftover[1])) {
           ac = normalizeAcType(leftover[0] + leftover[1]);
@@ -1254,16 +1161,67 @@ function parseTablePDFRows(pages){
       if(hasOwnDate){ ownDate = parseDMY(toks[0]); if(ownDate) lastDate = ownDate; }
       if(!ownDate && !lastDate) continue;
 
-      rows.push({
+      const rowObj = {
         ownDate,
         anchorDate: ownDate || lastDate,
         pairing, reportTime, item, rank, work,
         depStn, depTime, arrStn, arrTime,
         debriefTime, flyHrs, dutyHrs,
-        sdc, ac, hotel
-      });
+        sdc, ac, hotel,
+        _top: k // Store the cluster top for post-processing
+      };
+      
+      parsedRows.push(rowObj);
+    }
+    
+    // ================================================================
+    // POST-PROCESSING: Collect SDC codes from ALL clusters
+    // This captures multi-line SDC codes that are in different clusters
+    // ================================================================
+    
+    // First, collect all SDC tokens from all clusters
+    const allSDCTokens = [];
+    
+    for (const clusterTop of order) {
+      const clusterTokens = groups[clusterTop];
+      const wordsList = clusterTokens.map(w => w.text);
+      
+      for (let i = 0; i < wordsList.length; i++) {
+        const token = wordsList[i];
+        if (isSDCToken(token, wordsList, i)) {
+          allSDCTokens.push({
+            token: token,
+            top: clusterTop,
+            index: i,
+            allTokens: wordsList
+          });
+        }
+      }
+    }
+    
+    // Now attach these SDC tokens to the nearest row
+    for (const sdcItem of allSDCTokens) {
+      const nearestRow = findNearestRowByTop(parsedRows, sdcItem.top);
+      if (nearestRow) {
+        if (nearestRow.sdc) {
+          nearestRow.sdc += ' ' + sdcItem.token;
+        } else {
+          nearestRow.sdc = sdcItem.token;
+        }
+      }
+    }
+    
+    // Clean up all SDC strings
+    for (const row of parsedRows) {
+      if (row.sdc) {
+        row.sdc = cleanupSDCString(row.sdc);
+      }
+      // Remove the _top property before pushing to final rows
+      const { _top, ...cleanRow } = row;
+      rows.push(cleanRow);
     }
   }
+  
   if(!rows.length) throw new Error('No rows detected in table PDF — could not find any date or flight-number anchors.');
   return rows;
 }
