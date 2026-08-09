@@ -11,6 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
+  /* ... (full CSS from previous version) ... */
   :root{
     --bg:#0b0c0e; --panel:#141619; --panel2:#1b1e22; --line:#2a2e33;
     --text:#f2f3f5; --dim:#aeb4bb; --accent:#c6ff3d; --accent-dim:#7a934f;
@@ -546,7 +547,7 @@ function log(msg, cls){
 function clearLog(){ document.getElementById('log').innerHTML=''; document.getElementById('log').style.display='none'; }
 
 /* =====================================================================
-   SDC CODE COLLECTION - FIXED: Simple day-off filtering (Approach 1)
+   SDC CODE COLLECTION - CORRECTED: use pairing for day-off detection
 ===================================================================== */
 
 /**
@@ -584,7 +585,7 @@ function isSDCToken(token, toks, idx) {
 
 /**
  * Find the nearest non-day-off row by vertical position (top)
- * This is the key fix: we exclude day-offs entirely.
+ * FIXED: uses row.pairing for day-off detection, not row.item
  */
 function findNearestNonDayOffRow(rows, targetTop) {
   let nearestRow = null;
@@ -592,7 +593,7 @@ function findNearestNonDayOffRow(rows, targetTop) {
   
   for (const row of rows) {
     // Only consider rows that have a date, a _top, and are NOT day-offs
-    if (row._top !== undefined && row.ownDate !== null && !isOffCode(row.item)) {
+    if (row._top !== undefined && row.ownDate !== null && !isOffCode(row.pairing)) {
       const dist = Math.abs(row._top - targetTop);
       if (dist < minDist) {
         minDist = dist;
@@ -607,8 +608,9 @@ function findNearestNonDayOffRow(rows, targetTop) {
 
 /**
  * Clean up and format SDC string (with sorting, deduplication, and pairing-code filtering)
+ * FIXED: accepts pairingCode instead of itemCode
  */
-function cleanupSDCString(sdc, itemCode) {
+function cleanupSDCString(sdc, pairingCode) {
   if (!sdc) return sdc;
   
   // Split into tokens
@@ -617,12 +619,12 @@ function cleanupSDCString(sdc, itemCode) {
   // Remove duplicates
   tokens = [...new Set(tokens)];
   
-  // Filter out pairing codes (tokens that exactly match the row's item)
-  if (itemCode) {
-    tokens = tokens.filter(t => t !== itemCode);
+  // Filter out the row's pairing code (ground code)
+  if (pairingCode) {
+    tokens = tokens.filter(t => t !== pairingCode);
   }
   
-  // Filter out known pairing codes (additional safety)
+  // Additional safety filtering of known pairing codes
   const excludeList = ['ICCRCNT1', 'AVSECRP3', '570SFAW3', '570SEPW2', '17SMSC1', 'S4WBA', 'S3NBA'];
   tokens = tokens.filter(t => !excludeList.includes(t));
   
@@ -1080,7 +1082,7 @@ function looksLikeTableReport(words){
 }
 
 /* =====================================================================
-   3) PDF "ROSTER REPORT" TABLE PARSER - FIXED with day-off filtering
+   3) PDF "ROSTER REPORT" TABLE PARSER - CORRECTED
 ===================================================================== */
 function parseTablePDFRows(pages){
   const rows = [];
@@ -1215,7 +1217,7 @@ function parseTablePDFRows(pages){
     }
     
     // ================================================================
-    // POST-PROCESSING: Simple day-off filtering (Approach 1)
+    // POST-PROCESSING: Day-off filtering using pairing
     // ================================================================
     
     // 1. Collect all SDC tokens from all clusters
@@ -1238,7 +1240,7 @@ function parseTablePDFRows(pages){
       }
     }
     
-    // 2. Assign each SDC token to the nearest non-day-off row
+    // 2. Assign each SDC token to the nearest non-day-off row (using pairing)
     for (const sdcItem of allSDCTokens) {
       const targetRow = findNearestNonDayOffRow(parsedRows, sdcItem.top);
       if (targetRow) {
@@ -1250,10 +1252,10 @@ function parseTablePDFRows(pages){
       }
     }
     
-    // 3. Clean up all SDC strings, passing the row's item for pairing-code filtering
+    // 3. Clean up SDC strings, passing the row's pairing code for filtering
     for (const row of parsedRows) {
       if (row.sdc) {
-        row.sdc = cleanupSDCString(row.sdc, row.item);
+        row.sdc = cleanupSDCString(row.sdc, row.pairing);
       }
       const { _top, ...cleanRow } = row;
       rows.push(cleanRow);
