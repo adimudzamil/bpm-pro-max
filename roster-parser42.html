@@ -1542,24 +1542,28 @@ function fallbackDownload(blob, filename) {
 
 /* ===== Fit + Capture helper (async, always restores) ===== */
 async function fitAndCapture(element, filename, hideSelectors = []) {
-  // 1. Store original styles
-  const origTransform = element.style.transform;
-  const origWidth = element.style.width;
-  const origOrigin = element.style.transformOrigin;
+  // Store original styles
+  const orig = {
+    transform: element.style.transform,
+    width: element.style.width,
+    transformOrigin: element.style.transformOrigin,
+    overflow: element.style.overflow,
+  };
 
-  // 2. Temporarily hide elements
+  // Hide elements using visibility (preserves layout)
   const hiddenElements = [];
   hideSelectors.forEach(sel => {
     document.querySelectorAll(sel).forEach(el => {
-      if (el.style.display !== 'none') {
-        el._origDisplay = el.style.display;
-        el.style.display = 'none';
-        hiddenElements.push(el);
-      }
+      const origVis = el.style.visibility;
+      el.style.visibility = 'hidden';
+      hiddenElements.push({ el, origVis });
     });
   });
 
-  // 3. Compute scale using table.scrollWidth (matches manual fit button)
+  // Remove overflow:hidden to avoid clipping
+  element.style.overflow = 'visible';
+
+  // Compute scale using table.scrollWidth (matches manual fit button)
   const table = element.querySelector('table');
   const naturalWidth = table ? table.scrollWidth : element.scrollWidth;
   const availWidth = window.innerWidth - 20;
@@ -1571,22 +1575,23 @@ async function fitAndCapture(element, filename, hideSelectors = []) {
     element.style.width = (100 / scale) + '%';
   }
 
-  // 4. Wait for reflow
+  // Wait for reflow
   await new Promise(resolve => setTimeout(resolve, 300));
 
   try {
-    // 5. Capture the image (this includes the share sheet on mobile)
     await captureElementAsImage(element, filename);
   } catch (err) {
     log('Export failed: ' + err.message, 'err');
   } finally {
-    // 6. ALWAYS restore styles and show hidden elements
-    element.style.transform = origTransform || '';
-    element.style.width = origWidth || '';
-    element.style.transformOrigin = origOrigin || '';
-    hiddenElements.forEach(el => {
-      el.style.display = el._origDisplay || '';
-      delete el._origDisplay;
+    // Restore element styles
+    element.style.transform = orig.transform || '';
+    element.style.width = orig.width || '';
+    element.style.transformOrigin = orig.transformOrigin || '';
+    element.style.overflow = orig.overflow || '';
+
+    // Restore hidden elements
+    hiddenElements.forEach(({ el, origVis }) => {
+      el.style.visibility = origVis || '';
     });
   }
 }
