@@ -1039,24 +1039,78 @@ function parseTablePDFRows(pages){
       return merged.reduce((b,a)=>Math.abs(t-a)<Math.abs(t-b)?a:b, merged[0]);
     }
 
-    // assign every word to its nearest anchor, then bucket into a field
+    // assign every non-SDC/Hotel word to its nearest anchor row
     const groups = {};
     merged.forEach(a=>groups[a]={});
     for(const w of body){
-      const a = nearestAnchor(w.top);
       const x0 = w.x0, txt = w.text;
       let col;
       if(TABLE_TIME_RE.test(txt)) col = nearestTableCol(TABLE_TIME_COLS, x0);
       else if(TABLE_FLIGHT_RE.test(txt) && x0>=260 && x0<=320) col = 'item';
       else if(x0 > 990) continue; // updated-by / updated-date audit columns — not needed downstream
       else col = nearestTableCol(TABLE_NONTIME_COLS, x0);
+      if(col==='sdc' || col==='hotel') continue; // handled separately below
+      const a = nearestAnchor(w.top);
       groups[a][col] = groups[a][col] || [];
       groups[a][col].push(txt);
     }
 
+    // SDC/Hotel need different handling: a long wrapped list (e.g. many
+    // qualification codes) renders as one unbroken run of lines that can
+    // straddle its own row's anchor — some lines above it, some below —
+    // and can run long enough to reach past the NEXT row's anchor line too.
+    // Deciding line-by-line (nearest anchor, or "most recent anchor above")
+    // mis-splits these blocks. Instead: group same-column words into
+    // contiguous chains by consistent line-height spacing, then assign the
+    // WHOLE chain to whichever anchor's own row falls inside it (that's the
+    // row the cell actually belongs to), falling back to nearest-to-midpoint
+    // when no anchor falls inside the chain.
+    function assignChainColumn(colName){
+      const items = body.filter(w=>{
+        if(TABLE_TIME_RE.test(w.text)) return false;
+        if(TABLE_FLIGHT_RE.test(w.text) && w.x0>=260 && w.x0<=320) return false;
+        if(w.x0 > 990) return false;
+        return nearestTableCol(TABLE_NONTIME_COLS, w.x0) === colName;
+      }).sort((a,b)=>a.top-b.top);
+      const chains = [];
+      for(const w of items){
+        const last = chains.length ? chains[chains.length-1] : null;
+        if(last && (w.top - last.words[last.words.length-1].top) <= 15){
+          last.words.push(w);
+        } else {
+          chains.push({words:[w]});
+        }
+      }
+      for(const chain of chains){
+        const start = chain.words[0].top, end = chain.words[chain.words.length-1].top;
+        const mid = (start+end)/2;
+        const inside = merged.filter(a => a >= start-3 && a <= end+3);
+        const owner = inside.length
+          ? inside.reduce((b,a)=>Math.abs(mid-a)<Math.abs(mid-b)?a:b, inside[0])
+          : nearestAnchor(mid);
+        // Join fragments: a narrow column wraps mid-token as often as it
+        // wraps between tokens, and there's no whitespace info left once
+        // fragments are on separate lines. Empirically (verified against
+        // real exports): SDC codes are only ever separated by ", " — so a
+        // space belongs only where the previous fragment already ends in a
+        // comma; anywhere else the wrap was mid-token and needs no space.
+        // Hotel names are ordinary multi-word text, so always space-join.
+        let joined = chain.words[0].text;
+        for(let i=1;i<chain.words.length;i++){
+          const prev = chain.words[i-1].text;
+          const needsSpace = (colName!=='sdc') || prev.trim().endsWith(',');
+          joined += (needsSpace ? ' ' : '') + chain.words[i].text;
+        }
+        groups[owner][colName+'Text'] = groups[owner][colName+'Text']
+          ? groups[owner][colName+'Text'] + ' ' + joined : joined;
+      }
+    }
+    assignChainColumn('sdc');
+    assignChainColumn('hotel');
+
     for(const a of merged){
       const g = groups[a];
-      const get = (k) => g[k] ? (k==='hotel'||k==='sdc' ? g[k].join(' ') : g[k][0]) : '';
+      const get = (k) => (k==='hotel'||k==='sdc') ? (g[k+'Text']||'') : (g[k] ? g[k][0] : '');
 
       let ownDate = null;
       const dm = TABLE_DATE_RE.exec(get('date'));
