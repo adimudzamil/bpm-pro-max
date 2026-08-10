@@ -124,178 +124,9 @@
 
   footer{padding:20px 14px 40px;color:var(--dim);font-size:10.5px;text-align:center}
 
-  /* ===== HEATMAP POPUP STYLES ===== */
-  .popup-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    animation: fadeIn 0.2s ease;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  .popup-content {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    max-width: 340px;
-    width: 100%;
-    padding: 16px 20px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-  }
-
-  .popup-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--accent);
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 8px;
-    margin-bottom: 10px;
-  }
-
-  .popup-close {
-    background: transparent;
-    border: none;
-    color: var(--text);
-    font-size: 24px;
-    cursor: pointer;
-    padding: 0 4px;
-    opacity: 0.6;
-    transition: opacity 0.15s;
-    min-width: 44px;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .popup-close:hover,
-  .popup-close:focus {
-    opacity: 1;
-  }
-
-  .overlap-window {
-    padding: 8px 0;
-    border-bottom: 1px dashed var(--line);
-  }
-
-  .overlap-window:last-child {
-    border-bottom: none;
-  }
-
-  .window-time {
-    font-weight: 500;
-    font-size: 12px;
-    color: var(--dim);
-    margin-bottom: 4px;
-  }
-
-  .leaves-first {
-    font-size: 15px;
-    padding: 4px 0;
-  }
-
-  .leaves-first strong {
-    color: var(--err);
-  }
-
-  .others {
-    font-size: 12px;
-    color: var(--dim);
-    padding: 2px 0 0 4px;
-  }
-
-  .no-duty {
-    font-size: 15px;
-    color: var(--ok);
-    padding: 4px 0;
-    text-align: center;
-  }
-
-  /* ===== DEBUG CONSOLE ===== */
-  #debugConsole {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--panel);
-    border-top: 2px solid var(--accent);
-    z-index: 9999;
-    max-height: 200px;
-    overflow: auto;
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 8px 12px;
-    color: var(--text);
-    display: none;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
-  }
-
-  #debugConsole::-webkit-scrollbar {
-    width: 4px;
-  }
-  #debugConsole::-webkit-scrollbar-track {
-    background: var(--panel);
-  }
-  #debugConsole::-webkit-scrollbar-thumb {
-    background: var(--line);
-    border-radius: 4px;
-  }
-
-  .debug-entry {
-    padding: 1px 0;
-    border-bottom: 1px solid rgba(42,46,51,0.3);
-  }
-  .debug-entry .timestamp {
-    color: var(--dim);
-    font-size: 9px;
-    margin-right: 8px;
-  }
-  .debug-entry .ok {
-    color: var(--ok);
-  }
-  .debug-entry .err {
-    color: var(--err);
-  }
-  .debug-entry .warn {
-    color: var(--warn);
-  }
-  .debug-entry .info {
-    color: var(--accent);
-  }
-
-  #debugToggleBtn {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    background: var(--accent);
-    color: #0b0c0e;
-    border: none;
-    border-radius: 50%;
-    width: 44px;
-    height: 44px;
-    font-size: 20px;
-    cursor: pointer;
-    z-index: 10000;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
-    font-weight: 700;
-    display: none;
-  }
-
   @media print{
     body{background:#fff;color:#000}
-    header, #drop, #status, #log, footer, .btnRow, section.card h2 .btns, #saveCard, #savedListCard, #overlapCard, #debugConsole, #debugToggleBtn{display:none !important}
+    header, #drop, #status, #log, footer, .btnRow, section.card h2 .btns, #saveCard, #savedListCard, #overlapCard{display:none !important}
     #resultsWrap{width:auto !important;transform:scale(var(--print-scale,1)) !important;transform-origin:top left !important}
     #outCard{width:fit-content;max-width:none}
     section.card{border:1px solid #999;box-shadow:none;background:#fff;margin-top:5px;break-inside:avoid}
@@ -327,15 +158,12 @@
     @page{ size: portrait; margin: 8mm; }
   }
 </style>
-<style>
-  #debugToggleBtn, #debugConsole { display: none !important; }
-</style>
 </head>
 <body>
 
 <header>
   <h1>ROSTER <span>PARSER</span></h1>
-  <div class="sub">xlsx / pdf table / pdf calendar → unified daily roster + Find time 2B together with other CREW(s) · by 2100551</div>
+  <div class="sub">xlsx / pdf table / pdf calendar → unified daily roster + Find time together with other CREW(s) · by 2100551</div>
 </header>
 
 <main>
@@ -344,7 +172,7 @@
     <div class="btnRow" style="justify-content:center">
       <button class="primary" onclick="document.getElementById('fileInput').click()">Choose file</button>
     </div>
-    <div style="margin-top:8px">Accepts <b>.xlsx(PREFERRED)</b>, <b>.xls</b>, or <b>.pdf(STILL BUGGY,not recommended)</b> — any of: raw Roster Report export, PDF print of a Roster Report, or the calendar "fridge" PDF(lack info).</div>
+    <div style="margin-top:8px">Accepts <b>.xlsx(PREFERRED)</b>, <b>.xls</b>, or <b>.pdf(STILL BUGGY)</b> — any of: raw Roster Report export, PDF print of a Roster Report, or the calendar "fridge" PDF.</div>
     <input id="fileInput" type="file" accept=".xlsx,.xls,.pdf">
   </div>
 
@@ -412,12 +240,12 @@
   </section>
 
   <section class="card" id="savedListCard">
-    <h2>Saved Rosters <small>Must save to use 'Find Time 2B Together'. Local to this device only</small></h2>
+    <h2>Saved Rosters <small>Must save to use 'Find Time Together'. Local to this device only</small></h2>
     <div id="savedListBody" style="padding:6px 12px"></div>
   </section>
 
   <section class="card" id="overlapCard">
-    <h2>Find Time 2B Together 💞<small>select 2+ saved rosters</small></h2>
+    <h2>Find Time Together 💞<small>select 2+ saved rosters</small></h2>
     <div style="padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="primary" onclick="computeTogetherTime()">Find overlap</button>
       <button onclick="toggleHeatmap()" id="heatmapBtn" style="display:none">Heatmap view</button>
@@ -444,21 +272,6 @@
   </div>
 </div>
 
-<!-- ===== DEBUG CONSOLE ===== -->
-<div id="debugConsole">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;position:sticky;top:0;background:var(--panel);padding-bottom:4px;z-index:1">
-    <span style="color:var(--accent);font-weight:700">🐛 DEBUG CONSOLE</span>
-    <div>
-      <button onclick="clearDebugLog()" style="background:transparent;border:1px solid var(--line);color:var(--text);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;margin-right:6px">Clear</button>
-      <button onclick="toggleDebugConsole()" style="background:transparent;border:1px solid var(--line);color:var(--text);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer">✕</button>
-    </div>
-  </div>
-  <div id="debugLog" style="font-size:10.5px;line-height:1.6;color:var(--dim)"></div>
-</div>
-
-<!-- Debug toggle button (floating) -->
-<button onclick="toggleDebugConsole()" id="debugToggleBtn">🐛</button>
-
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
@@ -473,76 +286,10 @@ let LEGEND = {};
 
 let LAST_FILE_NAME = "";
 let LAST_FORMAT = "";
-let RAW_PDF_PAGES = null;
+let RAW_PDF_PAGES = null;   // cached extracted words, for re-parse / debug export
 let LAST_PARSED_ROWS = null;
 
-/* =====================================================================
-   NEW: Store the people data used for the last overlap calculation
-===================================================================== */
-let LAST_OVERLAP_PEOPLE = [];
-
 const HOME = "KUL";
-
-/* =====================================================================
-   DEBUG CONSOLE - Visible logging for debugging
-===================================================================== */
-let debugLogCount = 0;
-
-function debugLog(msg, type) {
-  const consoleMethod = type === 'err' ? 'error' : (type === 'warn' ? 'warn' : 'log');
-  console[consoleMethod]('[DEBUG] ' + msg);
-  
-  debugLogCount++;
-  const timestamp = new Date().toLocaleTimeString();
-  const entry = document.createElement('div');
-  entry.className = 'debug-entry';
-  entry.innerHTML = `<span class="timestamp">[${timestamp}]</span><span class="${type || 'info'}">${msg}</span>`;
-  const logEl = document.getElementById('debugLog');
-  if (logEl) {
-    logEl.appendChild(entry);
-    const consoleEl = document.getElementById('debugConsole');
-    if (consoleEl) consoleEl.scrollTop = consoleEl.scrollHeight;
-  }
-}
-
-function clearDebugLog() {
-  const logEl = document.getElementById('debugLog');
-  if (logEl) logEl.innerHTML = '';
-  debugLogCount = 0;
-}
-
-function toggleDebugConsole() {
-  const consoleEl = document.getElementById('debugConsole');
-  const btn = document.getElementById('debugToggleBtn');
-  if (!consoleEl || !btn) return;
-  if (consoleEl.style.display === 'block') {
-    consoleEl.style.display = 'none';
-    btn.textContent = '🐛';
-  } else {
-    consoleEl.style.display = 'block';
-    btn.textContent = '✕';
-    debugLog('Debug console opened', 'info');
-  }
-}
-
-// Show the debug toggle button
-document.addEventListener('DOMContentLoaded', function() {
-  const btn = document.getElementById('debugToggleBtn');
-  if (btn) {
-    btn.style.display = 'block';
-    debugLog('Debug console ready - click 🐛 to open', 'ok');
-  }
-});
-
-/* =====================================================================
-   HELPER: Clear the save name input box
-===================================================================== */
-function clearSaveNameInput() {
-  const saveNameInput = document.getElementById('saveNameInput');
-  if (saveNameInput) {
-    saveNameInput.value = '';
-  }
-}
 
 /* =====================================================================
    LOGGING
@@ -647,8 +394,6 @@ async function handleFile(file){
   document.getElementById('debugRow').style.display='none';
 
   const name = file.name.toLowerCase();
-  let parseSuccess = false;
-  
   try{
     if(name.endsWith('.xlsx') || name.endsWith('.xls')){
       setFmt('XLSX', true);
@@ -657,11 +402,10 @@ async function handleFile(file){
       LAST_PARSED_ROWS = rows;
       buildDays(rowsToLegs(rows));
       render();
-      parseSuccess = true;
     } else if(name.endsWith('.pdf')){
       const buf = await file.arrayBuffer();
       const pages = (await extractPdfWords(buf)).map(mergeDayHeaderTokens);
-      RAW_PDF_PAGES = pages;
+      RAW_PDF_PAGES = pages; // cache regardless of outcome, for debug export / override
       const allWords = [].concat(...pages);
       const isCalendar = looksLikeCalendar(allWords);
       const isTable = looksLikeTableReport(allWords);
@@ -669,16 +413,13 @@ async function handleFile(file){
       if(isCalendar && !isTable){
         setFmt('PDF · Calendar', true);
         parseAndBuild('calendar');
-        parseSuccess = true;
       } else if(isTable && !isCalendar){
         setFmt('PDF · Roster Report', true);
         parseAndBuild('table');
-        parseSuccess = true;
       } else if(isTable && isCalendar){
         setFmt('PDF · Ambiguous (guessed Table)', true);
         log('Both calendar and table signals detected — guessing table. Use the force-reparse buttons above if wrong.', 'warn');
         parseAndBuild('table');
-        parseSuccess = true;
       } else {
         setFmt('PDF · Unknown', false);
         log('Could not confidently detect the PDF sub-format. Try one of the "force re-parse" buttons above — and please send the debug export below so this can be fixed properly.', 'err');
@@ -692,11 +433,6 @@ async function handleFile(file){
     log('Fatal parse error: '+err.message, 'err');
   }
   document.getElementById('debugRow').style.display='block';
-  
-  // Only clear the save name input if parsing was successful
-  if (parseSuccess) {
-    clearSaveNameInput();
-  }
 }
 
 function parseAndBuild(kind){
@@ -746,6 +482,9 @@ function parseDMY(str){
   if(mo===undefined) return null;
   return new Date(parseInt(m[3]), mo, parseInt(m[1]));
 }
+// Returns {time:"HH:MM", rollover:0|1} — the (+1) suffix means "+1 calendar day
+// relative to this record's own anchor/report date", NOT relative to any other
+// field on the same record. See design note in parseTablePDFRows / rowsToLegs.
 function cleanTime(t){
   if(!t) return {time:'', rollover:0};
   const m = /^(\d{1,2}):(\d{2})(\(\+1\))?$/.exec(t.trim());
@@ -785,7 +524,7 @@ function parseXLSXRows(buf){
     if(!r || r.every(c=>c==='' || c===null || c===undefined)) continue;
     const get = j => (j==null || j<0) ? '' : String(r[j]===undefined?'':r[j]).trim();
     let rawDate = r[idx.date];
-    if(get(idx.date)==='Date') continue;
+    if(get(idx.date)==='Date') continue; // repeated header row mid-sheet
 
     let dateObj = null;
     if(rawDate instanceof Date && !isNaN(rawDate)) dateObj = new Date(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate());
@@ -828,21 +567,27 @@ function splitStnTime(s){
 
 /* =====================================================================
    2) PDF TEXT EXTRACTION (position-aware) + defensive re-tokenizer
+   pdf.js does not word-split the way a text-word-boundary tool would; this
+   report's PDF sometimes emits runs with no whitespace between semantically
+   distinct tokens (e.g. "REPORT:14:10Aug31"). We split on whitespace first,
+   then run every resulting chunk through a pattern tokenizer that knows the
+   shapes of tokens this report actually contains, so detection/parsing
+   downstream doesn't depend on pdf.js's arbitrary run boundaries.
 ===================================================================== */
 const TOKEN_PATTERNS = [
-  /\d{1,2}-[A-Za-z]{3}-\d{4}/,
-  /REPORT:\d{1,2}:\d{2}/,
-  /DEBRIEF:\d{1,2}:\d{2}(?:\(\+1\))?/,
-  /LO[A-Z]{3}/,
-  /MH\d{2,4}[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?-[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?/,
-  /MH\d{2,4}[A-Z]{3}-[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?/,
+  /\d{1,2}-[A-Za-z]{3}-\d{4}/,                     // 05-Aug-2026
+  /REPORT:\d{1,2}:\d{2}/,                          // REPORT:14:10
+  /DEBRIEF:\d{1,2}:\d{2}(?:\(\+1\))?/,             // DEBRIEF:23:35
+  /LO[A-Z]{3}/,                                    // LOAKL
+  /MH\d{2,4}[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?-[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?/, // MH145KUL21:30-AKL11:25(+1)
+  /MH\d{2,4}[A-Z]{3}-[A-Z]{3}\d{1,2}:\d{2}(?:\(\+1\))?/, // MH145KUL-AKL11:25(+1)
   /MH\d{2,4}/,
-  /[A-Za-z]{3}\d{1,2}(?![A-Za-z0-9])/,
+  /[A-Za-z]{3}\d{1,2}(?![A-Za-z0-9])/,             // Aug31 (month+day header)
   /\d{1,2}:\d{2}\(\+1\)/,
   /\d{1,2}:\d{2}/,
   /Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/,
   /January|February|March|April|May|June|July|August|September|October|November|December/,
-  /[A-Z]{3}(?=\d{1,2}:\d{2})/,
+  /[A-Z]{3}(?=\d{1,2}:\d{2})/,                     // bare station code glued to a time
   /[A-Za-z]{2,}/,
   /\d+/
 ];
@@ -861,7 +606,7 @@ function retokenize(str){
         break;
       }
     }
-    if(!matched){ s = s.slice(1); }
+    if(!matched){ s = s.slice(1); } // drop stray separator char
   }
   return out.length ? out : [str];
 }
@@ -914,7 +659,7 @@ function mergeDayHeaderTokens(words){
     if(nxt && MON_NAMES.includes(w.text) && /^\d{1,2}$/.test(nxt.text) &&
        Math.abs(w.top - nxt.top) < 4 && (nxt.x0 - w.x1) < 8 && (nxt.x0 - w.x1) > -3){
       out.push({text: w.text+nxt.text, x0:w.x0, x1:nxt.x1, top:w.top, bottom:Math.max(w.bottom,nxt.bottom), page:w.page, pageW:w.pageW, pageH:w.pageH});
-      i++;
+      i++; // day-number token consumed
     } else {
       out.push(w);
     }
@@ -922,10 +667,15 @@ function mergeDayHeaderTokens(words){
   return out;
 }
 
+// pdf.js drops a lone leading letter immediately before a digit in certain
+// fonts used by this report (confirmed via debug export: "S4WBA" extracts as
+// "4WBA", "C17SMSC1" as "17SMSC1" — the character is simply never emitted,
+// not a filtering bug on our side). These are the known shapes where that
+// happens; anything else is left as extracted rather than guessed at.
 function normalizeGroundCode(code){
   if(!code) return code;
-  if(/^[0-9][A-Z]{2,4}$/.test(code)) return 'S'+code;
-  if(/^[0-9]+SMSC[0-9]*$/.test(code)) return 'C'+code;
+  if(/^[0-9][A-Z]{2,4}$/.test(code)) return 'S'+code;        // 3NBA -> S3NBA, 4WBA -> S4WBA
+  if(/^[0-9]+SMSC[0-9]*$/.test(code)) return 'C'+code;       // 17SMSC1 -> C17SMSC1
   return code;
 }
 
@@ -942,7 +692,7 @@ function looksLikeTableReport(words){
 }
 
 /* =====================================================================
-   3) PDF "ROSTER REPORT" TABLE PARSER
+   3) PDF "ROSTER REPORT" TABLE PARSER (column-position based)
 ===================================================================== */
 function parseTablePDFRows(pages){
   const rows = [];
@@ -957,6 +707,13 @@ function parseTablePDFRows(pages){
   for(const words of pages){
     if(!words.length) continue;
 
+    // Column x-positions for this report turned out NOT to be stable across
+    // different exports/pages (verified against real extracted data), so
+    // rows are now parsed by TOKEN SHAPE in natural reading order instead of
+    // x-position — the same strategy validated for the calendar parser.
+    // Header/title block is still dropped via the same 'Pairing/Activity'
+    // anchor (falls back to a fixed offset from the first word if that exact
+    // compound token isn't present on this page).
     const pairingHdr = words.find(w => w.text === 'Pairing/Activity' || w.text === 'Pairing');
     const firstAnchorWord = words.reduce((min,w)=>{
       if(!(isDateTok(w.text) || isFlightTokLoose(w.text))) return min;
@@ -969,10 +726,13 @@ function parseTablePDFRows(pages){
       : (pairingHdr ? (pairingHdr.top + 15) : (words[0].top + 80));
     const body = words.filter(w => w.top >= headerCutoff && !HEADER_WORDS.has(w.text));
 
+    // Group into rows: sub-lines belonging to the same logical row (wrapped
+    // hotel names, dep/arr split onto an adjacent baseline, etc.) land within
+    // ~15pt of each other; distinct rows are further apart than that.
     const rowTops = [];
     for(const w of body){
       if(!rowTops.length || w.top - rowTops[rowTops.length-1] > 15) rowTops.push(w.top);
-      else rowTops[rowTops.length-1] = rowTops[rowTops.length-1];
+      else rowTops[rowTops.length-1] = rowTops[rowTops.length-1]; // keep first anchor of the cluster
     }
     const sortedTops = [...new Set(body.map(w=>w.top))].sort((a,b)=>a-b);
     const clusterTops = [];
@@ -997,7 +757,7 @@ function parseTablePDFRows(pages){
 
       const timeIdxs = []; toks.forEach((t,i)=>{ if(isTimeTok(t)) timeIdxs.push(i); });
       const firstTimeIdx = timeIdxs.length ? timeIdxs[0] : -1;
-      if(firstTimeIdx===-1 && itemIdx===-1) continue;
+      if(firstTimeIdx===-1 && itemIdx===-1) continue; // no usable data in this cluster
 
       const searchStart = itemIdx>=0 ? itemIdx+1 : (firstTimeIdx>=0 ? firstTimeIdx : 0);
       const stationIdxs = []; toks.forEach((t,i)=>{ if(i>=searchStart && isStationTok(t)) stationIdxs.push(i); });
@@ -1033,6 +793,10 @@ function parseTablePDFRows(pages){
       const codeEnd = codeEndCandidates.length ? Math.min(...codeEndCandidates) : toks.length;
       const pairing = toks.slice(hasOwnDate?1:0, codeEnd).join('');
 
+      // Trailing metadata (Updated By / Updated Date) always starts with a
+      // literal system marker or a long numeric staff ID — never real SDC
+      // text or a hotel name — so it's a safe boundary for where the
+      // leftover SDC/AC-type/Hotel content ends.
       const lastCoreIdx = [before, [depIdx,arrIdx].filter(x=>x!=null), between, after]
         .flat().reduce((m,i)=> Math.max(m,i), Math.max(itemIdx, reportBoundary-1));
       let metaStart = toks.length;
@@ -1069,7 +833,13 @@ function parseTablePDFRows(pages){
 }
 
 /* =====================================================================
-   4) PDF "FRIDGE CALENDAR" PARSER
+   4) PDF "FRIDGE CALENDAR" PARSER (geometric cell assignment)
+   Validated against the actual fridge-view PDF: rows = weekday, columns =
+   week-of-month, and each day header sits at the RIGHT edge of its cell
+   (content lines stack leftward as more lines are added), so a content
+   word belongs to the nearest header in its row whose x0 is >= the word's
+   x0. This was checked line-by-line against a known-good transcript of a
+   full month before being ported here.
 ===================================================================== */
 function parseCalendarPDF(pages){
   const legsAll = [];
@@ -1113,6 +883,13 @@ function parseCalendarPDF(pages){
       !/^[A-Za-z]{3}\d{1,2}$/.test(w.text)
     );
 
+    // Sanity thresholds derived from the real extracted data: legitimate cell
+    // content's top always sits within a few points of its row header's top
+    // (ROW_TOL), and its x0 sits at or slightly left of its matched header's
+    // x0, never more than one column-width-ish further left (X_OVERFLOW).
+    // Anything outside these bounds is boilerplate (staff name line, footer)
+    // that happened to fall inside the numeric row/column ranges — not real
+    // roster content — and is dropped rather than force-matched.
     const cellText = {};
     const TOL = 20, ROW_TOL = 25, X_OVERFLOW = 100;
     for(const w of content){
@@ -1182,6 +959,10 @@ function calendarCellToLegs(dateObj, text){
     return out;
   }
 
+  // A cell can hold MORE THAN ONE ground activity on the same day (e.g. a
+  // short training block followed by a security refresher) with no
+  // separator between them, so match globally rather than requiring the
+  // whole cell text to be exactly one activity.
   const groundRe = /([A-Z0-9]+?)([A-Z]{3})(\d{1,2}:\d{2})-([A-Z]{3})(\d{1,2}:\d{2})/g;
   let gm; let groundFound=false;
   while((gm = groundRe.exec(text))){
@@ -1192,6 +973,7 @@ function calendarCellToLegs(dateObj, text){
   }
   if(groundFound) return out;
 
+  // Bare code with no times at all (D, DO, DO1, DO2, ...)
   const bareM = /^[A-Z0-9]+$/.exec(text.trim());
   if(bareM){
     out.push({isGround:true, ownDate:dateObj, anchorDate:dateObj, pairing:'', item:normalizeGroundCode(text.trim()),
@@ -1211,6 +993,24 @@ function calendarCellToLegs(dateObj, text){
 
 /* =====================================================================
    5) ROW -> LEG NORMALIZER
+   IMPORTANT (+1) SEMANTICS — cross-checked between the table PDF and the
+   fridge calendar PDF for the same real trips:
+     · A "(+1)" suffix on ANY time field (dep, arr, report, or debrief) means
+       that field falls on the day AFTER this record's own anchor/report
+       date. It is NOT chained field-to-field — every field's rollover is
+       independently relative to the anchor date, never to a previously
+       resolved field on the same row.
+     Verified examples (05→06 Aug AKL outbound, 08→09 Aug AKL return):
+       anchor 05-Aug: report 20:00 (same day), dep KUL 21:30 (same day),
+         arr AKL 11:25(+1) -> 06-Aug, debrief 11:55(+1) -> 06-Aug.
+       anchor 08-Aug: report 23:25 (same day), dep AKL 00:25(+1) -> 09-Aug,
+         arr KUL 07:55(+1) -> 09-Aug, debrief 08:25(+1) -> 09-Aug.
+     Both resolved dates match the fridge PDF's own placement of that
+     content into the Aug06 / Aug09 cells respectively.
+   A row's "anchor date" is the most recent EXPLICIT Date value seen — it is
+   never advanced by a computed arrival date, only by the next row that
+   actually carries its own Date (same-duty continuation legs with a blank
+   Date field reuse the group's anchor).
 ===================================================================== */
 function rowsToLegs(rows){
   const legs = [];
@@ -1245,12 +1045,14 @@ function rowsToLegs(rows){
       rank: r.rank, work: r.work,
       flyHrs: r.flyHrs, dutyHrs: r.dutyHrs, sdc: r.sdc, ac: r.ac, hotel: r.hotel
     });
+    // NOTE: currentDate is deliberately NOT advanced from computed arrDate —
+    // see design note above.
   }
   return legs;
 }
 
 /* =====================================================================
-   6) BUILD FULL-MONTH DAY MODEL
+   6) BUILD FULL-MONTH DAY MODEL (no skipped dates) + layover inference
 ===================================================================== */
 function buildDays(legs){
   if(!legs.length) throw new Error('No records parsed from this file.');
@@ -1317,6 +1119,10 @@ function buildDays(legs){
           const d = ensureDay(cursor);
           if(!d.hasData){
             d.hasData = true;
+            // If the next leg's report happens on this gap day (report
+            // before midnight, departure after midnight), show that report
+            // time on the layover row instead of leaving it blank — matches
+            // how the calendar-source PDF already places it.
             const showReport = nextLeg.reportTime && nextLeg.reportDate && ymdKey(cursor)===ymdKey(nextLeg.reportDate);
             d.rows.push({dutyStart: showReport?nextLeg.reportTime:'', item:'LO', rank:'', depStn: awayStn, depTime:'', arrStn:'', arrTime:'', dutyEnd:'', work:'', block:'', dutyHrs:'', dutyCode:'', ac:''});
           }
@@ -1356,11 +1162,6 @@ function sumHrs(list){
   const h=Math.floor(total/60), m=total%60;
   return h+':'+String(m).padStart(2,'0');
 }
-function formatTime(minutes) {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
-}
 
 function render(){
   const tbody = document.getElementById('outBody');
@@ -1386,6 +1187,8 @@ function render(){
       cells.forEach((c,ci)=>{
         const td = document.createElement('td');
         if(ci===11 && c && c.includes(',')){
+          // Long duty-code lists wrap onto separate lines instead of
+          // widening the table — one code per line via <br>.
           const parts = c.split(',').map(s=>s.trim()).filter(Boolean);
           parts.forEach((p,pi)=>{
             td.appendChild(document.createTextNode(p + (pi<parts.length-1 ? ',' : '')));
@@ -1405,6 +1208,10 @@ function render(){
       if(r.item) codesUsed.add(r.item);
     });
 
+    // Off-day / layover-day stats are classified by the day's ITEM CODE,
+    // not by whether a row happened to exist (every date always has at
+    // least a placeholder row now) — this was the source of the previous
+    // "wrong off-day count" bug.
     if(rows.length===1){
       const only = rows[0];
       if(isOffCode(only.item)){
@@ -1487,6 +1294,9 @@ function downloadCSV(){
   a.click();
 }
 
+// "Fit screen" — scales the whole results block down (or up) to exactly fill
+// the viewport width and remaining height, so it can be read/zoomed as one
+// screen with no scrolling.
 let fitOn = false;
 function toggleFit(){
   const wrap = document.getElementById('resultsWrap');
@@ -1496,6 +1306,10 @@ function toggleFit(){
   if(!fitOn){ wrap.style.transform=''; wrap.style.width=''; return; }
   wrap.style.transform = '';
   wrap.style.width = '';
+  // Measure the table's true content width directly — wrap.scrollWidth is
+  // unreliable here because the table sits inside a .tableWrap with
+  // overflow-x:auto, which clips what the outer element reports as its
+  // content width to the viewport instead of the table's real full width.
   const naturalW = table ? table.scrollWidth : wrap.scrollWidth;
   const availW = window.innerWidth - 20;
   const scale = Math.min(availW/naturalW, 1);
@@ -1505,10 +1319,12 @@ function toggleFit(){
   document.getElementById('toolbarRow').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
+// Image export — renders the results block to a high-resolution PNG so it
+// stays crisp when zoomed after export.
 function exportPNG(){
   const wrap = document.getElementById('resultsWrap');
   const wasFit = fitOn;
-  if(!wasFit) toggleFit();
+  if(!wasFit) toggleFit(); // capture at fit-screen width so the whole table is visible in the image
   setTimeout(()=>{
     html2canvas(wrap, {scale:3, backgroundColor:getComputedStyle(wrap).getPropertyValue('--bg')||'#0b0c0e'}).then(canvas=>{
       canvas.toBlob(blob=>{
@@ -1520,23 +1336,34 @@ function exportPNG(){
       });
       if(!wasFit) toggleFit();
     }).catch(err=>{ log('Image export failed: '+err.message, 'err'); });
-  }, 350);
+  }, 350); // let the fit-screen smooth-scroll/transform settle before capturing
 }
 
+// Print / Save-as-PDF — uses the browser's native print pipeline (works
+// fully offline) with a font size chosen to keep the whole roster on one
+// landscape A4 page.
 function exportPDF(){
   const wasFit = fitOn;
   if(wasFit) toggleFit();
   const wrap = document.getElementById('resultsWrap');
   const table = document.getElementById('outTable');
   wrap.style.transform = ''; wrap.style.width = '';
+  // Measure actual rendered size rather than guessing from row count — a
+  // single very tall row (e.g. an 11-line duty-code list) was pushing the
+  // page count to 2 even though row COUNT looked fine, so a heuristic based
+  // on row count alone couldn't catch it.
   const naturalW = table ? table.scrollWidth : wrap.scrollWidth;
   const naturalH = wrap.scrollHeight;
+  // A4 portrait at 96dpi minus 8mm margins on each side, in CSS px
   const targetW = 730, targetH = 1060;
   const scale = Math.min(targetW/naturalW, targetH/naturalH, 1);
   document.documentElement.style.setProperty('--print-scale', scale);
   window.print();
 }
 
+// Debug export — dumps everything needed to diagnose a parsing problem
+// without a screenshot: raw extracted PDF word positions, the detected
+// format, intermediate parsed rows, and the final per-day model.
 function exportDebug(){
   const payload = {
     fileName: LAST_FILE_NAME,
@@ -1545,6 +1372,7 @@ function exportDebug(){
     rawWordsByPage: RAW_PDF_PAGES ? RAW_PDF_PAGES.map(pg=>pg.map(w=>({t:w.text,x0:Math.round(w.x0),x1:Math.round(w.x1),top:Math.round(w.top),bottom:Math.round(w.bottom)}))) : null,
     parsedRows: LAST_PARSED_ROWS ? LAST_PARSED_ROWS.map(r=>{
       const c = Object.assign({}, r);
+      // dates -> ISO strings for readability
       ['ownDate','anchorDate','depDate','arrDate','reportDate','debriefDate'].forEach(k=>{
         if(c[k] instanceof Date) c[k]=ymdKey(c[k]);
       });
@@ -1561,7 +1389,7 @@ function exportDebug(){
 }
 
 /* =====================================================================
-   9) SAVED ROSTERS
+   9) SAVED ROSTERS (local device storage, for the crew-overlap feature)
 ===================================================================== */
 function loadSavedRosters(){
   try{ return JSON.parse(localStorage.getItem('rosterParserSaved')||'[]'); }
@@ -1610,9 +1438,6 @@ function viewSavedRoster(id){
   LAST_FILE_NAME = entry.sourceFile;
   render();
   document.getElementById('toolbarRow').scrollIntoView({behavior:'smooth', block:'start'});
-  
-  // Clear the save name input when viewing a saved roster
-  clearSaveNameInput();
 }
 function renderSavedList(){
   const body = document.getElementById('savedListBody');
@@ -1645,12 +1470,16 @@ loadLegend();
 renderSavedList();
 
 /* =====================================================================
-   10) FIND TIME 2B TOGETHER
+   10) FIND TIME TOGETHER (crew overlap engine)
 ===================================================================== */
 function isStandbyCode(code){
   return /standby/i.test(legendDescFor(code)||'');
 }
 
+// Turns one saved roster's DAYS into a flat list of free (or maybe-free)
+// intervals: {date, startMin, endMin, station, type}. type is 'off',
+// 'layover', or 'standby' (standby is real duty the person is on call for,
+// so it's kept separate and never counted as confirmed free time).
 function extractFreeIntervals(entry){
   const out = [];
   const homeBase = 'KUL';
@@ -1683,6 +1512,7 @@ function extractFreeIntervals(entry){
       lastStation = stn;
       continue;
     }
+    // duty day: free only before first report and after last debrief
     const withStart = rows.find(r=>r.dutyStart);
     const withEndRow = [...rows].reverse().find(r=>r.dutyEnd);
     const sMin = withStart ? hhmmToMin(withStart.dutyStart) : null;
@@ -1703,12 +1533,12 @@ function extractFreeIntervals(entry){
 function intervalToAbsMinutes(iv, tz){
   const [y,m,d] = iv.date.split('-').map(Number);
   const dayBaseMin = Date.UTC(y, m-1, d, 0, 0) / 60000;
-  const offset = tz==='SLT' ? -480 : 0;
+  const offset = tz==='SLT' ? -480 : 0; // SLT clock time - 8h = UTC
   return { start: dayBaseMin + iv.startMin + offset, end: dayBaseMin + iv.endMin + offset };
 }
 
 function absMinutesToLabel(absMin){
-  const ms = absMin*60000 + 8*3600*1000;
+  const ms = absMin*60000 + 8*3600*1000; // display in SLT for readability
   const dt = new Date(ms);
   const dd = String(dt.getUTCDate()).padStart(2,'0');
   const mmm = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][dt.getUTCMonth()];
@@ -1767,12 +1597,6 @@ function computeTogetherTime(){
   const people = ids.map(id => all.find(r=>r.id===id)).filter(Boolean);
   const intervalSets = people.map(p => { const s = extractFreeIntervals(p); s.tz = p.tz; return s; });
 
-  LAST_OVERLAP_PEOPLE = people.map(p => ({
-    name: p.name,
-    tz: p.tz,
-    days: p.days
-  }));
-
   let html = '';
 
   if(people.length >= 3){
@@ -1815,6 +1639,8 @@ function computeTogetherTime(){
         <div class="tableWrap"><table><thead><tr><th>Date</th><th>Day</th><th>From</th><th>To</th><th>Location</th><th>Duration</th><th>Type</th></tr></thead>
         <tbody>${rows || '<tr><td colspan="7" style="color:var(--dim)">No overlapping free time found in the shared date range.</td></tr>'}</tbody></table></div>`;
 
+      // The primary result for the heatmap: the full-group intersection when
+      // 3+ people are selected, otherwise this (the only) pair.
       if(people.length===2){
         LAST_OVERLAP_PRIMARY = {
           overlaps: overlaps.map(o=>({start:o.startAbs, end:o.endAbs, maybe:o.maybe})),
@@ -1842,12 +1668,19 @@ function computeTogetherTime(){
 }
 
 /* =====================================================================
-   11) HEATMAP VIEW
+   11) HEATMAP VIEW — calendar grid, each cell a left-to-right timeline
+   bar (left edge = 00:00, right edge = 24:00). Consecutive-day overlaps
+   deliberately line up at the cell boundary (green touching green across
+   the midnight edge) so a multi-day stretch reads as one continuous bar
+   when viewed from a distance, not as isolated colored cells.
 ===================================================================== */
 let LAST_OVERLAP_PRIMARY = null;
 let LAST_OVERLAP_TABLE_HTML = '';
 let heatmapOn = false;
 
+// Converts an absolute minute value (same epoch used by intervalToAbsMinutes)
+// into {key: 'YYYY-MM-DD', minOfDay: 0-1440}, using the same +8h SLT display
+// shift as absMinutesToLabel so the two stay perfectly consistent.
 function absToDayMin(absMin){
   const dispMin = absMin + 480;
   const dayIdx = Math.floor(dispMin/1440);
@@ -1940,28 +1773,9 @@ function renderHeatmap(){
         continue;
       }
       const bg = buildGradient(dayMap[key]);
-      const hasOverlap = dayMap[key] && dayMap[key].length > 0;
-      const dayOverlaps = hasOverlap ? dayMap[key].map(seg => ({
-        start: seg.startMin,
-        end: seg.endMin,
-        maybe: seg.maybe
-      })) : [];
-
-      if (hasOverlap) {
-        const windowsEncoded = encodeURIComponent(JSON.stringify(dayOverlaps));
-        html += `<div style="aspect-ratio:1;border-radius:5px;background:${bg};position:relative;border:1px solid var(--line);cursor:pointer;transition:transform 0.15s"
-                    data-date="${key}"
-                    data-windows="${windowsEncoded}"
-                    onclick="showDutyPopup(this)"
-                    onmouseenter="this.style.transform='scale(1.05)'"
-                    onmouseleave="this.style.transform='scale(1)'">
-                 <span style="position:absolute;top:2px;right:3px;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9)">${d}</span>
-               </div>`;
-      } else {
-        html += `<div style="aspect-ratio:1;border-radius:5px;background:${bg};position:relative;border:1px solid var(--line);cursor:default">
-                 <span style="position:absolute;top:2px;right:3px;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9)">${d}</span>
-               </div>`;
-      }
+      html += `<div style="aspect-ratio:1;border-radius:5px;background:${bg};position:relative;border:1px solid var(--line)">
+        <span style="position:absolute;top:2px;right:3px;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9)">${d}</span>
+      </div>`;
     }
     html += `</div>`;
     cursor = new Date(y, m+1, 1);
@@ -1970,187 +1784,7 @@ function renderHeatmap(){
 }
 
 /* =====================================================================
-   12) HEATMAP POPUP - Shows who has to leave first
-===================================================================== */
-function showDutyPopup(element) {
-  debugLog('🔍 showDutyPopup() called', 'info');
-  
-  if (!element) {
-    debugLog('❌ element is null or undefined', 'err');
-    return;
-  }
-  
-  debugLog('  element.tagName: ' + element.tagName, 'info');
-  debugLog('  element.className: ' + element.className, 'info');
-  
-  if (!element.dataset) {
-    debugLog('❌ element has no dataset property', 'err');
-    return;
-  }
-
-  const dateKey = element.dataset.date;
-  debugLog('  dateKey: ' + dateKey, 'info');
-  
-  let overlapWindows;
-  try {
-    const windowsEncoded = element.dataset.windows;
-    debugLog('  windowsEncoded: ' + windowsEncoded, 'info');
-    if (!windowsEncoded) {
-      debugLog('❌ windowsEncoded is empty', 'err');
-      return;
-    }
-    overlapWindows = JSON.parse(decodeURIComponent(windowsEncoded));
-    debugLog('  overlapWindows: ' + JSON.stringify(overlapWindows), 'info');
-  } catch (e) {
-    debugLog('❌ Failed to parse overlap windows: ' + e.message, 'err');
-    return;
-  }
-
-  if (!LAST_OVERLAP_PEOPLE || !LAST_OVERLAP_PEOPLE.length) {
-    debugLog('❌ LAST_OVERLAP_PEOPLE is empty or undefined', 'err');
-    debugLog('  LAST_OVERLAP_PEOPLE: ' + JSON.stringify(LAST_OVERLAP_PEOPLE), 'err');
-    return;
-  }
-  
-  debugLog('  LAST_OVERLAP_PEOPLE has ' + LAST_OVERLAP_PEOPLE.length + ' crew members', 'ok');
-  for (const crew of LAST_OVERLAP_PEOPLE) {
-    debugLog('    👤 ' + crew.name + ' (' + crew.tz + ') - ' + (crew.days ? crew.days.length + ' days' : 'no days'), 'info');
-  }
-
-  if (!overlapWindows || !overlapWindows.length) {
-    debugLog('❌ overlapWindows is empty', 'err');
-    return;
-  }
-
-  const dateObj = new Date(dateKey + 'T00:00:00');
-  if (isNaN(dateObj.getTime())) {
-    debugLog('❌ Invalid date key: ' + dateKey, 'err');
-    return;
-  }
-  
-  debugLog('✅ All validations passed! Building popup...', 'ok');
-
-  const dateDisplay = fmtDate(dateObj) + ' (' + DOW[dateObj.getDay()] + ')';
-
-  const overlay = document.createElement('div');
-  overlay.className = 'popup-overlay';
-  overlay.setAttribute('role', 'dialog');
-  overlay.setAttribute('aria-label', 'Duty information for ' + dateDisplay);
-
-  let html = `
-    <div class="popup-content">
-      <div class="popup-header">
-        <span>📅 ${dateDisplay}</span>
-        <button class="popup-close" aria-label="Close popup">✕</button>
-      </div>
-      <div class="popup-body">
-  `;
-
-  for (const overlapWindow of overlapWindows) {
-    const windowEnd = overlapWindow.end;
-    const windowStart = overlapWindow.start;
-    const startStr = formatTime(windowStart);
-    const endStr = formatTime(windowEnd);
-    const dur = Math.floor((windowEnd - windowStart) / 60);
-
-    const dutyInfo = [];
-
-    for (const crew of LAST_OVERLAP_PEOPLE) {
-      const dayData = crew.days.find(d => d.date === dateKey);
-      if (!dayData || !dayData.rows || !dayData.rows.length) {
-        continue;
-      }
-
-      let earliestDutyStart = null;
-
-      const sortedRows = [...dayData.rows].sort((a, b) =>
-        (hhmmToMin(a.dutyStart) || 0) - (hhmmToMin(b.dutyStart) || 0)
-      );
-
-      for (const row of sortedRows) {
-        const dutyStart = hhmmToMin(row.dutyStart) || 0;
-        if (dutyStart >= windowEnd) {
-          if (earliestDutyStart === null || dutyStart < earliestDutyStart) {
-            earliestDutyStart = dutyStart;
-          }
-        }
-      }
-
-      if (earliestDutyStart !== null) {
-        dutyInfo.push({
-          name: crew.name,
-          startTime: earliestDutyStart
-        });
-      }
-    }
-
-    dutyInfo.sort((a, b) => a.startTime - b.startTime);
-
-    html += `<div class="overlap-window">
-      <div class="window-time">${startStr} - ${endStr} (${dur}h)</div>
-    `;
-
-    if (dutyInfo.length === 0) {
-      html += `<div class="no-duty">🎉 Everyone has time to be together!</div>`;
-    } else {
-      const first = dutyInfo[0];
-      const timeStr = formatTime(first.startTime);
-      html += `<div class="leaves-first">🚶 <strong>${first.name}</strong> working at <strong>${timeStr}</strong></div>`;
-
-      if (dutyInfo.length > 1) {
-        const others = dutyInfo.slice(1).map(c =>
-          `${c.name} at ${formatTime(c.startTime)}`
-        ).join(', ');
-        html += `<div class="others">Also: ${others}</div>`;
-      }
-    }
-
-    html += `</div>`;
-  }
-
-  html += `</div></div>`;
-
-  overlay.innerHTML = html;
-
-  const closeBtn = overlay.querySelector('.popup-close');
-  if (closeBtn) {
-    closeBtn.onclick = function(e) {
-      e.stopPropagation();
-      overlay.remove();
-      debugLog('Popup closed by close button', 'info');
-    };
-  }
-
-  overlay.onclick = function(e) {
-    if (e.target === overlay) {
-      overlay.remove();
-      debugLog('Popup closed by clicking overlay', 'info');
-    }
-  };
-
-  const keyHandler = function(e) {
-    if (e.key === 'Escape') {
-      overlay.remove();
-      document.removeEventListener('keydown', keyHandler);
-      debugLog('Popup closed by ESC key', 'info');
-    }
-  };
-  document.addEventListener('keydown', keyHandler);
-
-  const observer = new MutationObserver(function() {
-    if (!document.contains(overlay)) {
-      document.removeEventListener('keydown', keyHandler);
-      observer.disconnect();
-    }
-  });
-  observer.observe(document.body, { childList: true });
-
-  document.body.appendChild(overlay);
-  debugLog('✅ Popup built and displayed', 'ok');
-}
-
-/* =====================================================================
-   13) COLOUR THEMES
+   12) COLOUR THEMES
 ===================================================================== */
 const THEMES = [
   {id:'default', name:'Default (dark)', swatches:['#0b0c0e','#1b1e22','#c6ff3d','#f2f3f5']},
@@ -2187,6 +1821,7 @@ function closeColourModal(){
   document.getElementById('colourModalOverlay').style.display = 'none';
 }
 
+// Restore whatever theme was chosen last time, on load.
 applyTheme(localStorage.getItem('rosterParserTheme') || 'default', false);
 </script>
   <script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
