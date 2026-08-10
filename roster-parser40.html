@@ -657,10 +657,14 @@ async function handleFile(file){
       render();
       parseSuccess = true;
     } else if(name.endsWith('.pdf')){
-      const buf = await file.arrayBuffer();
-      const pages = (await extractPdfWords(buf)).map(mergeDayHeaderTokens);
+      // pdf.js detaches the ArrayBuffer it's given (transfers it to its worker),
+      // so the SAME buffer can't be passed to getDocument() twice — each call
+      // needs its own fresh, independent buffer.
+      const buf1 = await file.arrayBuffer();
+      const pages = (await extractPdfWords(buf1)).map(mergeDayHeaderTokens);
       RAW_PDF_PAGES = pages;
-      RAW_PDF_PAGES_SIMPLE = await extractPdfWordsSimple(buf);
+      const buf2 = await file.arrayBuffer();
+      RAW_PDF_PAGES_SIMPLE = await extractPdfWordsSimple(buf2);
       const allWords = [].concat(...pages);
       const isCalendar = looksLikeCalendar(allWords);
       const isTable = looksLikeTableReport(allWords);
@@ -1052,7 +1056,7 @@ function parseTablePDFRows(pages){
       if(col==='sdc' || col==='hotel') continue; // handled separately below
       const a = nearestAnchor(w.top);
       groups[a][col] = groups[a][col] || [];
-      groups[a][col].push(txt);
+      groups[a][col].push({txt, x0});
     }
 
     // SDC/Hotel need different handling: a long wrapped list (e.g. many
@@ -1110,7 +1114,16 @@ function parseTablePDFRows(pages){
 
     for(const a of merged){
       const g = groups[a];
-      const get = (k) => (k==='hotel'||k==='sdc') ? (g[k+'Text']||'') : (g[k] ? g[k][0] : '');
+      // A/C Type (and occasionally other short codes) can be drawn by the PDF
+      // as multiple separate glyph-runs on the SAME line due to kerning — take
+      // every fragment on that column, not just the first, so codes like "738"
+      // don't get truncated to "7".
+      const get = (k) => {
+        if(k==='hotel' || k==='sdc') return g[k+'Text'] || '';
+        if(!g[k]) return '';
+        const sorted = [...g[k]].sort((a,b)=>a.x0-b.x0);
+        return k==='ac' ? sorted.map(o=>o.txt).join('') : sorted[0].txt;
+      };
 
       let ownDate = null;
       const dm = TABLE_DATE_RE.exec(get('date'));
