@@ -332,7 +332,7 @@
 
 <header>
   <h1>ROSTER <span>PARSER</span></h1>
-  <div class="sub">xlsx / pdf table / pdf calendar → unified daily roster + Find time together with other CREW(s) · by 2100551</div>
+  <div class="sub">xlsx / pdf table / pdf calendar → unified daily roster + Find time 2B together with other CREW(s) · by 2100551</div>
 </header>
 
 <main>
@@ -409,12 +409,12 @@
   </section>
 
   <section class="card" id="savedListCard">
-    <h2>Saved Rosters <small>Must save to use 'Find Time Together'. Local to this device only</small></h2>
+    <h2>Saved Rosters <small>Must save to use 'Find Time 2B Together'. Local to this device only</small></h2>
     <div id="savedListBody" style="padding:6px 12px"></div>
   </section>
 
   <section class="card" id="overlapCard">
-    <h2>Find Time Together 💞<small>select 2+ saved rosters</small></h2>
+    <h2>Find Time 2B Together 💞<small>select 2+ saved rosters</small></h2>
     <div style="padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="primary" onclick="computeTogetherTime()">Find overlap</button>
       <button onclick="toggleHeatmap()" id="heatmapBtn" style="display:none">Heatmap view</button>
@@ -1642,7 +1642,7 @@ loadLegend();
 renderSavedList();
 
 /* =====================================================================
-   10) FIND TIME TOGETHER
+   10) FIND TIME 2B TOGETHER
 ===================================================================== */
 function isStandbyCode(code){
   return /standby/i.test(legendDescFor(code)||'');
@@ -2088,7 +2088,7 @@ function showDutyPopup(element) {
     `;
 
     if (dutyInfo.length === 0) {
-      html += `<div class="no-duty">🎉 No one has duty after this session!</div>`;
+      html += `<div class="no-duty">🎉 Everyone has time to be together!</div>`;
     } else {
       const first = dutyInfo[0];
       const timeStr = formatTime(first.startTime);
