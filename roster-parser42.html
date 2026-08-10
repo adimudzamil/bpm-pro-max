@@ -419,13 +419,15 @@
     <div id="savedListBody" style="padding:6px 12px"></div>
   </section>
 
+  <!-- OVERLAP TOOLBAR (moved outside the card) -->
+  <div id="overlapToolbar" class="btnRow" style="display:none; margin-top:12px;">
+    <button class="primary" onclick="computeTogetherTime()">Find overlap</button>
+    <button onclick="toggleHeatmap()" id="heatmapBtn" style="display:none">Heatmap view</button>
+    <button onclick="exportOverlapImage()" id="overlapImageBtn" style="display:none">Image</button>
+  </div>
+
   <section class="card" id="overlapCard">
     <h2>Find Time 2B Together 💞<small>select 2+ saved rosters</small></h2>
-    <div id="overlapActions" style="padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="primary" onclick="computeTogetherTime()">Find overlap</button>
-      <button onclick="toggleHeatmap()" id="heatmapBtn" style="display:none">Heatmap view</button>
-      <button onclick="exportOverlapImage()" id="overlapImageBtn" style="display:none">Image</button>
-    </div>
     <div id="overlapResults" style="padding:0 12px 12px"></div>
   </section>
 
@@ -1541,7 +1543,7 @@ function fallbackDownload(blob, filename) {
 }
 
 /* ===== Fit + Capture helper (async, always restores) ===== */
-async function fitAndCapture(element, filename, hideSelectors = []) {
+async function fitAndCapture(element, filename) {
   // Store original styles
   const orig = {
     transform: element.style.transform,
@@ -1549,16 +1551,6 @@ async function fitAndCapture(element, filename, hideSelectors = []) {
     transformOrigin: element.style.transformOrigin,
     overflow: element.style.overflow,
   };
-
-  // Hide elements using visibility (preserves layout)
-  const hiddenElements = [];
-  hideSelectors.forEach(sel => {
-    document.querySelectorAll(sel).forEach(el => {
-      const origVis = el.style.visibility;
-      el.style.visibility = 'hidden';
-      hiddenElements.push({ el, origVis });
-    });
-  });
 
   // Remove overflow:hidden to avoid clipping
   element.style.overflow = 'visible';
@@ -1588,11 +1580,6 @@ async function fitAndCapture(element, filename, hideSelectors = []) {
     element.style.width = orig.width || '';
     element.style.transformOrigin = orig.transformOrigin || '';
     element.style.overflow = orig.overflow || '';
-
-    // Restore hidden elements
-    hiddenElements.forEach(({ el, origVis }) => {
-      el.style.visibility = origVis || '';
-    });
   }
 }
 
@@ -1601,7 +1588,7 @@ function exportPNG() {
   const wrap = document.getElementById('resultsWrap');
   if (!wrap) return;
   const filename = 'roster-' + (DAYS.length ? DAYS[0].key : 'export') + '.png';
-  fitAndCapture(wrap, filename, []); // no hiding
+  fitAndCapture(wrap, filename);
 }
 
 function exportOverlapImage() {
@@ -1611,7 +1598,7 @@ function exportOverlapImage() {
     log('No overlap results to export.', 'warn');
     return;
   }
-  fitAndCapture(card, 'together-time.png', ['#overlapActions']);
+  fitAndCapture(card, 'together-time.png');
 }
 
 function exportPDF(){
@@ -1928,9 +1915,10 @@ function computeTogetherTime(){
   out.innerHTML = html;
   LAST_OVERLAP_TABLE_HTML = html;
   
-  // Show the heatmap and image buttons now that we have results
+  // Show the heatmap and image buttons in the new toolbar
   document.getElementById('heatmapBtn').style.display = 'inline-block';
   document.getElementById('overlapImageBtn').style.display = 'inline-block';
+  document.getElementById('overlapToolbar').style.display = 'flex';
   heatmapOn = false;
   document.getElementById('heatmapBtn').textContent = 'Heatmap view';
 }
