@@ -419,8 +419,8 @@
     <div id="savedListBody" style="padding:6px 12px"></div>
   </section>
 
-  <!-- OVERLAP TOOLBAR (moved outside the card) -->
-  <div id="overlapToolbar" class="btnRow" style="display:none; margin-top:12px;">
+  <!-- OVERLAP TOOLBAR - Always visible (matches daily roster toolbar) -->
+  <div id="overlapToolbar" class="btnRow" style="margin-top:12px;">
     <button class="primary" onclick="computeTogetherTime()">Find overlap</button>
     <button onclick="toggleHeatmap()" id="heatmapBtn" style="display:none">Heatmap view</button>
     <button onclick="exportOverlapImage()" id="overlapImageBtn" style="display:none">Image</button>
@@ -1915,10 +1915,9 @@ function computeTogetherTime(){
   out.innerHTML = html;
   LAST_OVERLAP_TABLE_HTML = html;
   
-  // Show the heatmap and image buttons in the new toolbar
+  // Show the heatmap and image buttons in the toolbar
   document.getElementById('heatmapBtn').style.display = 'inline-block';
   document.getElementById('overlapImageBtn').style.display = 'inline-block';
-  document.getElementById('overlapToolbar').style.display = 'flex';
   heatmapOn = false;
   document.getElementById('heatmapBtn').textContent = 'Heatmap view';
 }
