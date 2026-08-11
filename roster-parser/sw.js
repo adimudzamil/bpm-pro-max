@@ -1,20 +1,12 @@
-const CACHE_NAME = 'roster-parser-v1';
-const SHARE_URL = '/share-target';
+const CACHE_NAME = 'roster-parser-v4';
+const SHARE_TARGET = '/bpm-pro-max/roster-parser/share-target'; // must match manifest.action
 
-// Files to cache on install (the app shell)
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  // External libraries – you can add them if you want offline support, but they are large.
-  // If you include them, uncomment the lines below:
-  // 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
-  // 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
-  // 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
-  // 'https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap'
+  '/bpm-pro-max/roster-parser/',
+  '/bpm-pro-max/roster-parser/index.html',
+  '/bpm-pro-max/roster-parser/manifest.json'
 ];
 
-// Install event – cache the shell
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -23,28 +15,24 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate event – clean old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-      );
-    }).then(() => self.clients.claim())
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
+    ).then(() => self.clients.claim())
   );
 });
 
-// Fetch event – serve from cache, but also handle share POST
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   
-  // === Handle the share target POST ===
-  if (event.request.method === 'POST' && url.pathname === SHARE_URL) {
+  // === Handle share POST ===
+  if (event.request.method === 'POST' && url.pathname === SHARE_TARGET) {
     event.respondWith(handleShare(event.request));
     return;
   }
   
-  // Normal request – try cache, fallback to network
+  // === Normal fetch: cache then network ===
   event.respondWith(
     caches.match(event.request)
     .then(response => response || fetch(event.request))
@@ -52,17 +40,19 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Process a shared file
 async function handleShare(request) {
+  console.log('[SW] Share POST received');
   try {
     const formData = await request.formData();
-    const file = formData.get('file'); // 'file' matches the name in manifest.json
-    
+    const file = formData.get('file');
     if (!file) {
+      console.error('[SW] No file in form data');
       return new Response('No file received', { status: 400 });
     }
     
-    // Store the file in the cache so the main page can pick it up
+    console.log('[SW] File:', file.name, file.type, file.size);
+    
+    // Store file in a special cache
     const cache = await caches.open('shared-v1');
     const headers = new Headers({
       'Content-Type': file.type,
@@ -71,13 +61,12 @@ async function handleShare(request) {
     const response = new Response(file, { headers });
     await cache.put('/shared-file', response);
     
-    // Redirect to the main page with a query param (optional)
-    const redirectUrl = new URL('/', self.location.origin);
+    // Redirect to the main page
+    const redirectUrl = new URL('/bpm-pro-max/roster-parser/', self.location.origin);
     redirectUrl.searchParams.set('shared', '1');
     return Response.redirect(redirectUrl.toString(), 303);
-    
   } catch (error) {
-    console.error('Share handling error:', error);
+    console.error('[SW] Share error:', error);
     return new Response('Share processing failed', { status: 500 });
   }
 }
