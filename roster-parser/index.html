@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.25, maximum-scale=5">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0c0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Roster Parser · 2100551</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -2338,5 +2342,36 @@ window.addEventListener('load', async () => {
 });
 </script>
   <script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
+  <script>
+  // ---- Service Worker registration ----
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('[SW] Registered'))
+      .catch(err => console.warn('[SW] Registration failed', err));
+  }
+  
+  // ---- Check for a file shared to the app ----
+  async function checkPendingShare() {
+    try {
+      const cache = await caches.open('shared-v1');
+      const response = await cache.match('/shared-file');
+      if (response) {
+        const blob = await response.blob();
+        const filename = response.headers.get('X-Filename') || 'shared-file.xlsx';
+        const type = response.headers.get('Content-Type') || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        const file = new File([blob], filename, { type });
+        // Delete the cached item so we don't process it again
+        await cache.delete('/shared-file');
+        // Process the file just like a normal upload
+        handleFile(file);
+      }
+    } catch (e) {
+      console.warn('Could not check pending share', e);
+    }
+  }
+  
+  // Run on load
+  window.addEventListener('load', checkPendingShare);
+</script>
 </body>
 </html>
