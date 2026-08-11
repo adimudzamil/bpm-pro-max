@@ -8,6 +8,10 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!-- 👥 FAVICON -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👥</text></svg>">
+
+<!-- ===== PWA: MANIFEST (Web Share Target) ===== -->
+<link rel="manifest" href="/roster-parser/manifest.json">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2299,6 +2303,39 @@ function closeColourModal(){
 }
 
 applyTheme(localStorage.getItem('rosterParserTheme') || 'default', false);
+
+/* =====================================================================
+   PWA: SERVICE WORKER REGISTRATION & SHARED FILE RETRIEVAL
+===================================================================== */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/roster-parser/sw.js', { scope: '/roster-parser/' })
+    .then(() => console.log('[PWA] Service Worker registered'))
+    .catch(err => console.warn('[PWA] SW registration failed:', err));
+}
+
+window.addEventListener('load', async () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('shared') === 'true') {
+    console.log('[PWA] Shared file detected, retrieving from cache...');
+    try {
+      const cache = await caches.open('roster-shared-files');
+      const response = await cache.match('/shared-file');
+      if (response) {
+        const blob = await response.blob();
+        const file = new File([blob], 'shared-roster.xlsx', { type: blob.type });
+        // Call the existing handleFile function
+        handleFile(file);
+        // Remove the flag from URL and clean up cache
+        history.replaceState({}, document.title, window.location.pathname);
+        await cache.delete('/shared-file');
+      } else {
+        console.warn('[PWA] No shared file found in cache.');
+      }
+    } catch (err) {
+      console.error('[PWA] Failed to retrieve shared file:', err);
+    }
+  }
+});
 </script>
   <script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
 </body>
