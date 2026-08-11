@@ -11,8 +11,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 <style>
   :root{
     --bg:#0b0c0e; --panel:#141619; --panel2:#1b1e22; --line:#2a2e33;
@@ -349,11 +349,8 @@
     @page{ size: portrait; margin: 8mm; }
   }
 
-  /* ===== HIDE DEBUG UI ===== */
-  #debugToggleBtn,
-  #debugConsole {
-    display: none !important;
-  }
+  /* ===== DEBUG UI: visible while we're diagnosing the AirAsia/OCR path ===== */
+
 </style>
 </head>
 <body>
@@ -574,6 +571,57 @@ function clearSaveNameInput() {
 }
 
 /* =====================================================================
+   GLOBAL ERROR SURFACING
+   If anything throws outside handleFile's own try/catch — a CDN script
+   failing to load, a bug in an event listener, an unhandled promise
+   rejection inside async OCR work — it must still show up somewhere
+   visible on a phone screen instead of failing completely silently.
+===================================================================== */
+window.addEventListener('error', function(e){
+  try{
+    document.getElementById('log').style.display='block';
+    const d = document.createElement('div');
+    d.className = 'err';
+    d.textContent = '⚠ Uncaught error: ' + (e.message||e) + (e.filename ? (' ('+e.filename.split('/').pop()+':'+e.lineno+')') : '');
+    document.getElementById('log').appendChild(d);
+    debugLog('⚠ UNCAUGHT ERROR: ' + (e.message||e) + (e.filename ? (' at '+e.filename.split('/').pop()+':'+e.lineno) : ''), 'err');
+    openDebugConsoleForced();
+  }catch(_){}
+});
+window.addEventListener('unhandledrejection', function(e){
+  try{
+    document.getElementById('log').style.display='block';
+    const d = document.createElement('div');
+    d.className = 'err';
+    d.textContent = '⚠ Unhandled promise rejection: ' + (e.reason && e.reason.message ? e.reason.message : e.reason);
+    document.getElementById('log').appendChild(d);
+    debugLog('⚠ UNHANDLED PROMISE REJECTION: ' + (e.reason && e.reason.stack ? e.reason.stack : (e.reason && e.reason.message ? e.reason.message : e.reason)), 'err');
+    openDebugConsoleForced();
+  }catch(_){}
+});
+function openDebugConsoleForced(){
+  const consoleEl = document.getElementById('debugConsole');
+  const btn = document.getElementById('debugToggleBtn');
+  if(consoleEl && consoleEl.style.display !== 'block'){
+    consoleEl.style.display = 'block';
+    if(btn) btn.textContent = '✕';
+  }
+}
+function checkLibsLoaded(){
+  const missing = [];
+  if(typeof XLSX === 'undefined') missing.push('XLSX (xlsx.full.min.js)');
+  if(typeof pdfjsLib === 'undefined') missing.push('pdfjsLib (pdf.min.js)');
+  if(typeof JSZip === 'undefined') missing.push('JSZip (jszip.min.js)');
+  if(typeof Tesseract === 'undefined') missing.push('Tesseract (tesseract.min.js)');
+  debugLog('Library check — XLSX:'+(typeof XLSX!=='undefined')+' pdfjsLib:'+(typeof pdfjsLib!=='undefined')+' JSZip:'+(typeof JSZip!=='undefined')+' Tesseract:'+(typeof Tesseract!=='undefined'), missing.length?'err':'ok');
+  if(missing.length){
+    log('⚠ These libraries failed to load from CDN (check your internet connection): '+missing.join(', '), 'err');
+    openDebugConsoleForced();
+  }
+  return missing;
+}
+
+/* =====================================================================
    LOGGING
 ===================================================================== */
 function log(msg, cls){
@@ -584,6 +632,7 @@ function log(msg, cls){
   d.textContent = msg;
   el.appendChild(d);
   el.scrollTop = el.scrollHeight;
+  debugLog(msg, cls === 'err' ? 'err' : (cls === 'warn' ? 'warn' : (cls === 'ok' ? 'ok' : 'info')));
 }
 function clearLog(){ document.getElementById('log').innerHTML=''; document.getElementById('log').style.display='none'; }
 
@@ -673,6 +722,11 @@ document.addEventListener('keydown', function _j44(_e){
 
 async function handleFile(file){
   clearLog();
+  openDebugConsoleForced();
+  debugLog('=== handleFile() started ===', 'info');
+  debugLog('file.name='+file.name+' file.size='+file.size+' file.type='+file.type, 'info');
+  log('Reading '+file.name+' ('+Math.round(file.size/1024)+' KB)…');
+  const missingLibs = checkLibsLoaded();
   DAYS = []; RAW_WARNINGS = []; RAW_PDF_PAGES = null; LAST_PARSED_ROWS = null;
   LAST_FILE_NAME = file.name;
   document.getElementById('status').style.display='block';
@@ -690,7 +744,9 @@ async function handleFile(file){
   try{
     if(name.endsWith('.xlsx') || name.endsWith('.xls')){
       setFmt('XLSX', true);
+      debugLog('Reading file as ArrayBuffer…', 'info');
       const buf = await file.arrayBuffer();
+      debugLog('ArrayBuffer read OK, byteLength='+buf.byteLength, 'ok');
 
       /* NEW: parse the workbook exactly ONCE and reuse the resulting `wb`
          object everywhere below. Reading the same raw ArrayBuffer twice
@@ -701,24 +757,32 @@ async function handleFile(file){
          buffer can silently come back empty. */
       let wb;
       try{
+        debugLog('Calling XLSX.read()…', 'info');
         wb = XLSX.read(buf, {type:'array', cellDates:true});
+        debugLog('XLSX.read OK, sheets='+wb.SheetNames.join(','), 'ok');
       }catch(err){
+        debugLog('XLSX.read THREW: '+err.message, 'err');
         log('Could not read this xlsx file: '+err.message, 'err');
         return;
       }
 
       const sniff = sniffXLSXAirline(wb);
+      debugLog('Format sniff result: '+sniff, 'info');
 
       if(sniff === 'airasia'){
         setFmt('XLSX · AirAsia X (OCR)', true);
         log('AirAsia X "Personal Crew Schedule Report" detected — this format stores each day as a small screenshot image, so it needs OCR. This can take 20–60s on a phone.', 'warn');
+        debugLog('Entering parseAirAsiaXLSX()…', 'info');
         const legs = await parseAirAsiaXLSX(buf, wb, log);
+        debugLog('parseAirAsiaXLSX returned '+legs.length+' legs', 'ok');
         LAST_PARSED_ROWS = legs;
         buildDays(rowsToLegs(legs));
         render();
         parseSuccess = true;
       } else {
+        debugLog('Entering parseXLSXRows()…', 'info');
         const rows = parseXLSXRows(wb);
+        debugLog('parseXLSXRows returned '+rows.length+' rows', 'ok');
         LAST_PARSED_ROWS = rows;
         buildDays(rowsToLegs(rows));
         render();
@@ -2337,97 +2401,4 @@ function renderHeatmap(){
       })) : [];
 
       if (hasOverlap) {
-        const windowsEncoded = encodeURIComponent(JSON.stringify(dayOverlaps));
-        html += `<div style="aspect-ratio:1;border-radius:5px;background:${bg};position:relative;border:1px solid var(--line);cursor:pointer;transition:transform 0.15s"
-                    data-date="${key}"
-                    data-windows="${windowsEncoded}"
-                    onclick="showDutyPopup(this)"
-                    onmouseenter="this.style.transform='scale(1.05)'"
-                    onmouseleave="this.style.transform='scale(1)'">
-                 <span style="position:absolute;top:2px;right:3px;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9)">${d}</span>
-               </div>`;
-      } else {
-        html += `<div style="aspect-ratio:1;border-radius:5px;background:${bg};position:relative;border:1px solid var(--line);cursor:default">
-                 <span style="position:absolute;top:2px;right:3px;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9)">${d}</span>
-               </div>`;
-      }
-    }
-    html += `</div>`;
-    cursor = new Date(y, m+1, 1);
-  }
-  document.getElementById('overlapResults').innerHTML = html;
-}
-
-/* =====================================================================
-   12) HEATMAP POPUP - Shows who has to leave first
-===================================================================== */
-function showDutyPopup(element) {
-  debugLog('🔍 showDutyPopup() called', 'info');
-  
-  if (!element) {
-    debugLog('❌ element is null or undefined', 'err');
-    return;
-  }
-  
-  debugLog('  element.tagName: ' + element.tagName, 'info');
-  debugLog('  element.className: ' + element.className, 'info');
-  
-  if (!element.dataset) {
-    debugLog('❌ element has no dataset property', 'err');
-    return;
-  }
-
-  const dateKey = element.dataset.date;
-  debugLog('  dateKey: ' + dateKey, 'info');
-  
-  let overlapWindows;
-  try {
-    const windowsEncoded = element.dataset.windows;
-    debugLog('  windowsEncoded: ' + windowsEncoded, 'info');
-    if (!windowsEncoded) {
-      debugLog('❌ windowsEncoded is empty', 'err');
-      return;
-    }
-    overlapWindows = JSON.parse(decodeURIComponent(windowsEncoded));
-    debugLog('  overlapWindows: ' + JSON.stringify(overlapWindows), 'info');
-  } catch (e) {
-    debugLog('❌ Failed to parse overlap windows: ' + e.message, 'err');
-    return;
-  }
-
-  if (!LAST_OVERLAP_PEOPLE || !LAST_OVERLAP_PEOPLE.length) {
-    debugLog('❌ LAST_OVERLAP_PEOPLE is empty or undefined', 'err');
-    debugLog('  LAST_OVERLAP_PEOPLE: ' + JSON.stringify(LAST_OVERLAP_PEOPLE), 'err');
-    return;
-  }
-  
-  debugLog('  LAST_OVERLAP_PEOPLE has ' + LAST_OVERLAP_PEOPLE.length + ' crew members', 'ok');
-  for (const crew of LAST_OVERLAP_PEOPLE) {
-    debugLog('    👤 ' + crew.name + ' (' + crew.tz + ') - ' + (crew.days ? crew.days.length + ' days' : 'no days'), 'info');
-  }
-
-  if (!overlapWindows || !overlapWindows.length) {
-    debugLog('❌ overlapWindows is empty', 'err');
-    return;
-  }
-
-  const dateObj = new Date(dateKey + 'T00:00:00');
-  if (isNaN(dateObj.getTime())) {
-    debugLog('❌ Invalid date key: ' + dateKey, 'err');
-    return;
-  }
-  
-  debugLog('✅ All validations passed! Building popup...', 'ok');
-
-  const dateDisplay = fmtDate(dateObj) + ' (' + DOW[dateObj.getDay()] + ')';
-
-  const overlay = document.createElement('div');
-  overlay.className = 'popup-overlay';
-  overlay.setAttribute('role', 'dialog');
-  overlay.setAttribute('aria-label', 'Duty information for ' + dateDisplay);
-
-  let html = `
-    <div class="popup-content">
-      <div class="popup-header">
-        <span>📅 ${dateDisplay}</span>
-        <button c
+        const windowsEncoded = e
