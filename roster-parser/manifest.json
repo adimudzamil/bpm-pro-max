@@ -1,6 +1,6 @@
 {
-  "name": "Roster Parser · 2100551",
-  "short_name": "Roster Parser",
+  "name": "Roster Parser",
+  "short_name": "2100551",
   "description": "Parse crew rosters and find time together",
   "start_url": "/bpm-pro-max/roster-parser/index.html",
   "display": "standalone",
