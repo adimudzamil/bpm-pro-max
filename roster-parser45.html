@@ -692,23 +692,33 @@ async function handleFile(file){
       setFmt('XLSX', true);
       const buf = await file.arrayBuffer();
 
-      /* NEW: sniff which airline export this xlsx actually is before
-         committing to the MAS cell-based parser. AirAsia X's "Personal
-         Crew Schedule Report" renders its daily calendar as embedded
-         screenshot images rather than text cells, so it needs a
-         completely different (OCR-based) parser. */
-      const sniff = sniffXLSXAirline(buf);
+      /* NEW: parse the workbook exactly ONCE and reuse the resulting `wb`
+         object everywhere below. Reading the same raw ArrayBuffer twice
+         (once to sniff the format, once again to actually parse it) is
+         the same class of bug that caused the earlier PDF ArrayBuffer
+         detachment crashes — some mobile browsers neuter/detach a buffer
+         after its first read, so a second XLSX.read(buf) on the same
+         buffer can silently come back empty. */
+      let wb;
+      try{
+        wb = XLSX.read(buf, {type:'array', cellDates:true});
+      }catch(err){
+        log('Could not read this xlsx file: '+err.message, 'err');
+        return;
+      }
+
+      const sniff = sniffXLSXAirline(wb);
 
       if(sniff === 'airasia'){
         setFmt('XLSX · AirAsia X (OCR)', true);
         log('AirAsia X "Personal Crew Schedule Report" detected — this format stores each day as a small screenshot image, so it needs OCR. This can take 20–60s on a phone.', 'warn');
-        const legs = await parseAirAsiaXLSX(buf, log);
+        const legs = await parseAirAsiaXLSX(buf, wb, log);
         LAST_PARSED_ROWS = legs;
         buildDays(rowsToLegs(legs));
         render();
         parseSuccess = true;
       } else {
-        const rows = parseXLSXRows(buf);
+        const rows = parseXLSXRows(wb);
         LAST_PARSED_ROWS = rows;
         buildDays(rowsToLegs(rows));
         render();
@@ -818,8 +828,7 @@ function cleanTime(t){
 /* =====================================================================
    1) XLSX PARSER
 ===================================================================== */
-function parseXLSXRows(buf){
-  const wb = XLSX.read(buf, {type:'array', cellDates:true});
+function parseXLSXRows(wb){
   const ws = wb.Sheets[wb.SheetNames[0]];
   const aoa = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:''});
 
@@ -893,15 +902,15 @@ function splitStnTime(s){
    Peeks at the first sheet's text cells (cheap, no OCR) to decide which
    airline export this is, before choosing a parser.
 ===================================================================== */
-function sniffXLSXAirline(buf){
+function sniffXLSXAirline(wb){
   try{
-    const wb = XLSX.read(buf, {type:'array', cellDates:true});
     const ws = wb.Sheets[wb.SheetNames[0]];
     const aoa = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:''});
     const flat = aoa.slice(0, 10).map(r=>r.join(' ')).join(' ').toUpperCase();
     if(flat.includes('AIR ASIA') || flat.includes('PERSONAL CREW SCHEDULE')) return 'airasia';
     return 'mas';
   }catch(e){
+    log('Format sniff failed, defaulting to MAS parser: '+e.message, 'warn');
     return 'mas';
   }
 }
@@ -930,13 +939,15 @@ function sniffXLSXAirline(buf){
      continuation of the previous day's duty: it inherits the pairing
      and only contributes an arrival/duty-end value.
 ===================================================================== */
-async function parseAirAsiaXLSX(buf, logFn){
+async function parseAirAsiaXLSX(buf, wb, logFn){
   const zip = await JSZip.loadAsync(buf);
 
   // 1) figure out the report's start date from a plain text cell
   //    (e.g. Q4 = "01/07/2026 - 31/07/2026 (All times in Local Station)")
   //    so we don't have to trust OCR for the calendar's date axis.
-  const wb = XLSX.read(buf, {type:'array', cellDates:true});
+  //    Reuses the workbook already parsed once in handleFile — re-reading
+  //    the same ArrayBuffer via XLSX.read a second time is what caused
+  //    the silent failures (same bug class as the earlier PDF crashes).
   const ws = wb.Sheets[wb.SheetNames[0]];
   const aoa = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:''});
   let rangeStart = null;
@@ -2419,19 +2430,4 @@ function showDutyPopup(element) {
     <div class="popup-content">
       <div class="popup-header">
         <span>📅 ${dateDisplay}</span>
-        <button class="popup-close" aria-label="Close popup">✕</button>
-      </div>
-      <div class="popup-body">
-  `;
-
-  for (const overlapWindow of overlapWindows) {
-    const windowEnd = overlapWindow.end;
-    const windowStart = overlapWindow.start;
-    const startStr = formatTime(windowStart);
-    const endStr = formatTime(windowEnd);
-    const dur = Math.floor((windowEnd - windowStart) / 60);
-
-    const dutyInfo = [];
-
-    for (const crew of LAST_OVERLAP_PEOPLE) {
-      co
+        <button c
