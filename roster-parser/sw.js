@@ -1,60 +1,83 @@
-// sw.js – Roster Parser Service Worker
-// Handles file sharing from Android (Web Share Target)
+const CACHE_NAME = 'roster-parser-v1';
+const SHARE_URL = '/share-target';
 
-// Install: activate immediately
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
+// Files to cache on install (the app shell)
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  // External libraries – you can add them if you want offline support, but they are large.
+  // If you include them, uncomment the lines below:
+  // 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+  // 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+  // 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+  // 'https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap'
+];
+
+// Install event – cache the shell
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+    .then(cache => cache.addAll(STATIC_ASSETS))
+    .then(() => self.skipWaiting())
+  );
 });
 
-// Activate: take control of all clients
-self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
+// Activate event – clean old caches
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
-// Intercept requests
-self.addEventListener('fetch', (event) => {
+// Fetch event – serve from cache, but also handle share POST
+self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   
-  // Catch POST requests to the main page (coming from share target)
-  // The path must exactly match the "action" in your manifest.json
-  if (event.request.method === 'POST' && url.pathname === '/roster-parser/index.html') {
-    event.respondWith(handleShareTarget(event.request));
+  // === Handle the share target POST ===
+  if (event.request.method === 'POST' && url.pathname === SHARE_URL) {
+    event.respondWith(handleShare(event.request));
     return;
   }
   
-  // For everything else, go straight to the network
-  event.respondWith(fetch(event.request));
+  // Normal request – try cache, fallback to network
+  event.respondWith(
+    caches.match(event.request)
+    .then(response => response || fetch(event.request))
+    .catch(() => new Response('Offline', { status: 503 }))
+  );
 });
 
-/**
- * Processes the shared file, stores it in Cache, then redirects
- * to the main page with a ?shared=true flag.
- */
-async function handleShareTarget(request) {
+// Process a shared file
+async function handleShare(request) {
   try {
-    // Extract the file from the multipart form data
     const formData = await request.formData();
-    const file = formData.get('rosterFile'); // must match "name" in manifest
+    const file = formData.get('file'); // 'file' matches the name in manifest.json
     
     if (!file) {
-      // No file – just redirect normally
-      return Response.redirect('/roster-parser/index.html', 303);
+      return new Response('No file received', { status: 400 });
     }
     
-    // Store the file in Cache Storage under a fixed key
-    const cache = await caches.open('roster-shared-files');
-    const fileResponse = new Response(file, {
-      headers: { 'Content-Type': file.type }
+    // Store the file in the cache so the main page can pick it up
+    const cache = await caches.open('shared-v1');
+    const headers = new Headers({
+      'Content-Type': file.type,
+      'X-Filename': file.name,
     });
-    await cache.put('/shared-file', fileResponse);
+    const response = new Response(file, { headers });
+    await cache.put('/shared-file', response);
     
-    // Redirect to the main page with a flag so the page knows to load the file
-    const redirectUrl = new URL('/roster-parser/index.html', self.location.origin);
-    redirectUrl.searchParams.set('shared', 'true');
+    // Redirect to the main page with a query param (optional)
+    const redirectUrl = new URL('/', self.location.origin);
+    redirectUrl.searchParams.set('shared', '1');
     return Response.redirect(redirectUrl.toString(), 303);
+    
   } catch (error) {
-    console.error('Share target error:', error);
-    // Fallback: redirect to main page without file
-    return Response.redirect('/roster-parser/index.html', 303);
+    console.error('Share handling error:', error);
+    return new Response('Share processing failed', { status: 500 });
   }
 }
