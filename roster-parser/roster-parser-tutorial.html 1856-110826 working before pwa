@@ -26,38 +26,6 @@
   /* MAIN */
   main{padding:12px;max-width:900px;margin:0 auto}
   
-  /* INSTALL BANNER */
-  .install-banner{
-    background:var(--panel);
-    border:2px solid var(--accent);
-    border-radius:12px;
-    padding:14px 16px;
-    margin-bottom:20px;
-    display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-  }
-  .install-banner .text{flex:1;min-width:180px}
-  .install-banner .text .title{color:var(--accent);font-weight:700;font-size:14px}
-  .install-banner .text .desc{color:var(--dim);font-size:12px;margin:2px 0}
-  .install-banner .btn{
-    background:var(--accent);
-    color:#0b0c0e;
-    border:none;
-    border-radius:8px;
-    padding:10px 20px;
-    font-family:var(--mono);
-    font-size:13px;
-    font-weight:700;
-    cursor:pointer;
-    transition:transform .15s;
-  }
-  .install-banner .btn:active{transform:scale(.96)}
-  .install-banner .btn:disabled{opacity:.4;cursor:default}
-  .install-banner .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:10px;border:1px solid var(--accent-dim);color:var(--accent);margin-left:6px}
-  
   /* TOC */
   .toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-bottom:20px}
   .toc h2{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
@@ -69,7 +37,7 @@
   /* SECTIONS */
   section{margin-bottom:24px}
   .section-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-  .section-card h2{font-size:12.5px;margin:0;padding:10px 14px;border-bottom:1px solid var(--line);color:var(--accent);letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .section-card h2{font-size:12.5px;margin:0;padding:10px 14px;border-bottom:1px solid var(--line);color:var(--accent);letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:10px}
   .section-card h2 .badge{font-size:9px;text-transform:none;color:var(--dim);background:var(--panel2);padding:1px 10px;border-radius:12px;border:1px solid var(--line)}
   .section-card .body{padding:12px 14px}
   
@@ -145,9 +113,6 @@
   footer{padding:20px 14px 40px;color:var(--dim);font-size:10.5px;text-align:center;border-top:1px solid var(--line);margin-top:20px}
   .about{background:var(--panel2);border-radius:8px;padding:12px 16px;margin-top:16px;font-size:12px;color:var(--dim)}
   .about strong{color:var(--text)}
-  
-  /* HIDE INSTALL BUTTON IF ALREADY INSTALLED OR NOT SUPPORTED */
-  .install-banner.hidden{display:none}
 </style>
 </head>
 <body>
@@ -159,20 +124,10 @@
 
 <main>
 
-  <!-- ===== INSTALL BANNER (appears if installable) ===== -->
-  <div class="install-banner" id="installBanner">
-    <div class="text">
-      <div class="title">📲 Install App <span class="badge">NEW</span></div>
-      <div class="desc">Get the Roster Parser as a standalone app &amp; share Excel files directly to it from your phone!</div>
-    </div>
-    <button class="btn" id="installBtn">Install</button>
-  </div>
-
   <!-- ===== TABLE OF CONTENTS ===== -->
   <div class="toc">
     <h2>📑 Quick Navigation</h2>
     <div class="toc-grid">
-      <a href="#sec0"><span class="num">0.</span> Install &amp; Share (PWA)</a>
       <a href="#sec1"><span class="num">1.</span> Quick Start Guide</a>
       <a href="#sec2"><span class="num">2.</span> Loading Your Roster</a>
       <a href="#sec3"><span class="num">3.</span> Understanding the Table</a>
@@ -187,55 +142,6 @@
     </div>
   </div>
 
-  <!-- ===== SECTION 0: INSTALL & SHARE ===== -->
-  <section id="sec0">
-    <div class="section-card">
-      <h2>0. Install &amp; Share <span class="badge">PWA</span></h2>
-      <div class="body">
-        <p>This tool is a <strong>Progressive Web App (PWA)</strong>. Installing it lets you:</p>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li>Launch it from your home screen like a native app.</li>
-          <li><strong>Share Excel files (.xlsx, .xls) or PDFs directly from other apps</strong> – the Roster Parser will appear in your Android share sheet.</li>
-        </ul>
-
-        <h3>How to install (Android – Chrome)</h3>
-        <ol class="step-list">
-          <li>Open this page in <strong>Chrome</strong> on your Android device.</li>
-          <li>Look for the <span class="highlight">“Install”</span> banner at the top of this page – tap it if you see it.</li>
-          <li>If the banner doesn’t appear, tap the <strong>three‑dot menu</strong> (⋮) in the top‑right corner of Chrome.</li>
-          <li>Select <span class="highlight">“Install app”</span> or <span class="highlight">“Add to Home screen”</span> (the exact wording may vary).</li>
-          <li>Follow the on‑screen instructions – Chrome will add an icon to your home screen.</li>
-          <li>Once installed, open the app from the home screen. You’ll see the same interface, but now it’s a standalone app.</li>
-        </ol>
-        <div class="tip">💡 If you already see the <strong>“Install”</strong> button at the top of this page, tap it – that’s the fastest way!</div>
-
-        <h3>How to use the share feature (Android only)</h3>
-        <ol class="step-list">
-          <li>Open any app that has a roster file (e.g., email, WhatsApp, Drive, Files).</li>
-          <li>Tap the <span class="highlight">“Share”</span> button (usually an arrow or three dots).</li>
-          <li>In the share sheet, scroll until you see <span class="highlight">“Roster Parser”</span> (or “Roster Parser · 2100551”).</li>
-          <li>Tap it – the app will open and automatically parse the file.</li>
-          <li>You’ll see your roster loaded instantly, ready to save, export, or find time with others.</li>
-        </ol>
-        <div class="note">⚠️ <strong>iOS (Safari) note:</strong> Web Share Target is not supported on iOS. You can still install the app to your home screen (using “Add to Home Screen”), but you’ll need to upload files manually via the “Choose file” button. We recommend using Android for the best experience.</div>
-
-        <h3>What files can you share?</h3>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li><span class="tag on">.xlsx</span> – Excel (preferred, most reliable)</li>
-          <li><span class="tag on">.xls</span> – older Excel format</li>
-          <li><span class="tag warn">.pdf</span> – works for Roster Reports or Calendar PDFs (may need manual force‑reparse)</li>
-        </ul>
-
-        <h3>If the share option doesn’t appear</h3>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li><strong>Make sure you have installed the app</strong> – the share target only works after installation.</li>
-          <li><strong>Clear Chrome cache</strong> and re‑install if you see duplicate entries.</li>
-          <li>Ensure you’re using Chrome 89+ on Android 12+.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
   <!-- ===== SECTION 1: QUICK START ===== -->
   <section id="sec1">
     <div class="section-card">
@@ -245,7 +151,7 @@
         <ol class="step-list">
           <li><strong>Get your roster file</strong> — usually an Excel (.xlsx) file from your airline's portal or email.</li>
           <li><strong>Open this tool</strong> — on your phone, tablet, or computer.</li>
-          <li><strong>Load the file</strong> — drag it onto the dotted area, or tap <span class="highlight">"Choose file"</span> and select it. <strong>Better yet</strong>: share it directly from another app after installing!</li>
+          <li><strong>Load the file</strong> — drag it onto the dotted area, or tap <span class="highlight">"Choose file"</span> and select it.</li>
           <li><strong>Review your schedule</strong> — the table appears automatically. Use the <span class="highlight">"Fit screen"</span> button to see all columns.</li>
           <li><strong>Save your roster</strong> — type your name, pick a timezone, and tap <span class="highlight">"Save roster"</span> so you can later find free time with other crew.</li>
         </ol>
@@ -273,7 +179,6 @@
           <li><strong>On a phone/tablet:</strong> Tap <span class="highlight">"Choose file"</span> — your device will ask you to pick a file from your storage (Downloads, Photos, Files).</li>
           <li>After selecting, the file starts processing automatically. You'll see a message like <span class="tag on">XLSX</span> or <span class="tag warn">PDF · Roster Report</span>.</li>
         </ol>
-        <p><strong>Or use the share feature</strong> (if you've installed the app) – just share the file from any app and the parser will open automatically.</p>
 
         <h3>If the format is not recognised correctly</h3>
         <p>Sometimes the tool might guess the wrong PDF type. If you see a "Not right? force re-parse as:" section, try the other button:</p>
@@ -285,9 +190,6 @@
       </div>
     </div>
   </section>
-
-  <!-- ===== SECTIONS 3–11 (unchanged, keep the same content) ===== -->
-  <!-- ... rest of the sections (3 to 11) remain as in your original file ... -->
 
   <!-- ===== SECTION 3: UNDERSTANDING THE TABLE ===== -->
   <section id="sec3">
@@ -539,80 +441,42 @@
     </div>
   </section>
 
-  <!-- ===== SECTION 11: ABOUT ===== -->
-  <section id="sec11">
-    <div class="section-card">
-      <h2>11. About This Tool <span class="badge">Why?</span></h2>
-      <div class="body">
-        <div class="about">
-          <p><strong>Why I built this</strong></p>
-          <p>For the thousands of times I had to compare two rosters' timing from an image on my phone, calculating the time, figuring out the long or short streak of free time just to find when I could be with Her and Zayn Ikhlas.</p>
-          <p>I only have a phone, and I love portrait mode. I needed everything to fit on <strong>one screen</strong> because when you're scrolling through life on the go, you don't have time for landscape, and you don't have time for guesswork. The heatmap tells you exactly when you're both free and who has to leave first because that's the real question, isn't it?</p>
-          <p>So I built this for:</p>
-          <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-            <li>Couples figuring out <em>"When are we both free?"</em> and <em>"How long do we really have?"</em></li>
-            <li>Friends planning group gatherings, just a single overlap would do if we're lucky.</li>
-            <li>Crew parents coordinating school runs and parking spots.</li>
-            <li>The 3-minute hugs during transit when your layover is on the opposite side of the map.</li>
-          </ul>
-          <p>Over time, I added features my colleagues asked for: saving multiple rosters, classic styling, colours, no grainy, compressed images over WhatsApp, etc, which helps me too.</p>
-          <p>I hope it saves you as much time as it saves me because all I needed was those green bars in a sea of red cells. All code runs in your browser, so your data stays private. I welcome your feedback, it's the only way to improve things, so don't hesitate to text Alif and Fahrin.</p>
-          <p style="margin-top:8px;font-size:11px;color:var(--accent);">
-            Here's to fewer lonely calculations, and more 💚 bars.
-          </p>
-          <p style="margin-top:8px;font-size:11px;color:var(--dim)">— 2100551 · 02 August 2026</p>
-        </div>
-        <div style="margin-top:12px;padding:10px;background:var(--panel2);border-radius:6px;text-align:center;font-size:11px;color:var(--dim)">
-          🔐 <strong>Privacy:</strong> All parsing and processing happens <strong>locally in your device's browser</strong>. No files are uploaded to any server.
-        </div>
+<!-- ===== SECTION 11: ABOUT ===== -->
+<section id="sec11">
+  <div class="section-card">
+    <h2>11. About This Tool <span class="badge">Why?</span></h2>
+    <div class="body">
+      <div class="about">
+        <p><strong>Why I built this</strong></p>
+        <p>For the thousands of times I had to compare two rosters' timing from an image on my phone, calculating the time, figuring out the long or short streak of free time just to find when I could be with Her and Zayn Ikhlas.</p>
+        <p>I only have a phone, and I love portrait mode. I needed everything to fit on <strong>one screen</strong> because when you're scrolling through life on the go, you don't have time for landscape, and you don't have time for guesswork. The heatmap tells you exactly when you're both free and who has to leave first because that's the real question, isn't it?</p>
+        <p>So I built this for:</p>
+        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+          <li>Couples figuring out <em>"When are we both free?"</em> and <em>"How long do we really have?"</em></li>
+          <li>Friends planning group gatherings, just a single overlap would do if we're lucky.</li>
+          <li>Crew parents coordinating school runs and parking spots.</li>
+          <li>The 3-minute hugs during transit when your layover is on the opposite side of the map.</li>
+        </ul>
+        <p>Over time, I added features my colleagues asked for: saving multiple rosters, classic styling, colours, no grainy, compressed images over WhatsApp, etc, which helps me too.</p>
+        <p>I hope it saves you as much time as it saves me because all I needed was those green bars in a sea of red cells. All code runs in your browser, so your data stays private. I welcome your feedback, it's the only way to improve things, so don't hesitate to text Alif and Fahrin.</p>
+        <p style="margin-top:8px;font-size:11px;color:var(--accent);">
+          Here's to fewer lonely calculations, and more 💚 bars.
+        </p>
+        <p style="margin-top:8px;font-size:11px;color:var(--dim)">— 2100551 · 02 August 2026</p>
+      </div>
+      <div style="margin-top:12px;padding:10px;background:var(--panel2);border-radius:6px;text-align:center;font-size:11px;color:var(--dim)">
+        🔐 <strong>Privacy:</strong> All parsing and processing happens <strong>locally in your device's browser</strong>. No files are uploaded to any server.
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
   <!-- ===== FOOTER ===== -->
   <footer>
-    Roster Parser · by 2100551
+    Roster Parser · by 2100551<br>
   </footer>
 
 </main>
-
-<script>
-  // ---- PWA Install Button ----
-  let deferredPrompt = null;
-  const installBanner = document.getElementById('installBanner');
-  const installBtn = document.getElementById('installBtn');
-
-  // Listen for beforeinstallprompt
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBanner.classList.remove('hidden');
-  });
-
-  // Handle install button click
-  installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const result = await deferredPrompt.userChoice;
-    console.log('User choice:', result.outcome);
-    if (result.outcome === 'accepted') {
-      installBanner.classList.add('hidden');
-    }
-    deferredPrompt = null;
-  });
-
-  // Hide banner if app is already installed (appinstalled event)
-  window.addEventListener('appinstalled', () => {
-    installBanner.classList.add('hidden');
-  });
-
-  // Also hide if the user is on iOS or non-Chrome browser (no support)
-  const isChrome = navigator.userAgent.includes('Chrome');
-  const isAndroid = /android/i.test(navigator.userAgent);
-  if (!isChrome || !isAndroid) {
-    installBanner.classList.add('hidden');
-  }
-</script>
 
 </body>
 </html>
