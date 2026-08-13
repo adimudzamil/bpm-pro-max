@@ -572,7 +572,6 @@
             return codes.map(function(code) {
                 const data = SSR_MEAL_DATA[code];
                 if (data) {
-                    // Invisible click - no CSS classes, just onclick
                     return `<span onclick="event.stopPropagation(); showMealInfo('${code}')">${code}</span>`;
                 } else {
                     return `<span>${code}</span>`;
@@ -2386,9 +2385,8 @@
             const headers = showSeat ? '<th>SEAT</th><th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>' : '<th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>';
             html += '<thead><tr>' + headers + '</tr></thead><tbody>';
             passengers.forEach(p => {
-                // Generate clickable meal codes (invisible styling) and wrap in <strong> to match original table bold look
+                // Use renderMealCodes for clickable meal codes (no styling)
                 let mealHtml = renderMealCodes(p.meal);
-                if (mealHtml) mealHtml = '<strong>' + mealHtml + '</strong>';
                 if (p.hasBirthday) mealHtml += (mealHtml ? ' ' : '') + '🎂';
                 let remarkIndicator = '';
                 if (p.remark === 'UPG') remarkIndicator = '<span class="upgrade-indicator">↑</span>';
@@ -2414,9 +2412,7 @@
             let html = '<table class="' + tableClass + '">';
             html += '<thead><tr><th>SEAT</th><th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th></tr></thead><tbody>';
             passengers.forEach(p => {
-                let mealHtml = renderMealCodes(p.meal);
-                if (mealHtml) mealHtml = '<strong>' + mealHtml + '</strong>';
-                if (p.hasBirthday) mealHtml += (mealHtml ? ' ' : '') + '🎂';
+                const mealHtml = renderMealCodes(p.meal) + (p.hasBirthday ? ' 🎂' : '');
                 html += '<tr>';
                 html += '<td class="editable-seat-cell" ontouchstart="seatCellPressStart(\'' + p.id + '\')" ontouchend="seatCellPressEnd()" ontouchmove="seatCellPressEnd()" onmousedown="seatCellPressStart(\'' + p.id + '\')" onmouseup="seatCellPressEnd()" onmouseleave="seatCellPressEnd()" oncontextmenu="return false;" style="border: 1px dashed #999; background: #fffacd;">&nbsp;</td>';
                 html += '<td>' + p.title + '</td><td>' + p.name + '</td><td><strong>' + p.tier + '</strong></td><td>' + mealHtml + '</td>';
@@ -2528,7 +2524,6 @@
                                 }
                                 html += '<td class="' + cellClass + ' ' + tierClass + '" colspan="' + colspan + '">';
                                 if (passenger) {
-                                    // Seat chart – meal codes are plain text (not bold) to match original seat chart style
                                     let mealHtml = renderMealCodes(passenger.meal);
                                     if (passenger.hasBirthday) mealHtml += (mealHtml ? ' ' : '') + '🎂';
                                     const tierIcon = passenger.tier === 'PLAT' ? '❤️ ' : (passenger.tier === 'EMER' ? '🔴 ' : '');
