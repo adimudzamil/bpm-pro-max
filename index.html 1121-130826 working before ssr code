@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -432,153 +433,8 @@
             <div id="categoryListBody"></div>
         </div>
     </div>
-
-    <!-- NEW: Meal Info Modal -->
-    <div id="mealInfoOverlay" class="seat-lookup-overlay" onclick="closeMealInfoOnOverlay(event)">
-        <div class="seat-lookup-modal" onclick="event.stopPropagation()">
-            <button class="seat-lookup-close" onclick="closeMealInfo()">✕</button>
-            <div id="mealInfoBody"></div>
-        </div>
-    </div>
-
-    <style>
-        /* Meal info modal content */
-        #mealInfoBody .meal-info-header {
-            font-size: 28px;
-            font-weight: 700;
-            color: #1E293B;
-            margin-bottom: 6px;
-            text-align: center;
-            letter-spacing: 1px;
-        }
-        #mealInfoBody .meal-info-name {
-            font-size: 22px;
-            font-weight: 600;
-            color: #2563EB;
-            margin-bottom: 12px;
-            text-align: center;
-        }
-        #mealInfoBody .meal-info-desc {
-            font-size: 16px;
-            line-height: 1.6;
-            color: #334155;
-            text-align: left;
-            max-width: 480px;
-            margin: 0 auto;
-            padding: 0 10px;
-            border-top: 1px solid #E2E8F0;
-            padding-top: 14px;
-        }
-        #mealInfoBody .meal-info-empty {
-            text-align: center;
-            color: #94A3B8;
-            font-size: 18px;
-            padding: 20px 0;
-        }
-        /* Ensure overlay is above everything */
-        #mealInfoOverlay {
-            z-index: 10000;
-        }
-    </style>
-
+    
     <script>
-        // =================== SSR MEAL DATA ===================
-        const SSR_MEAL_DATA = {
-            // Special Dietary Meals (IATA)
-            'AVML': { name: 'Asian Vegetarian Meal', desc: 'South Asian‑style vegetarian – no meat, poultry, fish, or eggs. May contain dairy.' },
-            'BBML': { name: 'Infant/Baby Meal', desc: 'Pre‑packaged baby food for infants up to 2 years. May be non‑vegetarian.' },
-            'BLML': { name: 'Bland Meal', desc: 'No highly seasoned or fried foods. For stomach/gastrointestinal issues.' },
-            'CHML': { name: 'Child Meal', desc: 'Healthy food for children aged 2‑12 years.' },
-            'DBML': { name: 'Diabetic Meal', desc: 'Complex carbs, low sugar, high fibre. For insulin & non‑insulin dependent diabetics.' },
-            'FPML': { name: 'Fruit Platter', desc: 'Fresh fruits only (seasonal). No additives or preservatives.' },
-            'GFML': { name: 'Gluten Intolerant Meal', desc: 'Excludes wheat, rye, oats, bran, barley. For coeliac disease / gluten intolerance.' },
-            'HNML': { name: 'Hindu Non‑Vegetarian Meal', desc: 'Indian‑style. No beef, veal, pork. May contain lamb, chicken, fish, eggs, dairy.' },
-            'KSML': { name: 'Kosher Meal', desc: 'Kosher‑certified, complies with Jewish dietary laws. Select long‑haul routes only.' },
-            'LCML': { name: 'Low Calorie Meal', desc: 'Lean meats, low‑fat dairy, complex carbs, steamed/poached. No fried/fatty foods or sugar.' },
-            'LFML': { name: 'Low Fat Meal', desc: 'Low saturated fat. Lean meats, poultry, fish, low‑fat dairy, egg whites, wholegrains.' },
-            'LSML': { name: 'Low Salt Meal', desc: 'Limited sodium. For low‑sodium diets.' },
-            'NLML': { name: 'Lactose Intolerant Meal', desc: 'No lactose or dairy derivatives. May contain traces. Not for milk allergies.' },
-            'RVML': { name: 'Vegetarian Raw Meal', desc: 'Raw or lightly processed fruits, vegetables, nuts, seeds, legumes, grains.' },
-            'SFML': { name: 'Seafood Meal', desc: 'Seafood only – no meat or poultry.' },
-            'VGML': { name: 'Vegan Meal', desc: 'No animal products, by‑products, eggs, honey, or dairy.' },
-            'VJML': { name: 'Vegetarian Jain Meal', desc: 'Strict vegetarian, Indian‑style. No animal products, eggs, honey, dairy, root/bulb veg, or fermented food.' },
-            'VLML': { name: 'Vegetarian Lacto‑Ovo Meal', desc: 'No animal products/by‑products, but may contain eggs and dairy.' },
-            'VOML': { name: 'Vegetarian Oriental Meal', desc: 'East Asian cooking style. No animal products/by‑products, eggs, or dairy.' },
-            // Chef-on-Call
-            'AAML': { name: 'Nasi Lemak Prawn Sambal', desc: 'Coconut pandan rice with sweet & spicy prawn sambal, egg, fried anchovies, crunchy peanuts.' },
-            'ABML': { name: 'Scallop and Prawn Fettucine', desc: 'Thai basil pomodoro fettucine with grilled scallops & prawns, arugula & parmesan.' },
-            'AFML': { name: 'Lemon Mascarpone Tortellini', desc: 'Tortellini stuffed with lemon & mascarpone, sage beurre blanc, caramelised walnuts, basil oil.' },
-            'AGML': { name: 'Grilled Paneer Tikka', desc: 'Grilled cottage cheese with palak gravy, paratha, beetroot basmati rice, rajma masala.' },
-            'AHML': { name: 'Teochew Steamed Fish', desc: 'Sour & savoury steamed fish with preserved mustard greens, forbidden rice, straw mushrooms, bok choy.' },
-            'AIML': { name: 'Hand Pulled Noodles', desc: 'Hand‑pulled noodles in garlic oil with tomato & egg gravy, omelette, mushroom, bok choy.' },
-            'AJML': { name: 'Wantan Noodles', desc: 'Wantan noodles in oyster & dark soy sauce with honey BBQ chicken, fried prawn wantans, blanched veg.' },
-            'AKML': { name: 'Nasi Lemak Signature', desc: 'Coconut pandan rice wrapped in banana leaf with chicken rendang, prawn sambal, egg, anchovies, peanuts.' },
-            'ALML': { name: 'Nasi Lemak Chicken Rendang', desc: 'Coconut pandan rice with spiced chicken rendang, egg, fried anchovies, crunchy peanuts.' },
-            'AMML': { name: 'Nasi Lemak Mushroom Sambal', desc: 'Coconut pandan rice with lion\'s mane mushroom sambal, vegetarian sambal, tempeh, cucumber, peanuts.' },
-            'AOML': { name: 'Laksa Johor', desc: 'Spaghetti in seafood‑based gravy with minced fish, cucumber, onions, long beans, torch ginger.' },
-            'APML': { name: 'Ayam Sambal Bali', desc: 'Sweet & spicy stir‑fried chicken with lemongrass, turmeric rice, pineapple relish, cucumber, tomatoes.' },
-            'ARML': { name: 'Malai Tandoori Chicken', desc: 'Roasted tandoori chicken with mughlai biryani rice and bhindi masala (spiced okra).' },
-            'ASML': { name: 'Grilled Snapper', desc: 'Grilled snapper with coriander beurre blanc, potato latke, cornichons & green apple salad.' },
-            'BPML': { name: 'Ikan Percik', desc: 'Grilled seabass with percik sauce, nasi beringin, stir‑fried okra & eggplant with sambal.' },
-            'BQML': { name: 'Wild Mushroom Ragout Penne', desc: 'Penne pasta with wild mushroom ragout, steamed assorted vegetables.' },
-            'BRML': { name: 'Rainbow Rice with Shahi Paneer', desc: 'Creamy paneer curry with rainbow rice, stir‑fried green peas & carrots.' },
-            'BSML': { name: 'Strawberry Cinnamon Loaf', desc: 'Strawberry cinnamon loaf with apple‑strawberry compote, vanilla custard, fresh strawberries.' },
-            'BTML': { name: 'Nasi Daging Gerang', desc: 'Sweet, sour & spicy braised beef with herbs & spices, steamed rice & okra.' },
-            'CCML': { name: 'Grilled Beef Medallion', desc: 'Grilled beef medallion with baked potatoes, sour cream & chives, French beans, rosemary jus.' },
-            // EYPOML
-            'CPML': { name: 'Nasi Lemak Chicken Rendang', desc: 'Coconut pandan rice with chicken rendang, egg, fried anchovies, crunchy peanuts.' },
-            'CQML': { name: 'Ikan Percik with Nasi Beringin', desc: 'Spice‑infused rice with fish in spicy coconut sauce, sambal Jawa (stir‑fried beans & carrots).' },
-            'CSML': { name: 'Beef Japchae', desc: 'Korean‑style glass noodles with vegetables, stir‑fried beef, egg julienne.' },
-            'FIML': { name: 'Nasi Goreng Sate Ayam', desc: 'Chicken satay fried rice with MH signature chicken satay skewers & peanut sauce.' },
-            'FRML': { name: 'Lemon Chicken', desc: 'Fried chicken in lemon sauce with steamed rice & assorted steamed vegetables.' },
-            'FSML': { name: 'Beef Goulash', desc: 'Beef goulash with garlic mashed potato & assorted steamed vegetables.' },
-            'FTML': { name: 'Waffles with Vanilla Cream', desc: 'Waffles with vanilla cream & apple compote.' },
-            'FUML': { name: 'Upma with Sabudana Khichdi', desc: 'Upma with green peas & curry leaves, served with sago pearls tempered with spices.' },
-            'YAML': { name: 'Nasi Lemak Prawn Sambal', desc: 'Coconut pandan rice with sweet & spicy shrimp sambal, egg, fried anchovies, crunchy peanuts.' }
-        };
-
-        // =================== MEAL INFO FUNCTIONS ===================
-        function showMealInfo(code) {
-            if (!code) return;
-            const data = SSR_MEAL_DATA[code];
-            const body = document.getElementById('mealInfoBody');
-            if (!data) {
-                body.innerHTML = `
-                    <div class="meal-info-header">${code}</div>
-                    <div class="meal-info-empty">No description available for this code.</div>
-                `;
-            } else {
-                body.innerHTML = `
-                    <div class="meal-info-header">${code}</div>
-                    <div class="meal-info-name">${data.name}</div>
-                    <div class="meal-info-desc">${data.desc}</div>
-                `;
-            }
-            document.getElementById('mealInfoOverlay').style.display = 'flex';
-        }
-
-        function closeMealInfo() {
-            document.getElementById('mealInfoOverlay').style.display = 'none';
-        }
-
-        function closeMealInfoOnOverlay(e) {
-            if (e.target && e.target.id === 'mealInfoOverlay') closeMealInfo();
-        }
-
-        // =================== HELPER: renderMealCodes (no styling, clickable) ===================
-        function renderMealCodes(mealString) {
-            if (!mealString) return '';
-            const codes = mealString.split(',').map(s => s.trim()).filter(Boolean);
-            return codes.map(function(code) {
-                const data = SSR_MEAL_DATA[code];
-                if (data) {
-                    return `<span onclick="event.stopPropagation(); showMealInfo('${code}')">${code}</span>`;
-                } else {
-                    return `<span>${code}</span>`;
-                }
-            }).join(', ');
-        }
-
         // =================== GLOBAL VARIABLES & CONFIG ===================
         let seatChartWindow = null;
         let chartReadyForSecondManifest = false;
@@ -1191,8 +1047,6 @@
                 if (deleteOverlay && deleteOverlay.style.display !== 'none') cancelDeleteTab();
                 const categoryOverlay = document.getElementById('categoryListOverlay');
                 if (categoryOverlay && categoryOverlay.style.display !== 'none') closeCategoryList();
-                const mealOverlay = document.getElementById('mealInfoOverlay');
-                if (mealOverlay && mealOverlay.style.display !== 'none') closeMealInfo();
             }
         });
         
@@ -1550,10 +1404,10 @@
                 bbml: businessPassengers.filter(p => p.meal && p.meal.includes('BBML')).length
             };
             const businessChartData = {
-                flightInfo: flightInfo,
-                zoneSummary: businessZoneSummary,
-                passengers: businessPassengers,
-                tabId: activeTabId,
+    flightInfo: flightInfo,
+    zoneSummary: businessZoneSummary,
+    passengers: businessPassengers,
+    tabId: activeTabId,
                 config: {
                     aircraftType: aircraftType,
                     templateFile: BUSINESS_CLASS_TEMPLATES[aircraftType]?.template || 'sc-a333.html',
@@ -2385,9 +2239,18 @@
             const headers = showSeat ? '<th>SEAT</th><th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>' : '<th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>';
             html += '<thead><tr>' + headers + '</tr></thead><tbody>';
             passengers.forEach(p => {
-                // Use renderMealCodes for clickable meal codes (no styling)
-                let mealHtml = renderMealCodes(p.meal);
-                if (p.hasBirthday) mealHtml += (mealHtml ? ' ' : '') + '🎂';
+                const meals = p.meal ? p.meal.split(',').map(m => m.trim()) : [];
+                const parentMeal = meals.find(m => m !== 'BBML') || '';
+                const infantMeal = meals.find(m => m === 'BBML') || '';
+                let mealDisplay = '';
+                if (parentMeal && infantMeal) {
+                    mealDisplay = '<strong>' + parentMeal + '</strong><span class="infant-meal">(+' + infantMeal + ')</span>';
+                } else if (parentMeal) {
+                    mealDisplay = '<strong>' + parentMeal + '</strong>';
+                } else if (infantMeal) {
+                    mealDisplay = '<strong>' + infantMeal + '</strong>';
+                }
+                if (p.hasBirthday) mealDisplay += (mealDisplay ? ' ' : '') + '🎂';
                 let remarkIndicator = '';
                 if (p.remark === 'UPG') remarkIndicator = '<span class="upgrade-indicator">↑</span>';
                 else if (p.remark === 'DNG') remarkIndicator = '<span class="downgrade-indicator">↓</span>';
@@ -2400,7 +2263,7 @@
                         html += '<td ' + seatCellAttrs + ' style="border: 1px dashed #999; background: #fffacd;">&nbsp;</td>';
                     }
                 }
-                html += '<td>' + p.title + '</td><td>' + p.name + '</td><td><strong>' + p.tier + '</strong></td><td>' + mealHtml + '</td></tr>';
+                html += '<td>' + p.title + '</td><td>' + p.name + '</td><td><strong>' + p.tier + '</strong></td><td>' + mealDisplay + '</td></tr>';
             });
             html += '</tbody></table>';
             return html;
@@ -2412,10 +2275,21 @@
             let html = '<table class="' + tableClass + '">';
             html += '<thead><tr><th>SEAT</th><th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th></tr></thead><tbody>';
             passengers.forEach(p => {
-                const mealHtml = renderMealCodes(p.meal) + (p.hasBirthday ? ' 🎂' : '');
+                const meals = p.meal ? p.meal.split(',').map(m => m.trim()) : [];
+                const parentMeal = meals.find(m => m !== 'BBML') || '';
+                const infantMeal = meals.find(m => m === 'BBML') || '';
+                let mealDisplay = '';
+                if (parentMeal && infantMeal) {
+                    mealDisplay = '<strong>' + parentMeal + '</strong><span class="infant-meal">(+' + infantMeal + ')</span>';
+                } else if (parentMeal) {
+                    mealDisplay = '<strong>' + parentMeal + '</strong>';
+                } else if (infantMeal) {
+                    mealDisplay = '<strong>' + infantMeal + '</strong>';
+                }
+                if (p.hasBirthday) mealDisplay += (mealDisplay ? ' ' : '') + '🎂';
                 html += '<tr>';
                 html += '<td class="editable-seat-cell" ontouchstart="seatCellPressStart(\'' + p.id + '\')" ontouchend="seatCellPressEnd()" ontouchmove="seatCellPressEnd()" onmousedown="seatCellPressStart(\'' + p.id + '\')" onmouseup="seatCellPressEnd()" onmouseleave="seatCellPressEnd()" oncontextmenu="return false;" style="border: 1px dashed #999; background: #fffacd;">&nbsp;</td>';
-                html += '<td>' + p.title + '</td><td>' + p.name + '</td><td><strong>' + p.tier + '</strong></td><td>' + mealHtml + '</td>';
+                html += '<td>' + p.title + '</td><td>' + p.name + '</td><td><strong>' + p.tier + '</strong></td><td>' + mealDisplay + '</td>';
                 html += '</tr>';
             });
             html += '</tbody></table>';
@@ -2524,8 +2398,8 @@
                                 }
                                 html += '<td class="' + cellClass + ' ' + tierClass + '" colspan="' + colspan + '">';
                                 if (passenger) {
-                                    let mealHtml = renderMealCodes(passenger.meal);
-                                    if (passenger.hasBirthday) mealHtml += (mealHtml ? ' ' : '') + '🎂';
+                                    let mealDisplay = formatMealDisplay(passenger.meal);
+                                    if (passenger.hasBirthday) mealDisplay += (mealDisplay ? ' ' : '') + '🎂';
                                     const tierIcon = passenger.tier === 'PLAT' ? '❤️ ' : (passenger.tier === 'EMER' ? '🔴 ' : '');
                                     if (isBusinessZone) {
                                         const businessName = truncateNameForBusinessClass(passenger.name);
@@ -2535,14 +2409,14 @@
                                         html += `<div class="seat-cell business-class">
                                             <div class="seat-line1">${tierIcon + passenger.title + '/' + firstName.toUpperCase()}</div>
                                             ${lastName ? `<div class="seat-line2">${lastName.toUpperCase()}</div>` : ''}
-                                            <div class="seat-line3">${mealHtml ? mealHtml.toUpperCase() : '&nbsp;'}</div>
+                                            <div class="seat-line3">${mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;'}</div>
                                             <div class="seat-line4">&nbsp;</div>
                                         </div>`;
                                     } else {
                                         const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                         html += `<div class="seat-cell">
                                             <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
-                                            ${mealHtml ? `<div class="seat-line2">${mealHtml.toUpperCase()}</div>` : ''}
+                                            ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
                                         </div>`;
                                     }
                                 } else {
@@ -2568,8 +2442,8 @@
                             }
                             html += '<td class="' + cellClass + ' ' + tierClass + '">';
                             if (passenger) {
-                                let mealHtml = renderMealCodes(passenger.meal);
-                                if (passenger.hasBirthday) mealHtml += (mealHtml ? ' ' : '') + '🎂';
+                                let mealDisplay = formatMealDisplay(passenger.meal);
+                                if (passenger.hasBirthday) mealDisplay += (mealDisplay ? ' ' : '') + '🎂';
                                 const tierIcon = passenger.tier === 'PLAT' ? '❤️ ' : (passenger.tier === 'EMER' ? '🔴 ' : '');
                                 if (isBusinessZone) {
                                     const businessName = truncateNameForBusinessClass(passenger.name);
@@ -2579,14 +2453,14 @@
                                     html += `<div class="seat-cell business-class">
                                         <div class="seat-line1">${tierIcon + passenger.title + '/' + firstName.toUpperCase()}</div>
                                         ${lastName ? `<div class="seat-line2">${lastName.toUpperCase()}</div>` : ''}
-                                        <div class="seat-line3">${mealHtml ? mealHtml.toUpperCase() : '&nbsp;'}</div>
+                                        <div class="seat-line3">${mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;'}</div>
                                         <div class="seat-line4">&nbsp;</div>
                                     </div>`;
                                 } else {
                                     const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                     html += `<div class="seat-cell">
                                         <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
-                                        ${mealHtml ? `<div class="seat-line2">${mealHtml.toUpperCase()}</div>` : ''}
+                                        ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
                                     </div>`;
                                 }
                             } else {
@@ -2613,8 +2487,8 @@
                             }
                             html += '<td class="' + cellClass + ' ' + tierClass + '">';
                             if (passenger) {
-                                let mealHtml = renderMealCodes(passenger.meal);
-                                if (passenger.hasBirthday) mealHtml += (mealHtml ? ' ' : '') + '🎂';
+                                let mealDisplay = formatMealDisplay(passenger.meal);
+                                if (passenger.hasBirthday) mealDisplay += (mealDisplay ? ' ' : '') + '🎂';
                                 const tierIcon = passenger.tier === 'PLAT' ? '❤️ ' : (passenger.tier === 'EMER' ? '🔴 ' : '');
                                 if (isBusinessZone) {
                                     const businessName = truncateNameForBusinessClass(passenger.name);
@@ -2624,14 +2498,14 @@
                                     html += `<div class="seat-cell business-class">
                                         <div class="seat-line1">${tierIcon + passenger.title + '/' + firstName.toUpperCase()}</div>
                                         ${lastName ? `<div class="seat-line2">${lastName.toUpperCase()}</div>` : ''}
-                                        <div class="seat-line3">${mealHtml ? mealHtml.toUpperCase() : '&nbsp;'}</div>
+                                        <div class="seat-line3">${mealDisplay ? mealDisplay.toUpperCase() : '&nbsp;'}</div>
                                         <div class="seat-line4">&nbsp;</div>
                                     </div>`;
                                 } else {
                                     const namePart = passenger.title + '/' + passenger.name.split('/')[0];
                                     html += `<div class="seat-cell">
                                         <div class="seat-line1">${tierIcon + namePart.toUpperCase()}</div>
-                                        ${mealHtml ? `<div class="seat-line2">${mealHtml.toUpperCase()}</div>` : ''}
+                                        ${mealDisplay ? `<div class="seat-line2">${mealDisplay.toUpperCase()}</div>` : ''}
                                     </div>`;
                                 }
                             } else {
