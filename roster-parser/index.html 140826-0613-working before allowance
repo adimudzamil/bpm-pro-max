@@ -318,24 +318,9 @@
     display: none;
   }
 
-  /* ===== ALLOWANCE CARD STYLES ===== */
-  .allowance-summary{padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
-  .allowance-summary .stat{font-size:10px;color:var(--dim)}
-  .allowance-summary .stat b{display:block;font-size:14px;color:var(--accent);margin-top:2px}
-  .allowance-summary .stat.grand{grid-column:1/-1;border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
-  .allowance-summary .stat.grand b{font-size:19px;color:var(--text)}
-  .allowance-controls{padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel2)}
-  .allowance-controls select{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:7px 8px;font-family:var(--mono);font-size:12px}
-  .allowance-controls label{font-size:11px;color:var(--dim)}
-  .allowance-items{padding:0 12px 10px}
-  .allowance-unresolved{padding:8px 12px;background:#2a1d10;border-top:1px dashed var(--warn)}
-  .allowance-unresolved .row{display:flex;gap:6px;align-items:center;padding:4px 0;flex-wrap:wrap;font-size:11px}
-  .allowance-unresolved select{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:5px;padding:4px 6px;font-family:var(--mono);font-size:10.5px}
-  .allowance-empty{padding:14px 12px;color:var(--dim);font-size:12px}
-
   @media print{
     body{background:#fff;color:#000}
-    header, #drop, #status, #log, footer, .btnRow, section.card h2 .btns, #saveCard, #savedListCard, #overlapCard, #debugConsole, #debugToggleBtn, #allowanceCard, #allowanceToolbar{display:none !important}
+    header, #drop, #status, #log, footer, .btnRow, section.card h2 .btns, #saveCard, #savedListCard, #overlapCard, #debugConsole, #debugToggleBtn{display:none !important}
     #resultsWrap{width:auto !important;transform:scale(var(--print-scale,1)) !important;transform-origin:top left !important}
     #outCard{width:fit-content;max-width:none}
     section.card{border:1px solid #999;box-shadow:none;background:#fff;margin-top:5px;break-inside:avoid}
@@ -474,30 +459,12 @@
     <div id="overlapResults" style="padding:0 12px 12px"></div>
   </section>
 
-  <!-- ALLOWANCE TOOLBAR -->
-  <div class="btnRow" id="allowanceToolbar" style="margin-top:12px;display:none">
-    <button onclick="exportAllowanceImage()" id="allowanceImageBtn">Image</button>
-  </div>
-
-  <section class="card" id="allowanceCard" style="display:none">
-    <h2>Allowance Estimate 💰<small>productivity + block-hour + meal, estimated from this roster</small></h2>
-    <div class="allowance-controls">
-      <label for="allowGradeSelect">Grade</label>
-      <select id="allowGradeSelect" onchange="onGradeChange()">
-        <option value="D1">D1 (IFS/IFSS)</option>
-        <option value="E4">E4 (LS/LSS)</option>
-        <option value="E3">E3 (FS/FSS)</option>
-      </select>
-    </div>
-    <div id="allowanceBody"></div>
-  </section>
-
   <div class="btnRow" id="debugRow" style="display:none">
     <button class="ghost" onclick="exportDebug()">⬇ Export debug data</button>
   </div>
 </main>
 
-<footer>Parses locally in your browser. Nothing is uploaded. ·v4.4· by 2100551</footer>
+<footer>Parses locally in your browser. Nothing is uploaded. ·v4.3· by 2100551</footer>
 
 <!-- COLOUR THEME MODAL -->
 <div id="colourModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;padding:16px;overflow:auto">
@@ -540,7 +507,6 @@ let LAST_FILE_NAME = "";
 let LAST_FORMAT = "";
 let RAW_PDF_PAGES = null;
 let LAST_PARSED_ROWS = null;
-let LAST_LEGS = [];
 
 /* =====================================================================
    NEW: Store the people data used for the last overlap calculation
@@ -701,7 +667,7 @@ document.addEventListener('keydown', function _j44(_e){
 
 async function handleFile(file){
   clearLog();
-  DAYS = []; RAW_WARNINGS = []; RAW_PDF_PAGES = null; LAST_PARSED_ROWS = null; LAST_LEGS = [];
+  DAYS = []; RAW_WARNINGS = []; RAW_PDF_PAGES = null; LAST_PARSED_ROWS = null;
   LAST_FILE_NAME = file.name;
   document.getElementById('status').style.display='block';
   document.getElementById('fileNameLbl').textContent = file.name;
@@ -711,8 +677,6 @@ async function handleFile(file){
   document.getElementById('statsCard').style.display='none';
   document.getElementById('legendCard').style.display='none';
   document.getElementById('debugRow').style.display='none';
-  document.getElementById('allowanceCard').style.display='none';
-  document.getElementById('allowanceToolbar').style.display='none';
 
   const name = file.name.toLowerCase();
   let parseSuccess = false;
@@ -723,9 +687,7 @@ async function handleFile(file){
       const buf = await file.arrayBuffer();
       const rows = parseXLSXRows(buf);
       LAST_PARSED_ROWS = rows;
-      const legs = rowsToLegs(rows);
-      LAST_LEGS = legs;
-      buildDays(legs);
+      buildDays(rowsToLegs(rows));
       render();
       parseSuccess = true;
     } else if(name.endsWith('.pdf')){
@@ -774,14 +736,11 @@ function parseAndBuild(kind){
     if(kind==='calendar'){
       const legs = parseCalendarPDF(RAW_PDF_PAGES);
       LAST_PARSED_ROWS = legs;
-      LAST_LEGS = legs;
       buildDays(legs);
     } else {
       const rows = parseTablePDFRows(RAW_PDF_PAGES);
       LAST_PARSED_ROWS = rows;
-      const legs = rowsToLegs(rows);
-      LAST_LEGS = legs;
-      buildDays(legs);
+      buildDays(rowsToLegs(rows));
     }
     render();
   } catch(err){
@@ -1275,7 +1234,7 @@ function calendarCellToLegs(dateObj, text){
 
   if(text.trim()){
     RAW_WARNINGS.push('Unrecognised calendar cell on '+ymdKey(dateObj)+': "'+text+'"');
-    out.push({isGround:true, ownDate:dateObj, anchorDate:dateObj, item:text.trim(),
+    out.push({isGround:true, ownDate:dateObj, anchorDate:dateObj, pairing:'', item:text.trim(),
       rank:'', work:'', depStn:'', depTime:'', arrStn:'', arrTime:'', reportTime:'', debriefTime:'',
       flyHrs:'', dutyHrs:'', sdc:'', ac:'', hotel:''});
   }
@@ -1308,7 +1267,7 @@ function rowsToLegs(rows){
 
     legs.push({
       isGround,
-      pairingId: lastPairingKey,
+      pairingId: r.pairing || null,
       pairingSeq,
       depDate: addDays(anchor, dep.rollover), depStn: r.depStn, depTime: dep.time,
       arrDate: addDays(anchor, arr.rollover), arrStn: r.arrStn, arrTime: arr.time,
@@ -1503,7 +1462,6 @@ function render(){
   document.getElementById('statsCard').style.display='block';
 
   renderLegend(codesUsed);
-  renderAllowance();
 
   if(RAW_WARNINGS.length) RAW_WARNINGS.forEach(w=>log(w,'warn'));
   log('Parsed '+DAYS.length+' days ('+fmtDate(DAYS[0].date)+' – '+fmtDate(DAYS[DAYS.length-1].date)+').', 'ok');
@@ -1678,16 +1636,6 @@ function exportOverlapImage() {
   fitAndCapture(card, 'together-time.png');
 }
 
-function exportAllowanceImage() {
-  const card = document.getElementById('allowanceCard');
-  const body = document.getElementById('allowanceBody');
-  if (!body || !body.innerHTML.trim()) {
-    log('No allowance results to export.', 'warn');
-    return;
-  }
-  fitAndCapture(card, 'allowance-' + (DAYS.length ? DAYS[0].key : 'estimate') + '.png');
-}
-
 function exportPDF(){
   const wasFit = fitOn;
   if(wasFit) toggleFit();
@@ -1726,298 +1674,6 @@ function exportDebug(){
 }
 
 /* =====================================================================
-   14) ALLOWANCE ESTIMATE
-   Validated against a real July 2026 payslip export: RM0.00 diff across
-   productivity, incentive, block-hour-excess and every meal line item.
-===================================================================== */
-const GRADE_RATES = {
-  D1: { label:'D1 (IFS/IFSS)', prod:22, excess:18 },
-  E4: { label:'E4 (LS/LSS)',   prod:20, excess:16 },
-  E3: { label:'E3 (FS/FSS)',   prod:18, excess:15 }
-};
-const INC_RATE = 7; // flat, all grades
-
-const MEAL_REGION_RATES = {
-  'Australia/New Zealand':      {bf:120, lu:180, dr:300},
-  'North America':               {bf:88,  lu:132, dr:220},
-  'Western Europe':              {bf:110, lu:165, dr:275},
-  'Central and Eastern Europe':  {bf:86,  lu:129, dr:215},
-  'South America':               {bf:94,  lu:141, dr:235},
-  'East Asia':                   {bf:86,  lu:129, dr:215},
-  'South East Asia':             {bf:84,  lu:126, dr:210},
-  'South Asia':                  {bf:62,  lu:93,  dr:155},
-  'Central Asia':                {bf:94,  lu:141, dr:235},
-  'Middle East':                 {bf:110, lu:165, dr:275},
-  'Pacific Islands':             {bf:98,  lu:147, dr:245},
-  'South Africa':                {bf:80,  lu:120, dr:200},
-  'Malaysia':                    {bf:26,  lu:39,  dr:65}
-};
-
-// Seed station -> region map (common MAB network). Anything missing is
-// flagged in the UI so the user can assign it once; the assignment is
-// then remembered on this device.
-const DEFAULT_STATION_REGION = {
-  // Malaysia domestic
-  KUL:'Malaysia', BKI:'Malaysia', KCH:'Malaysia', KBR:'Malaysia', PEN:'Malaysia',
-  LGK:'Malaysia', JHB:'Malaysia', AOR:'Malaysia', KUA:'Malaysia', SDK:'Malaysia',
-  TWU:'Malaysia', MYY:'Malaysia', BTU:'Malaysia', SBW:'Malaysia', MKZ:'Malaysia',
-  IPH:'Malaysia', KTE:'Malaysia', TGG:'Malaysia', LBU:'Malaysia', SBU:'Malaysia',
-  LDU:'Malaysia',
-  // South East Asia
-  SIN:'South East Asia', BKK:'South East Asia', DMK:'South East Asia', MNL:'South East Asia',
-  SGN:'South East Asia', HAN:'South East Asia', PNH:'South East Asia', RGN:'South East Asia',
-  CGK:'South East Asia', DPS:'South East Asia', SUB:'South East Asia', VTE:'South East Asia',
-  BWN:'South East Asia', CEB:'South East Asia', KRB:'South East Asia', HKT:'South East Asia',
-  DAD:'South East Asia', SOC:'South East Asia',
-  // East Asia
-  NRT:'East Asia', HND:'East Asia', KIX:'East Asia', ICN:'East Asia', PVG:'East Asia',
-  PEK:'East Asia', PKX:'East Asia', HKG:'East Asia', TPE:'East Asia', CAN:'East Asia',
-  SZX:'East Asia', CTU:'East Asia', XMN:'East Asia', NGO:'East Asia', FUK:'East Asia',
-  // South Asia
-  DAC:'South Asia', BLR:'South Asia', DEL:'South Asia', BOM:'South Asia', MAA:'South Asia',
-  CCU:'South Asia', AMD:'South Asia', COK:'South Asia', HYD:'South Asia', CMB:'South Asia',
-  KTM:'South Asia', ISB:'South Asia', KHI:'South Asia',
-  // Middle East
-  DXB:'Middle East', DOH:'Middle East', JED:'Middle East', MED:'Middle East', AUH:'Middle East',
-  RUH:'Middle East', KWI:'Middle East', AMM:'Middle East', BEY:'Middle East', IST:'Middle East',
-  // Australia / NZ
-  BNE:'Australia/New Zealand', SYD:'Australia/New Zealand', MEL:'Australia/New Zealand',
-  PER:'Australia/New Zealand', ADL:'Australia/New Zealand', AKL:'Australia/New Zealand',
-  DRW:'Australia/New Zealand', CNS:'Australia/New Zealand',
-  // Pacific Islands
-  NAN:'Pacific Islands', GUM:'Pacific Islands', POM:'Pacific Islands',
-  // Western Europe
-  LHR:'Western Europe', CDG:'Western Europe', FRA:'Western Europe', AMS:'Western Europe',
-  MUC:'Western Europe', ZRH:'Western Europe', MAD:'Western Europe', BCN:'Western Europe',
-  FCO:'Western Europe', MXP:'Western Europe', VIE:'Western Europe', GVA:'Western Europe',
-  // Central/Eastern Europe
-  WAW:'Central and Eastern Europe', PRG:'Central and Eastern Europe', BUD:'Central and Eastern Europe',
-  SVO:'Central and Eastern Europe', LED:'Central and Eastern Europe',
-  // Central Asia
-  TAS:'Central Asia', ALA:'Central Asia', TSE:'Central Asia',
-  // North America
-  LAX:'North America', SFO:'North America', JFK:'North America', ORD:'North America',
-  YVR:'North America', YYZ:'North America',
-  // South America
-  GRU:'South America', GIG:'South America', EZE:'South America', SCL:'South America',
-  // South Africa
-  JNB:'South Africa', CPT:'South Africa'
-};
-
-function loadStationRegionOverrides(){
-  try{ return JSON.parse(localStorage.getItem('rosterParserStationRegion')||'{}'); }
-  catch(e){ return {}; }
-}
-function saveStationRegionOverrides(map){
-  localStorage.setItem('rosterParserStationRegion', JSON.stringify(map));
-}
-function regionForStation(stn){
-  if(!stn) return null;
-  const overrides = loadStationRegionOverrides();
-  if(overrides[stn]) return overrides[stn];
-  if(DEFAULT_STATION_REGION[stn]) return DEFAULT_STATION_REGION[stn];
-  return null; // unresolved
-}
-
-function loadAllowGrade(){
-  return localStorage.getItem('rosterParserGrade') || 'E4';
-}
-function saveAllowGrade(g){
-  localStorage.setItem('rosterParserGrade', g);
-}
-function onGradeChange(){
-  const sel = document.getElementById('allowGradeSelect');
-  saveAllowGrade(sel.value);
-  renderAllowance();
-}
-
-// Parse an "HH:MM" string to decimal hours
-function hmToDecimal(s){
-  if(!s) return 0;
-  const m = /^(\d{1,2}):(\d{2})$/.exec(String(s).trim());
-  if(!m) return 0;
-  return parseInt(m[1]) + parseInt(m[2])/60;
-}
-
-const MEAL_WINDOWS = [
-  {code:'bf', label:'Breakfast', start: 7*60+1, end: 9*60},
-  {code:'lu', label:'Lunch',     start:12*60+1, end:14*60},
-  {code:'dr', label:'Dinner',    start:19*60+1, end:21*60}
-];
-
-// Core calculation: uses LAST_LEGS (leg-level parsed data with pairingId
-// and precise report/debrief datetimes). Returns null if LAST_LEGS is
-// unavailable (e.g. an older saved roster without leg data).
-function computeAllowance(grade){
-  if(!LAST_LEGS || !LAST_LEGS.length) return null;
-  const rates = GRADE_RATES[grade] || GRADE_RATES.E4;
-
-  // 1) Productivity + Incentive: one instance per duty-hours value present
-  //    on a leg (covers flying, positioning and ground/standby legs).
-  const prodItems = [];
-  let prodTotal = 0, incTotal = 0;
-  for(const l of LAST_LEGS){
-    if(!l.dutyHrs) continue;
-    const dh = hmToDecimal(l.dutyHrs);
-    if(!dh) continue;
-    const prod = dh*rates.prod, inc = dh*INC_RATE;
-    prodTotal += prod; incTotal += inc;
-    prodItems.push({pairing:l.pairingId||l.item||'—', dutyHrs:l.dutyHrs, prod, inc});
-  }
-
-  // 2) Block hour excess: total flying hours across all legs, over 80.
-  let totalFlyMin = 0;
-  for(const l of LAST_LEGS){
-    if(l.flyHrs){
-      const m = /^(\d{1,2}):(\d{2})$/.exec(l.flyHrs.trim());
-      if(m) totalFlyMin += parseInt(m[1])*60+parseInt(m[2]);
-    }
-  }
-  const totalFlyHrs = totalFlyMin/60;
-  const excessHrs = Math.max(0, totalFlyHrs - 80);
-  const excessPay = excessHrs*rates.excess;
-
-  // 3) Meals: build "duty periods" (report -> debrief) per calendar leg
-  //    group, then find rest gaps > 3h between consecutive periods of the
-  //    SAME pairing (mid-trip layovers only — not days off at home).
-  const flightLegs = LAST_LEGS.filter(l=>!l.isGround && l.item);
-  const periods = [];
-  let current = null;
-  for(const l of flightLegs){
-    if(l.dutyHrs){
-      current = {pairing:l.pairingId, report:l.reportDate&&l.reportTime? combineDT(l.reportDate,l.reportTime):null, legs:[]};
-      periods.push(current);
-    }
-    if(current) current.legs.push(l);
-  }
-  for(const p of periods){
-    const lastLeg = p.legs[p.legs.length-1];
-    if(lastLeg.debriefDate && lastLeg.debriefTime) p.end = combineDT(lastLeg.debriefDate, lastLeg.debriefTime);
-    else if(lastLeg.arrDate && lastLeg.arrTime) p.end = combineDT(lastLeg.arrDate, lastLeg.arrTime);
-    p.endStation = lastLeg.arrStn;
-  }
-
-  const mealItems = [];
-  const unresolvedStations = new Set();
-  let mealTotal = 0;
-  for(let i=0;i<periods.length-1;i++){
-    const a = periods[i], b = periods[i+1];
-    if(!a.pairing || a.pairing !== b.pairing) continue;
-    if(!a.end || !b.report) continue;
-    const durHrs = (b.report - a.end)/3600000;
-    if(durHrs <= 3) continue;
-    const region = regionForStation(a.endStation);
-    if(!region){ unresolvedStations.add(a.endStation); continue; }
-    const rates3 = MEAL_REGION_RATES[region];
-    let d = new Date(a.end.getFullYear(), a.end.getMonth(), a.end.getDate());
-    while(true){
-      for(const w of MEAL_WINDOWS){
-        const wStart = new Date(d.getTime() + w.start*60000);
-        const wEnd = new Date(d.getTime() + w.end*60000);
-        if(wStart < b.report && wEnd > a.end){
-          const rate = rates3[w.code];
-          mealTotal += rate;
-          mealItems.push({pairing:a.pairing, date:ymdKey(d), station:a.endStation, region, meal:w.label, rate});
-        }
-      }
-      if(d >= new Date(b.report.getFullYear(), b.report.getMonth(), b.report.getDate())) break;
-      d = addDays(d,1);
-    }
-  }
-
-  const grandTotal = prodTotal + incTotal + excessPay + mealTotal;
-  return {
-    grade, rates,
-    prodItems, prodTotal, incTotal,
-    totalFlyHrs, excessHrs, excessPay,
-    mealItems, mealTotal,
-    unresolvedStations: Array.from(unresolvedStations),
-    grandTotal
-  };
-}
-
-function combineDT(dateObj, timeStr){
-  const m = /^(\d{1,2}):(\d{2})$/.exec((timeStr||'').trim());
-  if(!m) return null;
-  return new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), parseInt(m[1]), parseInt(m[2]));
-}
-
-function fmtMYR(n){
-  return 'RM' + n.toLocaleString('en-MY', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
-
-function renderAllowance(){
-  const card = document.getElementById('allowanceCard');
-  const toolbar = document.getElementById('allowanceToolbar');
-  const body = document.getElementById('allowanceBody');
-  const gradeSel = document.getElementById('allowGradeSelect');
-
-  const grade = loadAllowGrade();
-  gradeSel.value = grade;
-
-  const result = computeAllowance(grade);
-  card.style.display = 'block';
-  toolbar.style.display = 'flex';
-
-  if(!result){
-    body.innerHTML = '<div class="allowance-empty">No leg-level data available for this roster (older saved rosters made before this feature don\'t have it) — re-parse or re-save to enable allowance estimate.</div>';
-    return;
-  }
-
-  let html = `<div class="allowance-summary">
-    <div class="stat">Productivity (${result.prodItems.length} duty segments)<b>${fmtMYR(result.prodTotal)}</b></div>
-    <div class="stat">Incentive (flat RM7/hr)<b>${fmtMYR(result.incTotal)}</b></div>
-    <div class="stat">Block hr excess (${result.totalFlyHrs.toFixed(2)}h flown, ${result.excessHrs.toFixed(2)}h over 80)<b>${fmtMYR(result.excessPay)}</b></div>
-    <div class="stat">Meal allowance (${result.mealItems.length} meals)<b>${fmtMYR(result.mealTotal)}</b></div>
-    <div class="stat grand">Estimated Total<b>${fmtMYR(result.grandTotal)}</b></div>
-  </div>`;
-
-  if(result.unresolvedStations.length){
-    html += `<div class="allowance-unresolved">
-      <div style="font-size:11px;color:var(--warn);font-weight:600;margin-bottom:4px">⚠ Unknown region for: ${result.unresolvedStations.join(', ')} — meals at these stations are excluded from the total above until you assign a region.</div>
-      ${result.unresolvedStations.map(stn=>`
-        <div class="row">
-          <span style="font-weight:700">${stn}</span>
-          <select data-stn="${stn}" onchange="assignStationRegion(this)">
-            <option value="">Choose region…</option>
-            ${Object.keys(MEAL_REGION_RATES).map(r=>`<option value="${r}">${r}</option>`).join('')}
-          </select>
-        </div>`).join('')}
-    </div>`;
-  }
-
-  if(result.mealItems.length || result.prodItems.length){
-    html += `<div class="allowance-items">
-      <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px">Itemised breakdown</div>
-      <div class="tableWrap"><table><thead><tr><th>Pairing</th><th>Type</th><th>Detail</th><th>Amount</th></tr></thead><tbody>`;
-    result.prodItems.forEach(it=>{
-      html += `<tr><td>${it.pairing}</td><td>Productivity</td><td>${it.dutyHrs}</td><td class="num">${fmtMYR(it.prod)}</td></tr>`;
-      html += `<tr><td>${it.pairing}</td><td>Incentive</td><td>${it.dutyHrs}</td><td class="num">${fmtMYR(it.inc)}</td></tr>`;
-    });
-    if(result.excessPay>0){
-      html += `<tr><td>—</td><td>Block Hr Excess</td><td>${result.excessHrs.toFixed(2)}h over 80</td><td class="num">${fmtMYR(result.excessPay)}</td></tr>`;
-    }
-    result.mealItems.forEach(it=>{
-      html += `<tr><td>${it.pairing}</td><td>Meal (${it.meal})</td><td>${it.date} · ${it.station}</td><td class="num">${fmtMYR(it.rate)}</td></tr>`;
-    });
-    html += `</tbody></table></div></div>`;
-  }
-
-  body.innerHTML = html;
-}
-
-function assignStationRegion(selectEl){
-  const stn = selectEl.dataset.stn;
-  const region = selectEl.value;
-  if(!region) return;
-  const overrides = loadStationRegionOverrides();
-  overrides[stn] = region;
-  saveStationRegionOverrides(overrides);
-  log('Assigned '+stn+' → '+region+'. Recalculating allowance…', 'ok');
-  renderAllowance();
-}
-
-/* =====================================================================
    9) SAVED ROSTERS
 ===================================================================== */
 function loadSavedRosters(){
@@ -2026,26 +1682,6 @@ function loadSavedRosters(){
 }
 function persistSavedRosters(list){
   localStorage.setItem('rosterParserSaved', JSON.stringify(list));
-}
-function serializeLegsForStorage(legs){
-  if(!legs) return null;
-  return legs.map(l=>{
-    const c = Object.assign({}, l);
-    ['depDate','arrDate','reportDate','debriefDate'].forEach(k=>{
-      c[k] = c[k] ? ymdKey(c[k]) : null;
-    });
-    return c;
-  });
-}
-function deserializeLegsFromStorage(legs){
-  if(!legs) return [];
-  return legs.map(l=>{
-    const c = Object.assign({}, l);
-    ['depDate','arrDate','reportDate','debriefDate'].forEach(k=>{
-      c[k] = c[k] ? new Date(c[k]+'T00:00:00') : null;
-    });
-    return c;
-  });
 }
 function doSaveRoster(){
   const name = document.getElementById('saveNameInput').value.trim();
@@ -2061,8 +1697,7 @@ function doSaveRoster(){
     id: (overlapIdx>=0 ? list[overlapIdx].id : 'r'+Date.now()),
     name, tz, sourceFile: LAST_FILE_NAME || '', format: LAST_FORMAT || '',
     rangeStart, rangeEnd, savedAt: new Date().toISOString(),
-    days: DAYS.map(d=>({date:d.key, hasData:d.hasData, rows:d.rows})),
-    legs: serializeLegsForStorage(LAST_LEGS)
+    days: DAYS.map(d=>({date:d.key, hasData:d.hasData, rows:d.rows}))
   };
   if(overlapIdx>=0){
     if(!confirm(`${name} already has a saved roster covering an overlapping date range (${list[overlapIdx].rangeStart} to ${list[overlapIdx].rangeEnd}). Replace it?`)) return;
@@ -2086,7 +1721,6 @@ function viewSavedRoster(id){
     date: new Date(d.date+'T00:00:00'), key: d.date, hasData: d.hasData, rows: d.rows
   }));
   LAST_FILE_NAME = entry.sourceFile;
-  LAST_LEGS = deserializeLegsFromStorage(entry.legs);
   render();
   document.getElementById('toolbarRow').scrollIntoView({behavior:'smooth', block:'start'});
   
@@ -2414,4 +2048,292 @@ function renderHeatmap(){
     const leadingBlanks = new Date(y,m,1).getDay();
     for(let i=0;i<leadingBlanks;i++) html += `<div></div>`;
     const daysInMonth = new Date(y,m+1,0).getDate();
-    for(l
+    for(let d=1; d<=daysInMonth; d++){
+      const dt = new Date(y,m,d);
+      const key = ymdKey(dt);
+      if(dt < startD || dt > endD){
+        html += `<div style="aspect-ratio:1;border-radius:5px;background:var(--panel2);opacity:.35"></div>`;
+        continue;
+      }
+      const bg = buildGradient(dayMap[key]);
+      const hasOverlap = dayMap[key] && dayMap[key].length > 0;
+      const dayOverlaps = hasOverlap ? dayMap[key].map(seg => ({
+        start: seg.startMin,
+        end: seg.endMin,
+        maybe: seg.maybe
+      })) : [];
+
+      if (hasOverlap) {
+        const windowsEncoded = encodeURIComponent(JSON.stringify(dayOverlaps));
+        html += `<div style="aspect-ratio:1;border-radius:5px;background:${bg};position:relative;border:1px solid var(--line);cursor:pointer;transition:transform 0.15s"
+                    data-date="${key}"
+                    data-windows="${windowsEncoded}"
+                    onclick="showDutyPopup(this)"
+                    onmouseenter="this.style.transform='scale(1.05)'"
+                    onmouseleave="this.style.transform='scale(1)'">
+                 <span style="position:absolute;top:2px;right:3px;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9)">${d}</span>
+               </div>`;
+      } else {
+        html += `<div style="aspect-ratio:1;border-radius:5px;background:${bg};position:relative;border:1px solid var(--line);cursor:default">
+                 <span style="position:absolute;top:2px;right:3px;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9)">${d}</span>
+               </div>`;
+      }
+    }
+    html += `</div>`;
+    cursor = new Date(y, m+1, 1);
+  }
+  document.getElementById('overlapResults').innerHTML = html;
+}
+
+/* =====================================================================
+   12) HEATMAP POPUP - Shows who has to leave first
+===================================================================== */
+function showDutyPopup(element) {
+  debugLog('🔍 showDutyPopup() called', 'info');
+  
+  if (!element) {
+    debugLog('❌ element is null or undefined', 'err');
+    return;
+  }
+  
+  debugLog('  element.tagName: ' + element.tagName, 'info');
+  debugLog('  element.className: ' + element.className, 'info');
+  
+  if (!element.dataset) {
+    debugLog('❌ element has no dataset property', 'err');
+    return;
+  }
+
+  const dateKey = element.dataset.date;
+  debugLog('  dateKey: ' + dateKey, 'info');
+  
+  let overlapWindows;
+  try {
+    const windowsEncoded = element.dataset.windows;
+    debugLog('  windowsEncoded: ' + windowsEncoded, 'info');
+    if (!windowsEncoded) {
+      debugLog('❌ windowsEncoded is empty', 'err');
+      return;
+    }
+    overlapWindows = JSON.parse(decodeURIComponent(windowsEncoded));
+    debugLog('  overlapWindows: ' + JSON.stringify(overlapWindows), 'info');
+  } catch (e) {
+    debugLog('❌ Failed to parse overlap windows: ' + e.message, 'err');
+    return;
+  }
+
+  if (!LAST_OVERLAP_PEOPLE || !LAST_OVERLAP_PEOPLE.length) {
+    debugLog('❌ LAST_OVERLAP_PEOPLE is empty or undefined', 'err');
+    debugLog('  LAST_OVERLAP_PEOPLE: ' + JSON.stringify(LAST_OVERLAP_PEOPLE), 'err');
+    return;
+  }
+  
+  debugLog('  LAST_OVERLAP_PEOPLE has ' + LAST_OVERLAP_PEOPLE.length + ' crew members', 'ok');
+  for (const crew of LAST_OVERLAP_PEOPLE) {
+    debugLog('    👤 ' + crew.name + ' (' + crew.tz + ') - ' + (crew.days ? crew.days.length + ' days' : 'no days'), 'info');
+  }
+
+  if (!overlapWindows || !overlapWindows.length) {
+    debugLog('❌ overlapWindows is empty', 'err');
+    return;
+  }
+
+  const dateObj = new Date(dateKey + 'T00:00:00');
+  if (isNaN(dateObj.getTime())) {
+    debugLog('❌ Invalid date key: ' + dateKey, 'err');
+    return;
+  }
+  
+  debugLog('✅ All validations passed! Building popup...', 'ok');
+
+  const dateDisplay = fmtDate(dateObj) + ' (' + DOW[dateObj.getDay()] + ')';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'popup-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-label', 'Duty information for ' + dateDisplay);
+
+  let html = `
+    <div class="popup-content">
+      <div class="popup-header">
+        <span>📅 ${dateDisplay}</span>
+        <button class="popup-close" aria-label="Close popup">✕</button>
+      </div>
+      <div class="popup-body">
+  `;
+
+  for (const overlapWindow of overlapWindows) {
+    const windowEnd = overlapWindow.end;
+    const windowStart = overlapWindow.start;
+    const startStr = formatTime(windowStart);
+    const endStr = formatTime(windowEnd);
+    const dur = Math.floor((windowEnd - windowStart) / 60);
+
+    const dutyInfo = [];
+
+    for (const crew of LAST_OVERLAP_PEOPLE) {
+      const dayData = crew.days.find(d => d.date === dateKey);
+      if (!dayData || !dayData.rows || !dayData.rows.length) {
+        continue;
+      }
+
+      let earliestDutyStart = null;
+
+      const sortedRows = [...dayData.rows].sort((a, b) =>
+        (hhmmToMin(a.dutyStart) || 0) - (hhmmToMin(b.dutyStart) || 0)
+      );
+
+      for (const row of sortedRows) {
+        const dutyStart = hhmmToMin(row.dutyStart) || 0;
+        if (dutyStart >= windowEnd) {
+          if (earliestDutyStart === null || dutyStart < earliestDutyStart) {
+            earliestDutyStart = dutyStart;
+          }
+        }
+      }
+
+      if (earliestDutyStart !== null) {
+        dutyInfo.push({
+          name: crew.name,
+          startTime: earliestDutyStart
+        });
+      }
+    }
+
+    dutyInfo.sort((a, b) => a.startTime - b.startTime);
+
+    html += `<div class="overlap-window">
+      <div class="window-time">${startStr} - ${endStr} (${dur}h)</div>
+    `;
+
+    if (dutyInfo.length === 0) {
+      html += `<div class="no-duty">🎉 Everyone has time to be together!</div>`;
+    } else {
+      const first = dutyInfo[0];
+      const timeStr = formatTime(first.startTime);
+      html += `<div class="leaves-first">🚶 <strong>${first.name}</strong> working at <strong>${timeStr}</strong></div>`;
+
+      if (dutyInfo.length > 1) {
+        const others = dutyInfo.slice(1).map(c =>
+          `${c.name} at ${formatTime(c.startTime)}`
+        ).join(', ');
+        html += `<div class="others">Also: ${others}</div>`;
+      }
+    }
+
+    html += `</div>`;
+  }
+
+  html += `</div></div>`;
+
+  overlay.innerHTML = html;
+
+  const closeBtn = overlay.querySelector('.popup-close');
+  if (closeBtn) {
+    closeBtn.onclick = function(e) {
+      e.stopPropagation();
+      overlay.remove();
+      debugLog('Popup closed by close button', 'info');
+    };
+  }
+
+  overlay.onclick = function(e) {
+    if (e.target === overlay) {
+      overlay.remove();
+      debugLog('Popup closed by clicking overlay', 'info');
+    }
+  };
+
+  const keyHandler = function(e) {
+    if (e.key === 'Escape') {
+      overlay.remove();
+      document.removeEventListener('keydown', keyHandler);
+      debugLog('Popup closed by ESC key', 'info');
+    }
+  };
+  document.addEventListener('keydown', keyHandler);
+
+  const observer = new MutationObserver(function() {
+    if (!document.contains(overlay)) {
+      document.removeEventListener('keydown', keyHandler);
+      observer.disconnect();
+    }
+  });
+  observer.observe(document.body, { childList: true });
+
+  document.body.appendChild(overlay);
+  debugLog('✅ Popup built and displayed', 'ok');
+}
+
+/* =====================================================================
+   13) COLOUR THEMES
+===================================================================== */
+const THEMES = [
+  {id:'default', name:'Default (dark)', swatches:['#0b0c0e','#1b1e22','#c6ff3d','#f2f3f5']},
+  {id:'bw', name:'Black & White', swatches:['#ffffff','#f0f0f0','#000000','#000000']},
+  {id:'lv', name:'Earthy', swatches:['#2b1d10','#4a3320','#d4af37','#f3e6c8']},
+  {id:'gucci', name:'Fields', swatches:['#0e2818','#194028','#c8102e','#f5f0e6']},
+  {id:'mas', name:'Office', swatches:['#0f2a52','#153865','#f5c518','#ffffff']},
+  {id:'cyberpunk', name:'Cyberpunk', swatches:['#12002a','#1a0038','#ff00e6','#00fff9']}
+];
+
+function applyTheme(themeId, persist){
+  const wrap = document.getElementById('resultsWrap');
+  wrap.className = wrap.className.replace(/\btheme-\S+/g, '').trim();
+  if(themeId !== 'default') wrap.classList.add('theme-'+themeId);
+  if(persist !== false) localStorage.setItem('rosterParserTheme', themeId);
+  renderColourThemeList(themeId);
+}
+
+function renderColourThemeList(activeId){
+  activeId = activeId || localStorage.getItem('rosterParserTheme') || 'default';
+  const list = document.getElementById('colourThemeList');
+  list.innerHTML = THEMES.map(t=>`
+    <div class="themeCard ${t.id===activeId?'sel':''}" onclick="applyTheme('${t.id}')">
+      <div class="swatches">${t.swatches.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
+      <div class="themeName">${t.name}</div>
+    </div>`).join('');
+}
+
+function openColourModal(){
+  renderColourThemeList();
+  document.getElementById('colourModalOverlay').style.display = 'block';
+}
+function closeColourModal(){
+  document.getElementById('colourModalOverlay').style.display = 'none';
+}
+
+applyTheme(localStorage.getItem('rosterParserTheme') || 'default', false);
+
+// =====================================================================
+// PWA: SERVICE WORKER REGISTRATION & SHARED FILE RETRIEVAL
+// =====================================================================
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js', { scope: '/bpm-pro-max/roster-parser/' })
+    .then(() => console.log('[PWA] Service Worker registered'))
+    .catch(err => console.warn('[PWA] SW registration failed:', err));
+}
+
+async function checkPendingShare() {
+  try {
+    const cache = await caches.open('shared-v1');
+    const response = await cache.match('/shared-file');
+    if (response) {
+      const blob = await response.blob();
+      const filename = response.headers.get('X-Filename') || 'shared-file.xlsx';
+      const type = response.headers.get('Content-Type') || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      const file = new File([blob], filename, { type });
+      await cache.delete('/shared-file');
+      handleFile(file);
+    }
+  } catch (e) {
+    console.warn('Could not check pending share', e);
+  }
+}
+
+window.addEventListener('load', checkPendingShare);
+</script>
+  <script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
+</body>
+</html>
