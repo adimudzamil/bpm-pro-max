@@ -1831,14 +1831,6 @@ function onGradeChange(){
   renderAllowance();
 }
 
-// Only flights (operating/positioning) and Airport Standby (e.g. AS1WB)
-// earn Productivity/Incentive allowance. Cabin Crew Standby (S3WBA/S4WBA/
-// S3NBA-style codes), training/recurrent duties, and other ground codes
-// carry a Duty Hrs value in the roster but are NOT paid, per the CBA.
-function isPayableGroundDuty(item){
-  return /^AS\d/i.test(item||'');
-}
-
 // Parse an "HH:MM" string to decimal hours
 function hmToDecimal(s){
   if(!s) return 0;
@@ -1868,7 +1860,6 @@ function computeAllowance(grade){
     if(!l.dutyHrs) continue;
     const dh = hmToDecimal(l.dutyHrs);
     if(!dh) continue;
-    if(l.isGround && !isPayableGroundDuty(l.item)) continue; // e.g. Cabin Crew Standby, training
     const prod = dh*rates.prod, inc = dh*INC_RATE;
     prodTotal += prod; incTotal += inc;
     prodItems.push({pairing:l.pairingId||l.item||'—', dutyHrs:l.dutyHrs, prod, inc});
