@@ -2414,4 +2414,292 @@ function renderHeatmap(){
     const leadingBlanks = new Date(y,m,1).getDay();
     for(let i=0;i<leadingBlanks;i++) html += `<div></div>`;
     const daysInMonth = new Date(y,m+1,0).getDate();
-    for(l
+    for(let d=1; d<=daysInMonth; d++){
+      const dt = new Date(y,m,d);
+      const key = ymdKey(dt);
+      if(dt < startD || dt > endD){
+        html += `<div style="aspect-ratio:1;border-radius:5px;background:var(--panel2);opacity:.35"></div>`;
+        continue;
+      }
+      const bg = buildGradient(dayMap[key]);
+      const hasOverlap = dayMap[key] && dayMap[key].length > 0;
+      const dayOverlaps = hasOverlap ? dayMap[key].map(seg => ({
+        start: seg.startMin,
+        end: seg.endMin,
+        maybe: seg.maybe
+      })) : [];
+
+      if (hasOverlap) {
+        const windowsEncoded = encodeURIComponent(JSON.stringify(dayOverlaps));
+        html += `<div style="aspect-ratio:1;border-radius:5px;background:${bg};position:relative;border:1px solid var(--line);cursor:pointer;transition:transform 0.15s"
+                    data-date="${key}"
+                    data-windows="${windowsEncoded}"
+                    onclick="showDutyPopup(this)"
+                    onmouseenter="this.style.transform='scale(1.05)'"
+                    onmouseleave="this.style.transform='scale(1)'">
+                 <span style="position:absolute;top:2px;right:3px;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9)">${d}</span>
+               </div>`;
+      } else {
+        html += `<div style="aspect-ratio:1;border-radius:5px;background:${bg};position:relative;border:1px solid var(--line);cursor:default">
+                 <span style="position:absolute;top:2px;right:3px;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9)">${d}</span>
+               </div>`;
+      }
+    }
+    html += `</div>`;
+    cursor = new Date(y, m+1, 1);
+  }
+  document.getElementById('overlapResults').innerHTML = html;
+}
+
+/* =====================================================================
+   12) HEATMAP POPUP - Shows who has to leave first
+===================================================================== */
+function showDutyPopup(element) {
+  debugLog('🔍 showDutyPopup() called', 'info');
+  
+  if (!element) {
+    debugLog('❌ element is null or undefined', 'err');
+    return;
+  }
+  
+  debugLog('  element.tagName: ' + element.tagName, 'info');
+  debugLog('  element.className: ' + element.className, 'info');
+  
+  if (!element.dataset) {
+    debugLog('❌ element has no dataset property', 'err');
+    return;
+  }
+
+  const dateKey = element.dataset.date;
+  debugLog('  dateKey: ' + dateKey, 'info');
+  
+  let overlapWindows;
+  try {
+    const windowsEncoded = element.dataset.windows;
+    debugLog('  windowsEncoded: ' + windowsEncoded, 'info');
+    if (!windowsEncoded) {
+      debugLog('❌ windowsEncoded is empty', 'err');
+      return;
+    }
+    overlapWindows = JSON.parse(decodeURIComponent(windowsEncoded));
+    debugLog('  overlapWindows: ' + JSON.stringify(overlapWindows), 'info');
+  } catch (e) {
+    debugLog('❌ Failed to parse overlap windows: ' + e.message, 'err');
+    return;
+  }
+
+  if (!LAST_OVERLAP_PEOPLE || !LAST_OVERLAP_PEOPLE.length) {
+    debugLog('❌ LAST_OVERLAP_PEOPLE is empty or undefined', 'err');
+    debugLog('  LAST_OVERLAP_PEOPLE: ' + JSON.stringify(LAST_OVERLAP_PEOPLE), 'err');
+    return;
+  }
+  
+  debugLog('  LAST_OVERLAP_PEOPLE has ' + LAST_OVERLAP_PEOPLE.length + ' crew members', 'ok');
+  for (const crew of LAST_OVERLAP_PEOPLE) {
+    debugLog('    👤 ' + crew.name + ' (' + crew.tz + ') - ' + (crew.days ? crew.days.length + ' days' : 'no days'), 'info');
+  }
+
+  if (!overlapWindows || !overlapWindows.length) {
+    debugLog('❌ overlapWindows is empty', 'err');
+    return;
+  }
+
+  const dateObj = new Date(dateKey + 'T00:00:00');
+  if (isNaN(dateObj.getTime())) {
+    debugLog('❌ Invalid date key: ' + dateKey, 'err');
+    return;
+  }
+  
+  debugLog('✅ All validations passed! Building popup...', 'ok');
+
+  const dateDisplay = fmtDate(dateObj) + ' (' + DOW[dateObj.getDay()] + ')';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'popup-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-label', 'Duty information for ' + dateDisplay);
+
+  let html = `
+    <div class="popup-content">
+      <div class="popup-header">
+        <span>📅 ${dateDisplay}</span>
+        <button class="popup-close" aria-label="Close popup">✕</button>
+      </div>
+      <div class="popup-body">
+  `;
+
+  for (const overlapWindow of overlapWindows) {
+    const windowEnd = overlapWindow.end;
+    const windowStart = overlapWindow.start;
+    const startStr = formatTime(windowStart);
+    const endStr = formatTime(windowEnd);
+    const dur = Math.floor((windowEnd - windowStart) / 60);
+
+    const dutyInfo = [];
+
+    for (const crew of LAST_OVERLAP_PEOPLE) {
+      const dayData = crew.days.find(d => d.date === dateKey);
+      if (!dayData || !dayData.rows || !dayData.rows.length) {
+        continue;
+      }
+
+      let earliestDutyStart = null;
+
+      const sortedRows = [...dayData.rows].sort((a, b) =>
+        (hhmmToMin(a.dutyStart) || 0) - (hhmmToMin(b.dutyStart) || 0)
+      );
+
+      for (const row of sortedRows) {
+        const dutyStart = hhmmToMin(row.dutyStart) || 0;
+        if (dutyStart >= windowEnd) {
+          if (earliestDutyStart === null || dutyStart < earliestDutyStart) {
+            earliestDutyStart = dutyStart;
+          }
+        }
+      }
+
+      if (earliestDutyStart !== null) {
+        dutyInfo.push({
+          name: crew.name,
+          startTime: earliestDutyStart
+        });
+      }
+    }
+
+    dutyInfo.sort((a, b) => a.startTime - b.startTime);
+
+    html += `<div class="overlap-window">
+      <div class="window-time">${startStr} - ${endStr} (${dur}h)</div>
+    `;
+
+    if (dutyInfo.length === 0) {
+      html += `<div class="no-duty">🎉 Everyone has time to be together!</div>`;
+    } else {
+      const first = dutyInfo[0];
+      const timeStr = formatTime(first.startTime);
+      html += `<div class="leaves-first">🚶 <strong>${first.name}</strong> working at <strong>${timeStr}</strong></div>`;
+
+      if (dutyInfo.length > 1) {
+        const others = dutyInfo.slice(1).map(c =>
+          `${c.name} at ${formatTime(c.startTime)}`
+        ).join(', ');
+        html += `<div class="others">Also: ${others}</div>`;
+      }
+    }
+
+    html += `</div>`;
+  }
+
+  html += `</div></div>`;
+
+  overlay.innerHTML = html;
+
+  const closeBtn = overlay.querySelector('.popup-close');
+  if (closeBtn) {
+    closeBtn.onclick = function(e) {
+      e.stopPropagation();
+      overlay.remove();
+      debugLog('Popup closed by close button', 'info');
+    };
+  }
+
+  overlay.onclick = function(e) {
+    if (e.target === overlay) {
+      overlay.remove();
+      debugLog('Popup closed by clicking overlay', 'info');
+    }
+  };
+
+  const keyHandler = function(e) {
+    if (e.key === 'Escape') {
+      overlay.remove();
+      document.removeEventListener('keydown', keyHandler);
+      debugLog('Popup closed by ESC key', 'info');
+    }
+  };
+  document.addEventListener('keydown', keyHandler);
+
+  const observer = new MutationObserver(function() {
+    if (!document.contains(overlay)) {
+      document.removeEventListener('keydown', keyHandler);
+      observer.disconnect();
+    }
+  });
+  observer.observe(document.body, { childList: true });
+
+  document.body.appendChild(overlay);
+  debugLog('✅ Popup built and displayed', 'ok');
+}
+
+/* =====================================================================
+   13) COLOUR THEMES
+===================================================================== */
+const THEMES = [
+  {id:'default', name:'Default (dark)', swatches:['#0b0c0e','#1b1e22','#c6ff3d','#f2f3f5']},
+  {id:'bw', name:'Black & White', swatches:['#ffffff','#f0f0f0','#000000','#000000']},
+  {id:'lv', name:'Earthy', swatches:['#2b1d10','#4a3320','#d4af37','#f3e6c8']},
+  {id:'gucci', name:'Fields', swatches:['#0e2818','#194028','#c8102e','#f5f0e6']},
+  {id:'mas', name:'Office', swatches:['#0f2a52','#153865','#f5c518','#ffffff']},
+  {id:'cyberpunk', name:'Cyberpunk', swatches:['#12002a','#1a0038','#ff00e6','#00fff9']}
+];
+
+function applyTheme(themeId, persist){
+  const wrap = document.getElementById('resultsWrap');
+  wrap.className = wrap.className.replace(/\btheme-\S+/g, '').trim();
+  if(themeId !== 'default') wrap.classList.add('theme-'+themeId);
+  if(persist !== false) localStorage.setItem('rosterParserTheme', themeId);
+  renderColourThemeList(themeId);
+}
+
+function renderColourThemeList(activeId){
+  activeId = activeId || localStorage.getItem('rosterParserTheme') || 'default';
+  const list = document.getElementById('colourThemeList');
+  list.innerHTML = THEMES.map(t=>`
+    <div class="themeCard ${t.id===activeId?'sel':''}" onclick="applyTheme('${t.id}')">
+      <div class="swatches">${t.swatches.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
+      <div class="themeName">${t.name}</div>
+    </div>`).join('');
+}
+
+function openColourModal(){
+  renderColourThemeList();
+  document.getElementById('colourModalOverlay').style.display = 'block';
+}
+function closeColourModal(){
+  document.getElementById('colourModalOverlay').style.display = 'none';
+}
+
+applyTheme(localStorage.getItem('rosterParserTheme') || 'default', false);
+
+// =====================================================================
+// PWA: SERVICE WORKER REGISTRATION & SHARED FILE RETRIEVAL
+// =====================================================================
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js', { scope: '/bpm-pro-max/roster-parser/' })
+    .then(() => console.log('[PWA] Service Worker registered'))
+    .catch(err => console.warn('[PWA] SW registration failed:', err));
+}
+
+async function checkPendingShare() {
+  try {
+    const cache = await caches.open('shared-v1');
+    const response = await cache.match('/shared-file');
+    if (response) {
+      const blob = await response.blob();
+      const filename = response.headers.get('X-Filename') || 'shared-file.xlsx';
+      const type = response.headers.get('Content-Type') || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      const file = new File([blob], filename, { type });
+      await cache.delete('/shared-file');
+      handleFile(file);
+    }
+  } catch (e) {
+    console.warn('Could not check pending share', e);
+  }
+}
+
+window.addEventListener('load', checkPendingShare);
+</script>
+  <script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
+</body>
+</html>
