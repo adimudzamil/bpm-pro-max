@@ -476,12 +476,11 @@
 
   <!-- ALLOWANCE TOOLBAR -->
   <div class="btnRow" id="allowanceToolbar" style="margin-top:12px;display:none">
-    <button class="primary" onclick="calculateAllowanceClicked()">Calculate Allowance</button>
-    <button onclick="exportAllowanceImage()" id="allowanceImageBtn" style="display:none">Image</button>
+    <button onclick="exportAllowanceImage()" id="allowanceImageBtn">Image</button>
   </div>
 
   <section class="card" id="allowanceCard" style="display:none">
-    <h2>Allowance Estimate 💰<small>cabin crew only · productivity + block-hour + meal, estimated from this roster</small></h2>
+    <h2>Allowance Estimate 💰<small>productivity + block-hour + meal, estimated from this roster</small></h2>
     <div class="allowance-controls">
       <label for="allowGradeSelect">Grade</label>
       <select id="allowGradeSelect" onchange="onGradeChange()">
@@ -1504,7 +1503,7 @@ function render(){
   document.getElementById('statsCard').style.display='block';
 
   renderLegend(codesUsed);
-  resetAllowanceUI();
+  renderAllowance();
 
   if(RAW_WARNINGS.length) RAW_WARNINGS.forEach(w=>log(w,'warn'));
   log('Parsed '+DAYS.length+' days ('+fmtDate(DAYS[0].date)+' – '+fmtDate(DAYS[DAYS.length-1].date)+').', 'ok');
@@ -1581,10 +1580,10 @@ function toggleFit(){
 }
 
 /* ===== Generic image capture helper (returns Promise) ===== */
-function captureElementAsImage(element, filename, scale) {
+function captureElementAsImage(element, filename) {
   return new Promise((resolve, reject) => {
     html2canvas(element, {
-      scale: scale || 2,
+      scale: 2,
       backgroundColor: getComputedStyle(element).getPropertyValue('--panel') || '#141619',
       useCORS: true,
       logging: false,
@@ -1614,7 +1613,7 @@ function fallbackDownload(blob, filename) {
 }
 
 /* ===== Fit + Capture helper (async, always restores) ===== */
-async function fitAndCapture(element, filename, exportScale) {
+async function fitAndCapture(element, filename) {
   // Collect all elements that may have overflow clipping or border-radius
   const allElements = [element, ...element.querySelectorAll('.tableWrap')];
   const restoreInfo = [];
@@ -1645,7 +1644,7 @@ async function fitAndCapture(element, filename, exportScale) {
   await new Promise(resolve => setTimeout(resolve, 300));
 
   try {
-    await captureElementAsImage(element, filename, exportScale);
+    await captureElementAsImage(element, filename);
   } catch (err) {
     log('Export failed: ' + err.message, 'err');
   } finally {
@@ -1686,7 +1685,7 @@ function exportAllowanceImage() {
     log('No allowance results to export.', 'warn');
     return;
   }
-  fitAndCapture(card, 'allowance-' + (DAYS.length ? DAYS[0].key : 'estimate') + '.png', 4);
+  fitAndCapture(card, 'allowance-' + (DAYS.length ? DAYS[0].key : 'estimate') + '.png');
 }
 
 function exportPDF(){
@@ -1954,22 +1953,6 @@ function combineDT(dateObj, timeStr){
 
 function fmtMYR(n){
   return 'RM' + n.toLocaleString('en-MY', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
-
-// Called after every parse or "View" of a saved roster. Only resets the UI
-// to a not-yet-calculated state — does NOT run the calculation. The user
-// must tap "Calculate Allowance" explicitly.
-function resetAllowanceUI(){
-  document.getElementById('allowanceToolbar').style.display = DAYS.length ? 'flex' : 'none';
-  document.getElementById('allowanceCard').style.display = 'none';
-  document.getElementById('allowanceImageBtn').style.display = 'none';
-}
-
-function calculateAllowanceClicked(){
-  document.getElementById('allowanceCard').style.display = 'block';
-  renderAllowance();
-  document.getElementById('allowanceImageBtn').style.display = 'inline-block';
-  document.getElementById('allowanceCard').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function renderAllowance(){
