@@ -1,668 +1,1058 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roster Parser Tutorial · 2100551</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
-<style>
-  :root{
-    --bg:#0b0c0e; --panel:#141619; --panel2:#1b1e22; --line:#2a2e33;
-    --text:#f2f3f5; --dim:#aeb4bb; --accent:#c6ff3d; --accent-dim:#7a934f;
-    --warn:#ffb454; --err:#ff6b6b; --ok:#6bffb0;
-    --mono:'DM Mono','SF Mono',ui-monospace,Menlo,Consolas,monospace;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);font-size:14px;-webkit-tap-highlight-color:transparent;line-height:1.6}
-  
-  /* HEADER */
-  header{padding:16px 14px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
-  header h1{margin:0;font-size:16px;letter-spacing:.03em;font-weight:600}
-  header h1 span{color:var(--accent)}
-  header .sub{color:var(--dim);font-size:11.5px;margin-top:4px}
-  
-  /* MAIN */
-  main{padding:12px;max-width:900px;margin:0 auto}
-  
-  /* INSTALL BANNER */
-  .install-banner{
-    background:var(--panel);
-    border:2px solid var(--accent);
-    border-radius:12px;
-    padding:14px 16px;
-    margin-bottom:20px;
-    display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-  }
-  .install-banner .text{flex:1;min-width:180px}
-  .install-banner .text .title{color:var(--accent);font-weight:700;font-size:14px}
-  .install-banner .text .desc{color:var(--dim);font-size:12px;margin:2px 0}
-  .install-banner .btn{
-    background:var(--accent);
-    color:#0b0c0e;
-    border:none;
-    border-radius:8px;
-    padding:10px 20px;
-    font-family:var(--mono);
-    font-size:13px;
-    font-weight:700;
-    cursor:pointer;
-    transition:transform .15s;
-  }
-  .install-banner .btn:active{transform:scale(.96)}
-  .install-banner .btn:disabled{opacity:.4;cursor:default}
-  .install-banner .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:10px;border:1px solid var(--accent-dim);color:var(--accent);margin-left:6px}
-  
-  /* TOC */
-  .toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-bottom:20px}
-  .toc h2{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
-  .toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 20px}
-  .toc a{color:var(--text);text-decoration:none;font-size:12px;padding:3px 0;display:block;border-bottom:1px solid transparent}
-  .toc a:hover{color:var(--accent);border-bottom-color:var(--accent-dim)}
-  .toc a .num{color:var(--accent);margin-right:6px}
-  
-  /* SECTIONS */
-  section{margin-bottom:24px}
-  .section-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-  .section-card h2{font-size:12.5px;margin:0;padding:10px 14px;border-bottom:1px solid var(--line);color:var(--accent);letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .section-card h2 .badge{font-size:9px;text-transform:none;color:var(--dim);background:var(--panel2);padding:1px 10px;border-radius:12px;border:1px solid var(--line)}
-  .section-card .body{padding:12px 14px}
-  
-  /* TYPOGRAPHY */
-  h3{font-size:13px;margin:14px 0 6px;color:var(--text);font-weight:500}
-  h4{font-size:12px;margin:10px 0 4px;color:var(--dim);font-weight:500}
-  p{font-size:12.5px;color:var(--dim);margin:4px 0 8px}
-  .note{font-size:11.5px;color:var(--warn);background:var(--panel2);padding:6px 10px;border-radius:6px;border-left:2px solid var(--warn);margin:8px 0}
-  .tip{font-size:11.5px;color:var(--ok);background:var(--panel2);padding:6px 10px;border-radius:6px;border-left:2px solid var(--ok);margin:8px 0}
-  .err-box{font-size:11.5px;color:var(--err);background:var(--panel2);padding:6px 10px;border-radius:6px;border-left:2px solid var(--err);margin:8px 0}
-  
-  /* TABLES */
-  .mini-table{width:100%;font-size:10.5px;border-collapse:collapse;margin:6px 0}
-  .mini-table th{text-align:left;color:var(--accent);font-weight:500;padding:4px 6px;border-bottom:1px solid var(--line)}
-  .mini-table td{padding:3px 6px;border-bottom:1px solid var(--line);color:var(--dim)}
-  .mini-table .code{color:var(--text);font-family:var(--mono)}
-  .mini-table .desc{color:var(--dim)}
-  
-  /* GRID LAYOUTS */
-  .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}
-  .feature-item{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
-  .feature-item .label{color:var(--accent);font-size:11px;font-weight:500}
-  .feature-item .desc{color:var(--dim);font-size:10.5px;margin-top:2px}
-  
-  .step-list{counter-reset:step;padding:0;margin:6px 0}
-  .step-list li{list-style:none;counter-increment:step;padding:6px 0 6px 32px;position:relative;border-bottom:1px dashed var(--line);font-size:12px;color:var(--dim)}
-  .step-list li::before{content:counter(step);position:absolute;left:0;top:6px;background:var(--accent);color:var(--bg);width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:700;text-align:center;line-height:20px}
-  .step-list li strong{color:var(--text)}
-  .step-list li .highlight{color:var(--accent)}
-  .step-list ul{font-size:11px;color:var(--dim);padding-left:16px;margin:2px 0 0}
-  
-  .color-demo{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:middle;margin-right:4px;border:1px solid var(--line)}
-  .color-row{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--dim);padding:4px 0}
-  
-  /* BUTTON DEMO */
-  .btn-demo{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-family:var(--mono);font-size:10.5px;cursor:default;display:inline-block;margin:2px 4px 2px 0}
-  .btn-demo.primary{background:var(--accent);color:#0b0c0e;border-color:var(--accent)}
-  .btn-demo.ghost{background:transparent}
-  
-  /* TAGS */
-  .tag{display:inline-block;padding:1px 8px;border-radius:12px;font-size:9px;border:1px solid var(--line);color:var(--dim);margin:0 2px}
-  .tag.on{color:var(--accent);border-color:var(--accent-dim)}
-  .tag.bad{color:var(--err);border-color:#5a2a2a}
-  .tag.warn{color:var(--warn);border-color:#5a442a}
-  
-  /* VISUAL MOCK-UP */
-  .mockup{
-    background:var(--panel2);
-    border:1px solid var(--line);
-    border-radius:8px;
-    padding:8px 10px;
-    margin:8px 0;
-    font-size:10px;
-    font-family:var(--mono);
-    color:var(--dim);
-    line-height:1.5;
-  }
-  .mockup .accent{color:var(--accent)}
-  .mockup .dim{color:var(--dim)}
-  .mockup .highlight{background:var(--accent);color:#0b0c0e;padding:0 4px;border-radius:3px}
-  .mockup .tag{font-size:8px}
-  .mockup .row{display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px dashed var(--line);padding:2px 0}
-  .mockup .row:last-child{border-bottom:none}
-  
-  /* RESPONSIVE */
-  @media(max-width:600px){
-    .toc-grid{grid-template-columns:1fr}
-    .feature-grid{grid-template-columns:1fr}
-    .mockup{font-size:9px}
-  }
-  
-  /* FOOTER */
-  footer{padding:20px 14px 40px;color:var(--dim);font-size:10.5px;text-align:center;border-top:1px solid var(--line);margin-top:20px}
-  .about{background:var(--panel2);border-radius:8px;padding:12px 16px;margin-top:16px;font-size:12px;color:var(--dim)}
-  .about strong{color:var(--text)}
-  
-  /* HIDE INSTALL BUTTON IF ALREADY INSTALLED OR NOT SUPPORTED */
-  .install-banner.hidden{display:none}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roster Parser Tutorial · 2100551</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+    <style>
+        :root {
+            --bg: #0b0c0e;
+            --panel: #141619;
+            --panel2: #1b1e22;
+            --line: #2a2e33;
+            --text: #f2f3f5;
+            --dim: #aeb4bb;
+            --accent: #c6ff3d;
+            --accent-dim: #7a934f;
+            --warn: #ffb454;
+            --err: #ff6b6b;
+            --ok: #6bffb0;
+            --mono: 'DM Mono', 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+        }
+        * {
+            box-sizing: border-box
+        }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 14px;
+            -webkit-tap-highlight-color: transparent;
+            line-height: 1.6
+        }
+
+        /* HEADER */
+        header {
+            padding: 16px 14px 10px;
+            border-bottom: 1px solid var(--line);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        header .back-btn {
+            background: var(--panel2);
+            color: var(--text);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-family: var(--mono);
+            font-size: 12px;
+            cursor: pointer;
+            transition: background .15s, border-color .15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+        header .back-btn:hover {
+            background: var(--panel);
+            border-color: var(--accent-dim);
+        }
+        header .back-btn:active {
+            transform: scale(.96);
+        }
+        header .back-btn .arrow {
+            font-size: 14px;
+            line-height: 1;
+        }
+        header .title-group {
+            flex: 1;
+            min-width: 160px;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 16px;
+            letter-spacing: .03em;
+            font-weight: 600;
+        }
+        header h1 span {
+            color: var(--accent)
+        }
+        header .sub {
+            color: var(--dim);
+            font-size: 11.5px;
+            margin-top: 2px
+        }
+
+        /* MAIN */
+        main {
+            padding: 12px;
+            max-width: 900px;
+            margin: 0 auto
+        }
+
+        /* INSTALL BANNER */
+        .install-banner {
+            background: var(--panel);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .install-banner .text {
+            flex: 1;
+            min-width: 180px
+        }
+        .install-banner .text .title {
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 14px
+        }
+        .install-banner .text .desc {
+            color: var(--dim);
+            font-size: 12px;
+            margin: 2px 0
+        }
+        .install-banner .btn {
+            background: var(--accent);
+            color: #0b0c0e;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .15s;
+        }
+        .install-banner .btn:active {
+            transform: scale(.96)
+        }
+        .install-banner .btn:disabled {
+            opacity: .4;
+            cursor: default
+        }
+        .install-banner .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            border: 1px solid var(--accent-dim);
+            color: var(--accent);
+            margin-left: 6px
+        }
+
+        /* TOC */
+        .toc {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 20px
+        }
+        .toc h2 {
+            font-size: 12px;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin: 0 0 10px
+        }
+        .toc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 20px
+        }
+        .toc a {
+            color: var(--text);
+            text-decoration: none;
+            font-size: 12px;
+            padding: 3px 0;
+            display: block;
+            border-bottom: 1px solid transparent
+        }
+        .toc a:hover {
+            color: var(--accent);
+            border-bottom-color: var(--accent-dim)
+        }
+        .toc a .num {
+            color: var(--accent);
+            margin-right: 6px
+        }
+
+        /* SECTIONS */
+        section {
+            margin-bottom: 24px
+        }
+        .section-card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            overflow: hidden
+        }
+        .section-card h2 {
+            font-size: 12.5px;
+            margin: 0;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--line);
+            color: var(--accent);
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap
+        }
+        .section-card h2 .badge {
+            font-size: 9px;
+            text-transform: none;
+            color: var(--dim);
+            background: var(--panel2);
+            padding: 1px 10px;
+            border-radius: 12px;
+            border: 1px solid var(--line)
+        }
+        .section-card .body {
+            padding: 12px 14px
+        }
+
+        /* TYPOGRAPHY */
+        h3 {
+            font-size: 13px;
+            margin: 14px 0 6px;
+            color: var(--text);
+            font-weight: 500
+        }
+        h4 {
+            font-size: 12px;
+            margin: 10px 0 4px;
+            color: var(--dim);
+            font-weight: 500
+        }
+        p {
+            font-size: 12.5px;
+            color: var(--dim);
+            margin: 4px 0 8px
+        }
+        .note {
+            font-size: 11.5px;
+            color: var(--warn);
+            background: var(--panel2);
+            padding: 6px 10px;
+            border-radius: 6px;
+            border-left: 2px solid var(--warn);
+            margin: 8px 0
+        }
+        .tip {
+            font-size: 11.5px;
+            color: var(--ok);
+            background: var(--panel2);
+            padding: 6px 10px;
+            border-radius: 6px;
+            border-left: 2px solid var(--ok);
+            margin: 8px 0
+        }
+        .err-box {
+            font-size: 11.5px;
+            color: var(--err);
+            background: var(--panel2);
+            padding: 6px 10px;
+            border-radius: 6px;
+            border-left: 2px solid var(--err);
+            margin: 8px 0
+        }
+
+        /* TABLES */
+        .mini-table {
+            width: 100%;
+            font-size: 10.5px;
+            border-collapse: collapse;
+            margin: 6px 0
+        }
+        .mini-table th {
+            text-align: left;
+            color: var(--accent);
+            font-weight: 500;
+            padding: 4px 6px;
+            border-bottom: 1px solid var(--line)
+        }
+        .mini-table td {
+            padding: 3px 6px;
+            border-bottom: 1px solid var(--line);
+            color: var(--dim)
+        }
+        .mini-table .code {
+            color: var(--text);
+            font-family: var(--mono)
+        }
+        .mini-table .desc {
+            color: var(--dim)
+        }
+
+        /* GRID LAYOUTS */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 6px 0
+        }
+        .feature-item {
+            background: var(--panel2);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 8px 10px
+        }
+        .feature-item .label {
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 500
+        }
+        .feature-item .desc {
+            color: var(--dim);
+            font-size: 10.5px;
+            margin-top: 2px
+        }
+
+        .step-list {
+            counter-reset: step;
+            padding: 0;
+            margin: 6px 0
+        }
+        .step-list li {
+            list-style: none;
+            counter-increment: step;
+            padding: 6px 0 6px 32px;
+            position: relative;
+            border-bottom: 1px dashed var(--line);
+            font-size: 12px;
+            color: var(--dim)
+        }
+        .step-list li::before {
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 6px;
+            background: var(--accent);
+            color: var(--bg);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 700;
+            text-align: center;
+            line-height: 20px
+        }
+        .step-list li strong {
+            color: var(--text)
+        }
+        .step-list li .highlight {
+            color: var(--accent)
+        }
+        .step-list ul {
+            font-size: 11px;
+            color: var(--dim);
+            padding-left: 16px;
+            margin: 2px 0 0
+        }
+
+        .color-demo {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            vertical-align: middle;
+            margin-right: 4px;
+            border: 1px solid var(--line)
+        }
+        .color-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 11px;
+            color: var(--dim);
+            padding: 4px 0
+        }
+
+        /* BUTTON DEMO */
+        .btn-demo {
+            background: var(--panel2);
+            color: var(--text);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-family: var(--mono);
+            font-size: 10.5px;
+            cursor: default;
+            display: inline-block;
+            margin: 2px 4px 2px 0
+        }
+        .btn-demo.primary {
+            background: var(--accent);
+            color: #0b0c0e;
+            border-color: var(--accent)
+        }
+        .btn-demo.ghost {
+            background: transparent
+        }
+
+        /* TAGS */
+        .tag {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+            border: 1px solid var(--line);
+            color: var(--dim);
+            margin: 0 2px
+        }
+        .tag.on {
+            color: var(--accent);
+            border-color: var(--accent-dim)
+        }
+        .tag.bad {
+            color: var(--err);
+            border-color: #5a2a2a
+        }
+        .tag.warn {
+            color: var(--warn);
+            border-color: #5a442a
+        }
+
+        /* VISUAL MOCK-UP */
+        .mockup {
+            background: var(--panel2);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin: 8px 0;
+            font-size: 10px;
+            font-family: var(--mono);
+            color: var(--dim);
+            line-height: 1.5;
+        }
+        .mockup .accent {
+            color: var(--accent)
+        }
+        .mockup .dim {
+            color: var(--dim)
+        }
+        .mockup .highlight {
+            background: var(--accent);
+            color: #0b0c0e;
+            padding: 0 4px;
+            border-radius: 3px
+        }
+        .mockup .tag {
+            font-size: 8px
+        }
+        .mockup .row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            border-bottom: 1px dashed var(--line);
+            padding: 2px 0
+        }
+        .mockup .row:last-child {
+            border-bottom: none
+        }
+
+        /* RESPONSIVE */
+        @media(max-width:600px) {
+            .toc-grid {
+                grid-template-columns: 1fr
+            }
+            .feature-grid {
+                grid-template-columns: 1fr
+            }
+            .mockup {
+                font-size: 9px
+            }
+            header .sub {
+                font-size: 10px;
+            }
+            header h1 {
+                font-size: 14px;
+            }
+            header .back-btn {
+                font-size: 10px;
+                padding: 4px 10px;
+            }
+        }
+
+        /* FOOTER */
+        footer {
+            padding: 20px 14px 40px;
+            color: var(--dim);
+            font-size: 10.5px;
+            text-align: center;
+            border-top: 1px solid var(--line);
+            margin-top: 20px
+        }
+        .about {
+            background: var(--panel2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 16px;
+            font-size: 12px;
+            color: var(--dim)
+        }
+        .about strong {
+            color: var(--text)
+        }
+
+        /* HIDE INSTALL BUTTON IF ALREADY INSTALLED OR NOT SUPPORTED */
+        .install-banner.hidden {
+            display: none
+        }
+
+        /* back button icon */
+        .back-icon {
+            display: inline-block;
+            font-size: 16px;
+            line-height: 1;
+            margin-right: 2px;
+        }
+    </style>
 </head>
 <body>
 
-<header>
-  <h1>📖 ROSTER <span>PARSER</span> · TUTORIAL</h1>
-  <div class="sub">Complete user guide for the aviation crew roster tool · by 2100551</div>
-</header>
-
-<main>
-
-  <!-- ===== INSTALL BANNER ===== -->
-  <div class="install-banner" id="installBanner">
-    <div class="text">
-      <div class="title">📲 Install App <span class="badge">NEW</span></div>
-      <div class="desc">Get the Roster Parser as a standalone app &amp; share Excel files directly to it from your phone!</div>
-    </div>
-    <button class="btn" id="installBtn">Install</button>
-  </div>
-
-  <!-- ===== TABLE OF CONTENTS ===== -->
-  <div class="toc">
-    <h2>📑 Quick Navigation</h2>
-    <div class="toc-grid">
-      <a href="#sec0"><span class="num">0.</span> Install &amp; Share (PWA)</a>
-      <a href="#sec1"><span class="num">1.</span> Quick Start Guide</a>
-      <a href="#sec2"><span class="num">2.</span> Loading Your Roster</a>
-      <a href="#sec3"><span class="num">3.</span> Understanding the Table</a>
-      <a href="#sec4"><span class="num">4.</span> Toolbar Buttons Explained</a>
-      <a href="#sec5"><span class="num">5.</span> Editing the Code Legend</a>
-      <a href="#sec6"><span class="num">6.</span> Saving Rosters</a>
-      <a href="#sec7"><span class="num">7.</span> Finding Time Together</a>
-      <a href="#sec8"><span class="num">8.</span> Heatmap View</a>
-      <a href="#sec9"><span class="num">9.</span> Statistics Panel</a>
-      <a href="#sec10"><span class="num">10.</span> Allowance Estimate</a>
-      <a href="#sec11"><span class="num">11.</span> Troubleshooting</a>
-      <a href="#sec12"><span class="num">12.</span> About This Tool</a>
-    </div>
-  </div>
-
-  <!-- ===== SECTION 0: INSTALL & SHARE ===== -->
-  <section id="sec0">
-    <div class="section-card">
-      <h2>0. Install &amp; Share <span class="badge">PWA</span></h2>
-      <div class="body">
-        <p>This tool is a <strong>Progressive Web App (PWA)</strong>. Installing it lets you:</p>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li>Launch it from your home screen like a native app.</li>
-          <li><strong>Share Excel files (.xlsx, .xls) or PDFs directly from other apps</strong> – the Roster Parser will appear in your Android share sheet.</li>
-        </ul>
-
-        <h3>How to install (Android – Chrome)</h3>
-        <ol class="step-list">
-          <li>Open this page in <strong>Chrome</strong> on your Android device.</li>
-          <li>Look for the <span class="highlight">“Install”</span> banner at the top of this page – tap it if you see it.</li>
-          <li>If the banner doesn’t appear, tap the <strong>three‑dot menu</strong> (⋮) in the top‑right corner of Chrome.</li>
-          <li>Select <span class="highlight">“Install app”</span> or <span class="highlight">“Add to Home screen”</span> (the exact wording may vary).</li>
-          <li>Follow the on‑screen instructions – Chrome will add an icon to your home screen.</li>
-          <li>Once installed, open the app from the home screen. You’ll see the same interface, but now it’s a standalone app.</li>
-        </ol>
-        <div class="tip">💡 If you already see the <strong>“Install”</strong> button at the top of this page, tap it – that’s the fastest way!</div>
-
-        <h3>How to use the share feature (Android only)</h3>
-        <ol class="step-list">
-          <li>Open any app that has a roster file (e.g., email, WhatsApp, Drive, Files).</li>
-          <li>Tap the <span class="highlight">“Share”</span> button (usually an arrow or three dots).</li>
-          <li>In the share sheet, scroll until you see <span class="highlight">“Roster Parser”</span> (or “Roster Parser · 2100551”).</li>
-          <li>Tap it – the app will open and automatically parse the file.</li>
-          <li>You’ll see your roster loaded instantly, ready to save, export, or find time with others.</li>
-        </ol>
-        <div class="note">⚠️ <strong>iOS (Safari) note:</strong> Web Share Target is not supported on iOS. You can still install the app to your home screen (using “Add to Home Screen”), but you’ll need to upload files manually via the “Choose file” button. I recommend using Android for the best experience.</div>
-
-        <h3>What files can you share?</h3>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li><span class="tag on">.xlsx</span> – Excel (preferred, most reliable)</li>
-          <li><span class="tag on">.xls</span> – older Excel format</li>
-          <li><span class="tag warn">.pdf</span> – works for Roster Reports or Calendar PDFs (may need manual force‑reparse)</li>
-        </ul>
-
-        <h3>If the share option doesn’t appear</h3>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li><strong>Make sure you have installed the app</strong> – the share target only works after installation.</li>
-          <li><strong>Clear Chrome cache</strong> and re‑install if you see duplicate entries.</li>
-          <li>Ensure you’re using Chrome 89+ on Android 12+.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== SECTION 1: QUICK START ===== -->
-  <section id="sec1">
-    <div class="section-card">
-      <h2>1. Quick Start Guide <span class="badge">5 steps</span></h2>
-      <div class="body">
-        <p>If you just want to get started <strong>right now,</strong> follow these 5 steps:</p>
-        <ol class="step-list">
-          <li><strong>Get your roster file</strong> — usually an Excel (.xlsx) file from your airline's portal or email.</li>
-          <li><strong>Open this tool</strong> — on your phone, tablet, or computer.</li>
-          <li><strong>Load the file</strong> — drag it onto the dotted area, or tap <span class="highlight">"Choose file"</span> and select it. <strong>Better yet</strong>: share it directly from another app after installing!</li>
-          <li><strong>Review your schedule</strong> — the table appears automatically. Use the <span class="highlight">"Fit screen"</span> button to see all columns.</li>
-          <li><strong>Save your roster</strong> — type your name, pick a timezone, and tap <span class="highlight">"Save roster"</span> so you can later find free time with other crew.</li>
-        </ol>
-        <div class="tip">💡 On a phone? Tap buttons with your finger — they are sized for touch. On a PC? Click with your mouse.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== SECTION 2: LOADING YOUR ROSTER ===== -->
-  <section id="sec2">
-    <div class="section-card">
-      <h2>2. Loading Your Roster <span class="badge">file upload</span></h2>
-      <div class="body">
-        <h3>Where to get your roster file</h3>
-        <p>Your airline usually provides a roster in one of these formats:</p>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li><strong>Excel file (.xlsx or .xls)</strong> — the best format. Often named "Roster Report".</li>
-          <li><strong>PDF file</strong> — can be a "Roster Report" (table) or a "Calendar/Fridge" view.</li>
-        </ul>
-        <p>Download the file to your device (email, company portal, etc.)</p>
-
-        <h3>How to load the file</h3>
-        <ol class="step-list">
-          <li><strong>On a computer:</strong> Drag the file from your folder onto the dotted area. Or click <span class="highlight">"Choose file"</span> and pick it.</li>
-          <li><strong>On a phone/tablet:</strong> Tap <span class="highlight">"Choose file"</span> — your device will ask you to pick a file from your storage (Downloads, Photos, Files).</li>
-          <li>After selecting, the file starts processing automatically. You'll see a message like <span class="tag on">XLSX</span> or <span class="tag warn">PDF · Roster Report</span>.</li>
-        </ol>
-        <p><strong>Or use the share feature</strong> (if you've installed the app) – just share the file from any app and the parser will open automatically.</p>
-
-        <h3>If the format is not recognised correctly</h3>
-        <p>Sometimes the tool might guess the wrong PDF type. If you see a "Not right? force re-parse as:" section, try the other button:</p>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li><span class="highlight">"Roster Report table"</span> — use this if your PDF looks like a spreadsheet with rows and columns.</li>
-          <li><span class="highlight">"Calendar / fridge"</span> — use this if your PDF looks like a monthly calendar grid.</li>
-        </ul>
-        <div class="note">⚠️ PDF parsing can be imperfect — if you can, always use the .xlsx version for best results.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== SECTION 3: UNDERSTANDING THE TABLE ===== -->
-  <section id="sec3">
-    <div class="section-card">
-      <h2>3. Understanding the Roster Table <span class="badge">main screen</span></h2>
-      <div class="body">
-        <p>After loading, you'll see a table with your daily activities. Here's what each column means:</p>
-        <table class="mini-table">
-          <thead><tr><th>Column</th><th>What it tells you</th></tr></thead>
-          <tbody>
-            <tr><td class="code">Date</td><td>The calendar date (e.g., <span class="code">01-AUG-2026</span>)</td></tr>
-            <tr><td class="code">Day</td><td>Day of the week (Mon, Tue, etc.)</td></tr>
-            <tr><td class="code">Duty Start</td><td>Your report time — when you need to be at work.</td></tr>
-            <tr><td class="code">Item</td><td>Flight number (e.g., <span class="code">AA123</span>) or activity code (<span class="code">OP</span>, <span class="code">D</span>, <span class="code">LO</span>)</td></tr>
-            <tr><td class="code">Overrd Rank</td><td>Your rank for that day (e.g., <span class="code">FS</span> = Flight Steward)</td></tr>
-            <tr><td class="code">Dep/Start</td><td>Where you depart from and the time (e.g., <span class="code">KUL 08:30</span>)</td></tr>
-            <tr><td class="code">Arr/End</td><td>Where you arrive and the time (e.g., <span class="code">BKK 11:45</span>)</td></tr>
-            <tr><td class="code">Duty End</td><td>Your debrief / check‑out time.</td></tr>
-            <tr><td class="code">Work Type</td><td><span class="code">OP</span> means you're flying; blank means ground duty or training.</td></tr>
-            <tr><td class="code">Actual Block Hours</td><td>Flight time for that leg (hours:minutes).</td></tr>
-            <tr><td class="code">Duty Hours</td><td>Total duty time for that day.</td></tr>
-            <tr><td class="code">DutyCode</td><td>Activity code such as standby</td></tr>
-            <tr><td class="code">Ac Type</td><td>Aircraft type (if known).</td></tr>
-          </tbody>
-        </table>
-
-        <h3>Row colours tell you the status</h3>
-        <div class="color-row">
-          <span><span class="color-demo" style="background:var(--dim)"></span><strong>Off day</strong> (D, DO, EL) – you're free</span>
-          <span><span class="color-demo" style="background:var(--warn)"></span><strong>Layover</strong> (LO) – you're away, but not working</span>
-          <span><span class="color-demo" style="background:#cfd3d8;opacity:.6"></span><strong>Second leg</strong> – additional flight on same day</span>
-          <span><span class="color-demo" style="background:#ff9a9a"></span><strong>Full day overlap</strong> – used in "Find Time Together"</span>
+    <header>
+        <!-- BACK BUTTON — goes to index.html -->
+        <a href="index.html" class="back-btn" title="Back to Roster Parser">
+            <span class="back-icon">←</span> Back
+        </a>
+        <div class="title-group">
+            <h1>📖 ROSTER <span>PARSER</span> · TUTORIAL</h1>
+            <div class="sub">Complete user guide for the aviation crew roster tool · by 2100551</div>
         </div>
-        <div class="tip">💡 On a phone, you can scroll the table sideways to see all columns. Use <span class="highlight">"Fit screen"</span> to avoid scrolling — just tap it if you prefer portrait mode like I do.</div>
-      </div>
-    </div>
-  </section>
+    </header>
 
-  <!-- ===== SECTION 4: TOOLBAR BUTTONS ===== -->
-  <section id="sec4">
-    <div class="section-card">
-      <h2>4. Toolbar Buttons Explained <span class="badge">actions</span></h2>
-      <div class="body">
-        <p>These buttons appear above your roster. Each does a specific job:</p>
+    <main>
 
-        <div class="feature-grid">
-          <div class="feature-item">
-            <div class="label"><span class="btn-demo">Fit screen</span></div>
-            <div class="desc"><strong>What:</strong> Scales the table so all columns fit your screen width.<br>
-            <strong>When to use:</strong> If the table is too wide and you have to scroll sideways. Tap it once to fit; tap again to go back to normal size.</div>
-          </div>
-          <div class="feature-item">
-            <div class="label"><span class="btn-demo">Copy</span></div>
-            <div class="desc"><strong>What:</strong> Copies the entire roster (including headers) to your device's clipboard.<br>
-            <strong>When to use:</strong> Paste it into a text message, email, or spreadsheet app.</div>
-          </div>
-          <div class="feature-item">
-            <div class="label"><span class="btn-demo">CSV</span></div>
-            <div class="desc"><strong>What:</strong> Downloads a .csv file that can be opened in Excel, Numbers, or Google Sheets.<br>
-            <strong>When to use:</strong> For further analysis or printing in a spreadsheet.</div>
-          </div>
-          <div class="feature-item">
-            <div class="label"><span class="btn-demo">Image</span></div>
-            <div class="desc"><strong>What:</strong> Saves a high‑quality image (PNG) of your roster.<br>
-            <strong>When to use:</strong> To share your schedule or keep a picture on your phone.<br>
-            <strong>Platform details:</strong>
-              <ul style="margin:4px 0 0 12px;font-size:10px;color:var(--dim)">
-                <li><strong>iPhone:</strong> A share sheet appears — tap "Save Image".</li>
-                <li><strong>Android:</strong> A share sheet appears — choose "Save to Downloads" or "Save to Gallery". If you cancel, the image auto‑downloads to Downloads.</li>
-                <li><strong>PC:</strong> The image downloads directly to your Downloads folder.</li>
-              </ul>
+        <!-- ===== INSTALL BANNER ===== -->
+        <div class="install-banner" id="installBanner">
+            <div class="text">
+                <div class="title">📲 Install App <span class="badge">NEW</span></div>
+                <div class="desc">Get the Roster Parser as a standalone app &amp; share Excel files directly to it from your phone!</div>
             </div>
-          </div>
-          <div class="feature-item" style="grid-column:span 2">
-            <div class="label"><span class="btn-demo primary">Print / PDF</span></div>
-            <div class="desc"><strong>What:</strong> Opens your browser's print dialog.<br>
-            <strong>When to use:</strong> To get a clean paper printout or to save as a PDF file.<br>
-            <strong>How to save as PDF:</strong> In the print dialog, choose "Save as PDF" instead of a real printer.<br>
-            <strong>Important:</strong> Set the orientation to <strong>Portrait</strong> (vertical) for best results.</div>
-          </div>
+            <button class="btn" id="installBtn">Install</button>
         </div>
 
-        <div class="tip">💡 On mobile, the "Print / PDF" button may use your phone's print service (e.g., AirPrint on iOS). You can also choose "Save as PDF" there.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== SECTION 5: CODE LEGEND ===== -->
-  <section id="sec5">
-    <div class="section-card">
-      <h2>5. Editing the Code Legend <span class="badge">customize</span></h2>
-      <div class="body">
-        <p>The legend shows what each duty code means. You can change or add descriptions:</p>
-        <ol class="step-list">
-          <li><strong>Edit a description</strong> — tap or click on any description field (the right‑hand box). Type your own text.</li>
-          <li><strong>Add a new code</strong> — tap the <span class="highlight">"+ add code"</span> button. A new row appears. Enter the code (e.g., <span class="code">STBY</span>) and its description.</li>
-          <li><strong>Delete a code</strong> — tap the <span class="highlight">"✕"</span> button next to the row you want to remove.</li>
-          <li><strong>Changes are saved automatically</strong> — your customisations stay on this device, even after reloading the page.</li>
-        </ol>
-        <div class="note">⚠️ The legend is stored in your browser's local storage. If you clear your browser history/cache, your changes will be lost. Consider this when you switch devices.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== SECTION 6: SAVING ROSTERS ===== -->
-  <section id="sec6">
-    <div class="section-card">
-      <h2>6. Saving Rosters <span class="badge">for later use</span></h2>
-      <div class="body">
-        <p>You <strong>must</strong> save your roster if you want to use the "Find Time Together" feature. Saving also lets you keep a copy of your schedule.</p>
-
-        <h3>How to save</h3>
-        <ol class="step-list">
-          <li>After your roster appears, scroll down to the <span class="highlight">"Save This Roster"</span> section.</li>
-          <li><strong>Enter your name</strong> — any name you like (e.g., "Ikhlas", "Nadiya", or your full name).</li>
-          <li><strong>Choose a timezone</strong>:
-            <ul>
-              <li><span class="highlight">SLT</span> — your home base time (KUL / UTC+8). This is the default.</li>
-              <li><span class="highlight">UTC</span> — Coordinated Universal Time. Use this if you prefer to see everything in UTC.</li>
-            </ul>
-          </li>
-          <li>Tap <span class="highlight">"Save roster"</span>. You'll see a confirmation message.</li>
-        </ol>
-
-        <h3>Managing your saved rosters</h3>
-        <p>Below the save section, you'll see a list of all saved rosters. You can:</p>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li><strong>View</strong> — click the <span class="tag on">View</span> button to reload that roster and see it on screen.</li>
-          <li><strong>Delete</strong> — click the <span class="tag bad">Delete</span> button to remove it (this can't be undone).</li>
-          <li><strong>Select for overlap</strong> — check the checkbox next to a roster to include it in "Find Time Together".</li>
-        </ul>
-        <div class="note">⚠️ Saved rosters are stored only on this browser. If you use a different phone/computer, you'll need to save the roster again on that device.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== SECTION 7: FIND TIME TOGETHER ===== -->
-  <section id="sec7">
-    <div class="section-card">
-      <h2>7. Finding Time Together 💞 <span class="badge">crew sync</span></h2>
-      <div class="body">
-        <p>This is the main reason to save rosters — it finds overlapping free time between <strong>2 or more crew members</strong>.</p>
-
-        <h3>Step‑by‑step</h3>
-        <ol class="step-list">
-          <li><strong>Save at least 2 rosters</strong> with different names (e.g., "Ikhlas" and "Nadiya").</li>
-          <li>In the <span class="highlight">"Find Time 2B Together"</span> section, <strong>check the boxes</strong> next to the crew members you want to coordinate.</li>
-          <li>Tap <span class="highlight">"Find overlap"</span>. The tool will analyse all selected rosters.</li>
-          <li>Results appear:
-            <ul>
-              <li><strong>If you selected 3 or more</strong>, you'll see <em>"All {N} together"</em> — time when everyone is free.</li>
-              <li>Below that, you'll see <strong>pairwise breakdowns</strong> — overlap between each pair (e.g., Ikhlas × Nadiya).</li>
-              <li>Each result shows the date, time, location, duration, and whether it's <span class="tag on">Confirmed</span> or <span class="tag warn">Maybe (standby‑dependent)</span>.</li>
-            </ul>
-          </li>
-          <li>You can also tap <span class="highlight">"Heatmap view"</span> to see a calendar with coloured bars — more visual.</li>
-          <li>After computing, a new <span class="highlight">"Image"</span> button appears in the toolbar – tap it to save a snapshot of the overlap results.</li>
-        </ol>
-
-        <h3>How the tool decides what's "free"</h3>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li><strong>Off days</strong> (D, DO, EL) — completely free (confirmed).</li>
-          <li><strong>Layovers</strong> (LO) — free time away from base (confirmed).</li>
-          <li><strong>Gaps between duties</strong> — any time between report and debrief that isn't flying is counted as free.</li>
-          <li><strong>Standby duties</strong> — marked as <span class="tag warn">Maybe</span> because you might be called in.</li>
-        </ul>
-        <div class="tip">💡 If two people are in different locations (e.g., one in KUL, one in BKK), the tool only counts overlaps when they are both at the <strong>same station</strong>.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== SECTION 8: HEATMAP VIEW ===== -->
-  <section id="sec8">
-    <div class="section-card">
-      <h2>8. Heatmap View <span class="badge">visual calendar</span></h2>
-      <div class="body">
-        <p>After running "Find overlap", tap <span class="highlight">"Heatmap view"</span> to see a calendar‑like grid.</p>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li>Each day is a small box.</li>
-          <li>The box is filled with a horizontal bar that shows <strong>free time</strong> from midnight (left) to midnight (right).</li>
-          <li><span class="color-demo" style="background:var(--ok)"></span> <strong>Green</strong> = time everyone is free together (confirmed).</li>
-          <li><span class="color-demo" style="background:var(--warn)"></span> <strong>Gold</strong> = time that depends on standby (maybe).</li>
-          <li><span class="color-demo" style="background:#800020"></span> <strong>Red</strong> = not free.</li>
-          <li>Tap any box to see a popup that tells you <strong>who has to leave first</strong> for their next duty — useful if you're planning something and need to know when to wrap up.</li>
-        </ul>
-        <p>To go back to the table, tap <span class="highlight">"Table view"</span>.</p>
-        <div class="tip">💡 The heatmap is especially handy when comparing multiple people's free time — during a gathering, it indicates who has to leave if it's not a full day off together.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== SECTION 9: STATISTICS PANEL ===== -->
-  <section id="sec9">
-    <div class="section-card">
-      <h2>9. Statistics Panel <span class="badge">monthly summary</span></h2>
-      <div class="body">
-        <p>Automatically shown below the roster table. It gives you a quick summary of your month:</p>
-        <div class="feature-grid">
-          <div class="feature-item">
-            <div class="label">Actual Block Hours</div>
-            <div class="desc">Total flight hours for the month.</div>
-          </div>
-          <div class="feature-item">
-            <div class="label">Duty Hours</div>
-            <div class="desc">Total duty hours (from report to debrief).</div>
-          </div>
-          <div class="feature-item">
-            <div class="label">OFF Days At Base</div>
-            <div class="desc">Number of days you were off and at your home base (KUL).</div>
-          </div>
-          <div class="feature-item">
-            <div class="label">OFF Days Away From Base</div>
-            <div class="desc">Number of days you were off but <strong>away</strong> from base — includes layovers (LO).</div>
-          </div>
+        <!-- ===== TABLE OF CONTENTS ===== -->
+        <div class="toc">
+            <h2>📑 Quick Navigation</h2>
+            <div class="toc-grid">
+                <a href="#sec0"><span class="num">0.</span> Install &amp; Share (PWA)</a>
+                <a href="#sec1"><span class="num">1.</span> Quick Start Guide</a>
+                <a href="#sec2"><span class="num">2.</span> Loading Your Roster</a>
+                <a href="#sec3"><span class="num">3.</span> Understanding the Table</a>
+                <a href="#sec4"><span class="num">4.</span> Toolbar Buttons Explained</a>
+                <a href="#sec5"><span class="num">5.</span> Editing the Code Legend</a>
+                <a href="#sec6"><span class="num">6.</span> Saving Rosters</a>
+                <a href="#sec7"><span class="num">7.</span> Finding Time Together</a>
+                <a href="#sec8"><span class="num">8.</span> Heatmap View</a>
+                <a href="#sec9"><span class="num">9.</span> Statistics Panel</a>
+                <a href="#sec10"><span class="num">10.</span> Allowance Estimate</a>
+                <a href="#sec11"><span class="num">11.</span> Troubleshooting</a>
+                <a href="#sec12"><span class="num">12.</span> About This Tool</a>
+            </div>
         </div>
-        <div class="tip">💡 "OFF Days Away From Base" counts any day you're not flying but also not at home base.</div>
-      </div>
-    </div>
-  </section>
 
-  <!-- ===== SECTION 10: ALLOWANCE ESTIMATE (NEW) ===== -->
-  <section id="sec10">
-    <div class="section-card">
-      <h2>10. Allowance Estimate 💰 <span class="badge">cabin crew only</span></h2>
-      <div class="body">
-        <p>This feature gives you a <strong>rough estimate</strong> of your monthly allowance based on the parsed roster data. It calculates <em>productivity + incentive + block‑hour excess + meal</em> using the figures from the manual.</p>
+        <!-- ===== SECTION 0: INSTALL & SHARE ===== -->
+        <section id="sec0">
+            <div class="section-card">
+                <h2>0. Install &amp; Share <span class="badge">PWA</span></h2>
+                <div class="body">
+                    <p>This tool is a <strong>Progressive Web App (PWA)</strong>. Installing it lets you:</p>
+                    <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+                        <li>Launch it from your home screen like a native app.</li>
+                        <li><strong>Share Excel files (.xlsx, .xls) or PDFs directly from other apps</strong> – the Roster Parser will appear in your Android share sheet.</li>
+                    </ul>
 
-        <div class="note">⚠️ The estimate is <strong>not official</strong> – it’s a tool to help you plan and understand your pay components. Always refer to your actual payslip for exact figures.</div>
+                    <h3>How to install (Android – Chrome)</h3>
+                    <ol class="step-list">
+                        <li>Open this page in <strong>Chrome</strong> on your Android device.</li>
+                        <li>Look for the <span class="highlight">“Install”</span> banner at the top of this page – tap it if you see it.</li>
+                        <li>If the banner doesn’t appear, tap the <strong>three‑dot menu</strong> (⋮) in the top‑right corner of Chrome.</li>
+                        <li>Select <span class="highlight">“Install app”</span> or <span class="highlight">“Add to Home screen”</span> (the exact wording may vary).</li>
+                        <li>Follow the on‑screen instructions – Chrome will add an icon to your home screen.</li>
+                        <li>Once installed, open the app from the home screen. You’ll see the same interface, but now it’s a standalone app.</li>
+                    </ol>
+                    <div class="tip">💡 If you already see the <strong>“Install”</strong> button at the top of this page, tap it – that’s the fastest way!</div>
 
-        <h3>How to use it</h3>
-        <ol class="step-list">
-          <li>After loading and saving your roster, scroll to the <span class="highlight">“Calculate Allowance”</span> button (near the bottom, above the overlap section).</li>
-          <li>Tap it – the allowance card will expand.</li>
-          <li><strong>Select your grade</strong> (D1, E4, or E3) from the dropdown. The tool tries to auto‑detect it from your roster’s header, but you can override it manually.</li>
-          <li>The estimate appears with a breakdown of each component and a <strong>grand total</strong>.</li>
-          <li>If any station is unknown (i.e., not in the built‑in region map), you’ll see a prompt to assign a region – do that once, and the tool will remember it for future calculations.</li>
-          <li>You can also tap the <span class="highlight">“Image”</span> button that appears to save a snapshot of the allowance summary.</li>
-        </ol>
+                    <h3>How to use the share feature (Android only)</h3>
+                    <ol class="step-list">
+                        <li>Open any app that has a roster file (e.g., email, WhatsApp, Drive, Files).</li>
+                        <li>Tap the <span class="highlight">“Share”</span> button (usually an arrow or three dots).</li>
+                        <li>In the share sheet, scroll until you see <span class="highlight">“Roster Parser”</span> (or “Roster Parser · 2100551”).</li>
+                        <li>Tap it – the app will open and automatically parse the file.</li>
+                        <li>You’ll see your roster loaded instantly, ready to save, export, or find time with others.</li>
+                    </ol>
+                    <div class="note">⚠️ <strong>iOS (Safari) note:</strong> Web Share Target is not supported on iOS. You can still install the app to your home screen (using “Add to Home Screen”), but you’ll need to upload files manually via the “Choose file” button. I recommend using Android for the best experience.</div>
 
-        <h3>What each component means</h3>
-        <table class="mini-table">
-          <thead><tr><th>Component</th><th>How it’s calculated</th></tr></thead>
-          <tbody>
-            <tr><td class="code">Productivity</td><td>Sum of <em>duty hours</em> × grade‑specific rate (RM22, RM20, or RM18 per hour).<br>Only flying, positioning and <strong>airport standby</strong> (ASx) are counted – cabin crew standby (S3/S4) and training are excluded.</td></tr>
-            <tr><td class="code">Incentive</td><td>Sum of <em>duty hours</em> × flat RM7 per hour (same for all grades).</td></tr>
-            <tr><td class="code">Block‑hour excess</td><td>If total block hours exceed 80h, the excess is multiplied by the grade‑specific rate (RM18, RM16, or RM15 per hour).</td></tr>
-            <tr><td class="code">Meal allowance</td><td>For each layover (rest gap >3h between flights of the same pairing), one meal (breakfast/lunch/dinner) is added per day based on the station’s region – using fixed regional rates. If a station is unknown, you’ll be asked to assign it.</td></tr>
-          </tbody>
-        </table>
+                    <h3>What files can you share?</h3>
+                    <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+                        <li><span class="tag on">.xlsx</span> – Excel (preferred, most reliable)</li>
+                        <li><span class="tag on">.xls</span> – older Excel format</li>
+                        <li><span class="tag warn">.pdf</span> – works for Roster Reports or Calendar PDFs (may need manual force‑reparse)</li>
+                    </ul>
 
-        <h3>Station region assignment</h3>
-        <p>The tool has a built‑in map for most airports. If it encounters an unknown station (e.g., a new destination), it will:</p>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li>Show a warning with a dropdown list of regions.</li>
-          <li>Choose the correct region – the assignment is saved locally, so you only need to do it once per station.</li>
-          <li>After assigning, the meal allowance will automatically update.</li>
-        </ul>
-        <div class="tip">💡 The region determines meal rates – check the meal allowance rate table for accurate regions if you’re unsure.</div>
+                    <h3>If the share option doesn’t appear</h3>
+                    <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+                        <li><strong>Make sure you have installed the app</strong> – the share target only works after installation.</li>
+                        <li><strong>Clear Chrome cache</strong> and re‑install if you see duplicate entries.</li>
+                        <li>Ensure you’re using Chrome 89+ on Android 12+.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
 
-        <h3>Important notes</h3>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li><strong>Only works for rosters that contain leg‑level data</strong> (i.e., rosters parsed <em>after</em> this feature was added). Older saved rosters (without the <code>legs</code> field) will show a message – just re‑parse and re‑save.</li>
-          <li>All calculations are <strong>estimates</strong> and may not perfectly match your actual payslip because of company‑specific policies (e.g., rounding, minimum hourly blocks, etc.).</li>
-          <li>The tool uses the <strong>duty hours</strong> and <strong>flight hours</strong> exactly as parsed – ensure your roster is loaded correctly before trusting the numbers.</li>
-        </ul>
+        <!-- ===== SECTION 1: QUICK START ===== -->
+        <section id="sec1">
+            <div class="section-card">
+                <h2>1. Quick Start Guide <span class="badge">5 steps</span></h2>
+                <div class="body">
+                    <p>If you just want to get started <strong>right now,</strong> follow these 5 steps:</p>
+                    <ol class="step-list">
+                        <li><strong>Get your roster file</strong> — usually an Excel (.xlsx) file from your airline's portal or email.</li>
+                        <li><strong>Open this tool</strong> — on your phone, tablet, or computer.</li>
+                        <li><strong>Load the file</strong> — drag it onto the dotted area, or tap <span class="highlight">"Choose file"</span> and select it. <strong>Better yet</strong>: share it directly from another app after installing!</li>
+                        <li><strong>Review your schedule</strong> — the table appears automatically. Use the <span class="highlight">"Fit screen"</span> button to see all columns.</li>
+                        <li><strong>Save your roster</strong> — type your name, pick a timezone, and tap <span class="highlight">"Save roster"</span> so you can later find free time with other crew.</li>
+                    </ol>
+                    <div class="tip">💡 On a phone? Tap buttons with your finger — they are sized for touch. On a PC? Click with your mouse.</div>
+                </div>
+            </div>
+        </section>
 
-        <div class="err-box">⚠️ If you see “No leg‑level data available”, it means the current roster was saved before this allowance feature was added. Re‑upload the original file and save it again – then the estimate will work.</div>
-      </div>
-    </div>
-  </section>
+        <!-- ===== SECTION 2: LOADING YOUR ROSTER ===== -->
+        <section id="sec2">
+            <div class="section-card">
+                <h2>2. Loading Your Roster <span class="badge">file upload</span></h2>
+                <div class="body">
+                    <h3>Where to get your roster file</h3>
+                    <p>Your airline usually provides a roster in one of these formats:</p>
+                    <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+                        <li><strong>Excel file (.xlsx or .xls)</strong> — the best format. Often named "Roster Report".</li>
+                        <li><strong>PDF file</strong> — can be a "Roster Report" (table) or a "Calendar/Fridge" view.</li>
+                    </ul>
+                    <p>Download the file to your device (email, company portal, etc.)</p>
 
-  <!-- ===== SECTION 11: TROUBLESHOOTING ===== -->
-  <section id="sec11">
-    <div class="section-card">
-      <h2>11. Troubleshooting <span class="badge">help</span></h2>
-      <div class="body">
-        <h3>Where to get my Excel .xlsx file?</h3>
-        <ol class="step-list">
-          <li>Log in to your Company's Roster Website <span class="highlight">"Download Excel"</span>.</li>
-          <li><strong>Use the XLSX version</strong> if available — it's much more reliable.</li>
-          <li>If something goes wrong, click on <span class="highlight">"Export debug data"</span> (near the bottom) and send that file to Zayn Ikhlas' Dad.</li>
-        </ol>
+                    <h3>How to load the file</h3>
+                    <ol class="step-list">
+                        <li><strong>On a computer:</strong> Drag the file from your folder onto the dotted area. Or click <span class="highlight">"Choose file"</span> and pick it.</li>
+                        <li><strong>On a phone/tablet:</strong> Tap <span class="highlight">"Choose file"</span> — your device will ask you to pick a file from your storage (Downloads, Photos, Files).</li>
+                        <li>After selecting, the file starts processing automatically. You'll see a message like <span class="tag on">XLSX</span> or <span class="tag warn">PDF · Roster Report</span>.</li>
+                    </ol>
+                    <p><strong>Or use the share feature</strong> (if you've installed the app) – just share the file from any app and the parser will open automatically.</p>
 
-        <h3>"Find Time Together" shows no results</h3>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li>The selected rosters might not have overlapping date ranges. Make sure the rosters are from the same month.</li>
-          <li>They might be at different stations (e.g., one in KUL, one in BKK) during the entire overlap.</li>
-          <li>Check that you have saved both rosters with the correct timezone setting (SLT).</li>
-        </ul>
+                    <h3>If the format is not recognised correctly</h3>
+                    <p>Sometimes the tool might guess the wrong PDF type. If you see a "Not right? force re-parse as:" section, try the other button:</p>
+                    <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+                        <li><span class="highlight">"Roster Report table"</span> — use this if your PDF looks like a spreadsheet with rows and columns.</li>
+                        <li><span class="highlight">"Calendar / fridge"</span> — use this if your PDF looks like a monthly calendar grid.</li>
+                    </ul>
+                    <div class="note">⚠️ PDF parsing can be imperfect — if you can, always use the .xlsx version for best results.</div>
+                </div>
+            </div>
+        </section>
 
-        <h3>My custom legend disappeared</h3>
-        <div class="err-box">⚠️ Legend changes are stored in your browser's local storage. If you clear browsing data (cache, cookies, site data), they'll be lost. To avoid this, don't clear site data for this page.</div>
+        <!-- ===== SECTION 3: UNDERSTANDING THE TABLE ===== -->
+        <section id="sec3">
+            <div class="section-card">
+                <h2>3. Understanding the Roster Table <span class="badge">main screen</span></h2>
+                <div class="body">
+                    <p>After loading, you'll see a table with your daily activities. Here's what each column means:</p>
+                    <table class="mini-table">
+                        <thead><tr><th>Column</th><th>What it tells you</th></tr></thead>
+                        <tbody>
+                            <tr><td class="code">Date</td><td>The calendar date (e.g., <span class="code">01-AUG-2026</span>)</td></tr>
+                            <tr><td class="code">Day</td><td>Day of the week (Mon, Tue, etc.)</td></tr>
+                            <tr><td class="code">Duty Start</td><td>Your report time — when you need to be at work.</td></tr>
+                            <tr><td class="code">Item</td><td>Flight number (e.g., <span class="code">AA123</span>) or activity code (<span class="code">OP</span>, <span class="code">D</span>, <span class="code">LO</span>)</td></tr>
+                            <tr><td class="code">Overrd Rank</td><td>Your rank for that day (e.g., <span class="code">FS</span> = Flight Steward)</td></tr>
+                            <tr><td class="code">Dep/Start</td><td>Where you depart from and the time (e.g., <span class="code">KUL 08:30</span>)</td></tr>
+                            <tr><td class="code">Arr/End</td><td>Where you arrive and the time (e.g., <span class="code">BKK 11:45</span>)</td></tr>
+                            <tr><td class="code">Duty End</td><td>Your debrief / check‑out time.</td></tr>
+                            <tr><td class="code">Work Type</td><td><span class="code">OP</span> means you're flying; blank means ground duty or training.</td></tr>
+                            <tr><td class="code">Actual Block Hours</td><td>Flight time for that leg (hours:minutes).</td></tr>
+                            <tr><td class="code">Duty Hours</td><td>Total duty time for that day.</td></tr>
+                            <tr><td class="code">DutyCode</td><td>Activity code such as standby</td></tr>
+                            <tr><td class="code">Ac Type</td><td>Aircraft type (if known).</td></tr>
+                        </tbody>
+                    </table>
 
-        <h3>General tips</h3>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li>All processing is <strong>100% offline</strong> — nothing is uploaded anywhere. Your privacy is protected.</li>
-          <li>If something looks wrong, refresh the page and try again.</li>
-          <li>For best results, use the latest version of Chrome, Safari, or Firefox.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
+                    <h3>Row colours tell you the status</h3>
+                    <div class="color-row">
+                        <span><span class="color-demo" style="background:var(--dim)"></span><strong>Off day</strong> (D, DO, EL) – you're free</span>
+                        <span><span class="color-demo" style="background:var(--warn)"></span><strong>Layover</strong> (LO) – you're away, but not working</span>
+                        <span><span class="color-demo" style="background:#cfd3d8;opacity:.6"></span><strong>Second leg</strong> – additional flight on same day</span>
+                        <span><span class="color-demo" style="background:#ff9a9a"></span><strong>Full day overlap</strong> – used in "Find Time Together"</span>
+                    </div>
+                    <div class="tip">💡 On a phone, you can scroll the table sideways to see all columns. Use <span class="highlight">"Fit screen"</span> to avoid scrolling — just tap it if you prefer portrait mode like I do.</div>
+                </div>
+            </div>
+        </section>
 
-  <!-- ===== SECTION 12: ABOUT ===== -->
-  <section id="sec12">
-    <div class="section-card">
-      <h2>12. About This Tool <span class="badge">Why?</span></h2>
-      <div class="body">
-        <div class="about">
-          <p><strong>Why I built this</strong></p>
-          <p>For the thousands of times I had to compare two rosters' timing from an image on my phone, calculating the time, figuring out the long or short streak of free time just to find when I could be with Her and Zayn Ikhlas.</p>
-          <p>I only have a phone, and I love portrait mode. I needed everything to fit on <strong>one screen</strong> because when you're scrolling through life on the go, you don't have time for landscape, and you don't have time for guesswork. The heatmap tells you exactly when you're both free and who has to leave first because that's the real question, isn't it?</p>
-          <p>So I built this for:</p>
-          <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-            <li>Couples figuring out <em>"When are we both free?"</em> and <em>"How long do we really have?"</em></li>
-            <li>Friends planning group gatherings, just a single overlap would do if we're lucky.</li>
-            <li>Crew parents coordinating school runs and parking spots.</li>
-            <li>The 3-minute hugs during transit when your layover is on the opposite side of the map.</li>
-          </ul>
-          <p>Over time, I added features my colleagues asked for: saving multiple rosters, classic styling, colours, no grainy, compressed images over WhatsApp, etc, which helps me too.</p>
-          <p>I hope it saves you as much time as it saves me because all I needed was those green bars in a sea of red cells. All code runs in your browser, so your data stays private. I welcome your feedback, it's the only way to improve things, so don't hesitate to text Alif and Fahrin.</p>
-          <p style="margin-top:8px;font-size:11px;color:var(--accent);">
-            Here's to fewer lonely calculations, and more 💚 bars.
-          </p>
-          <p style="margin-top:8px;font-size:11px;color:var(--dim)">— 2100551 · 02 August 2026</p>
-        </div>
-        <div style="margin-top:12px;padding:10px;background:var(--panel2);border-radius:6px;text-align:center;font-size:11px;color:var(--dim)">
-          🔐 <strong>Privacy:</strong> All parsing and processing happens <strong>locally in your device's browser</strong>. No files are uploaded to any server.
-        </div>
-      </div>
-    </div>
-  </section>
+        <!-- ===== SECTION 4: TOOLBAR BUTTONS ===== -->
+        <section id="sec4">
+            <div class="section-card">
+                <h2>4. Toolbar Buttons Explained <span class="badge">actions</span></h2>
+                <div class="body">
+                    <p>These buttons appear above your roster. Each does a specific job:</p>
 
-  <!-- ===== FOOTER ===== -->
-  <footer>
-    Roster Parser · by 2100551
-  </footer>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <div class="label"><span class="btn-demo">Fit screen</span></div>
+                            <div class="desc"><strong>What:</strong> Scales the table so all columns fit your screen width.<br>
+                                <strong>When to use:</strong> If the table is too wide and you have to scroll sideways. Tap it once to fit; tap again to go back to normal size.</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="label"><span class="btn-demo">Copy</span></div>
+                            <div class="desc"><strong>What:</strong> Copies the entire roster (including headers) to your device's clipboard.<br>
+                                <strong>When to use:</strong> Paste it into a text message, email, or spreadsheet app.</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="label"><span class="btn-demo">CSV</span></div>
+                            <div class="desc"><strong>What:</strong> Downloads a .csv file that can be opened in Excel, Numbers, or Google Sheets.<br>
+                                <strong>When to use:</strong> For further analysis or printing in a spreadsheet.</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="label"><span class="btn-demo">Image</span></div>
+                            <div class="desc"><strong>What:</strong> Saves a high‑quality image (PNG) of your roster.<br>
+                                <strong>When to use:</strong> To share your schedule or keep a picture on your phone.<br>
+                                <strong>Platform details:</strong>
+                                <ul style="margin:4px 0 0 12px;font-size:10px;color:var(--dim)">
+                                    <li><strong>iPhone:</strong> A share sheet appears — tap "Save Image".</li>
+                                    <li><strong>Android:</strong> A share sheet appears — choose "Save to Downloads" or "Save to Gallery". If you cancel, the image auto‑downloads to Downloads.</li>
+                                    <li><strong>PC:</strong> The image downloads directly to your Downloads folder.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="feature-item" style="grid-column:span 2">
+                            <div class="label"><span class="btn-demo primary">Print / PDF</span></div>
+                            <div class="desc"><strong>What:</strong> Opens your browser's print dialog.<br>
+                                <strong>When to use:</strong> To get a clean paper printout or to save as a PDF file.<br>
+                                <strong>How to save as PDF:</strong> In the print dialog, choose "Save as PDF" instead of a real printer.<br>
+                                <strong>Important:</strong> Set the orientation to <strong>Portrait</strong> (vertical) for best results.</div>
+                        </div>
+                    </div>
 
-</main>
+                    <div class="tip">💡 On mobile, the "Print / PDF" button may use your phone's print service (e.g., AirPrint on iOS). You can also choose "Save as PDF" there.</div>
+                </div>
+            </div>
+        </section>
 
-<script>
-  // ---- PWA Install Button ----
-  let deferredPrompt = null;
-  const installBanner = document.getElementById('installBanner');
-  const installBtn = document.getElementById('installBtn');
+        <!-- ===== SECTION 5: CODE LEGEND ===== -->
+        <section id="sec5">
+            <div class="section-card">
+                <h2>5. Editing the Code Legend <span class="badge">customize</span></h2>
+                <div class="body">
+                    <p>The legend shows what each duty code means. You can change or add descriptions:</p>
+                    <ol class="step-list">
+                        <li><strong>Edit a description</strong> — tap or click on any description field (the right‑hand box). Type your own text.</li>
+                        <li><strong>Add a new code</strong> — tap the <span class="highlight">"+ add code"</span> button. A new row appears. Enter the code (e.g., <span class="code">STBY</span>) and its description.</li>
+                        <li><strong>Delete a code</strong> — tap the <span class="highlight">"✕"</span> button next to the row you want to remove.</li>
+                        <li><strong>Changes are saved automatically</strong> — your customisations stay on this device, even after reloading the page.</li>
+                    </ol>
+                    <div class="note">⚠️ The legend is stored in your browser's local storage. If you clear your browser history/cache, your changes will be lost. Consider this when you switch devices.</div>
+                </div>
+            </div>
+        </section>
 
-  // Listen for beforeinstallprompt
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBanner.classList.remove('hidden');
-  });
+        <!-- ===== SECTION 6: SAVING ROSTERS ===== -->
+        <section id="sec6">
+            <div class="section-card">
+                <h2>6. Saving Rosters <span class="badge">for later use</span></h2>
+                <div class="body">
+                    <p>You <strong>must</strong> save your roster if you want to use the "Find Time Together" feature. Saving also lets you keep a copy of your schedule.</p>
 
-  // Handle install button click
-  installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const result = await deferredPrompt.userChoice;
-    console.log('User choice:', result.outcome);
-    if (result.outcome === 'accepted') {
-      installBanner.classList.add('hidden');
-    }
-    deferredPrompt = null;
-  });
+                    <h3>How to save</h3>
+                    <ol class="step-list">
+                        <li>After your roster appears, scroll down to the <span class="highlight">"Save This Roster"</span> section.</li>
+                        <li><strong>Enter your name</strong> — any name you like (e.g., "Ikhlas", "Nadiya", or your full name).</li>
+                        <li><strong>Choose a timezone</strong>:
+                            <ul>
+                                <li><span class="highlight">SLT</span> — your home base time (KUL / UTC+8). This is the default.</li>
+                                <li><span class="highlight">UTC</span> — Coordinated Universal Time. Use this if you prefer to see everything in UTC.</li>
+                            </ul>
+                        </li>
+                        <li>Tap <span class="highlight">"Save roster"</span>. You'll see a confirmation message.</li>
+                    </ol>
 
-  // Hide banner if app is already installed (appinstalled event)
-  window.addEventListener('appinstalled', () => {
-    installBanner.classList.add('hidden');
-  });
+                    <h3>Managing your saved rosters</h3>
+                    <p>Below the save section, you'll see a list of all saved rosters. You can:</p>
+                    <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+                        <li><strong>View</strong> — click the <span class="tag on">View</span> button to reload that roster and see it on screen.</li>
+                        <li><strong>Delete</strong> — click the <span class="tag bad">Delete</span> button to remove it (this can't be undone).</li>
+                        <li><strong>Select for overlap</strong> — check the checkbox next to a roster to include it in "Find Time Together".</li>
+                    </ul>
+                    <div class="note">⚠️ Saved rosters are stored only on this browser. If you use a different phone/computer, you'll need to save the roster again on that device.</div>
+                </div>
+            </div>
+        </section>
 
-  // Also hide if the user is on iOS or non-Chrome browser (no support)
-  const isChrome = navigator.userAgent.includes('Chrome');
-  const isAndroid = /android/i.test(navigator.userAgent);
-  if (!isChrome || !isAndroid) {
-    installBanner.classList.add('hidden');
-  }
-</script>
+        <!-- ===== SECTION 7: FIND TIME TOGETHER ===== -->
+        <section id="sec7">
+            <div class="section-card">
+                <h2>7. Finding Time Together 💞 <span class="badge">crew sync</span></h2>
+                <div class="body">
+                    <p>This is the main reason to save rosters — it finds overlapping free time between <strong>2 or more crew members</strong>.</p>
+
+                    <h3>Step‑by‑step</h3>
+                    <ol class="step-list">
+                        <li><strong>Save at least 2 rosters</strong> with different names (e.g., "Ikhlas" and "Nadiya").</li>
+                        <li>In the <span class="highlight">"Find Time 2B Together"</span> section, <strong>check the boxes</strong> next to the crew members you want to coordinate.</li>
+                        <li>Tap <span class="highlight">"Find overlap"</span>. The tool will analyse all selected rosters.</li>
+                        <li>Results appear:
+                            <ul>
+                                <li><strong>If you selected 3 or more</strong>, you'll see <em>"All {N} together"</em> — time when everyone is free.</li>
+                                <li>Below that, you'll see <strong>pairwise breakdowns</strong> — overlap between each pair (e.g., Ikhlas × Nadiya).</li>
+                                <li>Each result shows the date, time, location, duration, and whether it's <span class="tag on">Confirmed</span> or <span class="tag warn">Maybe (standby‑dependent)</span>.</li>
+                            </ul>
+                        </li>
+                        <li>You can also tap <span class="highlight">"Heatmap view"</span> to see a calendar with coloured bars — more visual.</li>
+                        <li>After computing, a new <span class="highlight">"Image"</span> button appears in the toolbar – tap it to save a snapshot of the overlap results.</li>
+                    </ol>
+
+                    <h3>How the tool decides what's "free"</h3>
+                    <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+                        <li><strong>Off days</strong> (D, DO, EL) — completely free (confirmed).</li>
+                        <li><strong>Layovers</strong> (LO) — free time away from base (confirmed).</li>
+                        <li><strong>Gaps between duties</strong> — any time between report and debrief that isn't flying is counted as free.</li>
+                        <li><strong>Standby duties</strong> — marked as <span class="tag warn">Maybe</span> because you might be called in.</li>
+                    </ul>
+                    <div class="tip">💡 If two people are in different locations (e.g., one in KUL, one in BKK), the tool only counts overlaps when they are both at the <strong>same station</strong>.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SECTION 8: HEATMAP VIEW ===== -->
+        <section id="sec8">
+            <div class="section-card">
+                <h2>8. Heatmap View <span class="badge">visual calendar</span></h2>
+                <div class="body">
+                    <p>After running "Find overlap", tap <span class="highlight">"Heatmap view"</span> to see a calendar‑like grid.</p>
+                    <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+                        <li>Each day is a small box.</li>
+                        <li>The box is filled with a horizontal bar that shows <strong>free time</strong> from midnight (left) to midnight (right).</li>
+                        <li><span class="color-demo" style="background:var(--ok)"></span> <strong>Green</strong> = time everyone is free together (confirmed).</li>
+                        <li><span class="color-demo" style="background:var(--warn)"></span> <strong>Gold</strong> = time that depends on standby (maybe).</li>
+                        <li><span class="color-demo" style="background:#800020"></span> <strong>Red</strong> = not free.</li>
+                        <li>Tap any box to see a popup that tells you <strong>who has to leave first</strong> for their next duty — useful if you're planning something and need to know when to wrap up.</li>
+                    </ul>
+                    <p>To go back to the table, tap <span class="highlight">"Table view"</span>.</p>
+                    <div class="tip">💡 The heatmap is especially handy when comparing multiple people's free time — during a gathering, it indicates who has to leave if it's not a full day off together.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SECTION 9: STATISTICS PANEL ===== -->
+        <section id="sec9">
+            <div class="section-card">
+                <h2>9. Statistics Panel <span class="badge">monthly summary</span></h2>
+                <div class="body">
+                    <p>Automatically shown below the roster table. It gives you a quick summary of your month:</p>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <div class="label">Actual Block Hours</div>
+                            <div class="desc">Total flight hours for the month.</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="label">Duty Hours</div>
+                            <div class="desc">Total duty hours (from report to debrief).</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="label">OFF Days At Base</div>
+                            <div class="desc">Number of days you were off and at your home base (KUL).</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="label">OFF Days Away From Base</div>
+                            <div class="desc">Number of days you were off but <strong>away</strong> from base — includes layovers (LO).</div>
+                        </div>
+                    </div>
+                    <div class="tip">💡 "OFF Days Away From Base" counts any day you're not flying but also not at home base.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SECTION 10: ALLOWANCE ESTIMATE (NEW) ===== -->
+        <section id="sec10">
+            <div class="section-card">
+                <h2>10. Allowance Estimate 💰 <span class="badge">cabin crew only</span></h2>
+                <div class="body">
+                    <p>This feature gives you a <strong>rough estimate</strong> of your monthly allowance based on the parsed roster data. It calculates <em>productivity + incentive + block‑hour excess + meal</em> using the figures from the manual.</p>
+
+                    <div class="note">⚠️ The estimate is <strong>not official</strong> – it’s a tool to help you plan and understand your pay components. Always refer to your actual payslip for exact figures.</div>
+
+                    <h3>How to use it</h3>
+                    <ol class="step-list">
+                        <li>After loading and saving your roster, scroll to the <span class="highlight">“Calculate Allowance”</span> button (near the bottom, above the overlap section).</li>
+                        <li>Tap it – the allowance card will expand.</li>
+                        <li><strong>Select your grade</strong> (D1, E4, or E3) from the dropdown. The tool tries to auto‑detect it from your roster’s header, but you can override it manually.</li>
+                        <li>The estimate appears with a breakdown of each component and a <strong>grand total</strong>.</li>
+                        <li>If any station is unknown (i.e., not in the built‑in region map), you’ll see a prompt to assign a region – do that once, and the tool will remember it for future calculations.</li>
+                        <li>You can also tap the <span class="highlight">“Image”</span> button that appears to save a snapshot of the allowance summary.</li>
+                    </ol>
+
+                    <h3>What each component means</h3>
+                    <table class="mini-table">
+                        <thead><tr><th>Component</th><th>How it’s calculated</th></tr></thead>
+                        <tbody>
+                            <tr><td class="code">Productivity</td><td>Sum of <em>duty hours</em> × grade‑specific rate (RM22, RM20, or RM18 per hour).<br>Only flying, positioning and <strong>airport standby</strong> (ASx) are counted – cabin crew standby (S3/S4) and training are excluded.</td></tr>
+                            <tr><td class="code">Incentive</td><td>Sum of <em>duty hours</em> × flat RM7 per hour (same for all grades).</td></tr>
+                            <tr><td class="code">Block‑hour excess</td><td>If total block hours exceed 80h, the excess is multiplied by the grade‑specific rate (RM18, RM16, or RM15 per hour).</td></tr>
+                            <tr><td class="code">Meal allowance</td><td>For each layover (rest gap >3h between flights of the same pairing), one meal (breakfast/lunch/dinner) is added per day based on the station’s region – using fixed regional rates. If a station is unknown, you’ll be asked to assign it.</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Station region assignment</h3>
+                    <p>The tool has a built‑in map for most airports. If it encounters an unknown station (e.g., a new destination), it will:</p>
+                    <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+                        <li>Show a warning with a dropdown list of regions.</li>
+                        <li>Choose the correct region – the assignment is saved locally, so you only need to do it once per station.</li>
+                        <li>After assigning, the meal allowance will automatically update.</li>
+                    </ul>
+                    <div class="tip">💡 The region determines meal rates – check the meal allowance rate table for accurate regions if you’re unsure.</div>
+
+                    <h3>Important notes</h3>
+                    <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+                        <li><strong>Only works for rosters that contain leg‑level data</strong> (i.e., rosters parsed <em>after</em> this feature was added). Older saved rosters (without the <code>legs</code> field) will show a message – just re‑parse and re‑save.</li>
+                        <li>All calculations are <strong>estimates</strong> and may not perfectly match your actual payslip because of company‑specific policies (e.g., rounding, minimum hourly blocks, etc.).</li>
+                        <li>The tool uses the <strong>duty hours</strong> and <strong>flight hours</strong> exactly as parsed – ensure your roster is loaded correctly before trusting the numbers.</li>
+                    </ul>
+
+                    <div class="err-box">⚠️ If you see “No leg‑level data available”, it means the current roster was saved before this allowance feature was added. Re‑upload the original file and save it again – then the estimate will work.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SECTION 11: TROUBLESHOOTING ===== -->
+        <section id="sec11">
+            <div class="section-card">
+                <h2>11. Troubleshooting <span class="badge">help</span></h2>
+                <div class="body">
+                    <h3>Where to get my Excel .xlsx file?</h3>
+                    <ol class="step-list">
+                        <li>Log in to your Company's Roster Website <span class="highlight">"Download Excel"</span>.</li>
+                        <li><strong>Use the XLSX version</strong> if available — it's much more reliable.</li>
+                        <li>If something goes wrong, click on <span class="highlight">"Export debug data"</span> (near the bottom) and send that file to Zayn Ikhlas' Dad.</li>
+                    </ol>
+
+                    <h3>"Find Time Together" shows no results</h3>
+                    <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+                        <li>The selected rosters might not have overlapping date ranges. Make sure the rosters are from the same month.</li>
+                        <li>They might be at different stations (e.g., one in KUL, one in BKK) during the entire overlap.</li>
+                        <li>Check that you have saved both rosters with the correct timezone setting (SLT).</li>
+                    </ul>
+
+                    <h3>My custom legend disappeared</h3>
+                    <div class="err-box">⚠️ Legend changes are stored in your browser's local storage. If you clear browsing data (cache, cookies, site data), they'll be lost. To avoid this, don't clear site data for this page.</div>
+
+                    <h3>General tips</h3>
+                    <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+                        <li>All processing is <strong>100% offline</strong> — nothing is uploaded anywhere. Your privacy is protected.</li>
+                        <li>If something looks wrong, refresh the page and try again.</li>
+                        <li>For best results, use the latest version of Chrome, Safari, or Firefox.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SECTION 12: ABOUT ===== -->
+        <section id="sec12">
+            <div class="section-card">
+                <h2>12. About This Tool <span class="badge">Why?</span></h2>
+                <div class="body">
+                    <div class="about">
+                        <p><strong>Why I built this</strong></p>
+                        <p>For the thousands of times I had to compare two rosters' timing from an image on my phone, calculating the time, figuring out the long or short streak of free time just to find when I could be with Her and Zayn Ikhlas.</p>
+                        <p>I only have a phone, and I love portrait mode. I needed everything to fit on <strong>one screen</strong> because when you're scrolling through life on the go, you don't have time for landscape, and you don't have time for guesswork. The heatmap tells you exactly when you're both free and who has to leave first because that's the real question, isn't it?</p>
+                        <p>So I built this for:</p>
+                        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
+                            <li>Couples figuring out <em>"When are we both free?"</em> and <em>"How long do we really have?"</em></li>
+                            <li>Friends planning group gatherings, just a single overlap would do if we're lucky.</li>
+                            <li>Crew parents coordinating school runs and parking spots.</li>
+                            <li>The 3-minute hugs during transit when your layover is on the opposite side of the map.</li>
+                        </ul>
+                        <p>Over time, I added features my colleagues asked for: saving multiple rosters, classic styling, colours, no grainy, compressed images over WhatsApp, etc, which helps me too.</p>
+                        <p>I hope it saves you as much time as it saves me because all I needed was those green bars in a sea of red cells. All code runs in your browser, so your data stays private. I welcome your feedback, it's the only way to improve things, so don't hesitate to text Alif and Fahrin.</p>
+                        <p style="margin-top:8px;font-size:11px;color:var(--accent);">
+                            Here's to fewer lonely calculations, and more 💚 bars.
+                        </p>
+                        <p style="margin-top:8px;font-size:11px;color:var(--dim)">— 2100551 · 02 August 2026</p>
+                    </div>
+                    <div style="margin-top:12px;padding:10px;background:var(--panel2);border-radius:6px;text-align:center;font-size:11px;color:var(--dim)">
+                        🔐 <strong>Privacy:</strong> All parsing and processing happens <strong>locally in your device's browser</strong>. No files are uploaded to any server.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== FOOTER ===== -->
+        <footer>
+            Roster Parser · by 2100551
+        </footer>
+
+    </main>
+
+    <script>
+        // ---- PWA Install Button ----
+        let deferredPrompt = null;
+        const installBanner = document.getElementById('installBanner');
+        const installBtn = document.getElementById('installBtn');
+
+        // Listen for beforeinstallprompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBanner.classList.remove('hidden');
+        });
+
+        // Handle install button click
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const result = await deferredPrompt.userChoice;
+            console.log('User choice:', result.outcome);
+            if (result.outcome === 'accepted') {
+                installBanner.classList.add('hidden');
+            }
+            deferredPrompt = null;
+        });
+
+        // Hide banner if app is already installed (appinstalled event)
+        window.addEventListener('appinstalled', () => {
+            installBanner.classList.add('hidden');
+        });
+
+        // Also hide if the user is on iOS or non-Chrome browser (no support)
+        const isChrome = navigator.userAgent.includes('Chrome');
+        const isAndroid = /android/i.test(navigator.userAgent);
+        if (!isChrome || !isAndroid) {
+            installBanner.classList.add('hidden');
+        }
+
+        // ---- (Optional) handle back button via browser history ----
+        // The <a href="index.html"> already handles navigation.
+        // If you want the browser's back button to also go to index.html
+        // when the user lands here from somewhere else, you could push a state,
+        // but that's usually not needed. The "Back" link is explicit.
+    </script>
 
 </body>
 </html>
