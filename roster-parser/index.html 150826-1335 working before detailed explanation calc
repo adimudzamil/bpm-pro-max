@@ -1584,7 +1584,7 @@ function toggleFit(){
 function captureElementAsImage(element, filename, scale) {
   return new Promise((resolve, reject) => {
     html2canvas(element, {
-      scale: scale || 2,
+      scale: scale || 4,
       backgroundColor: getComputedStyle(element).getPropertyValue('--panel') || '#141619',
       useCORS: true,
       logging: false,
@@ -1666,7 +1666,7 @@ function exportPNG() {
   const wrap = document.getElementById('resultsWrap');
   if (!wrap) return;
   const filename = 'roster-' + (DAYS.length ? DAYS[0].key : 'export') + '.png';
-  fitAndCapture(wrap, filename);
+  fitAndCapture(wrap, filename, 4);
 }
 
 function exportOverlapImage() {
@@ -1676,7 +1676,7 @@ function exportOverlapImage() {
     log('No overlap results to export.', 'warn');
     return;
   }
-  fitAndCapture(card, 'together-time.png');
+  fitAndCapture(card, 'together-time.png', 4);
 }
 
 function exportAllowanceImage() {
@@ -1872,13 +1872,7 @@ function computeAllowance(grade){
     if(l.isGround && !isPayableGroundDuty(l.item)) continue; // e.g. Cabin Crew Standby, training
     const prod = dh*rates.prod, inc = dh*INC_RATE;
     prodTotal += prod; incTotal += inc;
-    const dutyDate = l.reportDate || l.depDate || null;
-    prodItems.push({
-      date: dutyDate ? ymdKey(dutyDate) : '',
-      pairing: l.pairingId || l.item || '—',
-      dutyHrs: l.dutyHrs, dh, prod, inc,
-      prodRate: rates.prod
-    });
+    prodItems.push({pairing:l.pairingId||l.item||'—', dutyHrs:l.dutyHrs, prod, inc});
   }
 
   // 2) Block hour excess: total flying hours across all legs, over 80.
@@ -1962,14 +1956,6 @@ function fmtMYR(n){
   return 'RM' + n.toLocaleString('en-MY', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
-// 'YYYY-MM-DD' -> 'DD-MON-YYYY' to match the rest of the app's date style
-function ymdToLabel(ymd){
-  if(!ymd) return '—';
-  const parts = ymd.split('-').map(Number);
-  if(parts.length!==3 || parts.some(isNaN)) return ymd;
-  return fmtDate(new Date(parts[0], parts[1]-1, parts[2]));
-}
-
 // Called after every parse or "View" of a saved roster. Only resets the UI
 // to a not-yet-calculated state — does NOT run the calculation. The user
 // must tap "Calculate Allowance" explicitly.
@@ -2004,13 +1990,11 @@ function renderAllowance(){
     return;
   }
 
-  const totalDutyHrs = sumHrs(result.prodItems.map(it=>it.dutyHrs));
-
   let html = `<div class="allowance-summary">
-    <div class="stat">Productivity (${result.prodItems.length} duty segments, ${totalDutyHrs} total × RM${result.rates.prod}/hr)<b>${fmtMYR(result.prodTotal)}</b></div>
-    <div class="stat">Incentive (flat RM${INC_RATE}/hr × ${totalDutyHrs} total hours)<b>${fmtMYR(result.incTotal)}</b></div>
-    <div class="stat">Block hr excess (${result.totalFlyHrs.toFixed(2)}h flown − 80h × RM${result.rates.excess}/hr)<b>${fmtMYR(result.excessPay)}</b></div>
-    <div class="stat">Meal allowance (${result.mealItems.length} meals, fixed regional rates)<b>${fmtMYR(result.mealTotal)}</b></div>
+    <div class="stat">Productivity (${result.prodItems.length} duty segments)<b>${fmtMYR(result.prodTotal)}</b></div>
+    <div class="stat">Incentive (flat RM7/hr)<b>${fmtMYR(result.incTotal)}</b></div>
+    <div class="stat">Block hr excess (${result.totalFlyHrs.toFixed(2)}h flown, ${result.excessHrs.toFixed(2)}h over 80)<b>${fmtMYR(result.excessPay)}</b></div>
+    <div class="stat">Meal allowance (${result.mealItems.length} meals)<b>${fmtMYR(result.mealTotal)}</b></div>
     <div class="stat grand">Estimated Total<b>${fmtMYR(result.grandTotal)}</b></div>
   </div>`;
 
@@ -2030,18 +2014,17 @@ function renderAllowance(){
 
   if(result.mealItems.length || result.prodItems.length){
     html += `<div class="allowance-items">
-      <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px">Itemised breakdown <span style="text-transform:none;font-weight:400">— shows the exact formula behind every amount</span></div>
-      <div class="tableWrap"><table><thead><tr><th>Date</th><th>Pairing</th><th>Type</th><th>Calculation</th><th>Amount</th></tr></thead><tbody>`;
+      <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px">Itemised breakdown</div>
+      <div class="tableWrap"><table><thead><tr><th>Pairing</th><th>Type</th><th>Detail</th><th>Amount</th></tr></thead><tbody>`;
     result.prodItems.forEach(it=>{
-      const dLbl = ymdToLabel(it.date);
-      html += `<tr><td class="date">${dLbl}</td><td>${it.pairing}</td><td>Productivity</td><td>${it.dutyHrs} × RM${it.prodRate}/hr</td><td class="num">${fmtMYR(it.prod)}</td></tr>`;
-      html += `<tr><td class="date">${dLbl}</td><td>${it.pairing}</td><td>Incentive</td><td>${it.dutyHrs} × RM${INC_RATE}/hr</td><td class="num">${fmtMYR(it.inc)}</td></tr>`;
+      html += `<tr><td>${it.pairing}</td><td>Productivity</td><td>${it.dutyHrs}</td><td class="num">${fmtMYR(it.prod)}</td></tr>`;
+      html += `<tr><td>${it.pairing}</td><td>Incentive</td><td>${it.dutyHrs}</td><td class="num">${fmtMYR(it.inc)}</td></tr>`;
     });
     if(result.excessPay>0){
-      html += `<tr><td class="date">—</td><td>—</td><td>Block Hr Excess</td><td>${result.totalFlyHrs.toFixed(2)}h − 80h = ${result.excessHrs.toFixed(2)}h × RM${result.rates.excess}/hr</td><td class="num">${fmtMYR(result.excessPay)}</td></tr>`;
+      html += `<tr><td>—</td><td>Block Hr Excess</td><td>${result.excessHrs.toFixed(2)}h over 80</td><td class="num">${fmtMYR(result.excessPay)}</td></tr>`;
     }
     result.mealItems.forEach(it=>{
-      html += `<tr><td class="date">${ymdToLabel(it.date)}</td><td>${it.pairing}</td><td>Meal (${it.meal})</td><td>${it.station} (${it.region}) fixed rate</td><td class="num">${fmtMYR(it.rate)}</td></tr>`;
+      html += `<tr><td>${it.pairing}</td><td>Meal (${it.meal})</td><td>${it.date} · ${it.station}</td><td class="num">${fmtMYR(it.rate)}</td></tr>`;
     });
     html += `</tbody></table></div></div>`;
   }
