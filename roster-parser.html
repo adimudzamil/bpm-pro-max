@@ -1618,7 +1618,7 @@ function exportPNG() {
   const wrap = document.getElementById('resultsWrap');
   if (!wrap) return;
   const filename = 'roster-' + (DAYS.length ? DAYS[0].key : 'export') + '.png';
-  fitAndCapture(wrap, filename);
+  fitAndCapture(wrap, filename, 4);
 }
 
 function exportOverlapImage() {
@@ -1628,7 +1628,7 @@ function exportOverlapImage() {
     log('No overlap results to export.', 'warn');
     return;
   }
-  fitAndCapture(card, 'together-time.png');
+  fitAndCapture(card, 'together-time.png',4);
 }
 
 function exportPDF(){
