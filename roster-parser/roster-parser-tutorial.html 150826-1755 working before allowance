@@ -159,7 +159,7 @@
 
 <main>
 
-  <!-- ===== INSTALL BANNER ===== -->
+  <!-- ===== INSTALL BANNER (appears if installable) ===== -->
   <div class="install-banner" id="installBanner">
     <div class="text">
       <div class="title">📲 Install App <span class="badge">NEW</span></div>
@@ -182,9 +182,8 @@
       <a href="#sec7"><span class="num">7.</span> Finding Time Together</a>
       <a href="#sec8"><span class="num">8.</span> Heatmap View</a>
       <a href="#sec9"><span class="num">9.</span> Statistics Panel</a>
-      <a href="#sec10"><span class="num">10.</span> Allowance Estimate</a>
-      <a href="#sec11"><span class="num">11.</span> Troubleshooting</a>
-      <a href="#sec12"><span class="num">12.</span> About This Tool</a>
+      <a href="#sec10"><span class="num">10.</span> Troubleshooting</a>
+      <a href="#sec11"><span class="num">11.</span> About This Tool</a>
     </div>
   </div>
 
@@ -286,6 +285,9 @@
       </div>
     </div>
   </section>
+
+  <!-- ===== SECTIONS 3–11 (unchanged, keep the same content) ===== -->
+  <!-- ... rest of the sections (3 to 11) remain as in your original file ... -->
 
   <!-- ===== SECTION 3: UNDERSTANDING THE TABLE ===== -->
   <section id="sec3">
@@ -442,7 +444,6 @@
             </ul>
           </li>
           <li>You can also tap <span class="highlight">"Heatmap view"</span> to see a calendar with coloured bars — more visual.</li>
-          <li>After computing, a new <span class="highlight">"Image"</span> button appears in the toolbar – tap it to save a snapshot of the overlap results.</li>
         </ol>
 
         <h3>How the tool decides what's "free"</h3>
@@ -506,61 +507,10 @@
     </div>
   </section>
 
-  <!-- ===== SECTION 10: ALLOWANCE ESTIMATE (NEW) ===== -->
+  <!-- ===== SECTION 10: TROUBLESHOOTING ===== -->
   <section id="sec10">
     <div class="section-card">
-      <h2>10. Allowance Estimate 💰 <span class="badge">cabin crew only</span></h2>
-      <div class="body">
-        <p>This feature gives you a <strong>rough estimate</strong> of your monthly allowance based on the parsed roster data. It calculates <em>productivity + incentive + block‑hour excess + meal</em> using the same logic as your airline’s CBA (Collective Bargaining Agreement).</p>
-
-        <div class="note">⚠️ The estimate is <strong>not official</strong> – it’s a tool to help you plan and understand your pay components. Always refer to your actual payslip for exact figures.</div>
-
-        <h3>How to use it</h3>
-        <ol class="step-list">
-          <li>After loading and saving your roster, scroll to the <span class="highlight">“Calculate Allowance”</span> button (near the bottom, above the overlap section).</li>
-          <li>Tap it – the allowance card will expand.</li>
-          <li><strong>Select your grade</strong> (D1, E4, or E3) from the dropdown. The tool tries to auto‑detect it from your roster’s header, but you can override it manually.</li>
-          <li>The estimate appears with a breakdown of each component and a <strong>grand total</strong>.</li>
-          <li>If any station is unknown (i.e., not in the built‑in region map), you’ll see a prompt to assign a region – do that once, and the tool will remember it for future calculations.</li>
-          <li>You can also tap the <span class="highlight">“Image”</span> button that appears to save a snapshot of the allowance summary.</li>
-        </ol>
-
-        <h3>What each component means</h3>
-        <table class="mini-table">
-          <thead><tr><th>Component</th><th>How it’s calculated</th></tr></thead>
-          <tbody>
-            <tr><td class="code">Productivity</td><td>Sum of <em>duty hours</em> × grade‑specific rate (RM22, RM20, or RM18 per hour).<br>Only flying, positioning and <strong>airport standby</strong> (ASx) are counted – cabin crew standby (S3/S4) and training are excluded.</td></tr>
-            <tr><td class="code">Incentive</td><td>Sum of <em>duty hours</em> × flat RM7 per hour (same for all grades).</td></tr>
-            <tr><td class="code">Block‑hour excess</td><td>If total block hours exceed 80h, the excess is multiplied by the grade‑specific rate (RM18, RM16, or RM15 per hour).</td></tr>
-            <tr><td class="code">Meal allowance</td><td>For each layover (rest gap >3h between flights of the same pairing), one meal (breakfast/lunch/dinner) is added per day based on the station’s region – using fixed regional rates. If a station is unknown, you’ll be asked to assign it.</td></tr>
-          </tbody>
-        </table>
-
-        <h3>Station region assignment</h3>
-        <p>The tool has a built‑in map for most airports. If it encounters an unknown station (e.g., a new destination), it will:</p>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li>Show a warning with a dropdown list of regions.</li>
-          <li>Choose the correct region – the assignment is saved locally, so you only need to do it once per station.</li>
-          <li>After assigning, the meal allowance will automatically update.</li>
-        </ul>
-        <div class="tip">💡 The region determines meal rates – check your airline’s CBA for accurate regions if you’re unsure.</div>
-
-        <h3>Important notes</h3>
-        <ul style="color:var(--dim);font-size:12px;padding-left:20px;margin:4px 0">
-          <li><strong>Only works for rosters that contain leg‑level data</strong> (i.e., rosters parsed <em>after</em> this feature was added). Older saved rosters (without the <code>legs</code> field) will show a message – just re‑parse and re‑save.</li>
-          <li>All calculations are <strong>estimates</strong> and may not perfectly match your actual payslip because of company‑specific policies (e.g., rounding, minimum hourly blocks, etc.).</li>
-          <li>The tool uses the <strong>duty hours</strong> and <strong>flight hours</strong> exactly as parsed – ensure your roster is loaded correctly before trusting the numbers.</li>
-        </ul>
-
-        <div class="err-box">⚠️ If you see “No leg‑level data available”, it means the current roster was saved before this allowance feature was added. Re‑upload the original file and save it again – then the estimate will work.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== SECTION 11: TROUBLESHOOTING ===== -->
-  <section id="sec11">
-    <div class="section-card">
-      <h2>11. Troubleshooting <span class="badge">help</span></h2>
+      <h2>10. Troubleshooting <span class="badge">help</span></h2>
       <div class="body">
         <h3>Where to get my Excel .xlsx file?</h3>
         <ol class="step-list">
@@ -589,10 +539,10 @@
     </div>
   </section>
 
-  <!-- ===== SECTION 12: ABOUT ===== -->
-  <section id="sec12">
+  <!-- ===== SECTION 11: ABOUT ===== -->
+  <section id="sec11">
     <div class="section-card">
-      <h2>12. About This Tool <span class="badge">Why?</span></h2>
+      <h2>11. About This Tool <span class="badge">Why?</span></h2>
       <div class="body">
         <div class="about">
           <p><strong>Why I built this</strong></p>
