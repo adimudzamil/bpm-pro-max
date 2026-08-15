@@ -1992,6 +1992,13 @@ function fmtMYR(n){
   return 'RM' + n.toLocaleString('en-MY', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
+// Converts decimal hours (e.g. 13.2669) to H:MM to match the payslip's
+// own HH:MM convention, so it isn't misread as hours.minutes.
+function decHrsToHHMM(dec){
+  const totalMin = Math.round(dec*60);
+  const h = Math.floor(totalMin/60), m = totalMin%60;
+  return h+':'+String(m).padStart(2,'0');
+}
 // 'YYYY-MM-DD' -> 'DD-MON-YYYY' to match the rest of the app's date style
 function ymdToLabel(ymd){
   if(!ymd) return '—';
@@ -2043,7 +2050,7 @@ function renderAllowance(){
   let html = `<div class="allowance-summary">
     <div class="stat">Productivity (${result.prodItems.length} duty segments, ${totalDutyHrs} total × RM${result.rates.prod}/hr)<b>${fmtMYR(result.prodTotal)}</b></div>
     <div class="stat">Incentive (flat RM${INC_RATE}/hr × ${totalDutyHrs} total hours)<b>${fmtMYR(result.incTotal)}</b></div>
-    <div class="stat">Block hr excess (${result.totalFlyHrs.toFixed(2)}h flown − 80h × RM${result.rates.excess}/hr)<b>${fmtMYR(result.excessPay)}</b></div>
+    <div class="stat">Block hr excess (${decHrsToHHMM(result.totalFlyHrs)} flown − 80:00 × RM${result.rates.excess}/hr)<b>${fmtMYR(result.excessPay)}</b></div>
     <div class="stat">Meal allowance (${result.mealItems.length} meals, fixed regional rates)<b>${fmtMYR(result.mealTotal)}</b></div>
     <div class="stat grand">Estimated Total<b>${fmtMYR(result.grandTotal)}</b></div>
   </div>`;
@@ -2072,7 +2079,7 @@ function renderAllowance(){
       html += `<tr><td class="date">${dLbl}</td><td>${it.pairing}</td><td>Incentive</td><td>${it.dutyHrs} × RM${INC_RATE}/hr</td><td class="num">${fmtMYR(it.inc)}</td></tr>`;
     });
     if(result.excessPay>0){
-      html += `<tr><td class="date">—</td><td>—</td><td>Block Hr Excess</td><td>${result.totalFlyHrs.toFixed(2)}h − 80h = ${result.excessHrs.toFixed(2)}h × RM${result.rates.excess}/hr</td><td class="num">${fmtMYR(result.excessPay)}</td></tr>`;
+      html += `<tr><td class="date">—</td><td>—</td><td>Block Hr Excess</td><td>${decHrsToHHMM(result.totalFlyHrs)} − 80:00 = ${decHrsToHHMM(result.excessHrs)} × RM${result.rates.excess}/hr</td><td class="num">${fmtMYR(result.excessPay)}</td></tr>`;
     }
     result.mealItems.forEach(it=>{
       html += `<tr><td class="date">${ymdToLabel(it.date)}</td><td>${it.pairing}</td><td>Meal (${it.meal})</td><td>${it.station} (${it.region}) fixed rate</td><td class="num">${fmtMYR(it.rate)}</td></tr>`;
