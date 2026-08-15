@@ -1581,21 +1581,14 @@ function toggleFit(){
 }
 
 /* ===== Generic image capture helper (returns Promise) ===== */
-function captureElementAsImage(element, filename, scale, targetWidth, targetHeight) {
+function captureElementAsImage(element, filename, scale) {
   return new Promise((resolve, reject) => {
-    const opts = {
+    html2canvas(element, {
       scale: scale || 2,
       backgroundColor: getComputedStyle(element).getPropertyValue('--panel') || '#141619',
       useCORS: true,
       logging: false,
-    };
-    // Tell html2canvas to render at the content's true full size, rather
-    // than whatever the element's current (possibly clipped/scrolled)
-    // on-screen box is. This is what actually prevents cropping — a CSS
-    // transform:scale() pre-shrink is NOT reliable for html2canvas sizing.
-    if (targetWidth) { opts.width = targetWidth; opts.windowWidth = targetWidth; }
-    if (targetHeight) { opts.height = targetHeight; opts.windowHeight = targetHeight; }
-    html2canvas(element, opts).then(canvas => {
+    }).then(canvas => {
       canvas.toBlob(blob => {
         if (!blob) { reject(new Error('Failed to create blob')); return; }
         if (navigator.share) {
@@ -1620,11 +1613,7 @@ function fallbackDownload(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
 
-/* ===== Fit + Capture helper (async, always restores) =====
-   Captures the element at its FULL natural size (no CSS shrink-to-fit
-   transform), letting html2canvas's own scale/width options handle
-   resolution. This guarantees nothing gets cropped, at the cost of a
-   wider/taller image for content that doesn't fit one screen width. */
+/* ===== Fit + Capture helper (async, always restores) ===== */
 async function fitAndCapture(element, filename, exportScale) {
   // Collect all elements that may have overflow clipping or border-radius
   const allElements = [element, ...element.querySelectorAll('.tableWrap')];
@@ -1640,16 +1629,23 @@ async function fitAndCapture(element, filename, exportScale) {
     el.style.borderRadius = '0';
   });
 
-  // Wait a tick for the overflow change to reflow
-  await new Promise(resolve => setTimeout(resolve, 50));
-
-  // Measure the TRUE full content size now that nothing is clipped.
+  // Compute scale using table.scrollWidth (matches manual fit button)
   const table = element.querySelector('table');
-  const naturalWidth = Math.max(element.scrollWidth, table ? table.scrollWidth + 4 : 0);
-  const naturalHeight = element.scrollHeight;
+  const naturalWidth = table ? table.scrollWidth + 10 : element.scrollWidth + 10; // safety margin
+  const availWidth = window.innerWidth - 40; // more margin
+  const scale = Math.min(availWidth / naturalWidth, 1);
+
+  if (scale < 1) {
+    element.style.transformOrigin = 'top left';
+    element.style.transform = `scale(${scale})`;
+    element.style.width = (100 / scale) + '%';
+  }
+
+  // Wait for reflow
+  await new Promise(resolve => setTimeout(resolve, 300));
 
   try {
-    await captureElementAsImage(element, filename, exportScale, naturalWidth, naturalHeight);
+    await captureElementAsImage(element, filename, exportScale);
   } catch (err) {
     log('Export failed: ' + err.message, 'err');
   } finally {
@@ -1658,6 +1654,10 @@ async function fitAndCapture(element, filename, exportScale) {
       el.style.overflow = overflow || '';
       el.style.borderRadius = borderRadius || '';
     });
+    // Restore element transform/width (these are separate)
+    element.style.transform = '';
+    element.style.width = '';
+    element.style.transformOrigin = '';
   }
 }
 
