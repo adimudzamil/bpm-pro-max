@@ -482,19 +482,14 @@
 
   <section class="card" id="allowanceCard" style="display:none">
     <h2>Allowance ESTIMATE 💰<small>CABIN CREW only · productivity + block-hour + meal, estimated from this roster</small></h2>
-<div class="allowance-controls">
-  <label for="allowGradeSelect">Grade</label>
-  <select id="allowGradeSelect" onchange="onGradeChange()">
-    <option value="D1">D1 (IFS/IFSS)</option>
-    <option value="E4">E4 (LS/LSS)</option>
-    <option value="E3">E3 (FS/FSS)</option>
-  </select>
-  <div style="display:flex;gap:6px;margin-left:auto">
-    <button id="scopeMonthBtn" onclick="setAllowScope('month')">This Month</button>
-    <button id="scopeAllBtn" onclick="setAllowScope('all')">Whole Roster</button>
-  </div>
-</div>
-<div id="allowScopeLbl" style="padding:6px 12px 0;font-size:10.5px;color:var(--dim)"></div>
+    <div class="allowance-controls">
+      <label for="allowGradeSelect">Grade</label>
+      <select id="allowGradeSelect" onchange="onGradeChange()">
+        <option value="D1">D1 (IFS/IFSS)</option>
+        <option value="E4">E4 (LS/LSS)</option>
+        <option value="E3">E3 (FS/FSS)</option>
+      </select>
+    </div>
     <div id="allowanceBody"></div>
   </section>
 
@@ -1754,52 +1749,6 @@ const GRADE_RATES = {
 };
 const INC_RATE = 7; // flat, all grades
 
-// Allowance scope: 'month' (default) restricts the calculation to the
-// calendar month (1st to last day) that makes up most of the loaded
-// roster — duties that spill into an adjacent month are excluded, since
-// they're paid out on that other month's payslip. 'all' calculates the
-// whole loaded roster regardless of month boundaries.
-function loadAllowScope(){ return localStorage.getItem('rosterParserAllowScope') || 'month'; }
-function saveAllowScope(v){ localStorage.setItem('rosterParserAllowScope', v); }
-
-// Determines the calendar month (1st to last day) that contains the most
-// days in the currently loaded DAYS array, and returns its date range.
-function getRosterMonthRange(){
-  if(!DAYS.length) return null;
-  const counts = {};
-  DAYS.forEach(d=>{
-    const key = d.date.getFullYear()+'-'+String(d.date.getMonth()+1).padStart(2,'0');
-    counts[key] = (counts[key]||0)+1;
-  });
-  let bestKey = null, bestCount = -1;
-  Object.keys(counts).forEach(k=>{
-    if(counts[k] > bestCount){ bestCount = counts[k]; bestKey = k; }
-  });
-  if(!bestKey) return null;
-  const [y,m] = bestKey.split('-').map(Number);
-  const start = new Date(y, m-1, 1);
-  const end = new Date(y, m, 0); // last day of month
-  return {
-    start, end,
-    startKey: ymdKey(start), endKey: ymdKey(end),
-    label: MON_NAMES[m-1]+' '+y
-  };
-}
-
-function setAllowScope(scope){
-  saveAllowScope(scope);
-  updateScopeButtons();
-  renderAllowance();
-}
-function updateScopeButtons(){
-  const mBtn = document.getElementById('scopeMonthBtn');
-  const aBtn = document.getElementById('scopeAllBtn');
-  if(!mBtn || !aBtn) return;
-  const scope = loadAllowScope();
-  mBtn.classList.toggle('primary', scope==='month');
-  aBtn.classList.toggle('primary', scope==='all');
-}
-
 // The roster header cell looks like "NAME | STAFFID | FLEET | BASE | RANK".
 // Split on '|' and check the last segment against known rank codes rather
 // than a fixed-position regex, since spacing/segment count can vary.
@@ -1938,17 +1887,9 @@ const MEAL_WINDOWS = [
 // Core calculation: uses LAST_LEGS (leg-level parsed data with pairingId
 // and precise report/debrief datetimes). Returns null if LAST_LEGS is
 // unavailable (e.g. an older saved roster without leg data).
-function computeAllowance(grade, scope){
+function computeAllowance(grade){
   if(!LAST_LEGS || !LAST_LEGS.length) return null;
   const rates = GRADE_RATES[grade] || GRADE_RATES.E4;
-
-  scope = scope || 'month';
-  const scopeRange = (scope !== 'all') ? getRosterMonthRange() : null;
-  function inScope(d){
-    if(!scopeRange || !d) return true;
-    const k = ymdKey(d);
-    return k >= scopeRange.startKey && k <= scopeRange.endKey;
-  }
 
   // 1) Productivity + Incentive: one instance per duty-hours value present
   //    on a leg (covers flying, positioning and ground/standby legs).
@@ -1959,10 +1900,9 @@ function computeAllowance(grade, scope){
     const dh = hmToDecimal(l.dutyHrs);
     if(!dh) continue;
     if(l.isGround && !isPayableGroundDuty(l.item)) continue; // e.g. Cabin Crew Standby, training
-    const dutyDate = l.reportDate || l.depDate || null;
-    if(!inScope(dutyDate)) continue; // duty belongs to an adjacent month's payslip
     const prod = dh*rates.prod, inc = dh*INC_RATE;
     prodTotal += prod; incTotal += inc;
+    const dutyDate = l.reportDate || l.depDate || null;
     prodItems.push({
       date: dutyDate ? ymdKey(dutyDate) : '',
       pairing: l.pairingId || l.item || '—',
@@ -1971,12 +1911,10 @@ function computeAllowance(grade, scope){
     });
   }
 
-  // 2) Block hour excess: total flying hours across in-scope legs, over 80.
+  // 2) Block hour excess: total flying hours across all legs, over 80.
   let totalFlyMin = 0;
   for(const l of LAST_LEGS){
     if(l.flyHrs){
-      const flyDate = l.depDate || l.reportDate || null;
-      if(!inScope(flyDate)) continue;
       const m = /^(\d{1,2}):(\d{2})$/.exec(l.flyHrs.trim());
       if(m) totalFlyMin += parseInt(m[1])*60+parseInt(m[2]);
     }
@@ -2018,24 +1956,24 @@ function computeAllowance(grade, scope){
     if(!region){ unresolvedStations.add(a.endStation); continue; }
     const rates3 = MEAL_REGION_RATES[region];
     let d = new Date(a.end.getFullYear(), a.end.getMonth(), a.end.getDate());
-while (true) {
-  for (const w of MEAL_WINDOWS) {
-    const wStart = new Date(d.getTime() + w.start * 60000);
-    const wEnd = new Date(d.getTime() + w.end * 60000);
-    if (wStart < b.report && wEnd > a.end && inScope(d)) {
-      const rate = rates3[w.code];
-      mealTotal += rate;
-      mealItems.push({ pairing: a.pairing, date: ymdKey(d), station: a.endStation, region, meal: w.label, rate });
+    while(true){
+      for(const w of MEAL_WINDOWS){
+        const wStart = new Date(d.getTime() + w.start*60000);
+        const wEnd = new Date(d.getTime() + w.end*60000);
+        if(wStart < b.report && wEnd > a.end){
+          const rate = rates3[w.code];
+          mealTotal += rate;
+          mealItems.push({pairing:a.pairing, date:ymdKey(d), station:a.endStation, region, meal:w.label, rate});
+        }
+      }
+      if(d >= new Date(b.report.getFullYear(), b.report.getMonth(), b.report.getDate())) break;
+      d = addDays(d,1);
     }
-  }
-  if (d >= new Date(b.report.getFullYear(), b.report.getMonth(), b.report.getDate())) break;
-  d = addDays(d, 1);
-}
   }
 
   const grandTotal = prodTotal + incTotal + excessPay + mealTotal;
   return {
-    grade, rates, scope, scopeRange,
+    grade, rates,
     prodItems, prodTotal, incTotal,
     totalFlyHrs, excessHrs, excessPay,
     mealItems, mealTotal,
@@ -2072,11 +2010,10 @@ function ymdToLabel(ymd){
 // Called after every parse or "View" of a saved roster. Only resets the UI
 // to a not-yet-calculated state — does NOT run the calculation. The user
 // must tap "Calculate Allowance" explicitly.
-function resetAllowanceUI() {
+function resetAllowanceUI(){
   document.getElementById('allowanceToolbar').style.display = DAYS.length ? 'flex' : 'none';
   document.getElementById('allowanceCard').style.display = 'none';
   document.getElementById('allowanceImageBtn').style.display = 'none';
-  updateScopeButtons();
   if(DETECTED_GRADE && GRADE_RATES[DETECTED_GRADE]){
     saveAllowGrade(DETECTED_GRADE);
     log('Detected grade '+DETECTED_GRADE+' ('+GRADE_RATES[DETECTED_GRADE].label+') from roster — allowance will use this automatically.', 'ok');
@@ -2097,27 +2034,16 @@ function renderAllowance(){
   const gradeSel = document.getElementById('allowGradeSelect');
 
   const grade = loadAllowGrade();
-gradeSel.value = grade;
-updateScopeButtons();
+  gradeSel.value = grade;
 
-const scope = loadAllowScope();
-const result = computeAllowance(grade, scope);
-card.style.display = 'block';
-toolbar.style.display = 'flex';
+  const result = computeAllowance(grade);
+  card.style.display = 'block';
+  toolbar.style.display = 'flex';
 
-const scopeLbl = document.getElementById('allowScopeLbl');
-if (scopeLbl) {
-  if (result && result.scope !== 'all' && result.scopeRange) {
-    scopeLbl.textContent = 'Showing ' + result.scopeRange.label + ' only (' + fmtDate(result.scopeRange.start) + ' to ' + fmtDate(result.scopeRange.end) + '). Duties outside this range belong to an adjacent month\'s payslip.';
-  } else {
-    scopeLbl.textContent = 'Showing the whole loaded roster (' + (DAYS.length ? fmtDate(DAYS[0].date) + ' to ' + fmtDate(DAYS[DAYS.length - 1].date) : '') + ').';
+  if(!result){
+    body.innerHTML = '<div class="allowance-empty">No leg-level data available for this roster (older saved rosters made before this feature don\'t have it) — re-parse or re-save to enable allowance estimate.</div>';
+    return;
   }
-}
-
-if (!result) {
-  body.innerHTML = '<div class="allowance-empty">No leg-level data available for this roster (older saved rosters made before this feature don\'t have it) — re-parse or re-save to enable allowance estimate.</div>';
-  return;
-}
 
   const totalDutyHrs = sumHrs(result.prodItems.map(it=>it.dutyHrs));
 
