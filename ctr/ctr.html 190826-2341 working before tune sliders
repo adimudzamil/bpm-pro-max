@@ -997,47 +997,6 @@
     outline: none;
   }
   select:focus { border-color: var(--accent); }
-
-  /* ── Fine‑tune sliders ── */
-  .fine-tune-group {
-    background: var(--surface2);
-    border-radius: var(--radius-sm);
-    padding: 16px;
-    margin-top: 12px;
-    border: 1px solid var(--border);
-  }
-  .fine-tune-group label {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .fine-tune-group input[type="range"] {
-    flex: 1;
-    min-width: 120px;
-    background: transparent;
-    cursor: pointer;
-    accent-color: var(--accent);
-  }
-  .fine-tune-group .value-display {
-    min-width: 36px;
-    text-align: center;
-    font-weight: 700;
-    color: var(--accent);
-  }
-  .fine-tune-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px 24px;
-    margin-top: 6px;
-  }
-  .fine-tune-row label {
-    flex: 1;
-    min-width: 140px;
-  }
 </style>
 </head>
 <body>
@@ -1131,7 +1090,7 @@
     <span class="method-tag">🖼️ A4</span>
     <div class="card-header">
       <div class="card-title"><span class="icon">📄</span> 3. Generate A4 Crew Sheets</div>
-      <span class="card-sub">rank‑ordered · fine‑tune · copy slots</span>
+      <span class="card-sub">multi‑template · configurable slots</span>
     </div>
 
     <div class="btnrow">
@@ -1152,22 +1111,6 @@
     <div class="btnrow">
       <button class="primary-btn" id="generateA4Btn">⚡ Generate A4 Pages</button>
       <button class="secondary-btn" id="clearA4Btn">Clear Pages</button>
-    </div>
-
-    <!-- ===== FINE‑TUNE CONTROLS ===== -->
-    <div class="fine-tune-group">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text);">🔧 Fine‑Tune (global offsets)</span>
-        <button class="secondary-btn" id="applyTuneBtn" style="padding:4px 16px;font-size:12px;">Apply & Regenerate</button>
-        <button class="secondary-btn" id="copySlotsBtn" style="padding:4px 16px;font-size:12px;border-color:var(--accent);color:var(--accent);">📋 Copy Adjusted Slots</button>
-      </div>
-      <div class="fine-tune-row">
-        <label>Name X <input type="range" id="nameOffsetX" min="-50" max="50" value="0" step="1"><span class="value-display" id="nameOffsetXVal">0</span></label>
-        <label>Name Y <input type="range" id="nameOffsetY" min="-50" max="50" value="0" step="1"><span class="value-display" id="nameOffsetYVal">0</span></label>
-        <label>Rank X <input type="range" id="rankOffsetX" min="-50" max="50" value="0" step="1"><span class="value-display" id="rankOffsetXVal">0</span></label>
-        <label>Rank Y <input type="range" id="rankOffsetY" min="-50" max="50" value="0" step="1"><span class="value-display" id="rankOffsetYVal">0</span></label>
-        <label>Font Size <input type="range" id="fontSizeAdj" min="-10" max="10" value="0" step="1"><span class="value-display" id="fontSizeAdjVal">0</span></label>
-      </div>
     </div>
 
     <div id="a4PreviewArea" style="display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;justify-content:center;"></div>
@@ -1330,11 +1273,10 @@
   const ITIN_HEADERS = ["Flight/Acy Id","Date","From","Dep.","To","Arr.","A/C","Version","A/C Reg","Flight Time","Ground Time","Activity Start","Activity End","Activity Location"];
   const CREW_HEADERS = ["OP Rank","Postion Rank","Crew Id","Crew Name","WT","Work Pos.","Base","SDC","Check In"];
   const STOP_TITLES = ['duty details','itinerary details','crew list','briefing','hotel','comments','departure summary','flight/acy id','stand/pax info','recovery','special meal'];
-  const COCKPIT_RANKS = ['CAPT','FO','SO','CDT','OBS'];
-  const PILOT_RANKS = ['CAPT','FO','SO','CDT','OBS'];
+  const COCKPIT_RANKS = ['CAPT','FO','SO','CDT'];
   const POSITIONS_NARROW = ['ICC', 'P1','P2','P3','P4','A1','A2'];
   const POSITIONS_WIDE = ['ICC', 'IFS B', 'LSB', 'LSC', 'LSD', 'AG', 'BG1', 'BG2', 'CG', 'DG', 'BC', 'BC1', 'CC', 'DC', 'DC2'];
-  const RANK_PRIORITY = { 'CAPT': 1, 'FO': 2, 'SO': 3, 'CDT': 4, 'OBS': 5, 'IFS': 6, 'LS': 7, 'FS': 8, 'FSS': 9, 'SS': 10, 'CS': 11, 'AS': 12 };
+  const RANK_PRIORITY = { 'IFS': 1, 'LS': 2, 'FS': 3, 'FSS': 4, 'SS': 5, 'CS': 6, 'AS': 7 };
   const DOORS_NARROW = ['1L','1R','2L','2R'];
   const DOORS_WIDE = ['1L','1R','2L','2R','3L','3R','4L','4R'];
 
@@ -1597,7 +1539,7 @@ const itin = itinRaw.rows
       .replace(/([A-Za-z])(\d{2}-[A-Za-z]{3}-\d{4})/g,'$1 $2')
       .replace(/\s+/g,' ').trim();
 
-    const RANKS = 'CAPT|FO|SO|CDT|OBS|IFS|LS|FSS|FS|SS|CS|AS';
+    const RANKS = 'CAPT|FO|SO|CDT|IFS|LS|FSS|FS|SS|CS|AS';
 
     const idxInbound = text.search(/\bInbound\b/i);
     const idxOutbound = text.search(/\bOutbound\b/i);
@@ -1725,7 +1667,7 @@ const itin = itinRaw.rows
       }
     }
 
-    const ownerMatch = headerSection.match(/([A-Z][A-Z .]+?)\s*\|\s*(\d{7})\s*\|\s*([A-Z]+)\s*\|\s*([A-Z]{3})\s*\|\s*(CAPT|FO|SO|OBS|IFS|LS|FSS|FS|SS|CS|AS)\b/);
+    const ownerMatch = headerSection.match(/([A-Z][A-Z .]+?)\s*\|\s*(\d{7})\s*\|\s*([A-Z]+)\s*\|\s*([A-Z]{3})\s*\|\s*(CAPT|FO|SO|IFS|LS|FSS|FS|SS|CS|AS)\b/);
     if(ownerMatch){
       crewMap[ownerMatch[2]] = { opRank: ownerMatch[5], crewId: ownerMatch[2], crewName: ownerMatch[1].trim() };
     }
@@ -2352,7 +2294,7 @@ const itin = itinRaw.rows
   document.getElementById('printBtn').addEventListener('click', () => window.print());
 
   // ============================================================
-  //  A4 EXPORT MODULE (Multi‑Template + Rank Ordering + Fine‑Tune)
+  //  A4 EXPORT MODULE (Multi‑Template)
   // ============================================================
 
   // --- A4 dimensions (landscape @ 150 DPI) ---
@@ -2375,11 +2317,16 @@ const itin = itinRaw.rows
   }
 
   // ===== TEMPLATE REGISTRY =====
+  // Each template has:
+  //   - label: display name in dropdown
+  //   - bgImageData: ImageData (null until uploaded)
+  //   - nameSlots: array of slot objects for crew names
+  //   - rankSlots: array of slot objects for crew ranks (optional, set to null if not needed)
+  //   - globalNumbering: boolean (true/false)
   const TEMPLATES = {
     bom_baggage: {
       label: 'BOM Baggage',
       bgImageData: null,
-      groupPilotsSeparately: true,
       nameSlots: generateSlots(83, 314, 16, 37, 400, 35, 12),
       rankSlots: generateSlots(497, 314, 16, 37, 80, 35, 12),
       globalNumbering: false
@@ -2388,25 +2335,15 @@ const itin = itinRaw.rows
     // cargo_manifest: {
     //   label: 'Cargo Manifest',
     //   bgImageData: null,
-    //   groupPilotsSeparately: false,
     //   nameSlots: generateSlots(100, 200, 16, 40, 500, 30, 14),
-    //   rankSlots: null,
+    //   rankSlots: null, // no rank slots for this one
     //   globalNumbering: true
     // },
   };
 
-  // --- Fine‑tune state (global offsets) ---
-  let globalOffsets = {
-    nameX: 0,
-    nameY: 0,
-    rankX: 0,
-    rankY: 0,
-    fontSizeAdj: 0
-  };
-
   // --- Module state ---
   let generatedCanvases = [];
-  let selectedTemplateId = 'bom_baggage';
+  let selectedTemplateId = 'bom_baggage'; // default
 
   // --- DOM refs for A4 module ---
   const templateSelect = document.getElementById('templateSelect');
@@ -2419,38 +2356,6 @@ const itin = itinRaw.rows
   const downloadArea = document.getElementById('a4DownloadArea');
   const downloadPngBtn = document.getElementById('downloadPngBtn');
   const downloadPdfBtn = document.getElementById('downloadPdfBtn');
-  const applyTuneBtn = document.getElementById('applyTuneBtn');
-  const copySlotsBtn = document.getElementById('copySlotsBtn');
-
-  // --- Fine‑tune inputs ---
-  const nameOffsetXInput = document.getElementById('nameOffsetX');
-  const nameOffsetYInput = document.getElementById('nameOffsetY');
-  const rankOffsetXInput = document.getElementById('rankOffsetX');
-  const rankOffsetYInput = document.getElementById('rankOffsetY');
-  const fontSizeAdjInput = document.getElementById('fontSizeAdj');
-  const nameOffsetXVal = document.getElementById('nameOffsetXVal');
-  const nameOffsetYVal = document.getElementById('nameOffsetYVal');
-  const rankOffsetXVal = document.getElementById('rankOffsetXVal');
-  const rankOffsetYVal = document.getElementById('rankOffsetYVal');
-  const fontSizeAdjVal = document.getElementById('fontSizeAdjVal');
-
-  // --- Update fine‑tune display values ---
-  function updateFineTuneDisplay() {
-    nameOffsetXVal.textContent = nameOffsetXInput.value;
-    nameOffsetYVal.textContent = nameOffsetYInput.value;
-    rankOffsetXVal.textContent = rankOffsetXInput.value;
-    rankOffsetYVal.textContent = rankOffsetYInput.value;
-    fontSizeAdjVal.textContent = fontSizeAdjInput.value;
-  }
-
-  // --- Read fine‑tune values ---
-  function readFineTune() {
-    globalOffsets.nameX = parseInt(nameOffsetXInput.value) || 0;
-    globalOffsets.nameY = parseInt(nameOffsetYInput.value) || 0;
-    globalOffsets.rankX = parseInt(rankOffsetXInput.value) || 0;
-    globalOffsets.rankY = parseInt(rankOffsetYInput.value) || 0;
-    globalOffsets.fontSizeAdj = parseInt(fontSizeAdjInput.value) || 0;
-  }
 
   // --- Populate dropdown ---
   function populateDropdown() {
@@ -2469,6 +2374,7 @@ const itin = itinRaw.rows
     const id = templateSelect.value;
     const tpl = TEMPLATES[id];
     templateNameDisplay.textContent = tpl ? tpl.label : 'selected';
+    // Update status text
     if (tpl && tpl.bgImageData) {
       templateStatus.textContent = '✅ Background loaded';
       templateStatus.style.color = 'var(--green)';
@@ -2478,6 +2384,7 @@ const itin = itinRaw.rows
     }
   }
 
+  // --- Switch template ---
   function switchTemplate(templateId) {
     selectedTemplateId = templateId;
     const tpl = TEMPLATES[templateId];
@@ -2488,29 +2395,14 @@ const itin = itinRaw.rows
       templateStatus.textContent = '⚠️ No background uploaded for this template';
       templateStatus.style.color = 'var(--text-muted)';
     }
+    // Clear previews when switching
     generatedCanvases = [];
     previewArea.innerHTML = '';
     downloadArea.style.display = 'none';
-    // Reset fine‑tune sliders
-    nameOffsetXInput.value = 0;
-    nameOffsetYInput.value = 0;
-    rankOffsetXInput.value = 0;
-    rankOffsetYInput.value = 0;
-    fontSizeAdjInput.value = 0;
-    updateFineTuneDisplay();
-    readFineTune();
   }
 
   templateSelect.addEventListener('change', function() {
     switchTemplate(this.value);
-  });
-
-  // --- Fine‑tune input listeners ---
-  [nameOffsetXInput, nameOffsetYInput, rankOffsetXInput, rankOffsetYInput, fontSizeAdjInput].forEach(input => {
-    input.addEventListener('input', function() {
-      updateFineTuneDisplay();
-      readFineTune();
-    });
   });
 
   // --- Load background for the SELECTED template ---
@@ -2580,6 +2472,7 @@ const itin = itinRaw.rows
         return;
       }
 
+      // Store in the registry
       tpl.bgImageData = ctx.getImageData(0, 0, A4_W, A4_H);
       templateStatus.textContent = `✅ ${file.name} loaded`;
       templateStatus.style.color = 'var(--green)';
@@ -2598,19 +2491,10 @@ const itin = itinRaw.rows
     } else {
       templateStatus.textContent = 'No file chosen';
     }
-    this.value = '';
+    this.value = ''; // allow re-upload of same file
   });
 
-  // --- Rank sorter ---
-  function sortByRank(crew) {
-    return crew.slice().sort((a, b) => {
-      const priA = RANK_PRIORITY[a.opRank] || 99;
-      const priB = RANK_PRIORITY[b.opRank] || 99;
-      return priA - priB;
-    });
-  }
-
-  // --- Generate A4 Pages ---
+  // --- Generate A4 Pages (uses selected template) ---
   function generateA4Pages() {
     if (!state || !state.crew || state.crew.length === 0) {
       showToast('No crew data found. Parse a report first!', 'error');
@@ -2629,48 +2513,15 @@ const itin = itinRaw.rows
       return;
     }
 
-    readFineTune(); // ensure latest values
-
-    const allCrew = state.crew;
-    const pilots = allCrew.filter(c => PILOT_RANKS.includes(c.opRank));
-    const cabin = allCrew.filter(c => !PILOT_RANKS.includes(c.opRank));
-
-    const sortedPilots = sortByRank(pilots);
-    const sortedCabin = sortByRank(cabin);
-
-    const perPage = tpl.nameSlots.length;
-    const totalCrew = allCrew.length;
-
-    let pages = [];
-
-    if (tpl.groupPilotsSeparately && totalCrew > perPage) {
-      // Page 1: pilots only (pad with nulls)
-      const page1 = [...sortedPilots];
-      while (page1.length < perPage) page1.push(null);
-      pages.push(page1);
-
-      // Subsequent pages: cabin crew
-      for (let i = 0; i < sortedCabin.length; i += perPage) {
-        pages.push(sortedCabin.slice(i, i + perPage));
-      }
-    } else {
-      // Combined: pilots first, then cabin
-      const combined = sortedPilots.concat(sortedCabin);
-      for (let i = 0; i < combined.length; i += perPage) {
-        pages.push(combined.slice(i, i + perPage));
-      }
-    }
+    const crew = state.crew;
+    const perPage = tpl.nameSlots.length; // usually 16
+    const totalNames = crew.length;
+    const totalPages = Math.ceil(totalNames / perPage);
 
     generatedCanvases = [];
     previewArea.innerHTML = '';
 
-    const nameOffX = globalOffsets.nameX;
-    const nameOffY = globalOffsets.nameY;
-    const rankOffX = globalOffsets.rankX;
-    const rankOffY = globalOffsets.rankY;
-    const fontAdj = globalOffsets.fontSizeAdj;
-
-    pages.forEach((pageCrew, pageIndex) => {
+    for (let p = 0; p < totalPages; p++) {
       const canvas = document.createElement('canvas');
       canvas.width = A4_W;
       canvas.height = A4_H;
@@ -2678,68 +2529,63 @@ const itin = itinRaw.rows
 
       ctx.putImageData(tpl.bgImageData, 0, 0);
 
-      pageCrew.forEach((crewMember, idx) => {
-        if (!crewMember) return; // skip null slots (pilot padding)
+      const start = p * perPage;
+      const pageCrew = crew.slice(start, start + perPage);
 
+      pageCrew.forEach((crewMember, idx) => {
         const nameSlot = tpl.nameSlots[idx];
         const rankSlot = tpl.rankSlots ? tpl.rankSlots[idx] : null;
         if (!nameSlot) return;
 
-        const globalNum = (pageIndex * perPage) + idx + 1;
+        const globalNum = start + idx + 1;
         let displayName = crewMember.crewName || 'Unnamed';
         if (tpl.globalNumbering) {
           displayName = `${globalNum}. ${displayName}`;
         }
         const displayRank = crewMember.opRank || '';
 
-        // ---- Draw Name ----
+        // Draw name
         ctx.save();
         ctx.textBaseline = 'top';
-        let nameFontSize = Math.max(6, nameSlot.fontSize + fontAdj);
-        ctx.font = `bold ${nameFontSize}px Arial`;
-        const nameX = nameSlot.x + nameOffX;
-        const nameY = nameSlot.y + nameOffY;
-        while (ctx.measureText(displayName).width > nameSlot.w - 10 && nameFontSize > 6) {
-          nameFontSize--;
-          ctx.font = `bold ${nameFontSize}px Arial`;
+        let fontSize = nameSlot.fontSize;
+        ctx.font = `bold ${fontSize}px Arial`;
+        while (ctx.measureText(displayName).width > nameSlot.w - 10 && fontSize > 6) {
+          fontSize--;
+          ctx.font = `bold ${fontSize}px Arial`;
         }
         ctx.shadowColor = 'white';
         ctx.shadowBlur = 6;
         ctx.fillStyle = '#000000';
-        ctx.fillText(displayName, nameX + 5, nameY + 5);
+        ctx.fillText(displayName, nameSlot.x + 5, nameSlot.y + 5);
         ctx.restore();
 
-        // ---- Draw Rank ----
+        // Draw rank (if slot exists)
         if (rankSlot && displayRank) {
           ctx.save();
           ctx.textBaseline = 'top';
-          let rankFontSize = Math.max(6, rankSlot.fontSize + fontAdj);
-          ctx.font = `bold ${rankFontSize}px Arial`;
-          const rankX = rankSlot.x + rankOffX;
-          const rankY = rankSlot.y + rankOffY;
-          while (ctx.measureText(displayRank).width > rankSlot.w - 10 && rankFontSize > 6) {
-            rankFontSize--;
-            ctx.font = `bold ${rankFontSize}px Arial`;
+          let rFontSize = rankSlot.fontSize;
+          ctx.font = `bold ${rFontSize}px Arial`;
+          while (ctx.measureText(displayRank).width > rankSlot.w - 10 && rFontSize > 6) {
+            rFontSize--;
+            ctx.font = `bold ${rFontSize}px Arial`;
           }
           ctx.shadowColor = 'white';
           ctx.shadowBlur = 6;
           ctx.fillStyle = '#000000';
-          ctx.fillText(displayRank, rankX + 5, rankY + 5);
+          ctx.fillText(displayRank, rankSlot.x + 5, rankSlot.y + 5);
           ctx.restore();
         }
       });
 
       generatedCanvases.push(canvas);
-    });
+    }
 
     // Display previews
     generatedCanvases.forEach((cv, idx) => {
       const wrapper = document.createElement('div');
       wrapper.style.textAlign = 'center';
       const label = document.createElement('div');
-      const pageLabel = `Page ${idx + 1} / ${pages.length}`;
-      const pilotNote = (idx === 0 && pages.length > 1 && tpl.groupPilotsSeparately) ? ' (Pilots)' : '';
-      label.textContent = pageLabel + pilotNote;
+      label.textContent = `Page ${idx + 1} / ${totalPages}`;
       label.style.fontSize = '12px';
       label.style.color = 'var(--text-muted)';
       label.style.fontFamily = "'DM Mono', monospace";
@@ -2749,96 +2595,17 @@ const itin = itinRaw.rows
     });
 
     downloadArea.style.display = 'flex';
-    showToast(`Generated ${pages.length} page(s)`, 'success');
+    showToast(`Generated ${totalPages} page(s)`, 'success');
   }
 
   generateBtn.addEventListener('click', generateA4Pages);
 
-  // --- Apply & Regenerate (fine‑tune) ---
-  applyTuneBtn.addEventListener('click', function() {
-    if (generatedCanvases.length === 0) {
-      showToast('Generate pages first, then fine‑tune.', 'error');
-      return;
-    }
-    readFineTune();
-    generateA4Pages(); // re‑run generation with new offsets
-  });
-
-  // --- Clear ---
   clearA4Btn.addEventListener('click', function() {
     generatedCanvases = [];
     previewArea.innerHTML = '';
     downloadArea.style.display = 'none';
     showToast('Cleared pages', 'default');
   });
-
-  // --- Copy Adjusted Slots ---
-  function copyAdjustedSlots() {
-    const templateId = templateSelect.value;
-    const tpl = TEMPLATES[templateId];
-    if (!tpl) {
-      showToast('No template selected.', 'error');
-      return;
-    }
-
-    readFineTune();
-
-    const nameOffX = globalOffsets.nameX;
-    const nameOffY = globalOffsets.nameY;
-    const rankOffX = globalOffsets.rankX;
-    const rankOffY = globalOffsets.rankY;
-    const fontAdj = globalOffsets.fontSizeAdj;
-
-    function adjustSlots(slots, offX, offY) {
-      if (!slots) return null;
-      return slots.map(s => ({
-        x: s.x + offX,
-        y: s.y + offY,
-        w: s.w,
-        h: s.h,
-        fontSize: Math.max(6, s.fontSize + fontAdj)
-      }));
-    }
-
-    const adjustedNameSlots = adjustSlots(tpl.nameSlots, nameOffX, nameOffY);
-    const adjustedRankSlots = tpl.rankSlots ? adjustSlots(tpl.rankSlots, rankOffX, rankOffY) : null;
-
-    // Build code string
-    let code = `// Adjusted slots for "${tpl.label}" (X/Y offsets applied)\n`;
-    code += `nameSlots: [\n`;
-    adjustedNameSlots.forEach((s, i) => {
-      code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
-      if (i < adjustedNameSlots.length - 1) code += ',';
-      code += '\n';
-    });
-    code += `],\n`;
-    if (adjustedRankSlots) {
-      code += `rankSlots: [\n`;
-      adjustedRankSlots.forEach((s, i) => {
-        code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
-        if (i < adjustedRankSlots.length - 1) code += ',';
-        code += '\n';
-      });
-      code += `]`;
-    } else {
-      code += `rankSlots: null`;
-    }
-
-    navigator.clipboard.writeText(code).then(() => {
-      showToast('Adjusted slots copied to clipboard!', 'success');
-    }).catch(() => {
-      // Fallback
-      const textarea = document.createElement('textarea');
-      textarea.value = code;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      showToast('Adjusted slots copied!', 'success');
-    });
-  }
-
-  copySlotsBtn.addEventListener('click', copyAdjustedSlots);
 
   // --- Download PNG sequential ---
   function downloadAllPng() {
@@ -2903,11 +2670,9 @@ const itin = itinRaw.rows
 
   downloadPdfBtn.addEventListener('click', downloadPdf);
 
-  // --- Init ---
+  // --- Init dropdown and status ---
   populateDropdown();
   switchTemplate(selectedTemplateId);
-  updateFineTuneDisplay();
-  readFineTune();
 
 })();
 </script>
