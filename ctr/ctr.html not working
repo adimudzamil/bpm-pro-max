@@ -1098,7 +1098,7 @@
     <div class="badge-group">
       <div class="badge">📄 PDF Parser</div>
       <div class="badge">🔒 Offline</div>
-      <div class="badge accent">v2.4 + Direct PDF</div>
+      <div class="badge accent">v2.3 + Multi‑Dest</div>
     </div>
   </header>
 
@@ -1343,7 +1343,7 @@
 <!-- ===== FOOTER ===== -->
 <footer class="noprint">
   🔒 All processing is local — your data never leaves your device.<br>
-  <span style="color:var(--accent);">CTR</span> · 2100551 · Direct PDF Overlay
+  <span style="color:var(--accent);">CTR</span> · 2100551 · Multi‑Destination PDF Overlay
 </footer>
 
 <script>
@@ -2460,7 +2460,7 @@
   document.getElementById('printBomBaggageBtn').addEventListener('click', () => printOnly('bomBaggageReportCard'));
 
   // ================================================================
-  // 2. NEW: PDF OVERLAY ENGINE (multi‑destination) – using fetch
+  // 2. NEW: PDF OVERLAY ENGINE (multi‑destination)
   // ================================================================
 
   // ---- DOM refs for overlay ----
@@ -2573,15 +2573,36 @@
     }
   }
 
-  // ---- NEW: Load PDF template directly via fetch ----
-  async function loadTemplatePDF(dest, formType) {
-    const url = `templates/${dest}_${formType}.pdf?t=${Date.now()}`; // cache‑bust
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to load PDF: ${url} (status ${response.status})`);
+  // ---- Dynamic template loader ----
+  function loadTemplateScript(dest, formType) {
+    return new Promise((resolve, reject) => {
+      const filename = `templates/${dest}_${formType}.js`;
+      const script = document.createElement('script');
+      script.src = filename;
+      const varName = formType === 'landing' ? 'LANDING_PDF_BASE64' : 'BAGGAGE_PDF_BASE64';
+      script.onload = function() {
+        if (window[varName]) {
+          resolve(window[varName]);
+          delete window[varName];
+        } else {
+          reject(new Error(`Template variable ${varName} not found in ${filename}`));
+        }
+      };
+      script.onerror = function() {
+        reject(new Error(`Failed to load ${filename}. Make sure the file exists.`));
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  // ---- Base64 helper ----
+  function base64ToUint8Array(base64) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
     }
-    const arrayBuffer = await response.arrayBuffer();
-    return arrayBuffer;
+    return bytes;
   }
 
   // ---- Calibration: render PDF to canvas using pdf.js ----
@@ -2604,11 +2625,12 @@
 
     try {
       const dest = destSelect.value;
-      const arrayBuffer = await loadTemplatePDF(dest, formType);
+      const base64 = await loadTemplateScript(dest, formType);
+      const pdfBytes = base64ToUint8Array(base64);
       const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
       if (!pdfjsLib) throw new Error('pdf.js not loaded');
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const pdf = await pdfjsLib.getDocument({ data: pdfBytes.buffer }).promise;
       const page = await pdf.getPage(1);
       const viewport = page.getViewport({ scale: 1.5 });
       const canvas = calibCanvas;
@@ -2820,9 +2842,10 @@
     try {
       const dest = destSelect.value;
       const formType = formTypeSelect.value;
-      const arrayBuffer = await loadTemplatePDF(dest, formType);
+      const base64 = await loadTemplateScript(dest, formType);
+      const pdfBytes = base64ToUint8Array(base64);
       const { PDFDocument, rgb } = PDFLib;
-      const doc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+      const doc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
       const pages = doc.getPages();
       const page = pages[0];
       const { width, height } = page.getSize();
