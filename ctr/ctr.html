@@ -6,9 +6,6 @@
 <title>CTR Autofill</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<!-- BAGGAGE GENERATOR LIBRARIES -->
-<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<script src="https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   /* ── Reset & Variables ── */
@@ -960,6 +957,32 @@
     .captain-icc-table td { padding: 2px 4px; }
   }
   @page { size: auto; margin: 8mm; }
+
+  /* ── A4 Export Card styles ── */
+  .file-upload-btn {
+    background: var(--accent);
+    color: #0a0a0b;
+    padding: 8px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    transition: all 0.2s;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .file-upload-btn:hover { background: var(--accent-hover); }
+
+  #a4PreviewArea canvas {
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius-sm);
+    max-width: 300px;
+    height: auto;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
 </style>
 </head>
 <body>
@@ -1042,12 +1065,38 @@
   <div class="report-card" id="reportCard" style="display:none;">
     <div class="btnrow noprint" style="margin-bottom:10px;">
       <button class="primary-btn" id="printBtn">🖨️ Print / Save PDF</button>
-      <!-- BAGGAGE DECLARATION BUTTON -->
-      <button class="secondary-btn" id="exportBaggageBtn">📋 Export Baggage Decl.</button>
-      <input type="file" id="baggageFileInput" accept=".pdf" style="display:none;">
     </div>
     <div class="report-inner">
       <div id="report"></div>
+    </div>
+  </div>
+
+  <!-- ===== A4 EXPORT CARD ===== -->
+  <div class="card noprint" id="a4ExportCard">
+    <span class="method-tag">🖼️ A4</span>
+    <div class="card-header">
+      <div class="card-title"><span class="icon">📄</span> 3. Generate A4 Crew Sheets</div>
+      <span class="card-sub">landscape A4 · 16 names per page</span>
+    </div>
+
+    <div class="btnrow">
+      <label class="file-upload-btn" style="background:var(--accent);padding:8px 20px;border-radius:50px;cursor:pointer;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:8px;">
+        📎 Upload Template
+        <input type="file" id="a4TemplateInput" accept=".pdf,.png,.jpg,.jpeg,.webp" style="display:none;">
+      </label>
+      <span id="a4TemplateStatus" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted);">No template loaded</span>
+    </div>
+
+    <div class="btnrow">
+      <button class="primary-btn" id="generateA4Btn">⚡ Generate A4 Pages</button>
+      <button class="secondary-btn" id="clearA4Btn">Clear Pages</button>
+    </div>
+
+    <div id="a4PreviewArea" style="display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;justify-content:center;"></div>
+
+    <div id="a4DownloadArea" style="display:none;margin-top:12px;" class="btnrow">
+      <button class="primary-btn" id="downloadPngBtn">⬇️ Download PNGs (sequential)</button>
+      <button class="primary-btn" id="downloadPdfBtn" style="background:#28a745;">⬇️ Download PDF</button>
     </div>
   </div>
 
@@ -1464,9 +1513,9 @@
     const lines = raw.split(/\r?\n/);
     const duty = extractRows(lines, DUTY_HEADERS, DUTY_HEADERS.length).rows.map(r => ({ start:r[0], end:r[1], pairingId:r[2], dutyHours:r[3], flyingHours:r[4], restRequired:r[5], restAvailable:r[6] }));
     const itinRaw = extractRows(lines, ITIN_HEADERS, ITIN_HEADERS.length);
-    const itin = itinRaw.rows
-      .filter(r => /^[A-Z]{2,3}\d{2,4}$/i.test(norm(r[0]))) // keep only real flight rows
-      .map(r => ({ flightId:r[0], date:r[1], from:r[2], dep:r[3], to:r[4], arr:r[5], ac:r[6], version:r[7], acReg:r[8], flightTime:r[9], groundTime:r[10], actStart:r[11], actEnd:r[12], actLoc:r[13] }));
+const itin = itinRaw.rows
+  .filter(r => /^[A-Z]{2,3}\d{2,4}$/i.test(norm(r[0]))) // keep only real flight rows
+  .map(r => ({ flightId:r[0], date:r[1], from:r[2], dep:r[3], to:r[4], arr:r[5], ac:r[6], version:r[7], acReg:r[8], flightTime:r[9], groundTime:r[10], actStart:r[11], actEnd:r[12], actLoc:r[13] }));
 
     const crewRaw = extractRows(lines, CREW_HEADERS, CREW_HEADERS.length);
     const crew = crewRaw.rows.map(r => ({ opRank:r[0], posRank:r[1], crewId:r[2], crewName:r[3], wt:r[4], workPos:r[5], base:r[6], sdc:r[7], checkIn:r[8] })).filter(c => c.crewId);
@@ -2305,94 +2354,305 @@
   // ===== Print =====
   document.getElementById('printBtn').addEventListener('click', () => window.print());
 
-  // ===== BAGGAGE DECLARATION GENERATOR (Fully fixed for rotated PDFs) =====
-  async function exportBaggageDeclaration() {
-    if (!state || !state.crew || state.crew.length === 0) {
-      showToast('No crew found. Parse a trip report first.', 'error');
+  // ============================================================
+  //  A4 EXPORT MODULE (added inside the main closure)
+  // ============================================================
+
+  // --- A4 dimensions (landscape @ 150 DPI) ---
+  const A4_W = 1754;
+  const A4_H = 1240;
+
+  // --- 16 slots (your exact formula) ---
+  const FIXED_SLOTS = [];
+  for (let i = 0; i < 16; i++) {
+    FIXED_SLOTS.push({
+      x: 83 + (i * 2),
+      y: 314 + (i * 37),
+      w: 400,
+      h: 35,
+      fontSize: 12
+    });
+  }
+
+  // --- Module state ---
+  let templateImageData = null;   // holds the A4 background
+  let generatedCanvases = [];     // array of canvases for each page
+  let templateLoaded = false;
+
+  // --- DOM refs ---
+  const templateInput = document.getElementById('a4TemplateInput');
+  const templateStatus = document.getElementById('a4TemplateStatus');
+  const generateBtn = document.getElementById('generateA4Btn');
+  const clearA4Btn = document.getElementById('clearA4Btn');
+  const previewArea = document.getElementById('a4PreviewArea');
+  const downloadArea = document.getElementById('a4DownloadArea');
+  const downloadPngBtn = document.getElementById('downloadPngBtn');
+  const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+
+  // ===== 1. TEMPLATE LOADER (PDF or Image) =====
+  async function loadTemplate(file) {
+    if (!file) {
+      templateStatus.textContent = 'No file selected';
+      templateLoaded = false;
       return;
     }
 
-    // Prepare name list (respecting edits made in the table)
-    const names = state.crew.map(c => {
-      const edited = state.fields && state.fields['crewname-' + c.crewId];
-      return (edited && edited.trim()) ? edited : c.crewName;
-    }).filter(n => n && n.trim() !== '');
+    templateStatus.textContent = 'Loading…';
+    const fileType = file.type;
 
-    const fileInput = document.getElementById('baggageFileInput');
-    fileInput.value = '';
-    fileInput.click();
+    // Create an offscreen canvas to render the template
+    const canvas = document.createElement('canvas');
+    canvas.width = A4_W;
+    canvas.height = A4_H;
+    const ctx = canvas.getContext('2d');
 
-    const file = await new Promise((resolve) => {
-      fileInput.onchange = (e) => resolve(e.target.files[0]);
-    });
-
-    if (!file) return; // User cancelled
+    // White background
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, A4_W, A4_H);
 
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const { PDFDocument, rgb, StandardFonts, degrees } = PDFLib;
+      if (fileType === 'application/pdf') {
+        // --- PDF (using pdf.js already loaded) ---
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const page = await pdf.getPage(1);
+        const rotation = page.rotate || 0;
+        const viewport = page.getViewport({ scale: 1, rotation: rotation });
 
-      const pdfDoc = await PDFDocument.load(arrayBuffer);
-      pdfDoc.registerFontkit(fontkit);
-      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const page = pdfDoc.getPages()[0];
+        const scaleX = A4_W / viewport.width;
+        const scaleY = A4_H / viewport.height;
+        const scale = Math.min(scaleX, scaleY);  // contain
+        const drawWidth = viewport.width * scale;
+        const drawHeight = viewport.height * scale;
+        const offsetX = (A4_W - drawWidth) / 2;
+        const offsetY = (A4_H - drawHeight) / 2;
 
-      // --- DETECT TEMPLATE ROTATION ---
-      const rotation = page.getRotation();
-      const isRotated = (rotation === 90 || rotation === -90);
+        const transform = [scale, 0, 0, scale, offsetX, offsetY];
+        await page.render({ canvasContext: ctx, viewport: viewport, transform: transform }).promise;
 
-      const VIEWER_START_X = 48;  // Left of "Name" column in viewer
-      const VIEWER_START_Y = 125; // Top row in viewer
-      const ROW_HEIGHT = 28;
-      const FONT_SIZE = 9.5;
-
-      const A4_WIDTH = 841.89;
-      const A4_HEIGHT = 595.28;
-
-      names.forEach((name, i) => {
-        let x, y, textRotation = 0;
-
-        if (isRotated) {
-          // If template is rotated 90°, coordinates are swapped and reversed
-          x = (A4_WIDTH - VIEWER_START_Y) - (i * ROW_HEIGHT);
-          y = VIEWER_START_X;
-          textRotation = -90; // Cancels out the template's rotation
-        } else {
-          // Standard unrotated A4 landscape
-          x = VIEWER_START_X;
-          y = A4_HEIGHT - (VIEWER_START_Y + (i * ROW_HEIGHT));
-          textRotation = 0;
-        }
-
-        // Stop if we run out of rows
-        if ((!isRotated && y < 60) || (isRotated && x < 60)) return;
-
-        page.drawText(name, {
-          x: x,
-          y: y,
-          size: FONT_SIZE,
-          font: font,
-          color: rgb(0, 0, 0),
-          rotate: degrees(textRotation)
+      } else if (fileType.startsWith('image/')) {
+        // --- Image (PNG/JPG/etc) ---
+        const reader = new FileReader();
+        const img = await new Promise((resolve, reject) => {
+          reader.onload = (e) => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.onerror = reject;
+            image.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
         });
-      });
 
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'Baggage_Declaration_Filled.pdf';
-      link.click();
+        const scaleX = A4_W / img.width;
+        const scaleY = A4_H / img.height;
+        const scale = Math.min(scaleX, scaleY);
+        const drawWidth = img.width * scale;
+        const drawHeight = img.height * scale;
+        const offsetX = (A4_W - drawWidth) / 2;
+        const offsetY = (A4_H - drawHeight) / 2;
+        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
-      showToast(`✅ Filled ${names.length} crew names onto the baggage form!`, 'success');
+      } else {
+        showToast('Unsupported file type', 'error');
+        templateStatus.textContent = 'Unsupported';
+        return;
+      }
+
+      // Store the rendered background
+      templateImageData = ctx.getImageData(0, 0, A4_W, A4_H);
+      templateLoaded = true;
+      templateStatus.textContent = `✅ ${file.name} loaded (${A4_W}×${A4_H})`;
+      showToast('Template loaded successfully!', 'success');
+
     } catch (err) {
-      showToast('❌ Error: ' + err.message, 'error');
-      console.error(err);
+      console.error('Template load error:', err);
+      showToast('Failed to load template: ' + err.message, 'error');
+      templateStatus.textContent = '❌ Error loading';
+      templateLoaded = false;
     }
   }
 
-  // Re-attach the baggage export function
-  document.getElementById('exportBaggageBtn').addEventListener('click', exportBaggageDeclaration);
+  // --- File input listener ---
+  templateInput.addEventListener('change', function(e) {
+    if (this.files && this.files.length > 0) {
+      loadTemplate(this.files[0]);
+    } else {
+      templateStatus.textContent = 'No file chosen';
+      templateLoaded = false;
+    }
+  });
+
+  // ===== 2. GENERATE A4 PAGES =====
+  function generateA4Pages() {
+    // --- Check state (global from main script) ---
+    if (!state || !state.crew || state.crew.length === 0) {
+      showToast('No crew data found. Parse a report first!', 'error');
+      return;
+    }
+
+    if (!templateLoaded || !templateImageData) {
+      showToast('Please upload an A4 template first.', 'error');
+      return;
+    }
+
+    const crew = state.crew;
+    const names = crew.map(c => c.crewName || 'Unnamed');
+    const totalNames = names.length;
+
+    if (totalNames === 0) {
+      showToast('Crew list is empty.', 'error');
+      return;
+    }
+
+    const perPage = FIXED_SLOTS.length;
+    const totalPages = Math.ceil(totalNames / perPage);
+
+    // Clear previous pages
+    generatedCanvases = [];
+    previewArea.innerHTML = '';
+
+    for (let p = 0; p < totalPages; p++) {
+      const canvas = document.createElement('canvas');
+      canvas.width = A4_W;
+      canvas.height = A4_H;
+      const ctx = canvas.getContext('2d');
+
+      // Draw the template background
+      ctx.putImageData(templateImageData, 0, 0);
+
+      // Get the slice of names for this page
+      const start = p * perPage;
+      const pageNames = names.slice(start, start + perPage);
+
+      // Draw each name into its slot
+      pageNames.forEach((name, slotIdx) => {
+        const slot = FIXED_SLOTS[slotIdx];
+        if (!slot) return;
+
+        const globalNum = start + slotIdx + 1;
+        const displayText = `${globalNum}. ${name}`;
+
+        ctx.save();
+        ctx.textBaseline = 'top';
+
+        // Auto-fit font size
+        let fontSize = slot.fontSize;
+        ctx.font = `bold ${fontSize}px Arial`;
+        while (ctx.measureText(displayText).width > slot.w - 10 && fontSize > 6) {
+          fontSize--;
+          ctx.font = `bold ${fontSize}px Arial`;
+        }
+
+        // White shadow for readability, text explicitly BLACK
+        ctx.shadowColor = 'white';
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = '#000000';  // <-- Explicitly black
+        ctx.fillText(displayText, slot.x + 5, slot.y + 5);
+        ctx.restore();
+      });
+
+      generatedCanvases.push(canvas);
+    }
+
+    // --- Display previews ---
+    generatedCanvases.forEach((cv, idx) => {
+      const wrapper = document.createElement('div');
+      wrapper.style.textAlign = 'center';
+      const label = document.createElement('div');
+      label.textContent = `Page ${idx + 1} / ${totalPages}`;
+      label.style.fontSize = '12px';
+      label.style.color = 'var(--text-muted)';
+      label.style.fontFamily = "'DM Mono', monospace";
+      wrapper.appendChild(label);
+      wrapper.appendChild(cv);
+      previewArea.appendChild(wrapper);
+    });
+
+    // Show download buttons
+    downloadArea.style.display = 'flex';
+    showToast(`Generated ${totalPages} page(s)`, 'success');
+  }
+
+  // --- Generate button ---
+  generateBtn.addEventListener('click', generateA4Pages);
+
+  // --- Clear button ---
+  clearA4Btn.addEventListener('click', function() {
+    generatedCanvases = [];
+    previewArea.innerHTML = '';
+    downloadArea.style.display = 'none';
+    showToast('Cleared pages', 'default');
+  });
+
+  // ===== 3. DOWNLOAD FUNCTIONS =====
+
+  // --- 3a. Sequential PNG download ---
+  function downloadAllPng() {
+    if (generatedCanvases.length === 0) {
+      showToast('No pages to download. Generate first.', 'error');
+      return;
+    }
+
+    let index = 0;
+    function downloadNext() {
+      if (index >= generatedCanvases.length) {
+        showToast('All PNGs downloaded!', 'success');
+        return;
+      }
+      const canvas = generatedCanvases[index];
+      const link = document.createElement('a');
+      link.download = `A4_crew_page_${index + 1}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      index++;
+      // slight delay to avoid browser blocking
+      setTimeout(downloadNext, 500);
+    }
+    downloadNext();
+  }
+
+  downloadPngBtn.addEventListener('click', downloadAllPng);
+
+  // --- 3b. PDF download (using jspdf) ---
+  function downloadPdf() {
+    if (generatedCanvases.length === 0) {
+      showToast('No pages to download. Generate first.', 'error');
+      return;
+    }
+
+    // Load jspdf dynamically if not already loaded
+    function loadJsPDF() {
+      return new Promise((resolve, reject) => {
+        if (typeof window.jspdf !== 'undefined') {
+          resolve(window.jspdf);
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        script.onload = () => resolve(window.jspdf);
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    loadJsPDF().then(({ jsPDF }) => {
+      const pdf = new jsPDF('landscape', 'px', 'a4'); // A4 landscape in pixels
+
+      generatedCanvases.forEach((canvas, idx) => {
+        if (idx > 0) pdf.addPage();
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        pdf.addImage(imgData, 'JPEG', 0, 0, 842, 595);
+      });
+
+      pdf.save('A4_crew_manifest.pdf');
+      showToast('PDF downloaded!', 'success');
+    }).catch(err => {
+      console.error(err);
+      showToast('Failed to load PDF library: ' + err.message, 'error');
+    });
+  }
+
+  downloadPdfBtn.addEventListener('click', downloadPdf);
 
 })();
 </script>
