@@ -1,46 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Slot Designer - PDF & PNG Support</title>
+    <title>Slot Designer - Landscape A4</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
         body { font-family: Arial; padding: 20px; background: #f0f2f5; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 12px; }
         .toolbar { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; margin: 15px 0; }
         button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
         button.danger { background: #dc3545; }
         button.success { background: #28a745; }
         button.warning { background: #ffc107; color: black; }
         canvas { border: 2px solid #333; width: 100%; height: auto; background: white; cursor: crosshair; }
-        .code-output { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 13px; white-space: pre-wrap; margin-top: 15px; }
+        .code-output { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 13px; white-space: pre-wrap; margin-top: 15px; max-height: 200px; overflow-y: auto; }
         input[type="file"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; }
         .file-hint { font-size: 13px; color: #666; margin-top: 5px; }
+        .flex-row { display: flex; gap: 20px; }
+        .flex-row > div { flex: 1; }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>📐 Design Your Text Slots (PDF / PNG / JPG)</h2>
-    <p>Upload your A4 <strong>PDF or PNG</strong> → Click anywhere to place red text-slots → Copy the code.</p>
+    <h2>📐 Landscape A4 Slot Designer (1754 x 1240)</h2>
+    <p>Upload your landscape PDF or PNG → Click anywhere to place red text-slots → Copy the code.</p>
 
     <input type="file" id="fileUpload" accept=".pdf,.png,.jpg,.jpeg,.webp">
-    <div class="file-hint">✅ Supports PDF, PNG, JPG, WebP</div>
+    <div class="file-hint">✅ Supports PDF, PNG, JPG, WebP (Fits to Landscape A4)</div>
     
     <div class="toolbar">
-        <button id="toggleDesignBtn" class="warning">✏️ Enable Click-to-Add (ON)</button>
-        <button id="clearSlotsBtn" class="danger">🗑️ Clear All Slots</button>
+        <button id="toggleDesignBtn" class="warning">✏️ Click-to-Add (ON)</button>
+        <button id="clearSlotsBtn" class="danger">🗑️ Clear All</button>
         <button id="copyCodeBtn" class="success">📋 Copy Code</button>
-        <span style="margin-left: auto; font-size: 14px;">Slots placed: <strong id="slotCounter">0</strong></span>
+        <span style="margin-left: auto; font-size: 14px;">Slots: <strong id="slotCounter">0</strong></span>
     </div>
 
     <canvas id="a4Canvas"></canvas>
 
-    <div class="flex-row">
-        <div>
-            <h4>📋 Generated Slot Array</h4>
-            <div class="code-output" id="codeDisplay">// Upload an image/PDF and click on it to add slots...</div>
-        </div>
+    <div>
+        <h4>📋 Generated Slot Array (Paste into your Roll-Call script)</h4>
+        <div class="code-output" id="codeDisplay">// Click on the canvas above to add slots...</div>
     </div>
-    <p style="font-size: 13px; color: #666;">💡 Default slot size: <strong>width: 400px, height: 60px</strong>. Edit <code>DEFAULT_W</code> and <code>DEFAULT_H</code> in the script if needed.</p>
+    <p style="font-size: 13px; color: #666;">💡 Default slot size: <strong>width: 500px, height: 70px</strong> (optimized for landscape). Edit <code>DEFAULT_W</code> and <code>DEFAULT_H</code> in the script if needed.</p>
 </div>
 
 <script>
@@ -51,32 +51,31 @@
     const codeDisplay = document.getElementById('codeDisplay');
     const slotCounter = document.getElementById('slotCounter');
 
-    const A4_W = 1240;
-    const A4_H = 1754;
+    // --- LANDSCAPE A4 DIMENSIONS @ 150 DPI ---
+    const A4_W = 1754;  // Width is now the larger number
+    const A4_H = 1240;  // Height is the smaller number
     canvas.width = A4_W;
     canvas.height = A4_H;
 
     let slots = [];
     let isDesignMode = true;
-    let backgroundImageData = null; // Stores the rendered background
+    let backgroundImageData = null;
 
-    // Default slot size
-    const DEFAULT_W = 400;
-    const DEFAULT_H = 60;
-    const DEFAULT_FONT = 28;
+    // Default slot size (wider for landscape)
+    const DEFAULT_W = 500;
+    const DEFAULT_H = 70;
+    const DEFAULT_FONT = 30;
 
-    // --- Core Render Function (Handles both PDF and Images) ---
+    // --- Render File (PDF or Image) to Landscape A4 ---
     async function renderFile(file) {
         if (!file) return;
 
-        // Clear canvas to white
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, A4_W, A4_H);
 
         const fileType = file.type;
 
         if (fileType === 'application/pdf') {
-            // --- PDF RENDERING ---
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
             const page = await pdf.getPage(1);
@@ -97,7 +96,6 @@
             }).promise;
         } 
         else if (fileType.startsWith('image/')) {
-            // --- IMAGE RENDERING (PNG, JPG, WebP, etc.) ---
             const reader = new FileReader();
             const img = await new Promise((resolve, reject) => {
                 reader.onload = (e) => {
@@ -109,7 +107,6 @@
                 reader.readAsDataURL(file);
             });
 
-            // Fit image into A4 (preserve aspect ratio)
             const scaleX = A4_W / img.width;
             const scaleY = A4_H / img.height;
             const scale = Math.min(scaleX, scaleY);
@@ -121,23 +118,19 @@
 
             ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
         } else {
-            alert('Unsupported file type. Please upload a PDF or image (PNG, JPG, WebP).');
+            alert('Unsupported file. Please upload PDF or PNG/JPG.');
             return;
         }
 
-        // Save the background so we can redraw slots on top
         backgroundImageData = ctx.getImageData(0, 0, A4_W, A4_H);
-        drawSlots(); // Draw slots over the new background
+        drawSlots();
     }
 
     // --- Draw Slots ---
     function drawSlots() {
         if (!backgroundImageData) return;
-        
-        // Restore the clean background
         ctx.putImageData(backgroundImageData, 0, 0);
 
-        // Draw each slot
         slots.forEach((slot, index) => {
             ctx.strokeStyle = '#FF0000';
             ctx.lineWidth = 3;
@@ -158,10 +151,9 @@
         updateCodeDisplay();
     }
 
-    // --- Update Code ---
     function updateCodeDisplay() {
         if (slots.length === 0) {
-            codeDisplay.innerText = '// No slots yet. Click on the image to add them!';
+            codeDisplay.innerText = '// No slots yet. Click on the canvas to add them!';
             return;
         }
         let code = 'const fixedSlots = [\n';
@@ -174,7 +166,7 @@
         codeDisplay.innerText = code;
     }
 
-    // --- Canvas Click ---
+    // --- Canvas Click (Add Slot) ---
     canvas.addEventListener('click', function(e) {
         if (!isDesignMode) {
             alert('Design mode is OFF. Click the toggle button to enable.');
@@ -209,7 +201,7 @@
     // --- UI Buttons ---
     document.getElementById('toggleDesignBtn').addEventListener('click', function() {
         isDesignMode = !isDesignMode;
-        this.textContent = isDesignMode ? '✏️ Enable Click-to-Add (ON)' : '✏️ Enable Click-to-Add (OFF)';
+        this.textContent = isDesignMode ? '✏️ Click-to-Add (ON)' : '✏️ Click-to-Add (OFF)';
         this.classList.toggle('warning');
     });
 
@@ -223,13 +215,12 @@
     document.getElementById('copyCodeBtn').addEventListener('click', function() {
         const code = codeDisplay.innerText;
         if (code.includes('No slots yet')) {
-            alert('Please add some slots first by clicking on the canvas!');
+            alert('Please add some slots first!');
             return;
         }
         navigator.clipboard.writeText(code).then(() => {
             alert('✅ Code copied to clipboard!');
         }).catch(() => {
-            // Fallback
             const range = document.createRange();
             range.selectNode(codeDisplay);
             window.getSelection().removeAllRanges();
@@ -246,7 +237,7 @@
         }
     });
 
-    // Initialize blank A4
+    // Initialize blank Landscape A4
     window.onload = function() {
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, A4_W, A4_H);
