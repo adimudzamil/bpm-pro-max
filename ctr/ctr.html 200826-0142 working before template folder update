@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  /* ── Reset & Variables ── */
+  /* ── Reset & Variables (unchanged) ── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
@@ -2378,22 +2378,21 @@ const itin = itinRaw.rows
   const TEMPLATES = {
     bom_baggage: {
       label: 'BOM Baggage',
-      bgPath: 'template/BOM_baggage.png',
       bgImageData: null,
       groupPilotsSeparately: true,
       nameSlots: generateSlots(83, 314, 16, 37, 400, 35, 12),
       rankSlots: generateSlots(497, 314, 16, 37, 80, 35, 12),
       globalNumbering: false
     },
-    bom_landing: {
-      label: 'BOM Landing',
-      bgPath: 'template/BOM_landing.png',
-      bgImageData: null,
-      groupPilotsSeparately: true,
-      nameSlots: generateSlots(243, 357, 17, 24, 300, 24, 12),
-      rankSlots: null,
-      globalNumbering: false
-    }
+    // --- Add more templates below ---
+    // cargo_manifest: {
+    //   label: 'Cargo Manifest',
+    //   bgImageData: null,
+    //   groupPilotsSeparately: false,
+    //   nameSlots: generateSlots(100, 200, 16, 40, 500, 30, 14),
+    //   rankSlots: null,
+    //   globalNumbering: true
+    // },
   };
 
   // --- Fine‑tune state (global offsets) ---
@@ -2474,71 +2473,21 @@ const itin = itinRaw.rows
       templateStatus.textContent = '✅ Background loaded';
       templateStatus.style.color = 'var(--green)';
     } else {
-      templateStatus.textContent = '⚠️ No background loaded (auto‑load or upload)';
+      templateStatus.textContent = '⚠️ No background uploaded for this template';
       templateStatus.style.color = 'var(--text-muted)';
     }
-  }
-
-  // --- Load background from path ---
-  function loadTemplateFromPath(templateId) {
-    const tpl = TEMPLATES[templateId];
-    if (!tpl || !tpl.bgPath) return;
-
-    // If already loaded, skip
-    if (tpl.bgImageData) {
-      templateStatus.textContent = '✅ Background loaded from path';
-      templateStatus.style.color = 'var(--green)';
-      return;
-    }
-
-    templateStatus.textContent = 'Loading background from path…';
-    templateStatus.style.color = 'var(--text-muted)';
-
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = function() {
-      const canvas = document.createElement('canvas');
-      canvas.width = A4_W;
-      canvas.height = A4_H;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, A4_W, A4_H);
-      // fit into A4
-      const scaleX = A4_W / img.width;
-      const scaleY = A4_H / img.height;
-      const scale = Math.min(scaleX, scaleY);
-      const drawWidth = img.width * scale;
-      const drawHeight = img.height * scale;
-      const offsetX = (A4_W - drawWidth) / 2;
-      const offsetY = (A4_H - drawHeight) / 2;
-      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-      tpl.bgImageData = ctx.getImageData(0, 0, A4_W, A4_H);
-      templateStatus.textContent = `✅ ${tpl.label} background loaded from template/ folder`;
-      templateStatus.style.color = 'var(--green)';
-      showToast(`Background loaded for ${tpl.label}`, 'success');
-    };
-    img.onerror = function() {
-      templateStatus.textContent = '⚠️ Could not load background from path. Upload manually.';
-      templateStatus.style.color = 'var(--red)';
-      showToast('Failed to load background from template/ folder', 'error');
-    };
-    img.src = tpl.bgPath;
   }
 
   function switchTemplate(templateId) {
     selectedTemplateId = templateId;
     const tpl = TEMPLATES[templateId];
-    // Attempt to load from path if not already loaded
-    if (tpl && !tpl.bgImageData) {
-      loadTemplateFromPath(templateId);
-    } else if (tpl && tpl.bgImageData) {
+    if (tpl && tpl.bgImageData) {
       templateStatus.textContent = '✅ Background loaded';
       templateStatus.style.color = 'var(--green)';
     } else {
-      templateStatus.textContent = '⚠️ No background loaded';
+      templateStatus.textContent = '⚠️ No background uploaded for this template';
       templateStatus.style.color = 'var(--text-muted)';
     }
-    // Clear previews
     generatedCanvases = [];
     previewArea.innerHTML = '';
     downloadArea.style.display = 'none';
@@ -2564,8 +2513,8 @@ const itin = itinRaw.rows
     });
   });
 
-  // --- Load background from file upload (fallback) ---
-  async function loadTemplateFromFile(file) {
+  // --- Load background for the SELECTED template ---
+  async function loadTemplateBackground(file) {
     if (!file) return;
     const templateId = templateSelect.value;
     const tpl = TEMPLATES[templateId];
@@ -2574,7 +2523,7 @@ const itin = itinRaw.rows
       return;
     }
 
-    templateStatus.textContent = 'Loading from file…';
+    templateStatus.textContent = 'Loading…';
     templateStatus.style.color = 'var(--text-muted)';
     const fileType = file.type;
 
@@ -2632,9 +2581,9 @@ const itin = itinRaw.rows
       }
 
       tpl.bgImageData = ctx.getImageData(0, 0, A4_W, A4_H);
-      templateStatus.textContent = `✅ ${file.name} uploaded (overrides auto‑load)`;
+      templateStatus.textContent = `✅ ${file.name} loaded`;
       templateStatus.style.color = 'var(--green)';
-      showToast('Background loaded from file for ' + tpl.label, 'success');
+      showToast('Background loaded for ' + tpl.label, 'success');
 
     } catch (err) {
       console.error(err);
@@ -2645,7 +2594,7 @@ const itin = itinRaw.rows
 
   templateInput.addEventListener('change', function(e) {
     if (this.files && this.files.length > 0) {
-      loadTemplateFromFile(this.files[0]);
+      loadTemplateBackground(this.files[0]);
     } else {
       templateStatus.textContent = 'No file chosen';
     }
@@ -2675,19 +2624,12 @@ const itin = itinRaw.rows
       return;
     }
 
-    // Try to load from path if not loaded yet (in case user switched without auto-load)
-    if (!tpl.bgImageData && tpl.bgPath) {
-      loadTemplateFromPath(templateId);
-      // But we need to wait – we'll check again after a short delay? Better to simply generate if loaded, else show error.
-      // Since load is async, we can't wait here easily. We'll just show error if still not loaded.
-    }
-
     if (!tpl.bgImageData) {
-      showToast('Please load a background (auto-load or upload).', 'error');
+      showToast('Please upload a background for this template first.', 'error');
       return;
     }
 
-    readFineTune();
+    readFineTune(); // ensure latest values
 
     const allCrew = state.crew;
     const pilots = allCrew.filter(c => PILOT_RANKS.includes(c.opRank));
@@ -2702,13 +2644,17 @@ const itin = itinRaw.rows
     let pages = [];
 
     if (tpl.groupPilotsSeparately && totalCrew > perPage) {
+      // Page 1: pilots only (pad with nulls)
       const page1 = [...sortedPilots];
       while (page1.length < perPage) page1.push(null);
       pages.push(page1);
+
+      // Subsequent pages: cabin crew
       for (let i = 0; i < sortedCabin.length; i += perPage) {
         pages.push(sortedCabin.slice(i, i + perPage));
       }
     } else {
+      // Combined: pilots first, then cabin
       const combined = sortedPilots.concat(sortedCabin);
       for (let i = 0; i < combined.length; i += perPage) {
         pages.push(combined.slice(i, i + perPage));
@@ -2733,7 +2679,7 @@ const itin = itinRaw.rows
       ctx.putImageData(tpl.bgImageData, 0, 0);
 
       pageCrew.forEach((crewMember, idx) => {
-        if (!crewMember) return;
+        if (!crewMember) return; // skip null slots (pilot padding)
 
         const nameSlot = tpl.nameSlots[idx];
         const rankSlot = tpl.rankSlots ? tpl.rankSlots[idx] : null;
@@ -2746,6 +2692,7 @@ const itin = itinRaw.rows
         }
         const displayRank = crewMember.opRank || '';
 
+        // ---- Draw Name ----
         ctx.save();
         ctx.textBaseline = 'top';
         let nameFontSize = Math.max(6, nameSlot.fontSize + fontAdj);
@@ -2762,6 +2709,7 @@ const itin = itinRaw.rows
         ctx.fillText(displayName, nameX + 5, nameY + 5);
         ctx.restore();
 
+        // ---- Draw Rank ----
         if (rankSlot && displayRank) {
           ctx.save();
           ctx.textBaseline = 'top';
@@ -2806,15 +2754,17 @@ const itin = itinRaw.rows
 
   generateBtn.addEventListener('click', generateA4Pages);
 
+  // --- Apply & Regenerate (fine‑tune) ---
   applyTuneBtn.addEventListener('click', function() {
     if (generatedCanvases.length === 0) {
       showToast('Generate pages first, then fine‑tune.', 'error');
       return;
     }
     readFineTune();
-    generateA4Pages();
+    generateA4Pages(); // re‑run generation with new offsets
   });
 
+  // --- Clear ---
   clearA4Btn.addEventListener('click', function() {
     generatedCanvases = [];
     previewArea.innerHTML = '';
@@ -2822,6 +2772,7 @@ const itin = itinRaw.rows
     showToast('Cleared pages', 'default');
   });
 
+  // --- Copy Adjusted Slots ---
   function copyAdjustedSlots() {
     const templateId = templateSelect.value;
     const tpl = TEMPLATES[templateId];
@@ -2852,6 +2803,7 @@ const itin = itinRaw.rows
     const adjustedNameSlots = adjustSlots(tpl.nameSlots, nameOffX, nameOffY);
     const adjustedRankSlots = tpl.rankSlots ? adjustSlots(tpl.rankSlots, rankOffX, rankOffY) : null;
 
+    // Build code string
     let code = `// Adjusted slots for "${tpl.label}" (X/Y offsets applied)\n`;
     code += `nameSlots: [\n`;
     adjustedNameSlots.forEach((s, i) => {
@@ -2875,6 +2827,7 @@ const itin = itinRaw.rows
     navigator.clipboard.writeText(code).then(() => {
       showToast('Adjusted slots copied to clipboard!', 'success');
     }).catch(() => {
+      // Fallback
       const textarea = document.createElement('textarea');
       textarea.value = code;
       document.body.appendChild(textarea);
@@ -2887,6 +2840,7 @@ const itin = itinRaw.rows
 
   copySlotsBtn.addEventListener('click', copyAdjustedSlots);
 
+  // --- Download PNG sequential ---
   function downloadAllPng() {
     if (generatedCanvases.length === 0) {
       showToast('No pages to download.', 'error');
@@ -2911,6 +2865,7 @@ const itin = itinRaw.rows
 
   downloadPngBtn.addEventListener('click', downloadAllPng);
 
+  // --- Download PDF ---
   function downloadPdf() {
     if (generatedCanvases.length === 0) {
       showToast('No pages to download.', 'error');
