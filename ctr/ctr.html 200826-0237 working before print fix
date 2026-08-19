@@ -927,61 +927,16 @@
 
   /* ── Print styles ── */
   @media print {
-    html, body { height: auto !important; min-height: auto !important; margin: 0; padding: 0; background: white; }
+    html, body { height: auto !important; min-height: auto !important; }
     body::before, body::after { display: none !important; }
     body { background: #fff; }
-
-    /* Hide all UI elements */
-    header, .card:not(.reportcard):not(#a4ExportCard), .noprint, .noprint-inline, .stats-row, .btnrow, .status, .badge-group, .file-upload-wrapper, .toast, footer { display: none !important; }
-
-    /* Show report card for internal report (if needed) */
+    header, .card:not(.reportcard), .noprint, .noprint-inline { display: none !important; }
     .report-card { background: none; border: none; padding: 0; margin: 0; }
     .report-card .report-inner { border-radius: 0; padding: 0; overflow: visible; margin: 0; }
-
-    /* --- A4 Export Card Print Styles --- */
-    #a4ExportCard {
-      display: block !important;
-      border: none !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      background: transparent !important;
-      box-shadow: none !important;
-    }
-    #a4ExportCard .card-header,
-    #a4ExportCard .btnrow,
-    #a4ExportCard .fine-tune-group,
-    #a4ExportCard .method-tag,
-    #a4ExportCard .card-sub {
-      display: none !important;
-    }
-
-    #a4PreviewArea {
-      display: block !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    #a4PreviewArea > div {
-      margin: 0 !important;
-      padding: 0 !important;
-      display: block !important;
-    }
-
-    #a4PreviewArea canvas {
-      display: block !important;
-      max-width: 100% !important;
-      width: 100% !important;
-      height: auto !important;
-      page-break-after: always;
-      border: none !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      margin: 0 auto !important;
-    }
-
+    .stats-row, .btnrow, .status, .badge-group { display: none !important; }
     .container { max-width: 100%; padding: 0; margin: 0; }
-
-    /* Specific table print overrides for internal report */
+    #report { border-radius: 0; font-size: 8.5px; margin: 0; padding: 0; }
+    #report .rpad { padding: 4px 6px; }
     .top-info input, .top-info input.rep { border-color: #999 !important; background: #fff !important; }
     .ft-table td input { border: none !important; }
     table.rtab { font-size: 8px; }
@@ -996,11 +951,12 @@
     .pos-cell.unset { color: transparent !important; font-size: 0 !important; }
     .door-cell.unset { color: transparent !important; font-size: 0 !important; }
     .ft-cell-clickable:hover { background: transparent !important; }
+    .toast { display: none !important; }
     table.rtab tr, .ft-table tr, .captain-icc-table tr { page-break-inside: avoid; }
     .alt-icc-badge { display: inline-block !important; background: #111 !important; color: #fff !important; }
     .captain-icc-table td { padding: 2px 4px; }
   }
-  @page { size: A4 landscape; margin: 0; }
+  @page { size: auto; margin: 8mm; }
 
   /* ── A4 Export Card styles ── */
   .file-upload-btn {
@@ -1171,14 +1127,14 @@
   </div>
 
   <!-- ===== A4 EXPORT CARD (Multi‑Template) ===== -->
-  <div class="card" id="a4ExportCard">
-    <span class="method-tag noprint">🖼️ A4</span>
-    <div class="card-header noprint">
+  <div class="card noprint" id="a4ExportCard">
+    <span class="method-tag">🖼️ A4</span>
+    <div class="card-header">
       <div class="card-title"><span class="icon">📄</span> 3. Generate A4 Crew Sheets</div>
       <span class="card-sub">rank‑ordered · fine‑tune · copy slots</span>
     </div>
 
-    <div class="btnrow noprint">
+    <div class="btnrow">
       <label style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text-muted);">Template:</label>
       <select id="templateSelect">
         <!-- Populated by JavaScript -->
@@ -1186,7 +1142,7 @@
       <button class="secondary-btn" id="loadTemplateBtn" style="border-color:var(--accent);color:var(--accent);">📥 Load from templates/</button>
     </div>
 
-    <div class="btnrow noprint">
+    <div class="btnrow">
       <label class="file-upload-btn" style="background:var(--accent);padding:8px 20px;border-radius:50px;cursor:pointer;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:8px;">
         📎 Upload Background for <span id="templateNameDisplay">selected</span>
         <input type="file" id="a4TemplateInput" accept=".pdf,.png,.jpg,.jpeg,.webp" style="display:none;">
@@ -1194,13 +1150,13 @@
       <span id="a4TemplateStatus" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted);">No background loaded</span>
     </div>
 
-    <div class="btnrow noprint">
+    <div class="btnrow">
       <button class="primary-btn" id="generateA4Btn">⚡ Generate A4 Pages</button>
       <button class="secondary-btn" id="clearA4Btn">Clear Pages</button>
     </div>
 
     <!-- ===== FINE‑TUNE CONTROLS ===== -->
-    <div class="fine-tune-group noprint">
+    <div class="fine-tune-group">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
         <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text);">🔧 Fine‑Tune (global offsets)</span>
         <button class="secondary-btn" id="applyTuneBtn" style="padding:4px 16px;font-size:12px;">Apply & Regenerate</button>
@@ -1217,7 +1173,7 @@
 
     <div id="a4PreviewArea" style="display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;justify-content:center;"></div>
 
-    <div id="a4DownloadArea" style="display:none;margin-top:12px;" class="btnrow noprint">
+    <div id="a4DownloadArea" style="display:none;margin-top:12px;" class="btnrow">
       <button class="primary-btn" id="downloadPngBtn">⬇️ Download PNGs (sequential)</button>
       <button class="primary-btn" id="downloadPdfBtn" style="background:#28a745;">⬇️ Download PDF</button>
     </div>
