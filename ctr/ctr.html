@@ -2305,7 +2305,7 @@
   // ===== Print =====
   document.getElementById('printBtn').addEventListener('click', () => window.print());
 
-  // ===== BAGGAGE DECLARATION GENERATOR =====
+  // ===== BAGGAGE DECLARATION GENERATOR (Re-calibrated to fit your screenshot) =====
   async function exportBaggageDeclaration() {
     if (!state || !state.crew || state.crew.length === 0) {
       showToast('No crew found. Parse a trip report first.', 'error');
@@ -2331,27 +2331,29 @@
     try {
       const arrayBuffer = await file.arrayBuffer();
       const { PDFDocument, rgb, StandardFonts } = PDFLib;
-      
+
       const pdfDoc = await PDFDocument.load(arrayBuffer);
       pdfDoc.registerFontkit(fontkit);
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const page = pdfDoc.getPages()[0];
 
-      // A4 Landscape exact coordinates
+      // --- RE-CALIBRATED EXACT COORDINATES FOR YOUR A4 LANDSCAPE FORM ---
       const A4_HEIGHT = 595.28;
-      const START_X = 50;      // Left edge of the Name column
-      const START_Y = 120;     // Top edge of the first empty row
-      const ROW_HEIGHT = 32;   // Space between rows
+      const START_X = 48;      // Left padding inside the "Name" column
+      const START_Y = 125;     // Top edge of the first empty row
+      const ROW_HEIGHT = 28;   // Compact spacing between rows
+      const FONT_SIZE = 9.5;   // Smaller font to prevent long names from overlapping
 
       names.forEach((name, i) => {
-        // Y originates from bottom in pdf-lib, so we flip it
+        // Y originates from the BOTTOM in pdf-lib, so we flip the math
         const y = A4_HEIGHT - (START_Y + (i * ROW_HEIGHT));
-        if (y < 50) return; // Stop if form runs out of rows
+        if (y < 60) return; // Stop writing if we run out of rows
 
+        // This writes the name HORIZONTALLY (left-to-right), fixing your rotation issue
         page.drawText(name, {
           x: START_X,
           y: y,
-          size: 11,
+          size: FONT_SIZE,
           font: font,
           color: rgb(0, 0, 0)
         });
@@ -2371,7 +2373,7 @@
     }
   }
 
-  // Attach the baggage export function to the new button
+  // Re-attach the baggage export function
   document.getElementById('exportBaggageBtn').addEventListener('click', exportBaggageDeclaration);
 
 })();
