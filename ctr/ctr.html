@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>CTR Autofill + PDF Overlay</title>
+<title>CTR Autofill – One‑Click PDF Overlay</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
@@ -1098,7 +1098,7 @@
     <div class="badge-group">
       <div class="badge">📄 PDF Parser</div>
       <div class="badge">🔒 Offline</div>
-      <div class="badge accent">v2.5 – Simple Calibration</div>
+      <div class="badge accent">v2.6 – One‑Click</div>
     </div>
   </header>
 
@@ -1200,7 +1200,7 @@
   </div>
 
   <!-- ============================================================ -->
-  <!-- ===== PDF OVERLAY CARD (simplified calibration) ===== -->
+  <!-- ===== PDF OVERLAY CARD – One‑Click default calibration ===== -->
   <!-- ============================================================ -->
   <div class="card noprint" id="pdfOverlayCard" style="display:none;">
     <span class="method-tag">📄 OVERLAY</span>
@@ -1208,11 +1208,11 @@
       <div class="card-header-left">
         <div class="card-title"><span class="icon">🖨️</span> PDF Template Overlay</div>
       </div>
-      <span class="card-sub">Stamp crew data – only Name & Rank/Designation</span>
+      <span class="card-sub">One‑click – no calibration needed for BOM</span>
     </div>
 
-    <div class="calib-step-hint" id="calibHint">
-      ⚙️ <strong>Calibration required once per destination+form.</strong> Tap the canvas to mark <strong>Name</strong> and <strong>Rank/Designation</strong> column positions, then tap row start and row end.
+    <div class="calib-step-hint" id="calibHint" style="display:none;">
+      ⚙️ <strong>Calibration required only if defaults don't fit.</strong> Tap the canvas to mark <strong>Name</strong> and <strong>Rank/Designation</strong> column positions.
     </div>
 
     <div class="calib-controls">
@@ -1228,19 +1228,19 @@
         <option value="landing">🛬 Landing Permit</option>
         <option value="baggage">🧳 Baggage Declaration</option>
       </select>
-      <button class="primary-btn" id="calibToggleBtn">📐 Calibrate</button>
+      <button class="primary-btn" id="calibToggleBtn" style="display:none;">📐 Calibrate (fine‑tune)</button>
       <button class="primary-btn" id="generateOverlayBtn">⬇️ Generate Filled PDF</button>
       <button class="secondary-btn" id="resetCalibBtn">↺ Reset Calibration</button>
     </div>
 
-    <div id="calibStatus" class="calib-status">Not calibrated. Tap "Calibrate" to begin.</div>
+    <div id="calibStatus" class="calib-status">Using built‑in defaults – ready to generate.</div>
 
     <div class="calib-canvas-wrap" id="calibCanvasWrap" style="display:none;">
       <canvas id="calibCanvas"></canvas>
       <div class="calib-overlay-layer" id="calibOverlayLayer"></div>
     </div>
 
-    <div class="coord-display" id="coordDisplay">Coordinates: —</div>
+    <div class="coord-display" id="coordDisplay">Coordinates: Default</div>
     <div class="btnrow" style="margin-top:8px;">
       <button class="secondary-btn" id="calibSaveBtn" style="display:none;">💾 Save Calibration</button>
       <button class="secondary-btn" id="calibCancelBtn" style="display:none;">Cancel</button>
@@ -1254,7 +1254,7 @@
     </div>
     <div style="font-family:'DM Mono',monospace; font-size:13px; color:var(--text-dim);">
       Paste a trip report above and tap <span style="color:var(--accent);">Parse & Fill Report</span> or <span style="color:var(--accent);">Parse PDF Report</span>.
-      Then use the <span style="color:var(--accent);">PDF Template Overlay</span> card to stamp crew data onto official PDF forms.
+      Then tap <span style="color:var(--accent);">Generate Filled PDF</span> – we've pre‑calibrated BOM forms for you.
     </div>
   </div>
 
@@ -1342,7 +1342,7 @@
 <!-- ===== FOOTER ===== -->
 <footer class="noprint">
   🔒 All processing is local — your data never leaves your device.<br>
-  <span style="color:var(--accent);">CTR</span> · 2100551 · Simplified Calibration
+  <span style="color:var(--accent);">CTR</span> · 2100551 · One‑Click PDF Overlay
 </footer>
 
 <script>
@@ -2459,7 +2459,7 @@
   document.getElementById('printBomBaggageBtn').addEventListener('click', () => printOnly('bomBaggageReportCard'));
 
   // ================================================================
-  // 2. SIMPLIFIED PDF OVERLAY ENGINE – only Name & Rank
+  // 2. SIMPLIFIED PDF OVERLAY ENGINE – with built‑in defaults
   // ================================================================
 
   // ---- DOM refs for overlay ----
@@ -2499,7 +2499,51 @@
   function setCalib(val) { calibData[getCalibKey()] = val; saveCalibration(); }
   function resetCalib() { delete calibData[getCalibKey()]; saveCalibration(); }
 
-  // ---- Simplified column labels – only Name and Rank ----
+  // ---- Built‑in default calibration for BOM forms (A4 landscape) ----
+  function getDefaultCalib(dest, formType) {
+    // Defaults: Name column ~15%, Rank column ~30% of page width,
+    // row start ~22% of page height, row height ~4.5% of page height.
+    // These work for typical A4 landscape (842 x 595 points).
+    if (dest !== 'bom') return null;
+    const pageWidth = 842;  // A4 landscape width (points)
+    const pageHeight = 595; // A4 landscape height
+    if (formType === 'baggage') {
+      return {
+        columns: [pageWidth * 0.08, pageWidth * 0.30],
+        rowY: pageHeight * 0.22,
+        rowHeight: pageHeight * 0.045,
+        pageWidth: pageWidth,
+        pageHeight: pageHeight,
+        rotation: 0,
+        fontSize: 9,
+        fontName: 'Helvetica'
+      };
+    } else if (formType === 'landing') {
+      // Slightly different for landing permit
+      return {
+        columns: [pageWidth * 0.15, pageWidth * 0.42],
+        rowY: pageHeight * 0.27,
+        rowHeight: pageHeight * 0.04,
+        pageWidth: pageWidth,
+        pageHeight: pageHeight,
+        rotation: 0,
+        fontSize: 9,
+        fontName: 'Helvetica'
+      };
+    }
+    return null;
+  }
+
+  // ---- Get effective calibration (user or default) ----
+  function getEffectiveCalib() {
+    const userCalib = getCalib();
+    if (userCalib) return userCalib;
+    const dest = destSelect.value;
+    const formType = formTypeSelect.value;
+    return getDefaultCalib(dest, formType);
+  }
+
+  // ---- Column labels (only Name and Rank) ----
   const COLUMN_LABELS = ['Name', 'Rank/Designation'];
 
   // ---- Get crew data ----
@@ -2529,12 +2573,11 @@
     return arrayBuffer;
   }
 
-  // ---- Calibration ----
+  // ---- Calibration (manual, hidden by default) ----
   let calibActive = false;
   let calibPoints = [];
   let calibStep = 0;
   let calibCtx = null;
-  let rotationAngle = 0; // capture rotation
 
   async function startCalibration() {
     calibActive = true;
@@ -2555,7 +2598,7 @@
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       const page = await pdf.getPage(1);
-      rotationAngle = page.rotate || 0; // store rotation
+      const rotationAngle = page.rotate || 0;
       const viewport = page.getViewport({ scale: 1.5 });
       const canvas = calibCanvas;
       const ctx = canvas.getContext('2d');
@@ -2704,7 +2747,7 @@
     cleanupCalibration();
   }
 
-  // ---- Toggle calibration ----
+  // ---- Toggle calibration (hidden by default) ----
   calibToggleBtn.addEventListener('click', function() {
     const calib = getCalib();
     if (calib) {
@@ -2719,22 +2762,23 @@
   resetCalibBtn.addEventListener('click', function() {
     if (confirm('Reset calibration for this form?')) {
       resetCalib();
-      calibStatus.textContent = 'Calibration reset. Tap "Calibrate" to set up again.';
+      calibStatus.textContent = 'Calibration reset. Using built‑in defaults.';
       calibStatus.className = 'calib-status';
-      coordDisplay.textContent = 'Coordinates: —';
+      coordDisplay.textContent = 'Coordinates: Default';
       showToast('Calibration reset', 'default');
+      updateCalibStatus();
     }
   });
 
-  // ---- Generate filled PDF ----
+  // ---- Generate filled PDF (uses effective calibration) ----
   generateOverlayBtn.addEventListener('click', async function() {
     if (!state || !state.crew || !state.crew.length) {
       showToast('No crew data. Parse a report first.', 'error');
       return;
     }
-    const calib = getCalib();
+    const calib = getEffectiveCalib();
     if (!calib || !calib.columns || calib.columns.length < 2) {
-      showToast('Please calibrate the form first (tap "Calibrate").', 'error');
+      showToast('No calibration available. Please tap "Calibrate" to set up.', 'error');
       return;
     }
 
@@ -2769,18 +2813,6 @@
       const rowsToDraw = Math.min(rowData.length, maxRows);
 
       const helvetica = await doc.embedFont(PDFLib.StandardFonts.Helvetica);
-
-      // For rotated pages, we need to adjust coordinates to the page's internal coordinate system.
-      // pdf-lib uses the page's own coordinate space (before rotation).
-      // If the page is rotated, we need to transform our calculated positions.
-      // The simplest: use the page's getSize after rotation? Actually, pdf-lib's page width/height are already the unrotated box size.
-      // When rotation is applied, the content is drawn on the unrotated page, but the viewer rotates it.
-      // So we should draw at the same positions as if the page were unrotated – the viewer will rotate it.
-      // Our calibration was done on the rotated view, but we captured the rotation and adjusted scale.
-      // The positions we computed (colX, startY) are in the unrotated coordinate system if we used effectiveWidth/height.
-      // Since we already used effective size for scaling, the coordinates are correct for the unrotated page.
-      // We just need to ensure we don't double-rotate.
-      // For safety, we'll just draw as-is.
 
       for (let r = 0; r < rowsToDraw; r++) {
         const row = rowData[r];
@@ -2821,13 +2853,13 @@
 
   // ---- Update status ----
   function updateCalibStatus() {
-    const calib = getCalib();
+    const calib = getEffectiveCalib();
     if (calib) {
-      calibStatus.textContent = '✅ Calibrated: Name + Rank, rowY=' + Math.round(calib.rowY) + ', rowH=' + Math.round(calib.rowHeight);
+      calibStatus.textContent = '✅ Using ' + (getCalib() ? 'user‑calibrated' : 'built‑in default') + ' settings. Ready to generate.';
       calibStatus.className = 'calib-status ok';
-      coordDisplay.textContent = 'Coordinates: Name + Rank ready';
+      coordDisplay.textContent = 'Coordinates: ' + (getCalib() ? 'User' : 'Default') + ' – Name + Rank';
     } else {
-      calibStatus.textContent = 'Not calibrated. Tap "Calibrate" to begin.';
+      calibStatus.textContent = 'No calibration found. Tap "Calibrate" to set up.';
       calibStatus.className = 'calib-status';
       coordDisplay.textContent = 'Coordinates: —';
     }
@@ -2840,6 +2872,11 @@
   (function initOverlay() {
     document.getElementById('pdfOverlayCard').style.display = 'none';
     updateCalibStatus();
+    // Hide calibrate button unless needed
+    calibToggleBtn.style.display = 'none';
+    // Show a hint that it's one‑click
+    const hint = document.getElementById('calibHint');
+    if (hint) hint.style.display = 'none';
   })();
 
 })();
