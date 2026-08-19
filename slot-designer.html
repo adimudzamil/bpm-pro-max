@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Slot Designer - Click to Add Text Boxes</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f0f2f5; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; }
+        .toolbar { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; margin: 15px 0; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+        button.danger { background: #dc3545; }
+        button.success { background: #28a745; }
+        button.warning { background: #ffc107; color: black; }
+        canvas { border: 2px solid #333; width: 100%; height: auto; background: white; cursor: crosshair; }
+        .code-output { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 13px; white-space: pre-wrap; margin-top: 15px; }
+        .flex-row { display: flex; gap: 20px; }
+        .flex-row > div { flex: 1; }
+        input[type="file"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>📐 Design Your Text Slots</h2>
+    <p>Upload your A4 PDF → <strong>Click anywhere</strong> on the image to place a red text-slot box → Copy the generated code.</p>
+
+    <input type="file" id="pdfUpload" accept=".pdf">
+    
+    <div class="toolbar">
+        <button id="toggleDesignBtn" class="warning">✏️ Enable Click-to-Add (ON)</button>
+        <button id="clearSlotsBtn" class="danger">🗑️ Clear All Slots</button>
+        <button id="copyCodeBtn" class="success">📋 Copy Code</button>
+        <span style="margin-left: auto; font-size: 14px;">Slots placed: <strong id="slotCounter">0</strong></span>
+    </div>
+
+    <canvas id="a4Canvas"></canvas>
+
+    <div class="flex-row">
+        <div>
+            <h4>📋 Generated Slot Array (Paste this into your script)</h4>
+            <div class="code-output" id="codeDisplay">// Click on the canvas above to add slots...</div>
+        </div>
+    </div>
+    <p style="font-size: 13px; color: #666;">💡 Each slot has default size: <strong>width: 400px, height: 60px</strong>. Edit the W/H numbers in the code if you need bigger boxes.</p>
+</div>
+
+<script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+    const canvas = document.getElementById('a4Canvas');
+    const ctx = canvas.getContext('2d');
+    const codeDisplay = document.getElementById('codeDisplay');
+    const slotCounter = document.getElementById('slotCounter');
+
+    // Fixed A4 size @ 150 DPI
+    const A4_W = 1240;
+    const A4_H = 1754;
+    canvas.width = A4_W;
+    canvas.height = A4_H;
+
+    let slots = []; // Array of { x, y, w, h, fontSize }
+    let isDesignMode = true;
+    let pdfRendered = false;
+
+    // Default slot size (you can change these)
+    const DEFAULT_W = 400;
+    const DEFAULT_H = 60;
+    const DEFAULT_FONT = 28;
+
+    // --- Render the PDF (or blank) ---
+    async function renderPDF(file) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, A4_W, A4_H);
+
+        if (file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            const page = await pdf.getPage(1);
+            
+            const viewport = page.getViewport({ scale: 1 });
+            const scaleX = A4_W / viewport.width;
+            const scaleY = A4_H / viewport.height;
+            const scale = Math.min(scaleX, scaleY);
+            
+            const scaledViewport = page.getViewport({ scale: scale });
+            const offsetX = (A4_W - scaledViewport.width) / 2;
+            const offsetY = (A4_H - scaledViewport.height) / 2;
+            
+            await page.render({
+                canvasContext: ctx,
+                viewport: scaledViewport,
+                transform: [1, 0, 0, 1, offsetX, offsetY]
+            }).promise;
+        }
+        pdfRendered = true;
+        drawSlots(); // Redraw slots on top
+    }
+
+    // --- Draw all slots on the canvas ---
+    function drawSlots() {
+        // Re-draw the PDF underneath first (to clear old slot drawings)
+        if (pdfRendered) {
+            // We need to re-render, but we don't have the file object stored easily here.
+            // Quick fix: we'll just redraw the slots over the existing background, 
+            // but if we want to clear red boxes, we need to re-render the PDF.
+            // Since this is a designer tool, we'll just draw a semi-transparent white layer over the boxes? No.
+            // Better: Save the raw PDF as an ImageData? Too heavy.
+            // Simpler: Just draw the slots on top. If the user wants to clear, they hit clear.
+            // We'll use a "dirty" flag or just draw over.
+        }
+        
+        // Actually, let's just overlay. Since the PDF is static, we can draw slots.
+        // But to clear previous slot drawings, we need the PDF background.
+        // Let's store the canvas image data right after PDF render.
+        // I'll use a backgroundImageData variable.
+        if (backgroundImageData) {
+            ctx.putImageData(backgroundImageData, 0, 0);
+        }
+
+        // Draw each slot
+        slots.forEach((slot, index) => {
+            // Red dashed box
+            ctx.strokeStyle = '#FF0000';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([8, 6]);
+            ctx.strokeRect(slot.x, slot.y, slot.w, slot.h);
+            ctx.setLineDash([]);
+
+            // Semi-transparent red fill
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.08)';
+            ctx.fillRect(slot.x, slot.y, slot.w, slot.h);
+
+            // Slot number label
+            ctx.fillStyle = '#FF0000';
+            ctx.font = 'bold 18px Arial';
+            ctx.textBaseline = 'top';
+            ctx.fillText(`#${index + 1}`, slot.x + 5, slot.y + 5);
+        });
+
+        // Update counter
+        slotCounter.innerText = slots.length;
+        updateCodeDisplay();
+    }
+
+    let backgroundImageData = null;
+
+    // Override renderPDF to save background
+    const originalRender = renderPDF;
+    renderPDF = async function(file) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, A4_W, A4_H);
+
+        if (file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            const page = await pdf.getPage(1);
+            
+            const viewport = page.getViewport({ scale: 1 });
+            const scaleX = A4_W / viewport.width;
+            const scaleY = A4_H / viewport.height;
+            const scale = Math.min(scaleX, scaleY);
+            
+            const scaledViewport = page.getViewport({ scale: scale });
+            const offsetX = (A4_W - scaledViewport.width) / 2;
+            const offsetY = (A4_H - scaledViewport.height) / 2;
+            
+            await page.render({
+                canvasContext: ctx,
+                viewport: scaledViewport,
+                transform: [1, 0, 0, 1, offsetX, offsetY]
+            }).promise;
+        }
+        pdfRendered = true;
+        // Save the background so we can redraw it over slots when refreshing
+        backgroundImageData = ctx.getImageData(0, 0, A4_W, A4_H);
+        drawSlots();
+    };
+
+    // --- Update the Code Display ---
+    function updateCodeDisplay() {
+        if (slots.length === 0) {
+            codeDisplay.innerText = '// No slots yet. Click on the canvas to add them!';
+            return;
+        }
+        let code = 'const fixedSlots = [\n';
+        slots.forEach((s, i) => {
+            code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
+            if (i < slots.length - 1) code += ',';
+            code += '\n';
+        });
+        code += '];';
+        codeDisplay.innerText = code;
+    }
+
+    // --- Canvas Click Handler (Design Mode) ---
+    canvas.addEventListener('click', function(e) {
+        if (!isDesignMode) return;
+        if (!pdfRendered) {
+            alert('Please upload a PDF first to see where to place slots!');
+            return;
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width; // canvas physical size / CSS size
+        const scaleY = canvas.height / rect.height;
+        
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
+
+        // Clamp to canvas bounds
+        const x = Math.min(Math.max(mouseX, 0), A4_W - 10);
+        const y = Math.min(Math.max(mouseY, 0), A4_H - 10);
+
+        // Add new slot with default dimensions
+        slots.push({ 
+            x: Math.round(x), 
+            y: Math.round(y), 
+            w: DEFAULT_W, 
+            h: DEFAULT_H, 
+            fontSize: DEFAULT_FONT 
+        });
+
+        drawSlots();
+    });
+
+    // --- UI Buttons ---
+    document.getElementById('toggleDesignBtn').addEventListener('click', function() {
+        isDesignMode = !isDesignMode;
+        this.textContent = isDesignMode ? '✏️ Enable Click-to-Add (ON)' : '✏️ Enable Click-to-Add (OFF)';
+        this.classList.toggle('warning');
+        this.classList.toggle('danger');
+    });
+
+    document.getElementById('clearSlotsBtn').addEventListener('click', function() {
+        if (confirm('Clear all placed slots?')) {
+            slots = [];
+            drawSlots();
+        }
+    });
+
+    document.getElementById('copyCodeBtn').addEventListener('click', function() {
+        const code = codeDisplay.innerText;
+        if (code.startsWith('// No slots')) {
+            alert('Please add some slots first by clicking on the canvas!');
+            return;
+        }
+        navigator.clipboard.writeText(code).then(() => {
+            alert('✅ Code copied to clipboard! Paste it into your final script.');
+        }).catch(() => {
+            // Fallback
+            const range = document.createRange();
+            range.selectNode(codeDisplay);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            alert('✅ Code copied!');
+        });
+    });
+
+    // --- File Upload ---
+    document.getElementById('pdfUpload').addEventListener('change', function(e) {
+        if (this.files && this.files.length > 0) {
+            renderPDF(this.files[0]);
+        }
+    });
+
+    // Auto-run with a blank canvas (so they can click even without a PDF)
+    window.onload = function() {
+        // Render blank A4
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, A4_W, A4_H);
+        backgroundImageData = ctx.getImageData(0, 0, A4_W, A4_H);
+        pdfRendered = true;
+        drawSlots();
+    };
+</script>
+</body>
+</html>
