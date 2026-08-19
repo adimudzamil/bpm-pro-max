@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Slot Designer - Landscape A4</title>
+    <title>Landscape A4 Slot Designer (Rotation Fix)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
         body { font-family: Arial; padding: 20px; background: #f0f2f5; }
@@ -15,17 +15,29 @@
         .code-output { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 13px; white-space: pre-wrap; margin-top: 15px; max-height: 200px; overflow-y: auto; }
         input[type="file"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; }
         .file-hint { font-size: 13px; color: #666; margin-top: 5px; }
-        .flex-row { display: flex; gap: 20px; }
-        .flex-row > div { flex: 1; }
+        select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; background: white; }
+        .info-box { background: #e7f3ff; padding: 10px; border-radius: 6px; font-size: 14px; margin-top: 10px; }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>📐 Landscape A4 Slot Designer (1754 x 1240)</h2>
-    <p>Upload your landscape PDF or PNG → Click anywhere to place red text-slots → Copy the code.</p>
+    <h2>📐 Landscape A4 Slot Designer</h2>
+    <p>Upload your landscape PDF/PNG → Click anywhere to place red text-slots → Copy the code.</p>
 
-    <input type="file" id="fileUpload" accept=".pdf,.png,.jpg,.jpeg,.webp">
-    <div class="file-hint">✅ Supports PDF, PNG, JPG, WebP (Fits to Landscape A4)</div>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+        <div style="flex: 2;">
+            <input type="file" id="fileUpload" accept=".pdf,.png,.jpg,.jpeg,.webp">
+        </div>
+        <div>
+            <label>Fit Mode: </label>
+            <select id="fitMode">
+                <option value="contain">Contain (Preserve aspect, no crop)</option>
+                <option value="cover">Cover (Fill A4, crops edges)</option>
+                <option value="stretch">Stretch (Fill exact A4, distorts)</option>
+            </select>
+        </div>
+    </div>
+    <div class="file-hint">✅ Supports PDF, PNG, JPG, WebP | <span id="pdfInfo">No file loaded</span></div>
     
     <div class="toolbar">
         <button id="toggleDesignBtn" class="warning">✏️ Click-to-Add (ON)</button>
@@ -37,10 +49,10 @@
     <canvas id="a4Canvas"></canvas>
 
     <div>
-        <h4>📋 Generated Slot Array (Paste into your Roll-Call script)</h4>
-        <div class="code-output" id="codeDisplay">// Click on the canvas above to add slots...</div>
+        <h4>📋 Generated Slot Array</h4>
+        <div class="code-output" id="codeDisplay">// Upload your file and click on the canvas to add slots...</div>
     </div>
-    <p style="font-size: 13px; color: #666;">💡 Default slot size: <strong>width: 500px, height: 70px</strong> (optimized for landscape). Edit <code>DEFAULT_W</code> and <code>DEFAULT_H</code> in the script if needed.</p>
+    <p style="font-size: 13px; color: #666;">💡 Default slot size: <strong>width: 500px, height: 70px</strong>. Edit <code>DEFAULT_W</code> and <code>DEFAULT_H</code> in the script if needed.</p>
 </div>
 
 <script>
@@ -50,10 +62,11 @@
     const ctx = canvas.getContext('2d');
     const codeDisplay = document.getElementById('codeDisplay');
     const slotCounter = document.getElementById('slotCounter');
+    const pdfInfo = document.getElementById('pdfInfo');
 
-    // --- LANDSCAPE A4 DIMENSIONS @ 150 DPI ---
-    const A4_W = 1754;  // Width is now the larger number
-    const A4_H = 1240;  // Height is the smaller number
+    // LANDSCAPE A4 @ 150 DPI
+    const A4_W = 1754;
+    const A4_H = 1240;
     canvas.width = A4_W;
     canvas.height = A4_H;
 
@@ -61,12 +74,11 @@
     let isDesignMode = true;
     let backgroundImageData = null;
 
-    // Default slot size (wider for landscape)
     const DEFAULT_W = 500;
     const DEFAULT_H = 70;
     const DEFAULT_FONT = 30;
 
-    // --- Render File (PDF or Image) to Landscape A4 ---
+    // --- RENDER FILE (FIXED ROTATION + FIT MODES) ---
     async function renderFile(file) {
         if (!file) return;
 
@@ -74,26 +86,67 @@
         ctx.fillRect(0, 0, A4_W, A4_H);
 
         const fileType = file.type;
+        const fitMode = document.getElementById('fitMode').value;
 
         if (fileType === 'application/pdf') {
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
             const page = await pdf.getPage(1);
             
-            const viewport = page.getViewport({ scale: 1 });
-            const scaleX = A4_W / viewport.width;
-            const scaleY = A4_H / viewport.height;
-            const scale = Math.min(scaleX, scaleY);
+            // --- FIX: Explicitly apply the PDF's rotation flag ---
+            const rotation = page.rotate || 0;
+            const viewport = page.getViewport({ scale: 1, rotation: rotation });
             
-            const scaledViewport = page.getViewport({ scale: scale });
-            const offsetX = (A4_W - scaledViewport.width) / 2;
-            const offsetY = (A4_H - scaledViewport.height) / 2;
-            
-            await page.render({
-                canvasContext: ctx,
-                viewport: scaledViewport,
-                transform: [1, 0, 0, 1, offsetX, offsetY]
-            }).promise;
+            // Show info
+            pdfInfo.innerText = `PDF Page: ${Math.round(viewport.width)}x${Math.round(viewport.height)} pts (Rotation: ${rotation}°)`;
+
+            let scaleX = A4_W / viewport.width;
+            let scaleY = A4_H / viewport.height;
+            let scale, offsetX, offsetY, drawWidth, drawHeight;
+
+            switch(fitMode) {
+                case 'contain':
+                    scale = Math.min(scaleX, scaleY);
+                    drawWidth = viewport.width * scale;
+                    drawHeight = viewport.height * scale;
+                    offsetX = (A4_W - drawWidth) / 2;
+                    offsetY = (A4_H - drawHeight) / 2;
+                    break;
+                case 'cover':
+                    scale = Math.max(scaleX, scaleY);
+                    drawWidth = viewport.width * scale;
+                    drawHeight = viewport.height * scale;
+                    offsetX = (A4_W - drawWidth) / 2;
+                    offsetY = (A4_H - drawHeight) / 2;
+                    break;
+                case 'stretch':
+                default:
+                    drawWidth = A4_W;
+                    drawHeight = A4_H;
+                    offsetX = 0;
+                    offsetY = 0;
+                    scale = 1; // Not used in transform
+                    break;
+            }
+
+            // For 'stretch', we don't use transform, we just render to the exact size.
+            if (fitMode === 'stretch') {
+                // Render PDF to fill the canvas completely (distorts if aspect differs)
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = viewport.width;
+                tempCanvas.height = viewport.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
+                ctx.drawImage(tempCanvas, 0, 0, A4_W, A4_H);
+            } else {
+                // Render with transform (contain or cover)
+                const transform = [scale, 0, 0, scale, offsetX, offsetY];
+                await page.render({
+                    canvasContext: ctx,
+                    viewport: viewport,
+                    transform: transform
+                }).promise;
+            }
         } 
         else if (fileType.startsWith('image/')) {
             const reader = new FileReader();
@@ -107,18 +160,36 @@
                 reader.readAsDataURL(file);
             });
 
+            pdfInfo.innerText = `Image: ${img.width}x${img.height} px`;
+
             const scaleX = A4_W / img.width;
             const scaleY = A4_H / img.height;
-            const scale = Math.min(scaleX, scaleY);
-            
-            const drawWidth = img.width * scale;
-            const drawHeight = img.height * scale;
-            const offsetX = (A4_W - drawWidth) / 2;
-            const offsetY = (A4_H - drawHeight) / 2;
+            let drawWidth, drawHeight, offsetX, offsetY;
 
-            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+            switch(fitMode) {
+                case 'contain':
+                    const scale = Math.min(scaleX, scaleY);
+                    drawWidth = img.width * scale;
+                    drawHeight = img.height * scale;
+                    offsetX = (A4_W - drawWidth) / 2;
+                    offsetY = (A4_H - drawHeight) / 2;
+                    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+                    break;
+                case 'cover':
+                    const scaleC = Math.max(scaleX, scaleY);
+                    drawWidth = img.width * scaleC;
+                    drawHeight = img.height * scaleC;
+                    offsetX = (A4_W - drawWidth) / 2;
+                    offsetY = (A4_H - drawHeight) / 2;
+                    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+                    break;
+                case 'stretch':
+                default:
+                    ctx.drawImage(img, 0, 0, A4_W, A4_H);
+                    break;
+            }
         } else {
-            alert('Unsupported file. Please upload PDF or PNG/JPG.');
+            alert('Unsupported file.');
             return;
         }
 
@@ -126,7 +197,7 @@
         drawSlots();
     }
 
-    // --- Draw Slots ---
+    // --- DRAW SLOTS (unchanged) ---
     function drawSlots() {
         if (!backgroundImageData) return;
         ctx.putImageData(backgroundImageData, 0, 0);
@@ -137,10 +208,8 @@
             ctx.setLineDash([8, 6]);
             ctx.strokeRect(slot.x, slot.y, slot.w, slot.h);
             ctx.setLineDash([]);
-
             ctx.fillStyle = 'rgba(255, 0, 0, 0.08)';
             ctx.fillRect(slot.x, slot.y, slot.w, slot.h);
-
             ctx.fillStyle = '#FF0000';
             ctx.font = 'bold 18px Arial';
             ctx.textBaseline = 'top';
@@ -166,10 +235,10 @@
         codeDisplay.innerText = code;
     }
 
-    // --- Canvas Click (Add Slot) ---
+    // --- CANVAS CLICK ---
     canvas.addEventListener('click', function(e) {
         if (!isDesignMode) {
-            alert('Design mode is OFF. Click the toggle button to enable.');
+            alert('Design mode is OFF.');
             return;
         }
         if (!backgroundImageData) {
@@ -180,25 +249,17 @@
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
-        
         const mouseX = (e.clientX - rect.left) * scaleX;
         const mouseY = (e.clientY - rect.top) * scaleY;
 
         const x = Math.min(Math.max(mouseX, 0), A4_W - 10);
         const y = Math.min(Math.max(mouseY, 0), A4_H - 10);
 
-        slots.push({ 
-            x: Math.round(x), 
-            y: Math.round(y), 
-            w: DEFAULT_W, 
-            h: DEFAULT_H, 
-            fontSize: DEFAULT_FONT 
-        });
-
+        slots.push({ x: Math.round(x), y: Math.round(y), w: DEFAULT_W, h: DEFAULT_H, fontSize: DEFAULT_FONT });
         drawSlots();
     });
 
-    // --- UI Buttons ---
+    // --- UI BUTTONS ---
     document.getElementById('toggleDesignBtn').addEventListener('click', function() {
         isDesignMode = !isDesignMode;
         this.textContent = isDesignMode ? '✏️ Click-to-Add (ON)' : '✏️ Click-to-Add (OFF)';
@@ -218,31 +279,31 @@
             alert('Please add some slots first!');
             return;
         }
-        navigator.clipboard.writeText(code).then(() => {
-            alert('✅ Code copied to clipboard!');
-        }).catch(() => {
+        navigator.clipboard.writeText(code).then(() => alert('✅ Copied!')).catch(() => {
             const range = document.createRange();
             range.selectNode(codeDisplay);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(range);
             document.execCommand('copy');
-            alert('✅ Code copied!');
+            alert('✅ Copied!');
         });
     });
 
-    // --- File Upload ---
     document.getElementById('fileUpload').addEventListener('change', function(e) {
-        if (this.files && this.files.length > 0) {
-            renderFile(this.files[0]);
-        }
+        if (this.files && this.files.length > 0) renderFile(this.files[0]);
     });
 
-    // Initialize blank Landscape A4
+    document.getElementById('fitMode').addEventListener('change', function() {
+        const fileInput = document.getElementById('fileUpload');
+        if (fileInput.files && fileInput.files.length > 0) renderFile(fileInput.files[0]);
+    });
+
     window.onload = function() {
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, A4_W, A4_H);
         backgroundImageData = ctx.getImageData(0, 0, A4_W, A4_H);
         drawSlots();
+        pdfInfo.innerText = 'Upload a file to see its dimensions.';
     };
 </script>
 </body>
