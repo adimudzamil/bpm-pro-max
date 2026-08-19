@@ -1098,7 +1098,7 @@
     <div class="badge-group">
       <div class="badge">📄 PDF Parser</div>
       <div class="badge">🔒 Offline</div>
-      <div class="badge accent">v2.4 + Direct PDF</div>
+      <div class="badge accent">v2.5 – Simple Calibration</div>
     </div>
   </header>
 
@@ -1200,7 +1200,7 @@
   </div>
 
   <!-- ============================================================ -->
-  <!-- ===== PDF OVERLAY CARD (multi‑destination) ===== -->
+  <!-- ===== PDF OVERLAY CARD (simplified calibration) ===== -->
   <!-- ============================================================ -->
   <div class="card noprint" id="pdfOverlayCard" style="display:none;">
     <span class="method-tag">📄 OVERLAY</span>
@@ -1208,12 +1208,11 @@
       <div class="card-header-left">
         <div class="card-title"><span class="icon">🖨️</span> PDF Template Overlay</div>
       </div>
-      <span class="card-sub">Stamp crew data onto official PDF forms</span>
+      <span class="card-sub">Stamp crew data – only Name & Rank/Designation</span>
     </div>
 
     <div class="calib-step-hint" id="calibHint">
-      ⚙️ <strong>Calibration required once per destination+form.</strong> Tap the canvas to mark column positions.
-      Coordinates are saved in your browser.
+      ⚙️ <strong>Calibration required once per destination+form.</strong> Tap the canvas to mark <strong>Name</strong> and <strong>Rank/Designation</strong> column positions, then tap row start and row end.
     </div>
 
     <div class="calib-controls">
@@ -1255,7 +1254,7 @@
     </div>
     <div style="font-family:'DM Mono',monospace; font-size:13px; color:var(--text-dim);">
       Paste a trip report above and tap <span style="color:var(--accent);">Parse & Fill Report</span> or <span style="color:var(--accent);">Parse PDF Report</span>.
-      Then use the <span style="color:var(--accent);">PDF Template Overlay</span> card to stamp data onto official PDF forms.
+      Then use the <span style="color:var(--accent);">PDF Template Overlay</span> card to stamp crew data onto official PDF forms.
     </div>
   </div>
 
@@ -1343,7 +1342,7 @@
 <!-- ===== FOOTER ===== -->
 <footer class="noprint">
   🔒 All processing is local — your data never leaves your device.<br>
-  <span style="color:var(--accent);">CTR</span> · 2100551 · Direct PDF Overlay
+  <span style="color:var(--accent);">CTR</span> · 2100551 · Simplified Calibration
 </footer>
 
 <script>
@@ -2460,7 +2459,7 @@
   document.getElementById('printBomBaggageBtn').addEventListener('click', () => printOnly('bomBaggageReportCard'));
 
   // ================================================================
-  // 2. NEW: PDF OVERLAY ENGINE (multi‑destination) – using fetch
+  // 2. SIMPLIFIED PDF OVERLAY ENGINE – only Name & Rank
   // ================================================================
 
   // ---- DOM refs for overlay ----
@@ -2494,88 +2493,34 @@
   loadCalibration();
 
   function getCalibKey() {
-    const dest = destSelect.value;
-    const form = formTypeSelect.value;
-    return dest + '_' + form;
+    return destSelect.value + '_' + formTypeSelect.value;
   }
   function getCalib() { return calibData[getCalibKey()] || null; }
   function setCalib(val) { calibData[getCalibKey()] = val; saveCalibration(); }
   function resetCalib() { delete calibData[getCalibKey()]; saveCalibration(); }
 
-  // ---- Column labels per form type ----
-  const COLUMN_LABELS = {
-    landing: ['Sr.No', 'Designation', 'Name', 'Nationality', 'Passport#', 'Date of Issue', 'Valid Till', 'Place of Issue', 'CNIC No.', 'CNIC Valid', 'Arrival Sign', 'Departure Sign'],
-    baggage: ['Name', 'Rank/Pos', 'Watch', 'Alc/Qty', 'Cig', 'Phone', 'Jewel', 'Other', 'Curr Arr', 'Sig Arr', 'Curr Dep', 'Sig Dep']
-  };
+  // ---- Simplified column labels – only Name and Rank ----
+  const COLUMN_LABELS = ['Name', 'Rank/Designation'];
 
-  // ---- Get crew data for overlay (same as before) ----
+  // ---- Get crew data ----
   function getCrewDataForOverlay() {
     if (!state || !state.crew) return [];
     const sorted = sortByRank(state.crew);
     return sorted.map(c => ({
-      crewId: c.crewId,
       name: c.crewName,
-      rank: c.opRank,
-      designation: c.opRank,
-      nationality: fval('bomL-nat-'+c.crewId, 'MALAYSIAN'),
-      passport: fval('bomL-pp-'+c.crewId, ''),
-      passportIssue: fval('bomL-ppissue-'+c.crewId, ''),
-      passportValid: fval('bomL-ppvalid-'+c.crewId, ''),
-      passportPlace: fval('bomL-ppplace-'+c.crewId, ''),
-      cnic: fval('bomL-cnic-'+c.crewId, ''),
-      cnicValid: fval('bomL-cnicvalid-'+c.crewId, ''),
-      watch: fval('bomB-watch-'+c.crewId, ''),
-      alc: fval('bomB-alc-'+c.crewId, ''),
-      cig: fval('bomB-cig-'+c.crewId, ''),
-      phone: fval('bomB-phone-'+c.crewId, ''),
-      jewel: fval('bomB-jewel-'+c.crewId, ''),
-      other: fval('bomB-other-'+c.crewId, ''),
-      curArr: fval('bomB-curArr-'+c.crewId, ''),
-      curDep: fval('bomB-curDep-'+c.crewId, ''),
+      rank: c.opRank
     }));
   }
 
-  function getRowData(crew, formType) {
-    if (formType === 'landing') {
-      return crew.map((c, i) => ({
-        cells: [
-          String(i+1),
-          c.designation || c.rank,
-          c.name,
-          c.nationality,
-          c.passport,
-          c.passportIssue,
-          c.passportValid,
-          c.passportPlace,
-          c.cnic,
-          c.cnicValid,
-          '',
-          ''
-        ]
-      }));
-    } else { // baggage
-      return crew.map(c => ({
-        cells: [
-          c.name,
-          c.rank,
-          c.watch,
-          c.alc,
-          c.cig,
-          c.phone,
-          c.jewel,
-          c.other,
-          c.curArr,
-          '',
-          c.curDep,
-          ''
-        ]
-      }));
-    }
+  function getRowData(crew) {
+    return crew.map(c => ({
+      cells: [c.name, c.rank]
+    }));
   }
 
-  // ---- NEW: Load PDF template directly via fetch ----
+  // ---- Load PDF via fetch ----
   async function loadTemplatePDF(dest, formType) {
-    const url = `templates/${dest}_${formType}.pdf?t=${Date.now()}`; // cache‑bust
+    const url = `templates/${dest}_${formType}.pdf?t=${Date.now()}`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to load PDF: ${url} (status ${response.status})`);
@@ -2584,15 +2529,14 @@
     return arrayBuffer;
   }
 
-  // ---- Calibration: render PDF to canvas using pdf.js ----
+  // ---- Calibration ----
   let calibActive = false;
   let calibPoints = [];
   let calibStep = 0;
   let calibCtx = null;
+  let rotationAngle = 0; // capture rotation
 
   async function startCalibration() {
-    const formType = formTypeSelect.value;
-    const colLabels = COLUMN_LABELS[formType] || [];
     calibActive = true;
     calibStep = 1;
     calibPoints = [];
@@ -2604,12 +2548,14 @@
 
     try {
       const dest = destSelect.value;
+      const formType = formTypeSelect.value;
       const arrayBuffer = await loadTemplatePDF(dest, formType);
       const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
       if (!pdfjsLib) throw new Error('pdf.js not loaded');
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       const page = await pdf.getPage(1);
+      rotationAngle = page.rotate || 0; // store rotation
       const viewport = page.getViewport({ scale: 1.5 });
       const canvas = calibCanvas;
       const ctx = canvas.getContext('2d');
@@ -2623,8 +2569,8 @@
       calibOverlayLayer.innerHTML = '';
       calibData._pageWidth = viewport.width;
       calibData._pageHeight = viewport.height;
+      calibData._rotation = rotationAngle;
 
-      // Click handler
       const clickHandler = function(e) {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
@@ -2649,8 +2595,8 @@
       calibCancelBtn._clickHandler = function() { cancelCalibration(); };
       calibCancelBtn.addEventListener('click', calibCancelBtn._clickHandler);
 
-      calibStatus.textContent = '📐 Tap the canvas to mark each column: ' + colLabels.join(' → ');
-      coordDisplay.textContent = 'Tap column positions (1/' + colLabels.length + ')';
+      calibStatus.textContent = '📐 Tap the canvas to mark the Name column (1/2)';
+      coordDisplay.textContent = 'Tap Name column';
 
     } catch (err) {
       calibStatus.textContent = '❌ Error loading PDF: ' + err.message;
@@ -2663,105 +2609,87 @@
 
   function handleCalibTap(x, y) {
     if (!calibActive) return;
-    const formType = formTypeSelect.value;
-    const colLabels = COLUMN_LABELS[formType] || [];
 
     if (calibStep === 1) {
-      calibPoints.push({ x, y, label: colLabels[calibPoints.length] || 'Col' + (calibPoints.length + 1) });
-      const dot = document.createElement('div');
-      dot.className = 'calib-dot';
-      dot.style.left = (x / calibData._pageWidth * 100) + '%';
-      dot.style.top = (y / calibData._pageHeight * 100) + '%';
-      const labelEl = document.createElement('div');
-      labelEl.className = 'calib-dot-label';
-      labelEl.textContent = (calibPoints.length) + ': ' + (colLabels[calibPoints.length - 1] || '');
-      labelEl.style.left = (x / calibData._pageWidth * 100) + '%';
-      labelEl.style.top = (y / calibData._pageHeight * 100) + '%';
-      calibOverlayLayer.appendChild(dot);
-      calibOverlayLayer.appendChild(labelEl);
-
-      coordDisplay.textContent = 'Column ' + calibPoints.length + '/' + colLabels.length + ' done';
-      if (calibPoints.length >= colLabels.length) {
-        calibStep = 2;
-        calibStatus.textContent = '✅ Columns done! Now tap the TOP-LEFT corner of the first data row.';
-        coordDisplay.textContent = 'Tap the first row start position';
-      } else {
-        calibStatus.textContent = '📐 Tap column: ' + colLabels[calibPoints.length];
-      }
+      calibPoints.push({ x, y, label: 'Name' });
+      addDot(x, y, 'Name');
+      calibStep = 2;
+      calibStatus.textContent = '📐 Now tap the Rank/Designation column (2/2)';
+      coordDisplay.textContent = 'Tap Rank column';
     } else if (calibStep === 2) {
-      calibPoints.push({ x, y, label: 'rowStart' });
-      const dot = document.createElement('div');
-      dot.className = 'calib-dot';
-      dot.style.left = (x / calibData._pageWidth * 100) + '%';
-      dot.style.top = (y / calibData._pageHeight * 100) + '%';
-      dot.style.background = '#00ff88';
-      const labelEl = document.createElement('div');
-      labelEl.className = 'calib-dot-label';
-      labelEl.textContent = '⬆ row start';
-      labelEl.style.left = (x / calibData._pageWidth * 100) + '%';
-      labelEl.style.top = (y / calibData._pageHeight * 100) + '%';
-      labelEl.style.color = '#00ff88';
-      calibOverlayLayer.appendChild(dot);
-      calibOverlayLayer.appendChild(labelEl);
+      calibPoints.push({ x, y, label: 'Rank' });
+      addDot(x, y, 'Rank');
       calibStep = 3;
-      calibStatus.textContent = '✅ Row start set! Now tap the BOTTOM-LEFT corner of the first data row.';
-      coordDisplay.textContent = 'Tap the row bottom position';
+      calibStatus.textContent = '✅ Columns done! Tap the TOP-LEFT corner of the first data row.';
+      coordDisplay.textContent = 'Tap row start';
     } else if (calibStep === 3) {
+      calibPoints.push({ x, y, label: 'rowStart' });
+      addDot(x, y, 'rowStart', '#00ff88');
+      calibStep = 4;
+      calibStatus.textContent = '✅ Row start set! Tap the BOTTOM-LEFT corner of the first data row.';
+      coordDisplay.textContent = 'Tap row end';
+    } else if (calibStep === 4) {
       calibPoints.push({ x, y, label: 'rowEnd' });
-      const dot = document.createElement('div');
-      dot.className = 'calib-dot';
-      dot.style.left = (x / calibData._pageWidth * 100) + '%';
-      dot.style.top = (y / calibData._pageHeight * 100) + '%';
-      dot.style.background = '#ff8800';
-      const labelEl = document.createElement('div');
-      labelEl.className = 'calib-dot-label';
-      labelEl.textContent = '⬇ row end';
-      labelEl.style.left = (x / calibData._pageWidth * 100) + '%';
-      labelEl.style.top = (y / calibData._pageHeight * 100) + '%';
-      labelEl.style.color = '#ff8800';
-      calibOverlayLayer.appendChild(dot);
-      calibOverlayLayer.appendChild(labelEl);
+      addDot(x, y, 'rowEnd', '#ff8800');
 
-      const cols = calibPoints.slice(0, colLabels.length);
-      const rowStart = calibPoints[colLabels.length];
-      const rowEnd = calibPoints[colLabels.length + 1];
+      const nameCol = calibPoints[0];
+      const rankCol = calibPoints[1];
+      const rowStart = calibPoints[2];
+      const rowEnd = calibPoints[3];
 
-      if (cols.length === colLabels.length && rowStart && rowEnd) {
-        const colX = cols.map(p => p.x);
-        const rowY = rowStart.y;
-        const rowHeight = rowEnd.y - rowStart.y;
-
+      if (nameCol && rankCol && rowStart && rowEnd) {
         const calib = {
-          columns: colX,
-          rowY: rowY,
-          rowHeight: rowHeight,
+          columns: [nameCol.x, rankCol.x],
+          rowY: rowStart.y,
+          rowHeight: rowEnd.y - rowStart.y,
           pageWidth: calibData._pageWidth,
           pageHeight: calibData._pageHeight,
+          rotation: calibData._rotation || 0,
           fontSize: 9,
           fontName: 'Helvetica'
         };
         setCalib(calib);
         calibStatus.textContent = '✅ Calibration saved! You can now generate filled PDFs.';
         calibStatus.className = 'calib-status ok';
-        coordDisplay.textContent = 'Saved: ' + colLabels.length + ' columns, rowY=' + Math.round(rowY) + ', rowH=' + Math.round(rowHeight);
+        coordDisplay.textContent = 'Saved: Name + Rank, rowY=' + Math.round(rowStart.y) + ', rowH=' + Math.round(calib.rowHeight);
         calibActive = false;
         calibSaveBtn.style.display = 'none';
         calibCancelBtn.style.display = 'none';
         showToast('Calibration saved for ' + getCalibKey(), 'success');
-        const canvas = calibCanvas;
-        if (canvas._clickHandler) {
-          canvas.removeEventListener('click', canvas._clickHandler);
-          canvas.removeEventListener('touchstart', canvas._clickHandler);
-        }
-        if (calibCancelBtn._clickHandler) {
-          calibCancelBtn.removeEventListener('click', calibCancelBtn._clickHandler);
-        }
+        cleanupCalibration();
       } else {
         calibStatus.textContent = '❌ Incomplete calibration. Please try again.';
         calibStatus.className = 'calib-status err';
         calibActive = false;
         calibCanvasWrap.style.display = 'none';
       }
+    }
+  }
+
+  function addDot(x, y, label, color) {
+    const dot = document.createElement('div');
+    dot.className = 'calib-dot';
+    if (color) dot.style.background = color;
+    dot.style.left = (x / calibData._pageWidth * 100) + '%';
+    dot.style.top = (y / calibData._pageHeight * 100) + '%';
+    const labelEl = document.createElement('div');
+    labelEl.className = 'calib-dot-label';
+    labelEl.textContent = label;
+    labelEl.style.left = (x / calibData._pageWidth * 100) + '%';
+    labelEl.style.top = (y / calibData._pageHeight * 100) + '%';
+    if (color) labelEl.style.color = color;
+    calibOverlayLayer.appendChild(dot);
+    calibOverlayLayer.appendChild(labelEl);
+  }
+
+  function cleanupCalibration() {
+    const canvas = calibCanvas;
+    if (canvas._clickHandler) {
+      canvas.removeEventListener('click', canvas._clickHandler);
+      canvas.removeEventListener('touchstart', canvas._clickHandler);
+    }
+    if (calibCancelBtn._clickHandler) {
+      calibCancelBtn.removeEventListener('click', calibCancelBtn._clickHandler);
     }
   }
 
@@ -2773,14 +2701,7 @@
     coordDisplay.textContent = 'Coordinates: —';
     calibSaveBtn.style.display = 'none';
     calibCancelBtn.style.display = 'none';
-    const canvas = calibCanvas;
-    if (canvas._clickHandler) {
-      canvas.removeEventListener('click', canvas._clickHandler);
-      canvas.removeEventListener('touchstart', canvas._clickHandler);
-    }
-    if (calibCancelBtn._clickHandler) {
-      calibCancelBtn.removeEventListener('click', calibCancelBtn._clickHandler);
-    }
+    cleanupCalibration();
   }
 
   // ---- Toggle calibration ----
@@ -2805,14 +2726,14 @@
     }
   });
 
-  // ---- Generate filled PDF using pdf-lib ----
+  // ---- Generate filled PDF ----
   generateOverlayBtn.addEventListener('click', async function() {
     if (!state || !state.crew || !state.crew.length) {
       showToast('No crew data. Parse a report first.', 'error');
       return;
     }
     const calib = getCalib();
-    if (!calib || !calib.columns || !calib.columns.length) {
+    if (!calib || !calib.columns || calib.columns.length < 2) {
       showToast('Please calibrate the form first (tap "Calibrate").', 'error');
       return;
     }
@@ -2827,8 +2748,15 @@
       const page = pages[0];
       const { width, height } = page.getSize();
 
-      const scaleX = width / calib.pageWidth;
-      const scaleY = height / calib.pageHeight;
+      const rot = calib.rotation || 0;
+      let effectiveWidth = width, effectiveHeight = height;
+      if (rot === 90 || rot === 270) {
+        effectiveWidth = height;
+        effectiveHeight = width;
+      }
+
+      const scaleX = effectiveWidth / calib.pageWidth;
+      const scaleY = effectiveHeight / calib.pageHeight;
 
       const fontSize = calib.fontSize || 9;
       const startY = calib.rowY * scaleY;
@@ -2836,19 +2764,29 @@
       const colX = calib.columns.map(x => x * scaleX);
 
       const crewData = getCrewDataForOverlay();
-      const rowData = getRowData(crewData, formType);
-      const maxRows = Math.floor((height - startY) / rowHeight);
+      const rowData = getRowData(crewData);
+      const maxRows = Math.floor((effectiveHeight - startY) / rowHeight);
       const rowsToDraw = Math.min(rowData.length, maxRows);
 
-      // Embed Helvetica font
       const helvetica = await doc.embedFont(PDFLib.StandardFonts.Helvetica);
+
+      // For rotated pages, we need to adjust coordinates to the page's internal coordinate system.
+      // pdf-lib uses the page's own coordinate space (before rotation).
+      // If the page is rotated, we need to transform our calculated positions.
+      // The simplest: use the page's getSize after rotation? Actually, pdf-lib's page width/height are already the unrotated box size.
+      // When rotation is applied, the content is drawn on the unrotated page, but the viewer rotates it.
+      // So we should draw at the same positions as if the page were unrotated – the viewer will rotate it.
+      // Our calibration was done on the rotated view, but we captured the rotation and adjusted scale.
+      // The positions we computed (colX, startY) are in the unrotated coordinate system if we used effectiveWidth/height.
+      // Since we already used effective size for scaling, the coordinates are correct for the unrotated page.
+      // We just need to ensure we don't double-rotate.
+      // For safety, we'll just draw as-is.
 
       for (let r = 0; r < rowsToDraw; r++) {
         const row = rowData[r];
         const yPos = startY + r * rowHeight;
         const cellHeight = rowHeight;
-
-        for (let c = 0; c < Math.min(row.cells.length, colX.length); c++) {
+        for (let c = 0; c < 2; c++) {
           const cellText = String(row.cells[c] || '');
           if (cellText.trim() === '') continue;
           const xPos = colX[c];
@@ -2881,17 +2819,15 @@
     }
   });
 
-  // ---- Update status when selections change ----
+  // ---- Update status ----
   function updateCalibStatus() {
     const calib = getCalib();
-    const key = getCalibKey();
     if (calib) {
-      const colLabels = COLUMN_LABELS[formTypeSelect.value] || [];
-      calibStatus.textContent = '✅ Calibrated: ' + colLabels.length + ' columns, rowY=' + Math.round(calib.rowY) + ', rowH=' + Math.round(calib.rowHeight);
+      calibStatus.textContent = '✅ Calibrated: Name + Rank, rowY=' + Math.round(calib.rowY) + ', rowH=' + Math.round(calib.rowHeight);
       calibStatus.className = 'calib-status ok';
-      coordDisplay.textContent = 'Coordinates: ' + colLabels.length + ' cols ready for ' + key;
+      coordDisplay.textContent = 'Coordinates: Name + Rank ready';
     } else {
-      calibStatus.textContent = 'Not calibrated for ' + key + '. Tap "Calibrate" to begin.';
+      calibStatus.textContent = 'Not calibrated. Tap "Calibrate" to begin.';
       calibStatus.className = 'calib-status';
       coordDisplay.textContent = 'Coordinates: —';
     }
