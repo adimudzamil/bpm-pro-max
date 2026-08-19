@@ -1139,7 +1139,6 @@
       <select id="templateSelect">
         <!-- Populated by JavaScript -->
       </select>
-      <button class="secondary-btn" id="loadTemplateBtn" style="border-color:var(--accent);color:var(--accent);">📥 Load from templates/</button>
     </div>
 
     <div class="btnrow">
@@ -2379,7 +2378,7 @@ const itin = itinRaw.rows
   const TEMPLATES = {
     bom_baggage: {
       label: 'BOM Baggage',
-      bgPath: 'templates/BOM_baggage.png',
+      bgPath: 'template/BOM_baggage.png',
       bgImageData: null,
       groupPilotsSeparately: true,
       nameSlots: generateSlots(83, 314, 16, 37, 400, 35, 12),
@@ -2388,7 +2387,7 @@ const itin = itinRaw.rows
     },
     bom_landing: {
       label: 'BOM Landing',
-      bgPath: 'templates/BOM_landing.png',
+      bgPath: 'template/BOM_landing.png',
       bgImageData: null,
       groupPilotsSeparately: true,
       nameSlots: generateSlots(243, 357, 17, 24, 300, 24, 12),
@@ -2423,7 +2422,6 @@ const itin = itinRaw.rows
   const downloadPdfBtn = document.getElementById('downloadPdfBtn');
   const applyTuneBtn = document.getElementById('applyTuneBtn');
   const copySlotsBtn = document.getElementById('copySlotsBtn');
-  const loadTemplateBtn = document.getElementById('loadTemplateBtn');
 
   // --- Fine‑tune inputs ---
   const nameOffsetXInput = document.getElementById('nameOffsetX');
@@ -2473,10 +2471,10 @@ const itin = itinRaw.rows
     const tpl = TEMPLATES[id];
     templateNameDisplay.textContent = tpl ? tpl.label : 'selected';
     if (tpl && tpl.bgImageData) {
-      templateStatus.textContent = '✅ Background loaded (manual or upload)';
+      templateStatus.textContent = '✅ Background loaded';
       templateStatus.style.color = 'var(--green)';
     } else {
-      templateStatus.textContent = '⚠️ Background not loaded. Click "Load from templates/" or upload a file.';
+      templateStatus.textContent = '⚠️ No background loaded (auto‑load or upload)';
       templateStatus.style.color = 'var(--text-muted)';
     }
   }
@@ -2484,12 +2482,16 @@ const itin = itinRaw.rows
   // --- Load background from path ---
   function loadTemplateFromPath(templateId) {
     const tpl = TEMPLATES[templateId];
-    if (!tpl || !tpl.bgPath) {
-      showToast('No bgPath defined for this template.', 'error');
+    if (!tpl || !tpl.bgPath) return;
+
+    // If already loaded, skip
+    if (tpl.bgImageData) {
+      templateStatus.textContent = '✅ Background loaded from path';
+      templateStatus.style.color = 'var(--green)';
       return;
     }
 
-    templateStatus.textContent = 'Loading from templates/ folder...';
+    templateStatus.textContent = 'Loading background from path…';
     templateStatus.style.color = 'var(--text-muted)';
 
     const img = new Image();
@@ -2501,6 +2503,7 @@ const itin = itinRaw.rows
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, A4_W, A4_H);
+      // fit into A4
       const scaleX = A4_W / img.width;
       const scaleY = A4_H / img.height;
       const scale = Math.min(scaleX, scaleY);
@@ -2510,28 +2513,29 @@ const itin = itinRaw.rows
       const offsetY = (A4_H - drawHeight) / 2;
       ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
       tpl.bgImageData = ctx.getImageData(0, 0, A4_W, A4_H);
-      templateStatus.textContent = `✅ ${tpl.label} background loaded from templates/ folder`;
+      templateStatus.textContent = `✅ ${tpl.label} background loaded from template/ folder`;
       templateStatus.style.color = 'var(--green)';
       showToast(`Background loaded for ${tpl.label}`, 'success');
     };
     img.onerror = function() {
-      templateStatus.textContent = '❌ Could not load background from templates/ folder. Upload manually.';
+      templateStatus.textContent = '⚠️ Could not load background from path. Upload manually.';
       templateStatus.style.color = 'var(--red)';
-      showToast('Failed to load background from templates/ folder', 'error');
+      showToast('Failed to load background from template/ folder', 'error');
     };
     img.src = tpl.bgPath;
   }
 
-  // --- Switch template (no auto-load) ---
   function switchTemplate(templateId) {
     selectedTemplateId = templateId;
     const tpl = TEMPLATES[templateId];
-    templateNameDisplay.textContent = tpl ? tpl.label : 'selected';
-    if (tpl && tpl.bgImageData) {
-      templateStatus.textContent = '✅ Background loaded (manual or upload)';
+    // Attempt to load from path if not already loaded
+    if (tpl && !tpl.bgImageData) {
+      loadTemplateFromPath(templateId);
+    } else if (tpl && tpl.bgImageData) {
+      templateStatus.textContent = '✅ Background loaded';
       templateStatus.style.color = 'var(--green)';
     } else {
-      templateStatus.textContent = '⚠️ Background not loaded. Click "Load from templates/" or upload a file.';
+      templateStatus.textContent = '⚠️ No background loaded';
       templateStatus.style.color = 'var(--text-muted)';
     }
     // Clear previews
@@ -2550,17 +2554,6 @@ const itin = itinRaw.rows
 
   templateSelect.addEventListener('change', function() {
     switchTemplate(this.value);
-  });
-
-  // --- Load button ---
-  loadTemplateBtn.addEventListener('click', function() {
-    const id = templateSelect.value;
-    const tpl = TEMPLATES[id];
-    if (!tpl || !tpl.bgPath) {
-      showToast('No bgPath defined for this template.', 'error');
-      return;
-    }
-    loadTemplateFromPath(id);
   });
 
   // --- Fine‑tune input listeners ---
@@ -2682,8 +2675,15 @@ const itin = itinRaw.rows
       return;
     }
 
+    // Try to load from path if not loaded yet (in case user switched without auto-load)
+    if (!tpl.bgImageData && tpl.bgPath) {
+      loadTemplateFromPath(templateId);
+      // But we need to wait – we'll check again after a short delay? Better to simply generate if loaded, else show error.
+      // Since load is async, we can't wait here easily. We'll just show error if still not loaded.
+    }
+
     if (!tpl.bgImageData) {
-      showToast('No background loaded. Click "Load from templates/" or upload a file.', 'error');
+      showToast('Please load a background (auto-load or upload).', 'error');
       return;
     }
 
