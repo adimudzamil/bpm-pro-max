@@ -1211,10 +1211,6 @@
       <span class="card-sub">One‑click – no calibration needed for BOM</span>
     </div>
 
-    <div class="calib-step-hint" id="calibHint" style="display:none;">
-      ⚙️ <strong>Calibration required only if defaults don't fit.</strong> Tap the canvas to mark <strong>Name</strong> and <strong>Rank/Designation</strong> column positions.
-    </div>
-
     <div class="calib-controls">
       <select id="destSelect">
         <option value="bom">Mumbai (BOM)</option>
@@ -1225,25 +1221,10 @@
         <option value="atq">Amritsar (ATQ)</option>
       </select>
       <select id="formTypeSelect">
-        <option value="landing">🛬 Landing Permit</option>
         <option value="baggage">🧳 Baggage Declaration</option>
+        <option value="landing">🛬 Landing Permit</option>
       </select>
-      <button class="primary-btn" id="calibToggleBtn" style="display:none;">📐 Calibrate (fine‑tune)</button>
       <button class="primary-btn" id="generateOverlayBtn">⬇️ Generate Filled PDF</button>
-      <button class="secondary-btn" id="resetCalibBtn">↺ Reset Calibration</button>
-    </div>
-
-    <div id="calibStatus" class="calib-status">Using built‑in defaults – ready to generate.</div>
-
-    <div class="calib-canvas-wrap" id="calibCanvasWrap" style="display:none;">
-      <canvas id="calibCanvas"></canvas>
-      <div class="calib-overlay-layer" id="calibOverlayLayer"></div>
-    </div>
-
-    <div class="coord-display" id="coordDisplay">Coordinates: Default</div>
-    <div class="btnrow" style="margin-top:8px;">
-      <button class="secondary-btn" id="calibSaveBtn" style="display:none;">💾 Save Calibration</button>
-      <button class="secondary-btn" id="calibCancelBtn" style="display:none;">Cancel</button>
     </div>
   </div>
 
@@ -1349,7 +1330,6 @@
 (function(){
   // ================================================================
   // 1. EXISTING CODE (your full parser, renderer, modals, etc.)
-  //    We keep everything as-is. Below we ADD the PDF overlay engine.
   // ================================================================
 
   // ---- DOM refs (existing) ----
@@ -2459,98 +2439,36 @@
   document.getElementById('printBomBaggageBtn').addEventListener('click', () => printOnly('bomBaggageReportCard'));
 
   // ================================================================
-  // 2. SIMPLIFIED PDF OVERLAY ENGINE – with built‑in defaults
+  // 2. STREAMLINED PDF OVERLAY ENGINE – Hardcoded BOM defaults
   // ================================================================
 
-  // ---- DOM refs for overlay ----
   const destSelect = document.getElementById('destSelect');
   const formTypeSelect = document.getElementById('formTypeSelect');
-  const calibToggleBtn = document.getElementById('calibToggleBtn');
   const generateOverlayBtn = document.getElementById('generateOverlayBtn');
-  const resetCalibBtn = document.getElementById('resetCalibBtn');
-  const calibStatus = document.getElementById('calibStatus');
-  const calibCanvasWrap = document.getElementById('calibCanvasWrap');
-  const calibCanvas = document.getElementById('calibCanvas');
-  const calibOverlayLayer = document.getElementById('calibOverlayLayer');
-  const coordDisplay = document.getElementById('coordDisplay');
-  const calibSaveBtn = document.getElementById('calibSaveBtn');
-  const calibCancelBtn = document.getElementById('calibCancelBtn');
 
-  // ---- Calibration state ----
-  const CALIB_KEY_PREFIX = 'ctr_pdf_overlay_calib_';
-  let calibData = {};
-
-  function loadCalibration() {
-    try {
-      const raw = localStorage.getItem(CALIB_KEY_PREFIX + 'all');
-      if (raw) calibData = JSON.parse(raw);
-      else calibData = {};
-    } catch(e) { calibData = {}; }
-  }
-  function saveCalibration() {
-    try { localStorage.setItem(CALIB_KEY_PREFIX + 'all', JSON.stringify(calibData)); } catch(e) {}
-  }
-  loadCalibration();
-
-  function getCalibKey() {
-    return destSelect.value + '_' + formTypeSelect.value;
-  }
-  function getCalib() { return calibData[getCalibKey()] || null; }
-  function setCalib(val) { calibData[getCalibKey()] = val; saveCalibration(); }
-  function resetCalib() { delete calibData[getCalibKey()]; saveCalibration(); }
-
-  // ---- Built‑in default calibration for BOM forms (A4 landscape) ----
   function getDefaultCalib(dest, formType) {
-    // Defaults: Name column ~15%, Rank column ~30% of page width,
-    // row start ~22% of page height, row height ~4.5% of page height.
-    // These work for typical A4 landscape (842 x 595 points).
     if (dest !== 'bom') return null;
-    const pageWidth = 842;  // A4 landscape width (points)
-    const pageHeight = 595; // A4 landscape height
+    const pageWidth = 842;
+    const pageHeight = 595;
+
     if (formType === 'baggage') {
       return {
-        columns: [pageWidth * 0.08, pageWidth * 0.30],
-        rowY: pageHeight * 0.22,
-        rowHeight: pageHeight * 0.045,
+        columns: [85, 195],   // X-coordinate for Name, X-coordinate for Rank
+        rowY: 145,            // Y-coordinate of the top of the first empty row
+        rowHeight: 25,        // Height of one row
         pageWidth: pageWidth,
         pageHeight: pageHeight,
         rotation: 0,
-        fontSize: 9,
-        fontName: 'Helvetica'
-      };
-    } else if (formType === 'landing') {
-      // Slightly different for landing permit
-      return {
-        columns: [pageWidth * 0.15, pageWidth * 0.42],
-        rowY: pageHeight * 0.27,
-        rowHeight: pageHeight * 0.04,
-        pageWidth: pageWidth,
-        pageHeight: pageHeight,
-        rotation: 0,
-        fontSize: 9,
+        fontSize: 10,
         fontName: 'Helvetica'
       };
     }
     return null;
   }
 
-  // ---- Get effective calibration (user or default) ----
-  function getEffectiveCalib() {
-    const userCalib = getCalib();
-    if (userCalib) return userCalib;
-    const dest = destSelect.value;
-    const formType = formTypeSelect.value;
-    return getDefaultCalib(dest, formType);
-  }
-
-  // ---- Column labels (only Name and Rank) ----
-  const COLUMN_LABELS = ['Name', 'Rank/Designation'];
-
-  // ---- Get crew data ----
   function getCrewDataForOverlay() {
     if (!state || !state.crew) return [];
-    const sorted = sortByRank(state.crew);
-    return sorted.map(c => ({
+    return sortByRank(state.crew).map(c => ({
       name: c.crewName,
       rank: c.opRank
     }));
@@ -2558,238 +2476,39 @@
 
   function getRowData(crew) {
     return crew.map(c => ({
-      cells: [c.name, c.rank]
+      cells: [c.name, c.rank] // We only draw Name and Rank
     }));
   }
 
-  // ---- Load PDF via fetch ----
   async function loadTemplatePDF(dest, formType) {
     const url = `templates/${dest}_${formType}.pdf?t=${Date.now()}`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to load PDF: ${url} (status ${response.status})`);
     }
-    const arrayBuffer = await response.arrayBuffer();
-    return arrayBuffer;
+    return await response.arrayBuffer();
   }
 
-  // ---- Calibration (manual, hidden by default) ----
-  let calibActive = false;
-  let calibPoints = [];
-  let calibStep = 0;
-  let calibCtx = null;
-
-  async function startCalibration() {
-    calibActive = true;
-    calibStep = 1;
-    calibPoints = [];
-    calibCanvasWrap.style.display = 'block';
-    calibStatus.textContent = '📐 Loading template…';
-    coordDisplay.textContent = 'Loading…';
-    calibSaveBtn.style.display = 'none';
-    calibCancelBtn.style.display = 'inline-block';
-
-    try {
-      const dest = destSelect.value;
-      const formType = formTypeSelect.value;
-      const arrayBuffer = await loadTemplatePDF(dest, formType);
-      const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
-      if (!pdfjsLib) throw new Error('pdf.js not loaded');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      const page = await pdf.getPage(1);
-      const rotationAngle = page.rotate || 0;
-      const viewport = page.getViewport({ scale: 1.5 });
-      const canvas = calibCanvas;
-      const ctx = canvas.getContext('2d');
-      calibCtx = ctx;
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      canvas.style.width = '100%';
-      canvas.style.height = 'auto';
-      await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-
-      calibOverlayLayer.innerHTML = '';
-      calibData._pageWidth = viewport.width;
-      calibData._pageHeight = viewport.height;
-      calibData._rotation = rotationAngle;
-
-      const clickHandler = function(e) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        let clientX, clientY;
-        if (e.touches) {
-          clientX = e.touches[0].clientX;
-          clientY = e.touches[0].clientY;
-          e.preventDefault();
-        } else {
-          clientX = e.clientX;
-          clientY = e.clientY;
-        }
-        const x = (clientX - rect.left) * scaleX;
-        const y = (clientY - rect.top) * scaleY;
-        handleCalibTap(x, y);
-      };
-      canvas.addEventListener('click', clickHandler);
-      canvas.addEventListener('touchstart', clickHandler, { passive: false });
-      canvas._clickHandler = clickHandler;
-
-      calibCancelBtn._clickHandler = function() { cancelCalibration(); };
-      calibCancelBtn.addEventListener('click', calibCancelBtn._clickHandler);
-
-      calibStatus.textContent = '📐 Tap the canvas to mark the Name column (1/2)';
-      coordDisplay.textContent = 'Tap Name column';
-
-    } catch (err) {
-      calibStatus.textContent = '❌ Error loading PDF: ' + err.message;
-      calibStatus.className = 'calib-status err';
-      showToast('PDF load error: ' + err.message, 'error');
-      calibActive = false;
-      calibCanvasWrap.style.display = 'none';
-    }
-  }
-
-  function handleCalibTap(x, y) {
-    if (!calibActive) return;
-
-    if (calibStep === 1) {
-      calibPoints.push({ x, y, label: 'Name' });
-      addDot(x, y, 'Name');
-      calibStep = 2;
-      calibStatus.textContent = '📐 Now tap the Rank/Designation column (2/2)';
-      coordDisplay.textContent = 'Tap Rank column';
-    } else if (calibStep === 2) {
-      calibPoints.push({ x, y, label: 'Rank' });
-      addDot(x, y, 'Rank');
-      calibStep = 3;
-      calibStatus.textContent = '✅ Columns done! Tap the TOP-LEFT corner of the first data row.';
-      coordDisplay.textContent = 'Tap row start';
-    } else if (calibStep === 3) {
-      calibPoints.push({ x, y, label: 'rowStart' });
-      addDot(x, y, 'rowStart', '#00ff88');
-      calibStep = 4;
-      calibStatus.textContent = '✅ Row start set! Tap the BOTTOM-LEFT corner of the first data row.';
-      coordDisplay.textContent = 'Tap row end';
-    } else if (calibStep === 4) {
-      calibPoints.push({ x, y, label: 'rowEnd' });
-      addDot(x, y, 'rowEnd', '#ff8800');
-
-      const nameCol = calibPoints[0];
-      const rankCol = calibPoints[1];
-      const rowStart = calibPoints[2];
-      const rowEnd = calibPoints[3];
-
-      if (nameCol && rankCol && rowStart && rowEnd) {
-        const calib = {
-          columns: [nameCol.x, rankCol.x],
-          rowY: rowStart.y,
-          rowHeight: rowEnd.y - rowStart.y,
-          pageWidth: calibData._pageWidth,
-          pageHeight: calibData._pageHeight,
-          rotation: calibData._rotation || 0,
-          fontSize: 9,
-          fontName: 'Helvetica'
-        };
-        setCalib(calib);
-        calibStatus.textContent = '✅ Calibration saved! You can now generate filled PDFs.';
-        calibStatus.className = 'calib-status ok';
-        coordDisplay.textContent = 'Saved: Name + Rank, rowY=' + Math.round(rowStart.y) + ', rowH=' + Math.round(calib.rowHeight);
-        calibActive = false;
-        calibSaveBtn.style.display = 'none';
-        calibCancelBtn.style.display = 'none';
-        showToast('Calibration saved for ' + getCalibKey(), 'success');
-        cleanupCalibration();
-      } else {
-        calibStatus.textContent = '❌ Incomplete calibration. Please try again.';
-        calibStatus.className = 'calib-status err';
-        calibActive = false;
-        calibCanvasWrap.style.display = 'none';
-      }
-    }
-  }
-
-  function addDot(x, y, label, color) {
-    const dot = document.createElement('div');
-    dot.className = 'calib-dot';
-    if (color) dot.style.background = color;
-    dot.style.left = (x / calibData._pageWidth * 100) + '%';
-    dot.style.top = (y / calibData._pageHeight * 100) + '%';
-    const labelEl = document.createElement('div');
-    labelEl.className = 'calib-dot-label';
-    labelEl.textContent = label;
-    labelEl.style.left = (x / calibData._pageWidth * 100) + '%';
-    labelEl.style.top = (y / calibData._pageHeight * 100) + '%';
-    if (color) labelEl.style.color = color;
-    calibOverlayLayer.appendChild(dot);
-    calibOverlayLayer.appendChild(labelEl);
-  }
-
-  function cleanupCalibration() {
-    const canvas = calibCanvas;
-    if (canvas._clickHandler) {
-      canvas.removeEventListener('click', canvas._clickHandler);
-      canvas.removeEventListener('touchstart', canvas._clickHandler);
-    }
-    if (calibCancelBtn._clickHandler) {
-      calibCancelBtn.removeEventListener('click', calibCancelBtn._clickHandler);
-    }
-  }
-
-  function cancelCalibration() {
-    calibActive = false;
-    calibCanvasWrap.style.display = 'none';
-    calibStatus.textContent = 'Calibration cancelled.';
-    calibStatus.className = 'calib-status';
-    coordDisplay.textContent = 'Coordinates: —';
-    calibSaveBtn.style.display = 'none';
-    calibCancelBtn.style.display = 'none';
-    cleanupCalibration();
-  }
-
-  // ---- Toggle calibration (hidden by default) ----
-  calibToggleBtn.addEventListener('click', function() {
-    const calib = getCalib();
-    if (calib) {
-      if (confirm('This form is already calibrated. Re-calibrate?')) {
-        startCalibration();
-      }
-    } else {
-      startCalibration();
-    }
-  });
-
-  resetCalibBtn.addEventListener('click', function() {
-    if (confirm('Reset calibration for this form?')) {
-      resetCalib();
-      calibStatus.textContent = 'Calibration reset. Using built‑in defaults.';
-      calibStatus.className = 'calib-status';
-      coordDisplay.textContent = 'Coordinates: Default';
-      showToast('Calibration reset', 'default');
-      updateCalibStatus();
-    }
-  });
-
-  // ---- Generate filled PDF (uses effective calibration) ----
   generateOverlayBtn.addEventListener('click', async function() {
     if (!state || !state.crew || !state.crew.length) {
       showToast('No crew data. Parse a report first.', 'error');
       return;
     }
-    const calib = getEffectiveCalib();
+
+    const dest = destSelect.value;
+    const formType = formTypeSelect.value;
+    const calib = getDefaultCalib(dest, formType);
+    
     if (!calib || !calib.columns || calib.columns.length < 2) {
-      showToast('No calibration available. Please tap "Calibrate" to set up.', 'error');
+      showToast('No calibration available.', 'error');
       return;
     }
 
     try {
-      const dest = destSelect.value;
-      const formType = formTypeSelect.value;
       const arrayBuffer = await loadTemplatePDF(dest, formType);
       const { PDFDocument, rgb } = PDFLib;
       const doc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
-      const pages = doc.getPages();
-      const page = pages[0];
+      const page = doc.getPages()[0];
       const { width, height } = page.getSize();
 
       const rot = calib.rotation || 0;
@@ -2817,14 +2536,13 @@
       for (let r = 0; r < rowsToDraw; r++) {
         const row = rowData[r];
         const yPos = startY + r * rowHeight;
-        const cellHeight = rowHeight;
         for (let c = 0; c < 2; c++) {
           const cellText = String(row.cells[c] || '');
           if (cellText.trim() === '') continue;
           const xPos = colX[c];
           page.drawText(cellText, {
             x: xPos + 2,
-            y: yPos + cellHeight - 4,
+            y: yPos + rowHeight - 4,
             size: fontSize,
             font: helvetica,
             color: rgb(0, 0, 0),
@@ -2850,34 +2568,6 @@
       showToast('Error generating PDF: ' + err.message, 'error');
     }
   });
-
-  // ---- Update status ----
-  function updateCalibStatus() {
-    const calib = getEffectiveCalib();
-    if (calib) {
-      calibStatus.textContent = '✅ Using ' + (getCalib() ? 'user‑calibrated' : 'built‑in default') + ' settings. Ready to generate.';
-      calibStatus.className = 'calib-status ok';
-      coordDisplay.textContent = 'Coordinates: ' + (getCalib() ? 'User' : 'Default') + ' – Name + Rank';
-    } else {
-      calibStatus.textContent = 'No calibration found. Tap "Calibrate" to set up.';
-      calibStatus.className = 'calib-status';
-      coordDisplay.textContent = 'Coordinates: —';
-    }
-  }
-
-  destSelect.addEventListener('change', updateCalibStatus);
-  formTypeSelect.addEventListener('change', updateCalibStatus);
-
-  // ---- Initial status ----
-  (function initOverlay() {
-    document.getElementById('pdfOverlayCard').style.display = 'none';
-    updateCalibStatus();
-    // Hide calibrate button unless needed
-    calibToggleBtn.style.display = 'none';
-    // Show a hint that it's one‑click
-    const hint = document.getElementById('calibHint');
-    if (hint) hint.style.display = 'none';
-  })();
 
 })();
 </script>
