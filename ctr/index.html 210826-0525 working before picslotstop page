@@ -355,13 +355,6 @@
   .saved-templates-list .saved-item button { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 12px; }
   .saved-templates-list .saved-item button:hover { text-decoration: underline; }
   .builder-status { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
-
-  /* ── PIC Modal ── */
-  #picModalOverlay .modal-box { max-width: 450px; }
-  .pic-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
-  .pic-btn { padding: 10px 14px; font-size: 14px; font-weight: 600; border-radius: var(--radius-sm); border: 2px solid #ddd; background: #f7f7f7; color: #333; cursor: pointer; transition: all 0.15s; text-align: left; }
-  .pic-btn:hover { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
-  .pic-btn.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
@@ -697,16 +690,6 @@
   </div>
 </div>
 
-<!-- ===== PIC SELECTION MODAL ===== -->
-<div class="modal-overlay" id="picModalOverlay">
-  <div class="modal-box">
-    <div class="modal-title">Select Pilot In Command (PIC)</div>
-    <div class="modal-sub" id="picModalSub">Choose the Captain for top page placement</div>
-    <div class="pic-grid" id="picGrid"></div>
-    <button class="secondary-btn" id="picModalCloseBtn">Cancel</button>
-  </div>
-</div>
-
 <!-- ===== TOAST ===== -->
 <div id="toastMsg" class="toast noprint"></div>
 
@@ -931,10 +914,6 @@
   let altIccCrewId = null;
   let snyCrewIds = {};
   let doorAssignments = {};
-
-  // PIC selection state
-  let pendingPicTemplateId = null;      // template that needs PIC selection
-  let pendingPicResolve = null;         // resolve function for the modal promise
 
   function isNarrowbody(ac){ if(!ac) return false; const a = ac.trim().toUpperCase(); return a === '737' || a.indexOf('73') === 0 || a.indexOf('7M') === 0; }
 
@@ -1487,8 +1466,6 @@
     state = parsed;
     state.fields = {};
     state.positions = {};
-    // Reset PIC choice when a new report is parsed
-    state.picChoice = null;
     iccChosenCrew = null;
     altIccCrewId = null;
     snyCrewIds = {};
@@ -1660,36 +1637,28 @@
       globalNumbering: false
     },
     del_landing: {
-      id: 'del_landing',
-      label: 'DEL Landing',
-      destination: 'DEL',
-      bgPath: 'templates/DEL_landing.png',
-      bgImageData: null,
-      groupPilotsSeparately: true,
-      picTopPage: true,
-      // ── PIC SLOTS ──
-      // 👇 EDIT THESE COORDINATES TO MATCH YOUR DESIGN
-      picSlots: {
-        nameSlots: generateSlots(100, 100, 1, 0, 200, 30, 14),
-        rankSlots: generateSlots(320, 100, 1, 0, 80, 30, 14),
-        crewIdSlots: generateSlots(500, 100, 1, 0, 100, 30, 14)
-      },
-      nameSlots: generateSlots(203, 424, 15, 36, 250, 36, 14),
-      rankSlots: generateSlots(88, 424, 15, 36, 110, 36, 14),
-      crewIdSlots: generateSlots(1015, 424, 15, 36, 125, 36, 14),
-      globalNumbering: false
-    },
-    del_baggage: {
-      id: 'del_baggage',
-      label: 'DEL Baggage',
-      destination: 'DEL',
-      bgPath: 'templates/DEL_baggage.png',
-      bgImageData: null,
-      groupPilotsSeparately: true,
-      nameSlots: generateSlots(33, 370, 14, 43, 300, 43, 14),
-      rankSlots: generateSlots(333, 370, 14, 43, 105, 43, 14),
-      globalNumbering: false
-    }
+  id: 'del_landing',
+  label: 'DEL Landing',
+  destination: 'DEL',
+  bgPath: 'templates/DEL_landing.png',
+  bgImageData: null,
+  groupPilotsSeparately: true,
+  nameSlots: generateSlots(203, 424, 15, 36, 250, 36, 14),
+  rankSlots: generateSlots(88, 424, 15, 36, 110, 36, 14),
+  crewIdSlots: generateSlots(1015, 424, 15, 36, 125, 36, 14),
+  globalNumbering: false
+},
+del_baggage: {
+  id: 'del_baggage',
+  label: 'DEL Baggage',
+  destination: 'DEL',
+  bgPath: 'templates/DEL_baggage.png',
+  bgImageData: null,
+  groupPilotsSeparately: true,
+  nameSlots: generateSlots(33, 370, 14, 43, 300, 43, 14),
+  rankSlots: generateSlots(333, 370, 14, 43, 105, 43, 14),
+  globalNumbering: false
+}
   };
 
   const templateOffsets = {};
@@ -1741,36 +1710,13 @@
     regenerateTemplate(tplId);
   }
 
-  // ===== Modified: generatePagesForTemplate with PIC support =====
   function generatePagesForTemplate(tpl, crew, offsets) {
-    // ── PIC Top Page Logic ──
-    let picCrewMember = null;
-    let remainingCrew = crew;
-
-    if (tpl.picTopPage) {
-      const captains = crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
-      if (captains.length === 1) {
-        picCrewMember = captains[0];
-        remainingCrew = crew.filter(c => c !== picCrewMember);
-      } else if (captains.length > 1) {
-        // Check if user already selected a PIC (stored in state.picChoice)
-        if (state.picChoice && captains.find(c => c.crewId === state.picChoice)) {
-          picCrewMember = captains.find(c => c.crewId === state.picChoice);
-          remainingCrew = crew.filter(c => c !== picCrewMember);
-        } else {
-          // Need user to select – return a special flag
-          return { needsPicSelection: true, captains: captains };
-        }
-      }
-      // If 0 captains, do nothing – no PIC to move.
-    }
-
     const perPage = tpl.nameSlots.length;
-    const pilots = remainingCrew.filter(c => PILOT_RANKS.includes(c.opRank));
-    const cabin = remainingCrew.filter(c => !PILOT_RANKS.includes(c.opRank));
+    const pilots = crew.filter(c => PILOT_RANKS.includes(c.opRank));
+    const cabin = crew.filter(c => !PILOT_RANKS.includes(c.opRank));
     const sortedPilots = sortByRank(pilots);
     const sortedCabin = sortByRank(cabin);
-    const totalCrew = remainingCrew.length;
+    const totalCrew = crew.length;
 
     let pages = [];
     if (tpl.groupPilotsSeparately && totalCrew > perPage) {
@@ -1798,95 +1744,6 @@
     const crewIdOffY = offsets.crewIdY || 0;
     const fontAdj = offsets.fontSizeAdj || 0;
 
-    // ---- Helper: draw a single crew member into a given slot set ----
-    function drawCrewMember(ctx, member, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber, tpl, offsets, fontAdj) {
-      if (!member) return;
-      const displayName = member.crewName || 'Unnamed';
-      const displayRank = member.opRank || '';
-      const displayCrewId = member.crewId || '';
-
-      // Name
-      if (nameSlot) {
-        ctx.save();
-        ctx.textBaseline = 'top';
-        let nameFontSize = Math.max(6, nameSlot.fontSize + fontAdj);
-        ctx.font = `bold ${nameFontSize}px Arial`;
-        const nameX = nameSlot.x + nameOffX;
-        const nameY = nameSlot.y + nameOffY;
-        let text = displayName;
-        while (ctx.measureText(text).width > nameSlot.w - 10 && nameFontSize > 6) {
-          nameFontSize--;
-          ctx.font = `bold ${nameFontSize}px Arial`;
-        }
-        ctx.shadowColor = 'white';
-        ctx.shadowBlur = 6;
-        ctx.fillStyle = '#000000';
-        ctx.fillText(text, nameX + 5, nameY + 5);
-        ctx.restore();
-      }
-
-      // Rank
-      if (rankSlot && displayRank) {
-        ctx.save();
-        ctx.textBaseline = 'top';
-        let rankFontSize = Math.max(6, rankSlot.fontSize + fontAdj);
-        ctx.font = `bold ${rankFontSize}px Arial`;
-        const rankX = rankSlot.x + rankOffX;
-        const rankY = rankSlot.y + rankOffY;
-        let text = displayRank;
-        while (ctx.measureText(text).width > rankSlot.w - 10 && rankFontSize > 6) {
-          rankFontSize--;
-          ctx.font = `bold ${rankFontSize}px Arial`;
-        }
-        ctx.shadowColor = 'white';
-        ctx.shadowBlur = 6;
-        ctx.fillStyle = '#000000';
-        ctx.fillText(text, rankX + 5, rankY + 5);
-        ctx.restore();
-      }
-
-      // Number
-      if (numberSlot) {
-        const numText = String(pageNumber);
-        ctx.save();
-        ctx.textBaseline = 'top';
-        let numFontSize = Math.max(6, numberSlot.fontSize + fontAdj);
-        ctx.font = `bold ${numFontSize}px Arial`;
-        const numX = numberSlot.x + numberOffX;
-        const numY = numberSlot.y + numberOffY;
-        while (ctx.measureText(numText).width > numberSlot.w - 10 && numFontSize > 6) {
-          numFontSize--;
-          ctx.font = `bold ${numFontSize}px Arial`;
-        }
-        ctx.shadowColor = 'white';
-        ctx.shadowBlur = 6;
-        ctx.fillStyle = '#000000';
-        ctx.fillText(numText, numX + 5, numY + 5);
-        ctx.restore();
-      }
-
-      // Crew ID
-      if (crewIdSlot && displayCrewId) {
-        ctx.save();
-        ctx.textBaseline = 'top';
-        let crewIdFontSize = Math.max(6, crewIdSlot.fontSize + fontAdj);
-        ctx.font = `bold ${crewIdFontSize}px Arial`;
-        const crewIdX = crewIdSlot.x + crewIdOffX;
-        const crewIdY = crewIdSlot.y + crewIdOffY;
-        let text = displayCrewId;
-        while (ctx.measureText(text).width > crewIdSlot.w - 10 && crewIdFontSize > 6) {
-          crewIdFontSize--;
-          ctx.font = `bold ${crewIdFontSize}px Arial`;
-        }
-        ctx.shadowColor = 'white';
-        ctx.shadowBlur = 6;
-        ctx.fillStyle = '#000000';
-        ctx.fillText(text, crewIdX + 5, crewIdY + 5);
-        ctx.restore();
-      }
-    }
-
-    // ---- Page generation ----
     pages.forEach((pageCrew, pageIndex) => {
       const canvas = document.createElement('canvas');
       canvas.width = A4_W;
@@ -1894,16 +1751,6 @@
       const ctx = canvas.getContext('2d');
       ctx.putImageData(tpl.bgImageData, 0, 0);
 
-      // If this is the first page and we have a PIC, draw PIC using picSlots
-      if (pageIndex === 0 && picCrewMember && tpl.picSlots) {
-        const picNameSlot = tpl.picSlots.nameSlots ? tpl.picSlots.nameSlots[0] : null;
-        const picRankSlot = tpl.picSlots.rankSlots ? tpl.picSlots.rankSlots[0] : null;
-        const picCrewIdSlot = tpl.picSlots.crewIdSlots ? tpl.picSlots.crewIdSlots[0] : null;
-        // For number, we don't have a number slot for PIC – skip.
-        drawCrewMember(ctx, picCrewMember, picNameSlot, picRankSlot, null, picCrewIdSlot, 1, tpl, offsets, fontAdj);
-      }
-
-      // Draw regular crew (excluding PIC)
       pageCrew.forEach((crewMember, idx) => {
         if (!crewMember) return;
         const nameSlot = tpl.nameSlots[idx];
@@ -1912,121 +1759,100 @@
         const crewIdSlot = tpl.crewIdSlots ? tpl.crewIdSlots[idx] : null;
         if (!nameSlot) return;
 
-        // Page number (idx+1 per page)
+        // Global number – reset per page: use idx+1
         const pageNumber = idx + 1;
 
-        // If globalNumbering is true and no numberSlot, prepend global index to name
+        // Name
         let displayName = crewMember.crewName || 'Unnamed';
         if (tpl.globalNumbering && !numberSlot) {
           const globalIdx = (pageIndex * perPage) + idx + 1;
           displayName = globalIdx + '. ' + displayName;
         }
-        // If we have a numberSlot, the drawCrewMember will handle it.
-        // But we need to pass the pageNumber (idx+1) for the number slot.
-        drawCrewMember(ctx, crewMember, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber, tpl, offsets, fontAdj);
+        const displayRank = crewMember.opRank || '';
+        const displayCrewId = crewMember.crewId || '';
+
+        // Draw name
+        ctx.save();
+        ctx.textBaseline = 'top';
+        let nameFontSize = Math.max(6, nameSlot.fontSize + fontAdj);
+        ctx.font = `bold ${nameFontSize}px Arial`;
+        const nameX = nameSlot.x + nameOffX;
+        const nameY = nameSlot.y + nameOffY;
+        while (ctx.measureText(displayName).width > nameSlot.w - 10 && nameFontSize > 6) {
+          nameFontSize--;
+          ctx.font = `bold ${nameFontSize}px Arial`;
+        }
+        ctx.shadowColor = 'white';
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = '#000000';
+        ctx.fillText(displayName, nameX + 5, nameY + 5);
+        ctx.restore();
+
+        // Draw rank
+        if (rankSlot && displayRank) {
+          ctx.save();
+          ctx.textBaseline = 'top';
+          let rankFontSize = Math.max(6, rankSlot.fontSize + fontAdj);
+          ctx.font = `bold ${rankFontSize}px Arial`;
+          const rankX = rankSlot.x + rankOffX;
+          const rankY = rankSlot.y + rankOffY;
+          while (ctx.measureText(displayRank).width > rankSlot.w - 10 && rankFontSize > 6) {
+            rankFontSize--;
+            ctx.font = `bold ${rankFontSize}px Arial`;
+          }
+          ctx.shadowColor = 'white';
+          ctx.shadowBlur = 6;
+          ctx.fillStyle = '#000000';
+          ctx.fillText(displayRank, rankX + 5, rankY + 5);
+          ctx.restore();
+        }
+
+        // Draw global number (if separate slot exists) – per page numbering
+        if (numberSlot) {
+          const numText = String(pageNumber);
+          ctx.save();
+          ctx.textBaseline = 'top';
+          let numFontSize = Math.max(6, numberSlot.fontSize + fontAdj);
+          ctx.font = `bold ${numFontSize}px Arial`;
+          const numX = numberSlot.x + numberOffX;
+          const numY = numberSlot.y + numberOffY;
+          while (ctx.measureText(numText).width > numberSlot.w - 10 && numFontSize > 6) {
+            numFontSize--;
+            ctx.font = `bold ${numFontSize}px Arial`;
+          }
+          ctx.shadowColor = 'white';
+          ctx.shadowBlur = 6;
+          ctx.fillStyle = '#000000';
+          ctx.fillText(numText, numX + 5, numY + 5);
+          ctx.restore();
+        }
+
+        // Draw crew ID
+        if (crewIdSlot && displayCrewId) {
+          ctx.save();
+          ctx.textBaseline = 'top';
+          let crewIdFontSize = Math.max(6, crewIdSlot.fontSize + fontAdj);
+          ctx.font = `bold ${crewIdFontSize}px Arial`;
+          const crewIdX = crewIdSlot.x + crewIdOffX;
+          const crewIdY = crewIdSlot.y + crewIdOffY;
+          while (ctx.measureText(displayCrewId).width > crewIdSlot.w - 10 && crewIdFontSize > 6) {
+            crewIdFontSize--;
+            ctx.font = `bold ${crewIdFontSize}px Arial`;
+          }
+          ctx.shadowColor = 'white';
+          ctx.shadowBlur = 6;
+          ctx.fillStyle = '#000000';
+          ctx.fillText(displayCrewId, crewIdX + 5, crewIdY + 5);
+          ctx.restore();
+        }
       });
 
       canvases.push(canvas);
     });
 
-    return { canvases, picCrewMember };
+    return canvases;
   }
 
-  // ===== PIC Modal functions =====
-  function showPicModal(captains, templateId) {
-    return new Promise((resolve) => {
-      const grid = document.getElementById('picGrid');
-      grid.innerHTML = '';
-      document.getElementById('picModalSub').textContent = 'Select the Captain for top page placement';
-
-      captains.forEach(c => {
-        const btn = document.createElement('button');
-        btn.className = 'pic-btn';
-        btn.textContent = c.crewId + ' · ' + c.opRank + ' · ' + c.crewName;
-        btn.addEventListener('click', function() {
-          resolve(c);
-          document.getElementById('picModalOverlay').style.display = 'none';
-        });
-        grid.appendChild(btn);
-      });
-
-      document.getElementById('picModalCloseBtn').onclick = function() {
-        resolve(null);
-        document.getElementById('picModalOverlay').style.display = 'none';
-      };
-
-      document.getElementById('picModalOverlay').style.display = 'flex';
-    });
-  }
-
-  // ===== Modified: generateFormsBtn handler =====
-  document.getElementById('generateFormsBtn').addEventListener('click', async function() {
-    if (!state || !state.crew || state.crew.length === 0) {
-      showToast('Please parse a PDF first.', 'error');
-      return;
-    }
-
-    const destination = document.getElementById('destinationSelect').value;
-    const templates = Object.values(TEMPLATES).filter(t => t.destination === destination);
-    if (templates.length === 0) {
-      showToast('No templates for this destination.', 'error');
-      return;
-    }
-
-    // We'll process templates one by one, handling PIC selection if needed.
-    // Use a loop with a flag to restart if needed.
-    let allGenerated = false;
-    while (!allGenerated) {
-      allGenerated = true;
-      generatedData = {};
-      document.getElementById('templateSectionsContainer').innerHTML = '';
-
-      for (const tpl of templates) {
-        try {
-          await loadTemplateFromPath(tpl.id);
-          if (!templateOffsets[tpl.id]) {
-            templateOffsets[tpl.id] = { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
-          }
-          const offsets = templateOffsets[tpl.id];
-          const result = generatePagesForTemplate(tpl, state.crew, offsets);
-
-          if (result.needsPicSelection) {
-            // Need to select PIC
-            allGenerated = false;
-            const selected = await showPicModal(result.captains, tpl.id);
-            if (selected) {
-              state.picChoice = selected.crewId;
-              // Restart the whole process for this template (break out of loop)
-              break;
-            } else {
-              // User cancelled – skip this template
-              showToast('PIC selection cancelled for ' + tpl.label, 'default');
-              break;
-            }
-          } else {
-            // Normal case
-            const canvases = result.canvases;
-            generatedData[tpl.id] = { template: tpl, canvases };
-            renderTemplateSection(tpl.id);
-          }
-        } catch (err) {
-          showToast('Failed to load ' + tpl.label + ': ' + err.message, 'error');
-        }
-      }
-
-      // If we broke out of the loop due to PIC selection, we need to restart the for loop.
-      // The while loop will handle this.
-      if (!allGenerated) {
-        // Wait a tiny bit before restarting to let the modal close properly
-        await new Promise(r => setTimeout(r, 100));
-      }
-    }
-
-    updateGlobalDownloadVisibility();
-    showToast('Generated ' + Object.keys(generatedData).length + ' template(s) for ' + destination, 'success');
-  });
-
-  // ===== renderTemplateSection (unchanged, but uses generatedData) =====
   function renderTemplateSection(templateId) {
     const tpl = TEMPLATES[templateId];
     const data = generatedData[templateId];
@@ -2176,12 +2002,7 @@
       if (tpl && !tpl.bgImageData) {
         loadTemplateFromPath(templateId).then(() => {
           const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
-          const result = generatePagesForTemplate(tpl, state.crew, offsets);
-          if (result.needsPicSelection) {
-            showToast('Please select PIC first via Generate Forms.', 'error');
-            return;
-          }
-          const canvases = result.canvases;
+          const canvases = generatePagesForTemplate(tpl, state.crew, offsets);
           generatedData[templateId] = { template: tpl, canvases };
           renderTemplateSection(templateId);
           updateGlobalDownloadVisibility();
@@ -2192,12 +2013,7 @@
       return;
     }
     const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
-    const result = generatePagesForTemplate(tpl, state.crew, offsets);
-    if (result.needsPicSelection) {
-      showToast('Please select PIC first via Generate Forms.', 'error');
-      return;
-    }
-    const canvases = result.canvases;
+    const canvases = generatePagesForTemplate(tpl, state.crew, offsets);
     generatedData[templateId] = { template: tpl, canvases };
     renderTemplateSection(templateId);
     updateGlobalDownloadVisibility();
@@ -2305,33 +2121,7 @@
         if (i < tpl.crewIdSlots.length - 1) code += ',';
         code += '\n';
       });
-      code += `],\n`;
-    }
-    // Add picSlots if they exist
-    if (tpl.picSlots) {
-      code += `picSlots: {\n`;
-      if (tpl.picSlots.nameSlots) {
-        code += `  nameSlots: [\n`;
-        adjustSlots(tpl.picSlots.nameSlots, nameOffX, nameOffY).forEach((s, i) => {
-          code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
-        });
-        code += `  ],\n`;
-      }
-      if (tpl.picSlots.rankSlots) {
-        code += `  rankSlots: [\n`;
-        adjustSlots(tpl.picSlots.rankSlots, rankOffX, rankOffY).forEach((s, i) => {
-          code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
-        });
-        code += `  ],\n`;
-      }
-      if (tpl.picSlots.crewIdSlots) {
-        code += `  crewIdSlots: [\n`;
-        adjustSlots(tpl.picSlots.crewIdSlots, crewIdOffX, crewIdOffY).forEach((s, i) => {
-          code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
-        });
-        code += `  ],\n`;
-      }
-      code += `},\n`;
+      code += `]\n`;
     }
 
     navigator.clipboard.writeText(code).then(() => {
@@ -2417,6 +2207,47 @@
 
   document.getElementById('downloadAllPngBtn').addEventListener('click', downloadAllPng);
   document.getElementById('downloadAllPdfBtn').addEventListener('click', downloadAllPdf);
+
+  document.getElementById('generateFormsBtn').addEventListener('click', async function() {
+    if (!state || !state.crew || state.crew.length === 0) {
+      showToast('Please parse a PDF first.', 'error');
+      return;
+    }
+
+    const destination = document.getElementById('destinationSelect').value;
+    const templates = Object.values(TEMPLATES).filter(t => t.destination === destination);
+    if (templates.length === 0) {
+      showToast('No templates for this destination.', 'error');
+      return;
+    }
+
+    generatedData = {};
+    document.getElementById('templateSectionsContainer').innerHTML = '';
+
+    let loaded = 0;
+    for (const tpl of templates) {
+      try {
+        await loadTemplateFromPath(tpl.id);
+        if (!templateOffsets[tpl.id]) {
+          templateOffsets[tpl.id] = { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
+        }
+        const offsets = templateOffsets[tpl.id];
+        const canvases = generatePagesForTemplate(tpl, state.crew, offsets);
+        generatedData[tpl.id] = { template: tpl, canvases };
+        renderTemplateSection(tpl.id);
+        loaded++;
+      } catch (err) {
+        showToast('Failed to load ' + tpl.label + ': ' + err.message, 'error');
+      }
+    }
+
+    if (loaded === 0) {
+      showToast('No templates could be loaded.', 'error');
+      return;
+    }
+    updateGlobalDownloadVisibility();
+    showToast('Generated ' + loaded + ' template(s) for ' + destination, 'success');
+  });
 
   // ===== Help toggle =====
   document.getElementById('toggleHelp').addEventListener('change', function() {
@@ -2940,6 +2771,8 @@
       if (builderBgImageData) builderRenderPreview();
     });
   });
+
+  // === Override the window.printTemplate to include builder print? No, builder is separate.
 
   // ===== End of Form Builder =====
 
