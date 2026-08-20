@@ -76,43 +76,12 @@
 
   .btn-small { padding: 6px 14px; font-size: 12px; }
 
-  /* ── Upload button (large primary) ── */
-  .btn-upload {
-    background: var(--accent);
-    border: none;
-    padding: 14px 32px;
-    border-radius: 50px;
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 12px var(--accent-glow);
-  }
-  .btn-upload:hover {
-    background: var(--accent-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px var(--accent-glow);
-  }
-  .btn-upload:active { transform: scale(0.96); }
-
-  .file-upload-wrapper { display: inline-block; }
+  .file-upload-wrapper { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .file-upload-wrapper label { background: var(--accent); color: #fff; padding: 8px 20px; border-radius: 50px; cursor: pointer; font-weight: 700; font-size: 13px; transition: 0.2s; border: none; }
+  .file-upload-wrapper label:hover { background: var(--accent-hover); }
   .file-upload-wrapper input[type="file"] { position: absolute; width: 0.1px; height: 0.1px; opacity: 0; overflow: hidden; z-index: -1; }
-
-  .file-status-wrapper {
-    margin-top: 8px;
-    font-family: 'DM Mono', monospace;
-    font-size: 14px;
-    color: var(--text-muted);
-  }
-  .file-status-wrapper .has-file {
-    color: var(--accent);
-    font-weight: 600;
-  }
+  .file-upload-wrapper .file-status { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); }
+  .file-upload-wrapper .file-status.has-file { color: var(--accent); }
 
   .stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0 20px; }
   .stat-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 18px; flex: 1; min-width: 100px; }
@@ -379,15 +348,13 @@
     </div>
     <textarea id="pdfBox" placeholder="Paste text from the PDF CrewTripReport here, or upload a PDF…"></textarea>
     <div class="btnrow">
-      <div class="file-upload-wrapper">
-        <label for="pdfFile" class="btn-upload">📎 Choose File</label>
-        <input type="file" id="pdfFile" accept=".pdf">
-      </div>
-      <button class="btn-secondary" id="parsePdfBtn">⚡ Parse PDF Report</button>
+      <button class="btn-primary" id="parsePdfBtn">⚡ Parse PDF Report</button>
       <button class="btn-secondary" id="clearPdfBtn">Clear</button>
-    </div>
-    <div class="file-status-wrapper">
-      <span class="file-status" id="fileStatus">No file chosen</span>
+      <div class="file-upload-wrapper">
+        <label for="pdfFile">📎 Choose File</label>
+        <input type="file" id="pdfFile" accept=".pdf">
+        <span class="file-status" id="fileStatus">No file chosen</span>
+      </div>
     </div>
     <div class="status noprint" id="pdfStatus"></div>
     <details id="pdfDbgWrap" style="display:none; margin-top:10px;" class="noprint">
@@ -1340,8 +1307,8 @@
     pdfStatus.className = 'status';
     pdfDbgWrap.style.display = 'none';
     pdfFile.value = '';
-    document.getElementById('fileStatus').textContent = 'No file chosen';
-    document.getElementById('fileStatus').className = 'file-status';
+    fileStatus.textContent = 'No file chosen';
+    fileStatus.className = 'file-status';
     reportCard.style.display = 'none';
     emptyCard.style.display = 'block';
     statsContainer.style.display = 'none';
@@ -1374,14 +1341,6 @@
 
   pdfFile.addEventListener('change', function(e){
     const file = e.target.files[0];
-    if (file) {
-      document.getElementById('fileStatus').textContent = '✅ ' + file.name;
-      document.getElementById('fileStatus').className = 'file-status has-file';
-    } else {
-      document.getElementById('fileStatus').textContent = 'No file chosen';
-      document.getElementById('fileStatus').className = 'file-status';
-    }
-
     if(!file) return;
     pdfStatus.textContent = 'Reading PDF…';
     pdfStatus.className = 'status';
@@ -1576,7 +1535,10 @@
 
         // Name
         let displayName = crewMember.crewName || 'Unnamed';
+        // If no separate number slot and globalNumbering is true, prepend number to name (but we use separate slot for BOM_landing)
+        // For other templates that may have globalNumbering true and no numberSlots, keep the old behavior.
         if (tpl.globalNumbering && !numberSlot) {
+          // Need to know the actual global index if we want continuous numbering across pages? But we'll keep the original logic: continuous across pages.
           const globalIdx = (pageIndex * perPage) + idx + 1;
           displayName = globalIdx + '. ' + displayName;
         }
