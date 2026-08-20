@@ -1546,7 +1546,7 @@
     header.className = 'template-header';
     header.innerHTML = `<h3>${tpl.label} (${data.canvases.length} pages)</h3>
       <div>
-        <button class="btn-secondary btn-small" onclick="window.printTemplate('${templateId}')">🖨️ Print A4 Sheets</button>
+        <button class="btn-success btn-small" onclick="window.printTemplate('${templateId}')">🖨️ Print A4 Sheets</button>
         <button class="btn-small btn-primary" onclick="window.copyAdjustedSlots('${templateId}')" style="margin-left:8px;">📋 Copy Slots</button>
       </div>`;
     section.appendChild(header);
