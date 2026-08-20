@@ -1530,17 +1530,14 @@
         const crewIdSlot = tpl.crewIdSlots ? tpl.crewIdSlots[idx] : null;
         if (!nameSlot) return;
 
-        // Global number – reset per page: use idx+1
-        const pageNumber = idx + 1;
+        // Global number
+        const globalNum = (pageIndex * perPage) + idx + 1;
 
         // Name
         let displayName = crewMember.crewName || 'Unnamed';
-        // If no separate number slot and globalNumbering is true, prepend number to name (but we use separate slot for BOM_landing)
-        // For other templates that may have globalNumbering true and no numberSlots, keep the old behavior.
+        // If no separate number slot, and globalNumbering is true, prepend number to name
         if (tpl.globalNumbering && !numberSlot) {
-          // Need to know the actual global index if we want continuous numbering across pages? But we'll keep the original logic: continuous across pages.
-          const globalIdx = (pageIndex * perPage) + idx + 1;
-          displayName = globalIdx + '. ' + displayName;
+          displayName = globalNum + '. ' + displayName;
         }
         const displayRank = crewMember.opRank || '';
         const displayCrewId = crewMember.crewId || '';
@@ -1581,9 +1578,9 @@
           ctx.restore();
         }
 
-        // Draw global number (if separate slot exists) – per page numbering
+        // Draw global number (if separate slot exists)
         if (numberSlot) {
-          const numText = String(pageNumber);
+          const numText = String(globalNum);
           ctx.save();
           ctx.textBaseline = 'top';
           let numFontSize = Math.max(6, numberSlot.fontSize + fontAdj);
@@ -1674,11 +1671,6 @@
     const group = document.createElement('div');
     group.className = 'fine-tune-group';
 
-    // Determine which sliders to show based on template
-    const hasRankSlots = tpl.rankSlots && tpl.rankSlots.length > 0;
-    const hasNumberSlots = tpl.numberSlots && tpl.numberSlots.length > 0;
-    const hasCrewIdSlots = tpl.crewIdSlots && tpl.crewIdSlots.length > 0;
-
     // Helper to create a slider + input pair
     function createSliderInputPair(label, key, min, max, value) {
       const wrapper = document.createElement('label');
@@ -1724,39 +1716,17 @@
       return wrapper;
     }
 
-    const sliderConfigs = [];
-
-    // Always show Name X/Y
-    sliderConfigs.push(
+    const sliderConfigs = [
       { label: 'Name X', key: 'nameX', min: -50, max: 50, value: offsets.nameX },
-      { label: 'Name Y', key: 'nameY', min: -50, max: 50, value: offsets.nameY }
-    );
-
-    if (hasRankSlots) {
-      sliderConfigs.push(
-        { label: 'Rank X', key: 'rankX', min: -50, max: 50, value: offsets.rankX || 0 },
-        { label: 'Rank Y', key: 'rankY', min: -50, max: 50, value: offsets.rankY || 0 }
-      );
-    }
-
-    if (hasNumberSlots) {
-      sliderConfigs.push(
-        { label: 'Number X', key: 'numberX', min: -50, max: 50, value: offsets.numberX || 0 },
-        { label: 'Number Y', key: 'numberY', min: -50, max: 50, value: offsets.numberY || 0 }
-      );
-    }
-
-    if (hasCrewIdSlots) {
-      sliderConfigs.push(
-        { label: 'Crew ID X', key: 'crewIdX', min: -50, max: 50, value: offsets.crewIdX || 0 },
-        { label: 'Crew ID Y', key: 'crewIdY', min: -50, max: 50, value: offsets.crewIdY || 0 }
-      );
-    }
-
-    // Always show Font Size
-    sliderConfigs.push(
-      { label: 'Font Size', key: 'fontSizeAdj', min: -10, max: 10, value: offsets.fontSizeAdj }
-    );
+      { label: 'Name Y', key: 'nameY', min: -50, max: 50, value: offsets.nameY },
+      { label: 'Rank X', key: 'rankX', min: -50, max: 50, value: offsets.rankX },
+      { label: 'Rank Y', key: 'rankY', min: -50, max: 50, value: offsets.rankY },
+      { label: 'Number X', key: 'numberX', min: -50, max: 50, value: offsets.numberX || 0 },
+      { label: 'Number Y', key: 'numberY', min: -50, max: 50, value: offsets.numberY || 0 },
+      { label: 'Crew ID X', key: 'crewIdX', min: -50, max: 50, value: offsets.crewIdX || 0 },
+      { label: 'Crew ID Y', key: 'crewIdY', min: -50, max: 50, value: offsets.crewIdY || 0 },
+      { label: 'Font Size', key: 'fontSizeAdj', min: -10, max: 10, value: offsets.fontSizeAdj },
+    ];
 
     const row = document.createElement('div');
     row.className = 'fine-tune-row';
