@@ -151,6 +151,22 @@
   .ft-cell-clickable input { cursor: pointer; width: 100%; border: none; background: transparent; font-size: 8.5px; text-align: center; font-family: inherit; padding: 4px 2px; }
   .ft-cell-clickable input:focus { outline: none; }
 
+/* ── Secondary button (for modals) ── */
+.secondary-btn {
+  background: transparent;
+  border: 1px solid var(--border-bright);
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.secondary-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
   /* ── Modals (unchanged from original) ── */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
   .modal-box { background: #fff; color: #111; border-radius: var(--radius); padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
@@ -186,6 +202,7 @@
   .keypad-actions .keypad-btn { padding: 12px; font-size: 16px; }
   .keypad-btn .sub { font-size: 12px; font-weight: 400; color: var(--text-muted); display: block; }
   .modal-box.dark .keypad-btn .sub { color: #666; }
+  
 
   /* ── Toast ── */
   .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface); border: 1px solid var(--border-bright); backdrop-filter: blur(12px); padding: 12px 24px; border-radius: 60px; font-family: 'DM Mono', monospace; font-size: 12px; z-index: 2000; transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1); white-space: nowrap; color: var(--text); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
