@@ -151,22 +151,23 @@
   .ft-cell-clickable input { cursor: pointer; width: 100%; border: none; background: transparent; font-size: 8.5px; text-align: center; font-family: inherit; padding: 4px 2px; }
   .ft-cell-clickable input:focus { outline: none; }
 
-/* ── Secondary button (for modals) ── */
-.secondary-btn {
-  background: transparent;
-  border: 1px solid var(--border-bright);
-  padding: 10px 20px;
-  border-radius: 50px;
-  font-family: 'DM Mono', monospace;
-  font-size: 13px;
-  color: var(--text);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.secondary-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
+  /* ── Secondary button (for modals) ── */
+  .secondary-btn {
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .secondary-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
   /* ── Modals (unchanged from original) ── */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
   .modal-box { background: #fff; color: #111; border-radius: var(--radius); padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
@@ -202,7 +203,6 @@
   .keypad-actions .keypad-btn { padding: 12px; font-size: 16px; }
   .keypad-btn .sub { font-size: 12px; font-weight: 400; color: var(--text-muted); display: block; }
   .modal-box.dark .keypad-btn .sub { color: #666; }
-  
 
   /* ── Toast ── */
   .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface); border: 1px solid var(--border-bright); backdrop-filter: blur(12px); padding: 12px 24px; border-radius: 60px; font-family: 'DM Mono', monospace; font-size: 12px; z-index: 2000; transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1); white-space: nowrap; color: var(--text); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
@@ -224,7 +224,23 @@
   .fine-tune-group { background: var(--surface2); border-radius: var(--radius-sm); padding: 16px; margin-top: 12px; border: 1px solid var(--border); }
   .fine-tune-group label { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .fine-tune-group input[type="range"] { flex: 1; min-width: 120px; background: transparent; cursor: pointer; accent-color: var(--accent); }
-  .fine-tune-group .value-display { min-width: 36px; text-align: center; font-weight: 700; color: var(--accent); }
+  .fine-tune-group .value-input {
+    width: 50px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 2px 4px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .fine-tune-group .value-input:focus {
+    border-color: var(--accent);
+  }
   .fine-tune-row { display: flex; flex-wrap: wrap; gap: 16px 24px; margin-top: 6px; }
   .fine-tune-row label { flex: 1; min-width: 140px; }
 
@@ -316,7 +332,7 @@
         <li>1. Upload a PDF (or paste its text) → click <strong>"Parse PDF Report"</strong></li>
         <li>2. Select your destination (e.g., BOM) from the dropdown</li>
         <li>3. Click <strong>"Generate Forms"</strong> – all templates for that destination will load</li>
-        <li>4. Fine‑tune each form individually using its sliders</li>
+        <li>4. Fine‑tune each form individually using its sliders or type values directly</li>
         <li>5. Print each form separately, or download all as PNG/PDF</li>
       </ul>
       <p style="margin-top:12px;">📖 <a href="#" onclick="window.open('ctr-tutorial.html','_blank'); return false;">Open full tutorial in new tab</a></p>
@@ -1409,7 +1425,9 @@
       bgImageData: null,
       groupPilotsSeparately: true,
       nameSlots: generateSlots(243, 354, 17, 30, 300, 30, 14),
-      rankSlots: null,
+      rankSlots: generateSlots(180, 354, 17, 30, 40, 30, 14),
+      numberSlots: generateSlots(123, 353, 17, 30, 40, 30, 14),
+      crewIdSlots: generateSlots(1088, 363, 17, 30, 100, 30, 14),
       globalNumbering: false
     }
   };
@@ -1457,6 +1475,12 @@
     });
   }
 
+  function updateOffset(tplId, key, val) {
+    if (!templateOffsets[tplId]) templateOffsets[tplId] = { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
+    templateOffsets[tplId][key] = val;
+    regenerateTemplate(tplId);
+  }
+
   function generatePagesForTemplate(tpl, crew, offsets) {
     const perPage = tpl.nameSlots.length;
     const pilots = crew.filter(c => PILOT_RANKS.includes(c.opRank));
@@ -1485,9 +1509,13 @@
     const nameOffY = offsets.nameY || 0;
     const rankOffX = offsets.rankX || 0;
     const rankOffY = offsets.rankY || 0;
+    const numberOffX = offsets.numberX || 0;
+    const numberOffY = offsets.numberY || 0;
+    const crewIdOffX = offsets.crewIdX || 0;
+    const crewIdOffY = offsets.crewIdY || 0;
     const fontAdj = offsets.fontSizeAdj || 0;
 
-    pages.forEach((pageCrew) => {
+    pages.forEach((pageCrew, pageIndex) => {
       const canvas = document.createElement('canvas');
       canvas.width = A4_W;
       canvas.height = A4_H;
@@ -1498,14 +1526,23 @@
         if (!crewMember) return;
         const nameSlot = tpl.nameSlots[idx];
         const rankSlot = tpl.rankSlots ? tpl.rankSlots[idx] : null;
+        const numberSlot = tpl.numberSlots ? tpl.numberSlots[idx] : null;
+        const crewIdSlot = tpl.crewIdSlots ? tpl.crewIdSlots[idx] : null;
         if (!nameSlot) return;
 
+        // Global number
+        const globalNum = (pageIndex * perPage) + idx + 1;
+
+        // Name
         let displayName = crewMember.crewName || 'Unnamed';
-        if (tpl.globalNumbering) {
-          displayName = (idx + 1) + '. ' + displayName;
+        // If no separate number slot, and globalNumbering is true, prepend number to name
+        if (tpl.globalNumbering && !numberSlot) {
+          displayName = globalNum + '. ' + displayName;
         }
         const displayRank = crewMember.opRank || '';
+        const displayCrewId = crewMember.crewId || '';
 
+        // Draw name
         ctx.save();
         ctx.textBaseline = 'top';
         let nameFontSize = Math.max(6, nameSlot.fontSize + fontAdj);
@@ -1522,6 +1559,7 @@
         ctx.fillText(displayName, nameX + 5, nameY + 5);
         ctx.restore();
 
+        // Draw rank
         if (rankSlot && displayRank) {
           ctx.save();
           ctx.textBaseline = 'top';
@@ -1537,6 +1575,45 @@
           ctx.shadowBlur = 6;
           ctx.fillStyle = '#000000';
           ctx.fillText(displayRank, rankX + 5, rankY + 5);
+          ctx.restore();
+        }
+
+        // Draw global number (if separate slot exists)
+        if (numberSlot) {
+          const numText = String(globalNum);
+          ctx.save();
+          ctx.textBaseline = 'top';
+          let numFontSize = Math.max(6, numberSlot.fontSize + fontAdj);
+          ctx.font = `bold ${numFontSize}px Arial`;
+          const numX = numberSlot.x + numberOffX;
+          const numY = numberSlot.y + numberOffY;
+          while (ctx.measureText(numText).width > numberSlot.w - 10 && numFontSize > 6) {
+            numFontSize--;
+            ctx.font = `bold ${numFontSize}px Arial`;
+          }
+          ctx.shadowColor = 'white';
+          ctx.shadowBlur = 6;
+          ctx.fillStyle = '#000000';
+          ctx.fillText(numText, numX + 5, numY + 5);
+          ctx.restore();
+        }
+
+        // Draw crew ID
+        if (crewIdSlot && displayCrewId) {
+          ctx.save();
+          ctx.textBaseline = 'top';
+          let crewIdFontSize = Math.max(6, crewIdSlot.fontSize + fontAdj);
+          ctx.font = `bold ${crewIdFontSize}px Arial`;
+          const crewIdX = crewIdSlot.x + crewIdOffX;
+          const crewIdY = crewIdSlot.y + crewIdOffY;
+          while (ctx.measureText(displayCrewId).width > crewIdSlot.w - 10 && crewIdFontSize > 6) {
+            crewIdFontSize--;
+            ctx.font = `bold ${crewIdFontSize}px Arial`;
+          }
+          ctx.shadowColor = 'white';
+          ctx.shadowBlur = 6;
+          ctx.fillStyle = '#000000';
+          ctx.fillText(displayCrewId, crewIdX + 5, crewIdY + 5);
           ctx.restore();
         }
       });
@@ -1590,45 +1667,75 @@
     });
     section.appendChild(preview);
 
-    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, fontSizeAdj:0 };
+    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
     const group = document.createElement('div');
     group.className = 'fine-tune-group';
-    group.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text);">🔧 Fine‑Tune for ${tpl.label}</span>
-        <button class="btn-secondary btn-small" onclick="window.applyFineTune('${templateId}')">Apply & Regenerate</button>
-      </div>
-      <div class="fine-tune-row">
-        <label>Name X <input type="range" id="nameX_${templateId}" min="-50" max="50" value="${offsets.nameX}" step="1"><span class="value-display" id="nameXVal_${templateId}">${offsets.nameX}</span></label>
-        <label>Name Y <input type="range" id="nameY_${templateId}" min="-50" max="50" value="${offsets.nameY}" step="1"><span class="value-display" id="nameYVal_${templateId}">${offsets.nameY}</span></label>
-        <label>Rank X <input type="range" id="rankX_${templateId}" min="-50" max="50" value="${offsets.rankX}" step="1"><span class="value-display" id="rankXVal_${templateId}">${offsets.rankX}</span></label>
-        <label>Rank Y <input type="range" id="rankY_${templateId}" min="-50" max="50" value="${offsets.rankY}" step="1"><span class="value-display" id="rankYVal_${templateId}">${offsets.rankY}</span></label>
-        <label>Font Size <input type="range" id="fontSizeAdj_${templateId}" min="-10" max="10" value="${offsets.fontSizeAdj}" step="1"><span class="value-display" id="fontSizeAdjVal_${templateId}">${offsets.fontSizeAdj}</span></label>
-      </div>
-    `;
-    section.appendChild(group);
 
-    const inputs = group.querySelectorAll('input[type="range"]');
-    inputs.forEach(inp => {
-      inp.addEventListener('input', function() {
-        const parts = this.id.split('_');
-        const tplId = parts.slice(1).join('_');
+    // Helper to create a slider + input pair
+    function createSliderInputPair(label, key, min, max, value) {
+      const wrapper = document.createElement('label');
+      wrapper.textContent = label;
+
+      const slider = document.createElement('input');
+      slider.type = 'range';
+      slider.min = min;
+      slider.max = max;
+      slider.value = value;
+      slider.step = 1;
+      slider.id = key + '_' + templateId;
+
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.className = 'value-input';
+      input.min = min;
+      input.max = max;
+      input.value = value;
+      input.step = 1;
+      input.id = key + 'Val_' + templateId;
+
+      // Slider → Input
+      slider.addEventListener('input', function() {
         const val = parseInt(this.value);
-        const displayId = this.id.replace('_', 'Val_');
-        const display = document.getElementById(displayId);
-        if (display) display.textContent = val;
-
-        if (!templateOffsets[tplId]) templateOffsets[tplId] = { nameX:0, nameY:0, rankX:0, rankY:0, fontSizeAdj:0 };
-        const key = this.id.split('_')[0];
-        if (key === 'nameX') templateOffsets[tplId].nameX = val;
-        else if (key === 'nameY') templateOffsets[tplId].nameY = val;
-        else if (key === 'rankX') templateOffsets[tplId].rankX = val;
-        else if (key === 'rankY') templateOffsets[tplId].rankY = val;
-        else if (key === 'fontSizeAdj') templateOffsets[tplId].fontSizeAdj = val;
-
-        regenerateTemplate(tplId);
+        input.value = val;
+        updateOffset(templateId, key, val);
       });
+
+      // Input → Slider
+      input.addEventListener('input', function() {
+        let val = parseInt(this.value);
+        if (isNaN(val)) return;
+        if (val < min) val = min;
+        if (val > max) val = max;
+        slider.value = val;
+        this.value = val;
+        updateOffset(templateId, key, val);
+      });
+
+      wrapper.appendChild(slider);
+      wrapper.appendChild(input);
+      return wrapper;
+    }
+
+    const sliderConfigs = [
+      { label: 'Name X', key: 'nameX', min: -50, max: 50, value: offsets.nameX },
+      { label: 'Name Y', key: 'nameY', min: -50, max: 50, value: offsets.nameY },
+      { label: 'Rank X', key: 'rankX', min: -50, max: 50, value: offsets.rankX },
+      { label: 'Rank Y', key: 'rankY', min: -50, max: 50, value: offsets.rankY },
+      { label: 'Number X', key: 'numberX', min: -50, max: 50, value: offsets.numberX || 0 },
+      { label: 'Number Y', key: 'numberY', min: -50, max: 50, value: offsets.numberY || 0 },
+      { label: 'Crew ID X', key: 'crewIdX', min: -50, max: 50, value: offsets.crewIdX || 0 },
+      { label: 'Crew ID Y', key: 'crewIdY', min: -50, max: 50, value: offsets.crewIdY || 0 },
+      { label: 'Font Size', key: 'fontSizeAdj', min: -10, max: 10, value: offsets.fontSizeAdj },
+    ];
+
+    const row = document.createElement('div');
+    row.className = 'fine-tune-row';
+    sliderConfigs.forEach(cfg => {
+      row.appendChild(createSliderInputPair(cfg.label, cfg.key, cfg.min, cfg.max, cfg.value));
     });
+    group.appendChild(row);
+
+    section.appendChild(group);
 
     document.getElementById('templateSectionsContainer').appendChild(section);
   }
@@ -1638,7 +1745,7 @@
     if (!tpl || !tpl.bgImageData || !state || !state.crew) {
       if (tpl && !tpl.bgImageData) {
         loadTemplateFromPath(templateId).then(() => {
-          const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, fontSizeAdj:0 };
+          const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
           const canvases = generatePagesForTemplate(tpl, state.crew, offsets);
           generatedData[templateId] = { template: tpl, canvases };
           renderTemplateSection(templateId);
@@ -1649,7 +1756,7 @@
       }
       return;
     }
-    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, fontSizeAdj:0 };
+    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
     const canvases = generatePagesForTemplate(tpl, state.crew, offsets);
     generatedData[templateId] = { template: tpl, canvases };
     renderTemplateSection(templateId);
@@ -1703,11 +1810,15 @@
   window.copyAdjustedSlots = function(templateId) {
     const tpl = TEMPLATES[templateId];
     if (!tpl) return;
-    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, fontSizeAdj:0 };
+    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
     const nameOffX = offsets.nameX || 0;
     const nameOffY = offsets.nameY || 0;
     const rankOffX = offsets.rankX || 0;
     const rankOffY = offsets.rankY || 0;
+    const numberOffX = offsets.numberX || 0;
+    const numberOffY = offsets.numberY || 0;
+    const crewIdOffX = offsets.crewIdX || 0;
+    const crewIdOffY = offsets.crewIdY || 0;
     const fontAdj = offsets.fontSizeAdj || 0;
 
     function adjustSlots(slots, offX, offY) {
@@ -1721,27 +1832,40 @@
       }));
     }
 
-    const adjustedNameSlots = adjustSlots(tpl.nameSlots, nameOffX, nameOffY);
-    const adjustedRankSlots = tpl.rankSlots ? adjustSlots(tpl.rankSlots, rankOffX, rankOffY) : null;
-
     let code = `// Adjusted slots for "${tpl.label}"\n`;
     code += `nameSlots: [\n`;
-    adjustedNameSlots.forEach((s, i) => {
+    adjustSlots(tpl.nameSlots, nameOffX, nameOffY).forEach((s, i) => {
       code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
-      if (i < adjustedNameSlots.length - 1) code += ',';
+      if (i < tpl.nameSlots.length - 1) code += ',';
       code += '\n';
     });
     code += `],\n`;
-    if (adjustedRankSlots) {
+    if (tpl.rankSlots) {
       code += `rankSlots: [\n`;
-      adjustedRankSlots.forEach((s, i) => {
+      adjustSlots(tpl.rankSlots, rankOffX, rankOffY).forEach((s, i) => {
         code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
-        if (i < adjustedRankSlots.length - 1) code += ',';
+        if (i < tpl.rankSlots.length - 1) code += ',';
         code += '\n';
       });
-      code += `]`;
-    } else {
-      code += `rankSlots: null`;
+      code += `],\n`;
+    }
+    if (tpl.numberSlots) {
+      code += `numberSlots: [\n`;
+      adjustSlots(tpl.numberSlots, numberOffX, numberOffY).forEach((s, i) => {
+        code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
+        if (i < tpl.numberSlots.length - 1) code += ',';
+        code += '\n';
+      });
+      code += `],\n`;
+    }
+    if (tpl.crewIdSlots) {
+      code += `crewIdSlots: [\n`;
+      adjustSlots(tpl.crewIdSlots, crewIdOffX, crewIdOffY).forEach((s, i) => {
+        code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
+        if (i < tpl.crewIdSlots.length - 1) code += ',';
+        code += '\n';
+      });
+      code += `]\n`;
     }
 
     navigator.clipboard.writeText(code).then(() => {
@@ -1849,7 +1973,7 @@
       try {
         await loadTemplateFromPath(tpl.id);
         if (!templateOffsets[tpl.id]) {
-          templateOffsets[tpl.id] = { nameX:0, nameY:0, rankX:0, rankY:0, fontSizeAdj:0 };
+          templateOffsets[tpl.id] = { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
         }
         const offsets = templateOffsets[tpl.id];
         const canvases = generatePagesForTemplate(tpl, state.crew, offsets);
