@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>CTR Autofill</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & Variables (Light Theme) ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --surface2: #f1f5f9;
+    --border: #e2e8f0;
+    --border-bright: #cbd5e1;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.1);
+    --accent-glow: rgba(37,99,235,0.2);
+    --accent-hover: #1d4ed8;
+    --red: #dc2626;
+    --green: #16a34a;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-bottom: 40px;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 32px 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .logo-area {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .logo {
+    font-size: clamp(32px, 7vw, 48px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .byline-badge {
+    display: inline-block;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    padding: 2px 14px;
+    border-radius: 100px;
+    margin-top: 2px;
+    width: fit-content;
+  }
+
+  .badge-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 4px;
+  }
+
+  .badge {
+    font-family: 'DM Mono', monospace;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+
+  .badge.accent {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+    transition: border-color 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .card:hover { border-color: var(--border-bright); }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .card-title {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title .icon { color: var(--accent); }
+
+  .card-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Method Tag ── */
+  .method-tag {
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 2px 14px;
+    border-radius: 100px;
+    border: 2px solid var(--surface);
+    text-transform: uppercase;
+    z-index: 4;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .card { position: relative; padding-top: 28px; }
+
+  /* ── OR Divider ── */
+  .or-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: -12px 0 -12px 0;
+    position: relative;
+    z-index: 3;
+  }
+
+  .or-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    box-shadow: 0 0 20px var(--accent-glow);
+    border: 2px solid var(--surface);
+    flex-shrink: 0;
+    user-select: none;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 12px 14px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    resize: vertical;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .btnrow {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    align-items: center;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    border: none;
+    padding: 10px 24px;
+    border-radius: 50px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-success {
+    background: var(--green);
+    border: none;
+    padding: 10px 24px;
+    border-radius: 50px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-success:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  .btn-small {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+
+  /* ── File Upload ── */
+  .file-upload-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .file-upload-wrapper label {
+    background: var(--accent);
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    transition: 0.2s;
+    border: none;
+  }
+  .file-upload-wrapper label:hover { background: var(--accent-hover); }
+
+  .file-upload-wrapper input[type="file"] {
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+  }
+
+  .file-upload-wrapper .file-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .file-upload-wrapper .file-status.has-file { color: var(--accent); }
+
+  /* ── Stats ── */
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 16px 0 20px;
+  }
+
+  .stat-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 18px;
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .stat-number {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+
+  .status {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    white-space: pre-line;
+  }
+  .status.err { color: var(--red); }
+  .status.ok { color: var(--green); }
+
+  /* ── Report Card ── */
+  .report-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .report-card .report-inner {
+    background: #ffffff;
+    border-radius: var(--radius-sm);
+    overflow: auto;
+    padding: 8px;
+    max-width: 100%;
+  }
+
+  /* ── Modals (unchanged) ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+
+  .modal-box {
+    background: #fff;
+    color: #1e293b;
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .modal-sub { font-family: 'DM Mono', monospace; font-size: 13px; color: #666; margin-bottom: 16px; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    backdrop-filter: blur(12px);
+    padding: 12px 24px;
+    border-radius: 60px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    z-index: 2000;
+    transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    white-space: nowrap;
+    color: var(--text);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+
+  /* ── A4 Export Card ── */
+  .a4-export-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    position: relative;
+    padding-top: 28px;
+  }
+
+  .a4-export-card .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+
+  select {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    outline: none;
+  }
+  select:focus { border-color: var(--accent); }
+
+  /* ── Template Section ── */
+  .template-section {
+    margin-top: 24px;
+    border-top: 2px solid var(--border);
+    padding-top: 20px;
+  }
+
+  .template-section .template-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .template-section .template-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .template-preview-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: flex-start;
+  }
+
+  .template-preview-area canvas {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    max-width: 200px;
+    height: auto;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .fine-tune-group {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    margin-top: 12px;
+    border: 1px solid var(--border);
+  }
+
+  .fine-tune-group label {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .fine-tune-group input[type="range"] {
+    flex: 1;
+    min-width: 120px;
+    background: transparent;
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+
+  .fine-tune-group .value-display {
+    min-width: 36px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .fine-tune-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+    margin-top: 6px;
+  }
+
+  .fine-tune-row label { flex: 1; min-width: 140px; }
+
+  /* ── How‑to toggle ── */
+  .help-section {
+    margin: 16px 0 24px;
+  }
+  .help-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .help-toggle-label {
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-muted);
+  }
+  .help-toggle-label:hover { color: var(--accent); }
+
+  .toggle-switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #ccc;
+    transition: .3s;
+    border-radius: 22px;
+  }
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    transition: .3s;
+    border-radius: 50%;
+  }
+  .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+  .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
+
+  .help-content {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    margin-top: 8px;
+    display: none;
+    border: 1px solid var(--border);
+  }
+  .help-content.visible { display: block; }
+
+  .help-content a { color: var(--accent); text-decoration: none; }
+  .help-content a:hover { text-decoration: underline; }
+
+  /* ── Empty state ── */
+  .empty-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    margin-top: 48px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Print styles for internal report ── */
+  @media print {
+    html, body { background: #fff; }
+    header, .card:not(.reportcard), .noprint, .stats-row, .btnrow, .status, .badge-group { display: none !important; }
+    .report-card { border: none; padding: 0; margin: 0; background: none; box-shadow: none; }
+    .report-card .report-inner { border-radius: 0; padding: 0; overflow: visible; margin: 0; }
+    .container { max-width: 100%; padding: 0; margin: 0; }
+    .toast { display: none !important; }
+    #a4ExportCard { display: none !important; }
+  }
+  @page { size: auto; margin: 8mm; }
+
+  /* ── Misc ── */
+  .hidden { display: none !important; }
+  .noprint { display: block; }
+  @media print { .noprint { display: none !important; } }
+  .flex { display: flex; align-items: center; gap: 8px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ===== HEADER ===== -->
+  <header class="noprint">
+    <div class="logo-area">
+      <div class="logo">CTR<span>.</span></div>
+      <div class="byline-badge">✈️ by 2100551</div>
+    </div>
+    <div class="badge-group">
+      <div class="badge">📄 PDF Parser</div>
+      <div class="badge">🔒 Offline</div>
+      <div class="badge accent">v2.0</div>
+    </div>
+  </header>
+
+  <!-- ===== HELP / HOW‑TO TOGGLE ===== -->
+  <div class="help-section noprint">
+    <div class="help-toggle">
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggleHelp">
+        <span class="toggle-slider"></span>
+      </label>
+      <label class="help-toggle-label" for="toggleHelp">How to Use This Tool</label>
+    </div>
+    <div id="helpContent" class="help-content">
+      <p><strong>Quick Guide</strong></p>
+      <ul style="margin-left:20px; font-family:'DM Mono',monospace; font-size:13px; color:var(--text-muted);">
+        <li>1. Upload a PDF (or paste its text) → click <strong>"Parse PDF Report"</strong></li>
+        <li>2. Select your destination (e.g., BOM) from the dropdown</li>
+        <li>3. Click <strong>"Generate Forms"</strong> – all templates for that destination will load</li>
+        <li>4. Fine‑tune each form individually using its sliders</li>
+        <li>5. Print each form separately, or download all as PNG/PDF</li>
+      </ul>
+      <p style="margin-top:12px;">📖 <a href="#" onclick="window.open('ctr-tutorial.html','_blank'); return false;">Open full tutorial in new tab</a></p>
+    </div>
+  </div>
+
+  <!-- ===== PARSER CARD (PDF only) ===== -->
+  <div class="card noprint">
+    <span class="method-tag">📄</span>
+    <div class="card-header">
+      <div class="card-title"><span class="icon">📄</span> Upload PDF or Paste Text</div>
+      <span class="card-sub">CrewTripReport export</span>
+    </div>
+    <textarea id="pdfBox" placeholder="Paste text from the PDF CrewTripReport here, or upload a PDF…"></textarea>
+    <div class="btnrow">
+      <button class="btn-primary" id="parsePdfBtn">⚡ Parse PDF Report</button>
+      <button class="btn-secondary" id="clearPdfBtn">Clear</button>
+      <div class="file-upload-wrapper">
+        <label for="pdfFile">📎 Choose File</label>
+        <input type="file" id="pdfFile" accept=".pdf">
+        <span class="file-status" id="fileStatus">No file chosen</span>
+      </div>
+    </div>
+    <div class="status noprint" id="pdfStatus"></div>
+    <details id="pdfDbgWrap" style="display:none; margin-top:10px;" class="noprint">
+      <summary style="color:var(--text-muted); font-family:'DM Mono',monospace; font-size:11px; cursor:pointer;">Parsed data (debug)</summary>
+      <div id="pdfDbgContent"></div>
+    </details>
+  </div>
+
+  <!-- ===== STATS ===== -->
+  <div id="statsContainer" style="display:none;" class="stats-row noprint">
+    <div class="stat-chip"><div class="stat-number" id="statFlights">0</div><div class="stat-label">Flights</div></div>
+    <div class="stat-chip"><div class="stat-number" id="statCrew">0</div><div class="stat-label">Crew</div></div>
+    <div class="stat-chip"><div class="stat-number" id="statCabin">0</div><div class="stat-label">Cabin Crew</div></div>
+  </div>
+
+  <!-- ===== REPORT PREVIEW (Internal) ===== -->
+  <div class="report-card" id="reportCard" style="display:none;">
+    <div class="btnrow noprint" style="margin-bottom:10px;">
+      <button class="btn-primary" id="printBtn">🖨️ Print / Save PDF</button>
+    </div>
+    <div class="report-inner">
+      <div id="report"></div>
+    </div>
+  </div>
+
+  <!-- ===== A4 EXPORT CARD ===== -->
+  <div class="a4-export-card noprint" id="a4ExportCard">
+    <span class="method-tag">🖼️ A4</span>
+    <div class="card-header">
+      <div class="card-title"><span class="icon">📄</span> Generate A4 Forms</div>
+      <span class="card-sub">destination · multi‑template · fine‑tune</span>
+    </div>
+
+    <div class="btnrow">
+      <label style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text-muted);">Destination:</label>
+      <select id="destinationSelect">
+        <option value="BOM">BOM (Mumbai)</option>
+        <option value="DEL">DEL (Delhi)</option>
+        <option value="HYD">HYD (Hyderabad)</option>
+        <option value="BLR">BLR (Bengaluru)</option>
+        <option value="AMD">AMD (Ahmedabad)</option>
+        <option value="ATQ">ATQ (Amritsar)</option>
+      </select>
+      <button class="btn-primary" id="generateFormsBtn">⚡ Generate Forms</button>
+    </div>
+
+    <!-- Dynamic container for template sections -->
+    <div id="templateSectionsContainer"></div>
+
+    <!-- Global download buttons -->
+    <div id="globalDownloadArea" style="display:none; margin-top:16px;" class="btnrow">
+      <button class="btn-primary" id="downloadAllPngBtn">⬇️ Download All PNGs (sequential)</button>
+      <button class="btn-success" id="downloadAllPdfBtn">⬇️ Download All PDF</button>
+    </div>
+  </div>
+
+  <!-- ===== EMPTY STATE ===== -->
+  <div class="empty-card noprint" id="emptyCard">
+    <div class="card-header">
+      <div class="card-title" style="color:var(--text-muted); font-weight:400;">❌ No report generated yet</div>
+    </div>
+    <div style="font-family:'DM Mono',monospace; font-size:13px; color:var(--text-dim);">
+      Upload a PDF or paste its text above and tap <span style="color:var(--accent);">Parse PDF Report</span>.
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== MODALS (kept for compatibility) ===== -->
+<!-- (Modals from original – we keep them but they are not used in this simplified version) -->
+<div class="modal-overlay" id="posModalOverlay"><div class="modal-box"><div class="modal-title">Working Position</div><div class="modal-sub" id="modalCrewName"></div><div class="pos-grid" id="posGrid"></div><button class="secondary-btn" id="modalCloseBtn">Close</button></div></div>
+<div class="modal-overlay" id="doorModalOverlay"><div class="modal-box"><div class="modal-title">Assign Door</div><div class="modal-sub" id="doorModalCrewName"></div><div class="door-grid" id="doorGrid"></div><button class="secondary-btn" id="doorModalCloseBtn">Close</button></div></div>
+<div class="modal-overlay" id="bayLetterModalOverlay"><div class="modal-box dark"><div class="modal-title">Select Bay Letter</div><div class="letter-grid"><button class="letter-btn" data-letter="A">A</button><button class="letter-btn" data-letter="B">B</button><button class="letter-btn" data-letter="C">C</button><button class="letter-btn" data-letter="G">G</button><button class="letter-btn" data-letter="H">H</button></div><button class="secondary-btn" id="bayLetterCancelBtn">Cancel</button></div></div>
+<div class="modal-overlay" id="numberKeypadModalOverlay"><div class="modal-box dark"><div class="modal-title" id="numberKeypadTitle">Enter Number</div><div class="keypad-display" id="numberKeypadDisplay">0</div><div class="keypad-grid"><button class="keypad-btn" data-key="1">1</button><button class="keypad-btn" data-key="2">2</button><button class="keypad-btn" data-key="3">3</button><button class="keypad-btn" data-key="4">4</button><button class="keypad-btn" data-key="5">5</button><button class="keypad-btn" data-key="6">6</button><button class="keypad-btn" data-key="7">7</button><button class="keypad-btn" data-key="8">8</button><button class="keypad-btn" data-key="9">9</button><button class="keypad-btn danger" data-key="clear">⌫</button><button class="keypad-btn" data-key="0">0</button><button class="keypad-btn accent" data-key="save">✓</button></div><div class="keypad-actions"><button class="keypad-btn" data-key="cancel">Cancel</button><button class="keypad-btn accent" data-key="save">Save</button></div></div></div>
+
+<!-- ===== TOAST ===== -->
+<div id="toastMsg" class="toast noprint"></div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="noprint">
+  🔒 All processing is local — your data never leaves your device.<br>
+  <span style="color:var(--accent);">CTR</span> · 2100551
+</footer>
+
+<script>
+// ============================================================
+//  MAIN CTR SCRIPT – Parser + Report Builder + A4 Forms
+// ============================================================
+(function(){
+  "use strict";
+
+  // ===== DOM refs =====
+  const pdfBox = document.getElementById('pdfBox');
+  const pdfStatus = document.getElementById('pdfStatus');
+  const pdfFile = document.getElementById('pdfFile');
+  const fileStatus = document.getElementById('fileStatus');
+  const pdfDbgWrap = document.getElementById('pdfDbgWrap');
+  const pdfDbgContent = document.getElementById('pdfDbgContent');
+  const reportCard = document.getElementById('reportCard');
+  const emptyCard = document.getElementById('emptyCard');
+  const reportEl = document.getElementById('report');
+  const statsContainer = document.getElementById('statsContainer');
+  const statFlights = document.getElementById('statFlights');
+  const statCrew = document.getElementById('statCrew');
+  const statCabin = document.getElementById('statCabin');
+
+  // A4 Export refs
+  const destinationSelect = document.getElementById('destinationSelect');
+  const generateFormsBtn = document.getElementById('generateFormsBtn');
+  const templateSectionsContainer = document.getElementById('templateSectionsContainer');
+  const globalDownloadArea = document.getElementById('globalDownloadArea');
+  const downloadAllPngBtn = document.getElementById('downloadAllPngBtn');
+  const downloadAllPdfBtn = document.getElementById('downloadAllPdfBtn');
+
+  // Toast
+  function showToast(msg, type='default'){
+    const toast = document.getElementById('toastMsg');
+    toast.textContent = msg;
+    toast.className = `toast ${type} show`;
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // ===== Parser (unchanged) =====
+  function norm(s){ return (s===undefined||s===null) ? '' : String(s).trim(); }
+  function esc(s){ return String(s===undefined||s===null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function timeOnly(dt){ if(!dt) return ''; const parts = dt.trim().split(/\s+/); return parts.length>1 ? parts[parts.length-1] : dt; }
+  function getDayName(dateStr){
+    try{
+      const d = new Date(dateStr);
+      if(isNaN(d)) return '???';
+      return ['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()];
+    }catch(e){ return '???'; }
+  }
+
+  const RANKS = 'CAPT|FO|SO|CDT|OBS|IFS|LS|FSS|FS|SS|CS|AS';
+
+  function parseCrewTripReport(raw){
+    let text = raw.replace(/\r?\n/g,' ')
+      .replace(/([A-Za-z])(\d{7})\b/g,'$1 $2')
+      .replace(/([A-Za-z])(\d{2}-[A-Za-z]{3}-\d{4})/g,'$1 $2')
+      .replace(/\s+/g,' ').trim();
+
+    const idxInbound = text.search(/\bInbound\b/i);
+    const idxOutbound = text.search(/\bOutbound\b/i);
+    const idxCrewPairing = text.search(/Crew On My Pairing/i);
+    const idxReportGen = text.search(/Report generated by/i);
+
+    const headerSection = text.substring(0, idxInbound >= 0 ? idxInbound : text.length);
+    const inboundSection = idxInbound >= 0 ? text.substring(idxInbound, idxOutbound >= 0 ? idxOutbound : text.length) : '';
+    const outboundSection = idxOutbound >= 0 ? text.substring(idxOutbound, idxCrewPairing >= 0 ? idxCrewPairing : text.length) : '';
+    const pairingSection = idxCrewPairing >= 0 ? text.substring(idxCrewPairing, idxReportGen >= 0 ? idxReportGen : text.length) : '';
+
+    const dateIdx = headerSection.search(/\bDate\b/i);
+    const tableSection = dateIdx >= 0 ? headerSection.substring(dateIdx) : headerSection;
+
+    const flightRegex = /MH\d{3,4}/g;
+    let match;
+    const flightMatches = [];
+    while((match = flightRegex.exec(tableSection)) !== null){
+      flightMatches.push({ flight: match[0], index: match.index });
+    }
+    const flightNos = flightMatches.map(f => f.flight);
+
+    const dates = tableSection.match(/\d{2}-[A-Za-z]{3}-\d{4}/g) || [];
+    const depArrMatches = [...tableSection.matchAll(/\b([A-Z]{3})\b\s+(\d{2}:\d{2}(?:\(\+1\))?)/g)];
+
+    const masked = tableSection
+      .replace(/\d{2}-[A-Za-z]{3}-\d{4}/g, 'DATE')
+      .replace(/\d{2}:\d{2}(?:\(\+1\))?/g, 'TIME')
+      .replace(/MH\d{3,4}/g, 'FLIGHTNO');
+    const segments = masked.split('FLIGHTNO').slice(1);
+
+    const itin = [];
+    for(let i=0; i<flightNos.length; i++){
+      const rowStart = flightMatches[i].index + flightNos[i].length;
+      const rowEnd = (i+1 < flightMatches.length) ? flightMatches[i+1].index : tableSection.length;
+      const rawRowSpan = tableSection.slice(rowStart, rowEnd);
+
+      const acRegoMasked = rawRowSpan
+        .replace(/\b([A-Z]{3})\b\s+(\d{2}:\d{2}(?:\(\+1\))?)/g, 'ARPTPAIR')
+        .replace(/\d{2}-[A-Za-z]{3}-\d{4}/g, 'DATE')
+        .replace(/\d{2}:\d{2}(?:\(\+1\))?/g, 'TIME');
+
+      const acMatch = acRegoMasked.match(/\b([0-9][0-9A-Z]{1,3})\b/);
+      const ac = acMatch ? acMatch[1] : '';
+
+      let acReg = '';
+      if(acMatch){
+        const afterAc = acRegoMasked.slice(acMatch.index + acMatch[0].length);
+        const leftoverWords = (afterAc.match(/[A-Za-z0-9]+/g) || [])
+          .filter(w => w !== 'DATE' && w !== 'TIME' && w !== 'ARPTPAIR' && /^[A-Za-z0-9]{2,6}$/.test(w));
+        if(leftoverWords.length) acReg = leftoverWords[leftoverWords.length - 1];
+      }
+      const dep = depArrMatches[i*2];
+      const arr = depArrMatches[i*2+1];
+
+      let fh = '';
+      if(arr){
+        const segStart = arr.index + arr[0].length;
+        const segEnd = rowEnd;
+        const rowTail = tableSection.slice(segStart, segEnd);
+        const maskedRowTail = rowTail
+          .replace(/\d{2}-[A-Za-z]{3}-\d{4}/g, 'DATE')
+          .replace(/\d{2}:\d{2}(?:\(\+1\))?/g, 'TIME');
+        const acMatchLocal = maskedRowTail.match(/\b([0-9][0-9A-Z]{1,3})\b/);
+        const beforeAc = acMatchLocal ? maskedRowTail.slice(0, acMatchLocal.index) : maskedRowTail;
+        const timeCountBeforeAc = (beforeAc.match(/TIME/g) || []).length;
+        const allTimesInRowTail = rowTail.match(/\d{2}:\d{2}(?:\(\+1\))?/g) || [];
+        const times = allTimesInRowTail.slice(0, timeCountBeforeAc);
+        if(times.length === 1) fh = times[0];
+        else if(times.length === 2) fh = times[1];
+        else if(times.length >= 3) fh = times[times.length - 2];
+      }
+
+      itin.push({
+        flightId: flightNos[i] || '',
+        date: dates[i] || '',
+        from: dep ? dep[1] : '',
+        dep: dep ? dep[2] : '',
+        to: arr ? arr[1] : '',
+        arr: arr ? arr[2] : '',
+        ac: ac,
+        version: '',
+        acReg: acReg,
+        flightTime: fh,
+        groundTime: '',
+        actStart: '',
+        actEnd: '',
+        actLoc: ''
+      });
+    }
+
+    if(!itin.length){
+      const seen = new Set();
+      (tableSection.match(/MH\d{3,4}/g) || []).forEach(f => {
+        if(!seen.has(f)){ seen.add(f); itin.push({ flightId:f, date:'', from:'', dep:'', to:'', arr:'', ac:'', version:'', acReg:'', flightTime:'', groundTime:'', actStart:'', actEnd:'', actLoc:'' }); }
+      });
+    }
+
+    const crewMap = {};
+    const patA = new RegExp('(MH\\d{3,4})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z][A-Z .]*?)\\s+(\\d{7})\\s+([A-Z]{1,3})\\b', 'g');
+    const patB = new RegExp('(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z]{1,3})\\b', 'g');
+    const patC = new RegExp('(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{1,3})\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\b', 'g');
+    [inboundSection, outboundSection].forEach(section => {
+      let m;
+      while((m = patA.exec(section)) !== null){
+        crewMap[m[5]] = { opRank: m[2], crewId: m[5], crewName: m[4].trim() };
+      }
+      while((m = patB.exec(section)) !== null){
+        if(!crewMap[m[2]]) crewMap[m[2]] = { opRank: m[4], crewId: m[2], crewName: m[3].trim() };
+      }
+      while((m = patC.exec(section)) !== null){
+        if(!crewMap[m[2]]) crewMap[m[2]] = { opRank: m[4], crewId: m[2], crewName: m[3].trim() };
+      }
+    });
+
+    const pairA = new RegExp('([A-Z]{3})\\s+(' + RANKS + ')\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)(?=\\s+[A-Z]{3}\\s+(?:' + RANKS + ')\\s+\\d{7}|\\s+\\d{7}\\s+(?:' + RANKS + ')\\s+[A-Z]{3}|$)', 'g');
+    const pairB = new RegExp('(\\d{7})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+([A-Z][A-Z .]*?)(?=\\s+\\d{7}|\\s+[A-Z]{3}\\s+(?:' + RANKS + ')\\s+\\d{7}|$)', 'g');
+    {
+      let m;
+      while((m = pairA.exec(pairingSection)) !== null){
+        crewMap[m[3]] = { opRank: m[2], crewId: m[3], crewName: m[4].trim() };
+      }
+      while((m = pairB.exec(pairingSection)) !== null){
+        if(!crewMap[m[1]]) crewMap[m[1]] = { opRank: m[2], crewId: m[1], crewName: m[4].trim() };
+      }
+    }
+
+    const ownerMatch = headerSection.match(/([A-Z][A-Z .]+?)\s*\|\s*(\d{7})\s*\|\s*([A-Z]+)\s*\|\s*([A-Z]{3})\s*\|\s*(CAPT|FO|SO|OBS|IFS|LS|FSS|FS|SS|CS|AS)\b/);
+    if(ownerMatch){
+      crewMap[ownerMatch[2]] = { opRank: ownerMatch[5], crewId: ownerMatch[2], crewName: ownerMatch[1].trim() };
+    }
+
+    const crew = Object.keys(crewMap).map(id => ({
+      opRank: crewMap[id].opRank, posRank: crewMap[id].opRank, crewId: id, crewName: crewMap[id].crewName,
+      wt:'', workPos:'', base:'', sdc:'', checkIn:''
+    }));
+
+    const dutyDate = itin.length ? itin[0].date : '';
+    const dutyStartTimeMatch = headerSection.match(/(\d{2}-[A-Za-z]{3}-\d{4})\s+(\d{2}:\d{2})/);
+    const repTime = dutyStartTimeMatch ? dutyStartTimeMatch[2] : (itin.length ? itin[0].dep : '');
+    const dutyStart = dutyDate ? (dutyDate + ' ' + repTime) : '';
+
+    return {
+      duty: [], itin, crew,
+      found: { duty:false, itin: itin.length>0, crew: crew.length>0 },
+      source: 'pdf',
+      dutyStart, dutyDate,
+      pdfData: { date: dutyDate, acReg: itin.length ? itin[0].acReg : '', repTime }
+    };
+  }
+
+  // ===== Shared state =====
+  let state = null;
+
+  // ===== Internal report builder (simplified) =====
+  function buildReport(){
+    const d = state;
+    const cabinCrew = d.crew.filter(c => ['CAPT','FO','SO','CDT','OBS'].indexOf(c.opRank.toUpperCase()) === -1);
+    const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
+    const fos = d.crew.filter(c => c.opRank.toUpperCase() === 'FO');
+    const cdts = d.crew.filter(c => c.opRank.toUpperCase() === 'CDT');
+
+    let repDisplay = '';
+    if(d.dutyDate || (d.pdfData && d.pdfData.date)){
+      const dateStr = (d.pdfData && d.pdfData.date) || d.dutyDate || '';
+      const day = getDayName(dateStr);
+      const repTime = (d.pdfData && d.pdfData.repTime) || (d.dutyStart ? d.dutyStart.split(/\s+/).pop() : '') || '';
+      repDisplay = dateStr + ' (' + day + ') ' + repTime;
+    } else if(d.dutyStart){
+      const parts = d.dutyStart.split(/\s+/);
+      if(parts.length>=2){
+        const dateStr = parts[0] + ' ' + (parts[1] || '');
+        const day = getDayName(dateStr);
+        const repTime = parts[parts.length-1] || '';
+        repDisplay = dateStr + ' (' + day + ') ' + repTime;
+      } else { repDisplay = d.dutyStart; }
+    }
+    if(!repDisplay) repDisplay = '----';
+
+    let html = `<div class="rpad">`;
+    html += `<div class="top-info"><span>REP: ${esc(repDisplay)}</span></div>`;
+    html += `<table class="rtab"><tr><th>F.NO</th><th>STATION</th><th>STD</th><th>STA</th><th>FT</th><th>A/C TYPE</th><th>A/C REG</th></tr>`;
+    d.itin.forEach(l => {
+      html += `<tr><td>${esc(l.flightId)}</td><td>${esc((l.from||'')+'/'+(l.to||''))}</td><td>${esc(timeOnly(l.dep))}</td><td>${esc(timeOnly(l.arr))}</td><td>${esc(l.flightTime||'')}</td><td>${esc(l.ac||'')}</td><td>${esc(l.acReg||'')}</td></tr>`;
+    });
+    html += `</table>`;
+
+    html += `<div><strong>Captain:</strong> ${captains.map(c=>esc(c.crewId)+' · '+esc(c.opRank)+' · '+esc(c.crewName)).join('<br>')}</div>`;
+    html += `<div><strong>FO:</strong> ${fos.map(c=>esc(c.crewId)+' · '+esc(c.opRank)+' · '+esc(c.crewName)).join('<br>')}</div>`;
+    html += `<div><strong>CDT:</strong> ${cdts.map(c=>esc(c.crewId)+' · '+esc(c.opRank)+' · '+esc(c.crewName)).join('<br>')}</div>`;
+    html += `<div><strong>CABIN CREW (${cabinCrew.length})</strong></div>`;
+    html += `<table class="rtab"><tr><th>S/No</th><th>Rank</th><th>Name</th></tr>`;
+    cabinCrew.forEach(c => {
+      html += `<tr><td>${esc(c.crewId)}</td><td>${esc(c.opRank)}</td><td>${esc(c.crewName)}</td></tr>`;
+    });
+    html += `</table>`;
+    html += `</div>`;
+    reportEl.innerHTML = html;
+    statFlights.textContent = d.itin.length;
+    statCrew.textContent = d.crew.length;
+    statCabin.textContent = cabinCrew.length;
+    statsContainer.style.display = 'flex';
+    reportCard.style.display = 'block';
+    emptyCard.style.display = 'none';
+  }
+
+  function setStateAndRender(parsed, source){
+    state = parsed;
+    buildReport();
+    pdfDbgContent.innerHTML = '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, ['flightId','date','from','dep','to','arr','ac','acReg','flightTime']) +
+      '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, ['opRank','crewId','crewName']);
+    pdfDbgWrap.style.display = '';
+  }
+
+  function renderDebugTable(rows, cols){
+    if(!rows.length) return '<p style="color:#888;font-size:11px;">none found</p>';
+    let html = '<table style="width:100%; border-collapse:collapse; font-size:11px; margin-top:6px;">';
+    html += '<tr>' + cols.map(c=>'<th style="border:1px solid var(--border); padding:4px 6px; background:var(--surface2);">'+c+'</th>').join('') + '</tr>';
+    rows.forEach(row=>{
+      html += '<tr>' + cols.map(c=> '<td style="border:1px solid var(--border); padding:4px 6px;">'+(row[c]!==undefined?row[c]:'')+'</td>').join('') + '</tr>';
+    });
+    html += '</table>';
+    return html;
+  }
+
+  // ===== Parser event handlers =====
+  document.getElementById('parsePdfBtn').addEventListener('click', function(){
+    handlePdfParse(pdfBox.value);
+  });
+
+  document.getElementById('clearPdfBtn').addEventListener('click', function(){
+    pdfBox.value = '';
+    pdfStatus.textContent = '';
+    pdfStatus.className = 'status';
+    pdfDbgWrap.style.display = 'none';
+    pdfFile.value = '';
+    fileStatus.textContent = 'No file chosen';
+    fileStatus.className = 'file-status';
+    reportCard.style.display = 'none';
+    emptyCard.style.display = 'block';
+    statsContainer.style.display = 'none';
+    showToast('Cleared', 'default');
+  });
+
+  function handlePdfParse(text){
+    pdfStatus.textContent = 'Parsing…';
+    pdfStatus.className = 'status';
+    try{
+      if(!text.trim()){ pdfStatus.textContent = 'No text to parse.'; pdfStatus.className = 'status err'; showToast('No text to parse', 'error'); return; }
+      const parsed = parseCrewTripReport(text);
+      if(!parsed.found.crew){
+        pdfStatus.textContent = 'Could not parse crew data. Make sure you copied the full table rows from the PDF.';
+        pdfStatus.className = 'status err';
+        showToast('PDF parsing failed', 'error');
+        return;
+      }
+      pdfStatus.className = 'status ok';
+      pdfStatus.textContent = 'Parsed OK — '+parsed.itin.length+' leg(s), '+parsed.crew.length+' crew members.';
+      setStateAndRender(parsed, 'pdf');
+      showToast('PDF report generated!', 'success');
+    } catch(err){
+      pdfStatus.textContent = 'Error: '+ (err.message||err);
+      pdfStatus.className = 'status err';
+      showToast('Error: '+err.message, 'error');
+      console.error(err);
+    }
+  }
+
+  pdfFile.addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    pdfStatus.textContent = 'Reading PDF…';
+    pdfStatus.className = 'status';
+    const reader = new FileReader();
+    reader.onload = function(loadEvent){
+      const arrayBuffer = loadEvent.target.result;
+      const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+      if(!pdfjsLib){
+        pdfStatus.textContent = 'Error: pdf.js library not loaded.';
+        pdfStatus.className = 'status err';
+        showToast('pdf.js not loaded', 'error');
+        return;
+      }
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      pdfjsLib.getDocument({data: arrayBuffer}).promise.then(function(pdf){
+        let fullText = '';
+        const pages = [];
+        for(let i=1; i<=pdf.numPages; i++) pages.push(pdf.getPage(i));
+        return Promise.all(pages).then(function(pagePromises){
+          return Promise.all(pagePromises.map(function(page){
+            return page.getTextContent().then(function(textContent){
+              return textContent.items.map(item => item.str).join(' ');
+            });
+          }));
+        }).then(function(texts){
+          fullText = texts.join('\n');
+          pdfBox.value = fullText;
+          pdfStatus.textContent = 'PDF text extracted. Auto‑parsing…';
+          handlePdfParse(fullText);
+        });
+      }).catch(function(err){
+        pdfStatus.textContent = 'Error reading PDF: ' + err.message;
+        pdfStatus.className = 'status err';
+        showToast('PDF read error', 'error');
+        console.error(err);
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+  // ============================================================
+  //  A4 FORMS MODULE – Destination‑based, Multi‑Template
+  // ============================================================
+
+  // --- A4 dimensions (landscape @ 150 DPI) ---
+  const A4_W = 1754;
+  const A4_H = 1240;
+
+  // --- Helper: generate slots dynamically ---
+  function generateSlots(startX, startY, count, stepY, width, height, fontSize) {
+    const slots = [];
+    for (let i = 0; i < count; i++) {
+      slots.push({
+        x: startX,
+        y: startY + (i * stepY),
+        w: width,
+        h: height,
+        fontSize: fontSize
+      });
+    }
+    return slots;
+  }
+
+  // ===== TEMPLATE REGISTRY with destinations =====
+  const TEMPLATES = {
+    bom_baggage: {
+      id: 'bom_baggage',
+      label: 'BOM Baggage',
+      destination: 'BOM',
+      bgPath: 'templates/BOM_baggage.png',
+      bgImageData: null,
+      groupPilotsSeparately: true,
+      nameSlots: generateSlots(83, 314, 16, 37, 400, 35, 12),
+      rankSlots: generateSlots(497, 314, 16, 37, 80, 35, 12),
+      globalNumbering: false
+    },
+    bom_landing: {
+      id: 'bom_landing',
+      label: 'BOM Landing',
+      destination: 'BOM',
+      bgPath: 'templates/BOM_landing.png',
+      bgImageData: null,
+      groupPilotsSeparately: true,
+      nameSlots: generateSlots(243, 357, 17, 24, 300, 24, 12),
+      rankSlots: null,
+      globalNumbering: false
+    }
+    // Additional templates for other destinations will be added here
+  };
+
+  // --- Per‑template offsets ---
+  const templateOffsets = {};
+
+  // --- Generated data store ---
+  let generatedData = {}; // key: templateId, value: { template, canvases }
+
+  // --- Load background from path ---
+  function loadTemplateFromPath(templateId) {
+    return new Promise((resolve, reject) => {
+      const tpl = TEMPLATES[templateId];
+      if (!tpl || !tpl.bgPath) {
+        reject(new Error('No bgPath defined for template'));
+        return;
+      }
+      if (tpl.bgImageData) {
+        resolve(tpl.bgImageData);
+        return;
+      }
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = A4_W;
+        canvas.height = A4_H;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, A4_W, A4_H);
+        const scaleX = A4_W / img.width;
+        const scaleY = A4_H / img.height;
+        const scale = Math.min(scaleX, scaleY);
+        const drawWidth = img.width * scale;
+        const drawHeight = img.height * scale;
+        const offsetX = (A4_W - drawWidth) / 2;
+        const offsetY = (A4_H - drawHeight) / 2;
+        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+        tpl.bgImageData = ctx.getImageData(0, 0, A4_W, A4_H);
+        resolve(tpl.bgImageData);
+      };
+      img.onerror = function() {
+        reject(new Error('Failed to load background from path: ' + tpl.bgPath));
+      };
+      img.src = tpl.bgPath;
+    });
+  }
+
+  // --- Rank sorter ---
+  const RANK_PRIORITY = { 'CAPT': 1, 'FO': 2, 'SO': 3, 'CDT': 4, 'OBS': 5, 'IFS': 6, 'LS': 7, 'FS': 8, 'FSS': 9, 'SS': 10, 'CS': 11, 'AS': 12 };
+  const PILOT_RANKS = ['CAPT','FO','SO','CDT','OBS'];
+  function sortByRank(crew) {
+    return crew.slice().sort((a, b) => {
+      const priA = RANK_PRIORITY[a.opRank] || 99;
+      const priB = RANK_PRIORITY[b.opRank] || 99;
+      return priA - priB;
+    });
+  }
+
+  // --- Core generation for a single template ---
+  function generatePagesForTemplate(tpl, crew, offsets) {
+    const perPage = tpl.nameSlots.length;
+    const pilots = crew.filter(c => PILOT_RANKS.includes(c.opRank));
+    const cabin = crew.filter(c => !PILOT_RANKS.includes(c.opRank));
+    const sortedPilots = sortByRank(pilots);
+    const sortedCabin = sortByRank(cabin);
+    const totalCrew = crew.length;
+
+    let pages = [];
+    if (tpl.groupPilotsSeparately && totalCrew > perPage) {
+      const page1 = [...sortedPilots];
+      while (page1.length < perPage) page1.push(null);
+      pages.push(page1);
+      for (let i = 0; i < sortedCabin.length; i += perPage) {
+        pages.push(sortedCabin.slice(i, i + perPage));
+      }
+    } else {
+      const combined = sortedPilots.concat(sortedCabin);
+      for (let i = 0; i < combined.length; i += perPage) {
+        pages.push(combined.slice(i, i + perPage));
+      }
+    }
+
+    const canvases = [];
+    const nameOffX = offsets.nameX || 0;
+    const nameOffY = offsets.nameY || 0;
+    const rankOffX = offsets.rankX || 0;
+    const rankOffY = offsets.rankY || 0;
+    const fontAdj = offsets.fontSizeAdj || 0;
+
+    pages.forEach((pageCrew) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = A4_W;
+      canvas.height = A4_H;
+      const ctx = canvas.getContext('2d');
+      ctx.putImageData(tpl.bgImageData, 0, 0);
+
+      pageCrew.forEach((crewMember, idx) => {
+        if (!crewMember) return;
+        const nameSlot = tpl.nameSlots[idx];
+        const rankSlot = tpl.rankSlots ? tpl.rankSlots[idx] : null;
+        if (!nameSlot) return;
+
+        let displayName = crewMember.crewName || 'Unnamed';
+        if (tpl.globalNumbering) {
+          displayName = (idx + 1) + '. ' + displayName;
+        }
+        const displayRank = crewMember.opRank || '';
+
+        // Draw name
+        ctx.save();
+        ctx.textBaseline = 'top';
+        let nameFontSize = Math.max(6, nameSlot.fontSize + fontAdj);
+        ctx.font = `bold ${nameFontSize}px Arial`;
+        const nameX = nameSlot.x + nameOffX;
+        const nameY = nameSlot.y + nameOffY;
+        while (ctx.measureText(displayName).width > nameSlot.w - 10 && nameFontSize > 6) {
+          nameFontSize--;
+          ctx.font = `bold ${nameFontSize}px Arial`;
+        }
+        ctx.shadowColor = 'white';
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = '#000000';
+        ctx.fillText(displayName, nameX + 5, nameY + 5);
+        ctx.restore();
+
+        // Draw rank
+        if (rankSlot && displayRank) {
+          ctx.save();
+          ctx.textBaseline = 'top';
+          let rankFontSize = Math.max(6, rankSlot.fontSize + fontAdj);
+          ctx.font = `bold ${rankFontSize}px Arial`;
+          const rankX = rankSlot.x + rankOffX;
+          const rankY = rankSlot.y + rankOffY;
+          while (ctx.measureText(displayRank).width > rankSlot.w - 10 && rankFontSize > 6) {
+            rankFontSize--;
+            ctx.font = `bold ${rankFontSize}px Arial`;
+          }
+          ctx.shadowColor = 'white';
+          ctx.shadowBlur = 6;
+          ctx.fillStyle = '#000000';
+          ctx.fillText(displayRank, rankX + 5, rankY + 5);
+          ctx.restore();
+        }
+      });
+
+      canvases.push(canvas);
+    });
+
+    return canvases;
+  }
+
+  // --- Render template section in UI ---
+  function renderTemplateSection(templateId) {
+    const tpl = TEMPLATES[templateId];
+    const data = generatedData[templateId];
+    if (!data) return;
+
+    // Remove existing section if any
+    const existing = document.getElementById('section-' + templateId);
+    if (existing) existing.remove();
+
+    const section = document.createElement('div');
+    section.id = 'section-' + templateId;
+    section.className = 'template-section';
+
+    const header = document.createElement('div');
+    header.className = 'template-header';
+    header.innerHTML = `<h3>${tpl.label} (${data.canvases.length} pages)</h3>
+      <div>
+        <button class="btn-secondary btn-small" onclick="window.printTemplate('${templateId}')">🖨️ Print A4 Sheets</button>
+        <button class="btn-small btn-primary" onclick="window.copyAdjustedSlots('${templateId}')" style="margin-left:8px;">📋 Copy Slots</button>
+      </div>`;
+
+    section.appendChild(header);
+
+    // Preview area
+    const preview = document.createElement('div');
+    preview.className = 'template-preview-area';
+    data.canvases.forEach((cv, idx) => {
+      const wrapper = document.createElement('div');
+      wrapper.style.textAlign = 'center';
+      const label = document.createElement('div');
+      label.textContent = `Page ${idx+1}`;
+      label.style.fontSize = '11px';
+      label.style.color = 'var(--text-muted)';
+      label.style.fontFamily = "'DM Mono', monospace";
+      wrapper.appendChild(label);
+      wrapper.appendChild(cv.cloneNode(true));
+      preview.appendChild(wrapper);
+    });
+    section.appendChild(preview);
+
+    // Fine-tune sliders
+    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, fontSizeAdj:0 };
+    const group = document.createElement('div');
+    group.className = 'fine-tune-group';
+    group.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text);">🔧 Fine‑Tune for ${tpl.label}</span>
+        <button class="btn-secondary btn-small" onclick="window.applyFineTune('${templateId}')">Apply & Regenerate</button>
+      </div>
+      <div class="fine-tune-row">
+        <label>Name X <input type="range" id="nameX_${templateId}" min="-50" max="50" value="${offsets.nameX}" step="1"><span class="value-display" id="nameXVal_${templateId}">${offsets.nameX}</span></label>
+        <label>Name Y <input type="range" id="nameY_${templateId}" min="-50" max="50" value="${offsets.nameY}" step="1"><span class="value-display" id="nameYVal_${templateId}">${offsets.nameY}</span></label>
+        <label>Rank X <input type="range" id="rankX_${templateId}" min="-50" max="50" value="${offsets.rankX}" step="1"><span class="value-display" id="rankXVal_${templateId}">${offsets.rankX}</span></label>
+        <label>Rank Y <input type="range" id="rankY_${templateId}" min="-50" max="50" value="${offsets.rankY}" step="1"><span class="value-display" id="rankYVal_${templateId}">${offsets.rankY}</span></label>
+        <label>Font Size <input type="range" id="fontSizeAdj_${templateId}" min="-10" max="10" value="${offsets.fontSizeAdj}" step="1"><span class="value-display" id="fontSizeAdjVal_${templateId}">${offsets.fontSizeAdj}</span></label>
+      </div>
+    `;
+    section.appendChild(group);
+
+    // Attach live preview listeners
+    const inputs = group.querySelectorAll('input[type="range"]');
+    inputs.forEach(inp => {
+      inp.addEventListener('input', function() {
+        const id = this.id;
+        const val = this.value;
+        const displayId = id.replace('_', 'Val_');
+        const display = document.getElementById(displayId);
+        if (display) display.textContent = val;
+        // Update offsets
+        const tplId = templateId;
+        if (!templateOffsets[tplId]) templateOffsets[tplId] = { nameX:0, nameY:0, rankX:0, rankY:0, fontSizeAdj:0 };
+        const key = id.split('_')[0];
+        if (key === 'nameX') templateOffsets[tplId].nameX = parseInt(val);
+        else if (key === 'nameY') templateOffsets[tplId].nameY = parseInt(val);
+        else if (key === 'rankX') templateOffsets[tplId].rankX = parseInt(val);
+        else if (key === 'rankY') templateOffsets[tplId].rankY = parseInt(val);
+        else if (key === 'fontSizeAdj') templateOffsets[tplId].fontSizeAdj = parseInt(val);
+        // Live regenerate
+        regenerateTemplate(tplId);
+      });
+    });
+
+    templateSectionsContainer.appendChild(section);
+  }
+
+  // --- Regenerate a single template ---
+  function regenerateTemplate(templateId) {
+    const tpl = TEMPLATES[templateId];
+    if (!tpl || !tpl.bgImageData || !state || !state.crew) return;
+    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, fontSizeAdj:0 };
+    const canvases = generatePagesForTemplate(tpl, state.crew, offsets);
+    generatedData[templateId] = { template: tpl, canvases };
+    renderTemplateSection(templateId);
+    updateGlobalDownloadVisibility();
+  }
+
+  // --- Apply fine-tune (regen) ---
+  window.applyFineTune = function(templateId) {
+    regenerateTemplate(templateId);
+    showToast('Regenerated ' + TEMPLATES[templateId].label, 'success');
+  };
+
+  // --- Print a single template ---
+  window.printTemplate = function(templateId) {
+    const data = generatedData[templateId];
+    if (!data || data.canvases.length === 0) {
+      showToast('No pages to print for this template.', 'error');
+      return;
+    }
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+      showToast('Please allow popups.', 'error');
+      return;
+    }
+    let html = `<!DOCTYPE html><html><head><title>${data.template.label}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: white; }
+        .page { page-break-after: always; display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh; }
+        .page img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        @page { size: A4 landscape; margin: 0; }
+        @media print { body { margin: 0; padding: 0; } .page { page-break-after: always; width: 100%; height: 100%; } .page img { max-width: 100%; max-height: 100%; } }
+      </style>
+    </head><body>`;
+    data.canvases.forEach(cv => {
+      html += `<div class="page"><img src="${cv.toDataURL('image/png')}" alt="A4 sheet"></div>`;
+    });
+    html += `<script>
+      (function() {
+        const images = document.querySelectorAll('img');
+        let loaded = 0;
+        const total = images.length;
+        if (total === 0) { window.print(); return; }
+        function onLoad() { loaded++; if (loaded === total) { window.print(); } }
+        images.forEach(img => { if (img.complete) onLoad(); else { img.onload = onLoad; img.onerror = onLoad; } });
+      })();
+    <\/script></body></html>`;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+  };
+
+  // --- Copy adjusted slots for a template ---
+  window.copyAdjustedSlots = function(templateId) {
+    const tpl = TEMPLATES[templateId];
+    if (!tpl) return;
+    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, fontSizeAdj:0 };
+    const nameOffX = offsets.nameX || 0;
+    const nameOffY = offsets.nameY || 0;
+    const rankOffX = offsets.rankX || 0;
+    const rankOffY = offsets.rankY || 0;
+    const fontAdj = offsets.fontSizeAdj || 0;
+
+    function adjustSlots(slots, offX, offY) {
+      if (!slots) return null;
+      return slots.map(s => ({
+        x: s.x + offX,
+        y: s.y + offY,
+        w: s.w,
+        h: s.h,
+        fontSize: Math.max(6, s.fontSize + fontAdj)
+      }));
+    }
+
+    const adjustedNameSlots = adjustSlots(tpl.nameSlots, nameOffX, nameOffY);
+    const adjustedRankSlots = tpl.rankSlots ? adjustSlots(tpl.rankSlots, rankOffX, rankOffY) : null;
+
+    let code = `// Adjusted slots for "${tpl.label}"\n`;
+    code += `nameSlots: [\n`;
+    adjustedNameSlots.forEach((s, i) => {
+      code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
+      if (i < adjustedNameSlots.length - 1) code += ',';
+      code += '\n';
+    });
+    code += `],\n`;
+    if (adjustedRankSlots) {
+      code += `rankSlots: [\n`;
+      adjustedRankSlots.forEach((s, i) => {
+        code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
+        if (i < adjustedRankSlots.length - 1) code += ',';
+        code += '\n';
+      });
+      code += `]`;
+    } else {
+      code += `rankSlots: null`;
+    }
+
+    navigator.clipboard.writeText(code).then(() => {
+      showToast('Adjusted slots copied for ' + tpl.label, 'success');
+    }).catch(() => {
+      const textarea = document.createElement('textarea');
+      textarea.value = code;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showToast('Adjusted slots copied!', 'success');
+    });
+  };
+
+  // --- Update global download visibility ---
+  function updateGlobalDownloadVisibility() {
+    const anyData = Object.values(generatedData).some(d => d.canvases.length > 0);
+    globalDownloadArea.style.display = anyData ? 'flex' : 'none';
+  }
+
+  // --- Global download PNGs ---
+  function downloadAllPng() {
+    const allCanvases = [];
+    for (const id in generatedData) {
+      allCanvases.push(...generatedData[id].canvases);
+    }
+    if (allCanvases.length === 0) {
+      showToast('No pages to download.', 'error');
+      return;
+    }
+    let index = 0;
+    function downloadNext() {
+      if (index >= allCanvases.length) {
+        showToast('All PNGs downloaded!', 'success');
+        return;
+      }
+      const canvas = allCanvases[index];
+      const link = document.createElement('a');
+      link.download = `A4_page_${index + 1}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      index++;
+      setTimeout(downloadNext, 500);
+    }
+    downloadNext();
+  }
+
+  // --- Global download PDF ---
+  function downloadAllPdf() {
+    const allCanvases = [];
+    for (const id in generatedData) {
+      allCanvases.push(...generatedData[id].canvases);
+    }
+    if (allCanvases.length === 0) {
+      showToast('No pages to download.', 'error');
+      return;
+    }
+    function loadJsPDF() {
+      return new Promise((resolve, reject) => {
+        if (typeof window.jspdf !== 'undefined') {
+          resolve(window.jspdf);
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        script.onload = () => resolve(window.jspdf);
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+    loadJsPDF().then(({ jsPDF }) => {
+      const pdf = new jsPDF('landscape', 'px', 'a4');
+      allCanvases.forEach((canvas, idx) => {
+        if (idx > 0) pdf.addPage();
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        pdf.addImage(imgData, 'JPEG', 0, 0, 842, 595);
+      });
+      pdf.save('A4_crew_manifest.pdf');
+      showToast('PDF downloaded!', 'success');
+    }).catch(err => {
+      console.error(err);
+      showToast('PDF library error: ' + err.message, 'error');
+    });
+  }
+
+  downloadAllPngBtn.addEventListener('click', downloadAllPng);
+  downloadAllPdfBtn.addEventListener('click', downloadAllPdf);
+
+  // --- Generate Forms ---
+  generateFormsBtn.addEventListener('click', async function() {
+    if (!state || !state.crew || state.crew.length === 0) {
+      showToast('Please parse a PDF first.', 'error');
+      return;
+    }
+
+    const destination = destinationSelect.value;
+    const templates = Object.values(TEMPLATES).filter(t => t.destination === destination);
+    if (templates.length === 0) {
+      showToast('No templates for this destination.', 'error');
+      return;
+    }
+
+    // Clear previous generated data and UI
+    generatedData = {};
+    templateSectionsContainer.innerHTML = '';
+
+    // Load backgrounds and generate
+    let loaded = 0;
+    for (const tpl of templates) {
+      try {
+        await loadTemplateFromPath(tpl.id);
+        // Initialize offsets if not present
+        if (!templateOffsets[tpl.id]) {
+          templateOffsets[tpl.id] = { nameX:0, nameY:0, rankX:0, rankY:0, fontSizeAdj:0 };
+        }
+        const offsets = templateOffsets[tpl.id];
+        const canvases = generatePagesForTemplate(tpl, state.crew, offsets);
+        generatedData[tpl.id] = { template: tpl, canvases };
+        renderTemplateSection(tpl.id);
+        loaded++;
+      } catch (err) {
+        showToast('Failed to load ' + tpl.label + ': ' + err.message, 'error');
+      }
+    }
+
+    if (loaded === 0) {
+      showToast('No templates could be loaded.', 'error');
+      return;
+    }
+
+    updateGlobalDownloadVisibility();
+    showToast('Generated ' + loaded + ' template(s) for ' + destination, 'success');
+  });
+
+  // ===== Help toggle =====
+  document.getElementById('toggleHelp').addEventListener('change', function() {
+    document.getElementById('helpContent').classList.toggle('visible', this.checked);
+  });
+
+  // ===== Init =====
+  // Initialize any existing templates (none initially)
+  updateGlobalDownloadVisibility();
+
+})();
+</script>
+<!-- Counter script (optional) -->
+<script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
+</body>
+</html>
