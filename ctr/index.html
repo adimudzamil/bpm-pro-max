@@ -38,405 +38,83 @@
     padding-bottom: 40px;
   }
 
-  .container {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 0 24px 60px;
-  }
+  .container { max-width: 960px; margin: 0 auto; padding: 0 24px 60px; }
 
   /* ── Header ── */
-  header {
-    padding: 32px 0 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-
-  .logo-area {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .logo {
-    font-size: clamp(32px, 7vw, 48px);
-    font-weight: 800;
-    letter-spacing: -0.04em;
-    line-height: 1;
-  }
-
+  header { padding: 32px 0 24px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .logo-area { display: flex; flex-direction: column; gap: 4px; }
+  .logo { font-size: clamp(32px, 7vw, 48px); font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
   .logo span { color: var(--accent); }
-
-  .byline-badge {
-    display: inline-block;
-    background: var(--accent-dim);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    padding: 2px 14px;
-    border-radius: 100px;
-    margin-top: 2px;
-    width: fit-content;
-  }
-
-  .badge-group {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    padding-top: 4px;
-  }
-
-  .badge {
-    font-family: 'DM Mono', monospace;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 100px;
-    padding: 4px 14px;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-  }
-
-  .badge.accent {
-    border-color: var(--accent);
-    background: var(--accent-dim);
-    color: var(--accent);
-  }
+  .byline-badge { display: inline-block; background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; padding: 2px 14px; border-radius: 100px; margin-top: 2px; width: fit-content; }
+  .badge-group { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 4px; }
+  .badge { font-family: 'DM Mono', monospace; background: var(--surface2); border: 1px solid var(--border); border-radius: 100px; padding: 4px 14px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: var(--text-muted); }
+  .badge.accent { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
 
   /* ── Cards ── */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 24px;
-    transition: border-color 0.2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    position: relative;
-    padding-top: 28px;
-  }
-
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; transition: border-color 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; padding-top: 28px; }
   .card:hover { border-color: var(--border-bright); }
-
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-  }
-
-  .card-title {
-    font-weight: 700;
-    font-size: 18px;
-    letter-spacing: -0.02em;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .card-title { font-weight: 700; font-size: 18px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
   .card-title .icon { color: var(--accent); }
+  .card-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-muted); letter-spacing: 0.08em; }
+  .method-tag { position: absolute; top: -10px; left: 16px; background: var(--accent); color: #fff; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; padding: 2px 14px; border-radius: 100px; border: 2px solid var(--surface); text-transform: uppercase; z-index: 4; box-shadow: 0 0 20px var(--accent-glow); }
 
-  .card-sub {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 0.08em;
-  }
+  textarea { width: 100%; min-height: 120px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); padding: 12px 14px; font-size: 13px; font-family: 'DM Mono', monospace; resize: vertical; transition: border-color 0.2s; }
+  textarea:focus { outline: none; border-color: var(--accent); }
 
-  .method-tag {
-    position: absolute;
-    top: -10px;
-    left: 16px;
-    background: var(--accent);
-    color: #fff;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    padding: 2px 14px;
-    border-radius: 100px;
-    border: 2px solid var(--surface);
-    text-transform: uppercase;
-    z-index: 4;
-    box-shadow: 0 0 20px var(--accent-glow);
-  }
+  .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
 
-  textarea {
-    width: 100%;
-    min-height: 120px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    padding: 12px 14px;
-    font-size: 13px;
-    font-family: 'DM Mono', monospace;
-    resize: vertical;
-    transition: border-color 0.2s;
-  }
-
-  textarea:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-
-  .btnrow {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 14px;
-    align-items: center;
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    border: none;
-    padding: 10px 24px;
-    border-radius: 50px;
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
+  .btn-primary { background: var(--accent); border: none; padding: 10px 24px; border-radius: 50px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: #fff; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; }
   .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .btn-secondary {
-    background: transparent;
-    border: 1px solid var(--border-bright);
-    padding: 10px 20px;
-    border-radius: 50px;
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    color: var(--text);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
+  .btn-secondary { background: transparent; border: 1px solid var(--border-bright); padding: 10px 20px; border-radius: 50px; font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); cursor: pointer; transition: all 0.2s; }
   .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
 
-  .btn-success {
-    background: var(--green);
-    border: none;
-    padding: 10px 24px;
-    border-radius: 50px;
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
+  .btn-success { background: var(--green); border: none; padding: 10px 24px; border-radius: 50px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: #fff; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; }
   .btn-success:hover { opacity: 0.85; transform: translateY(-1px); }
 
-  .btn-small {
-    padding: 6px 14px;
-    font-size: 12px;
-  }
+  .btn-small { padding: 6px 14px; font-size: 12px; }
 
-  .file-upload-wrapper {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  .file-upload-wrapper label {
-    background: var(--accent);
-    color: #fff;
-    padding: 8px 20px;
-    border-radius: 50px;
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 13px;
-    transition: 0.2s;
-    border: none;
-  }
+  .file-upload-wrapper { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .file-upload-wrapper label { background: var(--accent); color: #fff; padding: 8px 20px; border-radius: 50px; cursor: pointer; font-weight: 700; font-size: 13px; transition: 0.2s; border: none; }
   .file-upload-wrapper label:hover { background: var(--accent-hover); }
-
-  .file-upload-wrapper input[type="file"] {
-    position: absolute;
-    width: 0.1px;
-    height: 0.1px;
-    opacity: 0;
-    overflow: hidden;
-    z-index: -1;
-  }
-
-  .file-upload-wrapper .file-status {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--text-muted);
-  }
+  .file-upload-wrapper input[type="file"] { position: absolute; width: 0.1px; height: 0.1px; opacity: 0; overflow: hidden; z-index: -1; }
+  .file-upload-wrapper .file-status { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); }
   .file-upload-wrapper .file-status.has-file { color: var(--accent); }
 
-  .stats-row {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin: 16px 0 20px;
-  }
+  .stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0 20px; }
+  .stat-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 18px; flex: 1; min-width: 100px; }
+  .stat-number { font-size: 26px; font-weight: 800; color: var(--accent); }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--text-muted); }
 
-  .stat-chip {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 10px 18px;
-    flex: 1;
-    min-width: 100px;
-  }
-
-  .stat-number {
-    font-size: 26px;
-    font-weight: 800;
-    color: var(--accent);
-  }
-  .stat-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-  }
-
-  .status {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 10px;
-    white-space: pre-line;
-  }
+  .status { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); margin-top: 10px; white-space: pre-line; }
   .status.err { color: var(--red); }
   .status.ok { color: var(--green); }
 
   /* ── Report Card (internal) ── */
-  .report-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  }
-
-  .report-card .report-inner {
-    background: #ffffff;
-    border-radius: var(--radius-sm);
-    overflow: auto;
-    padding: 8px;
-    max-width: 100%;
-  }
+  .report-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .report-card .report-inner { background: #ffffff; border-radius: var(--radius-sm); overflow: auto; padding: 8px; max-width: 100%; }
 
   /* ── Inline report styles (unchanged from original) ── */
-  #report {
-    background: #fff;
-    color: #111;
-    border-radius: 6px;
-    overflow: auto;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    font-size: 10px;
-  }
-
+  #report { background: #fff; color: #111; border-radius: 6px; overflow: auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 10px; }
   #report .rpad { padding: 8px 10px; }
+  .rtitle { text-align: center; border-bottom: 1px solid #111; padding-bottom: 4px; margin-bottom: 6px; }
+  .rtitle h2 { margin: 0; font-size: 8pt; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }
 
-  .rtitle {
-    text-align: center;
-    border-bottom: 1px solid #111;
-    padding-bottom: 4px;
-    margin-bottom: 6px;
-  }
-
-  .rtitle h2 {
-    margin: 0;
-    font-size: 8pt;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  }
-
-  .captain-icc-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 9px;
-    margin-top: 4px;
-    table-layout: fixed;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  }
-  .captain-icc-table td {
-    border: 1px solid #333;
-    padding: 2px 4px;
-    vertical-align: top;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  }
+  .captain-icc-table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 4px; table-layout: fixed; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }
+  .captain-icc-table td { border: 1px solid #333; padding: 2px 4px; vertical-align: top; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }
   .captain-icc-table .left-col { width: 55%; }
   .captain-icc-table .right-col { width: 45%; }
   .captain-icc-table .label { font-weight: 600; color: #444; }
-  .captain-icc-table .clickable-cell {
-    cursor: pointer;
-    transition: background 0.15s;
-    border-radius: 3px;
-  }
-  .captain-icc-table .clickable-cell:hover {
-    background: rgba(37,99,235,0.1);
-  }
+  .captain-icc-table .clickable-cell { cursor: pointer; transition: background 0.15s; border-radius: 3px; }
+  .captain-icc-table .clickable-cell:hover { background: rgba(37,99,235,0.1); }
 
-  table.rtab {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 9.5px;
-    margin-bottom: 3px;
-    table-layout: fixed;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  }
-
-  table.rtab th,
-  table.rtab td {
-    border: 1px solid #333;
-    padding: 2px 4px;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  }
-
-  table.rtab th {
-    background: #eee;
-    font-weight: 600;
-    font-size: 8.5px;
-    padding: 2px 3px;
-  }
-
-  table.rtab td input {
-    border: none;
-    width: 100%;
-    text-align: center;
-    font-size: 9px;
-    background: transparent;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    min-width: 0;
-    padding: 1px 0;
-    outline: none;
-  }
-
-  table.rtab td input.remarksTxt {
-    text-align: left;
-    font-size: 9px;
-  }
-
+  table.rtab { width: 100%; border-collapse: collapse; font-size: 9.5px; margin-bottom: 3px; table-layout: fixed; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }
+  table.rtab th, table.rtab td { border: 1px solid #333; padding: 2px 4px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }
+  table.rtab th { background: #eee; font-weight: 600; font-size: 8.5px; padding: 2px 3px; }
+  table.rtab td input { border: none; width: 100%; text-align: center; font-size: 9px; background: transparent; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; min-width: 0; padding: 1px 0; outline: none; }
+  table.rtab td input.remarksTxt { text-align: left; font-size: 9px; }
   .rtab .col-flight { width: 9%; }
   .rtab .col-station { width: 10%; }
   .rtab .col-time { width: 7%; }
@@ -447,507 +125,112 @@
   .rtab .col-ac-reg { width: 8%; }
   .rtab .col-remarks { width: 28%; }
 
-  .pos-cell {
-    cursor: pointer;
-    font-weight: 700;
-    color: #1d4ed8;
-  }
+  .pos-cell { cursor: pointer; font-weight: 700; color: #1d4ed8; }
   .pos-cell.unset { color: #aaa; font-weight: 400; font-style: italic; }
-
-  .door-cell {
-    cursor: pointer;
-    font-weight: 600;
-    color: #1d4ed8;
-  }
+  .door-cell { cursor: pointer; font-weight: 600; color: #1d4ed8; }
   .door-cell.unset { color: #aaa; font-weight: 400; }
 
-  .alt-icc-badge {
-    display: inline-block;
-    background: #111;
-    color: #fff;
-    font-size: 7.5px;
-    font-weight: 700;
-    padding: 1px 8px;
-    border-radius: 100px;
-    margin-left: 6px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.04em;
-    border: 1px solid #333;
-    vertical-align: middle;
-  }
+  .alt-icc-badge { display: inline-block; background: #111; color: #fff; font-size: 7.5px; font-weight: 700; padding: 1px 8px; border-radius: 100px; margin-left: 6px; font-family: 'DM Mono', monospace; letter-spacing: 0.04em; border: 1px solid #333; vertical-align: middle; }
 
-  .top-info {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    font-size: 9.5px;
-    margin-bottom: 6px;
-    align-items: center;
-    font-weight: 600;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  }
-
-  .top-info .label {
-    font-weight: 600;
-    color: #444;
-    margin-right: 2px;
-  }
-
-  .top-info .clickable-input {
-    cursor: pointer;
-    border: 1px solid #333;
-    border-radius: 4px;
-    padding: 2px 4px;
-    font-size: 9.5px;
-    background: #fff;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    outline: none;
-  }
-
-  .top-info .clickable-input:hover {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px var(--accent-glow);
-  }
-
-  .top-info .clickable-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px var(--accent-glow);
-  }
-
+  .top-info { display: flex; flex-wrap: wrap; gap: 12px; font-size: 9.5px; margin-bottom: 6px; align-items: center; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }
+  .top-info .label { font-weight: 600; color: #444; margin-right: 2px; }
+  .top-info .clickable-input { cursor: pointer; border: 1px solid #333; border-radius: 4px; padding: 2px 4px; font-size: 9.5px; background: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+  .top-info .clickable-input:hover { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+  .top-info .clickable-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
   .top-info .clickable-input.bay-input { width: 80px; }
-  .top-info .clickable-input.rep-input {
-    width: 180px;
-    background: #f0f0f0;
-    cursor: default;
-    font-weight: 600;
-    border-color: #555;
-  }
-  .top-info .clickable-input.rep-input:hover {
-    box-shadow: none;
-    border-color: #555;
-  }
+  .top-info .clickable-input.rep-input { width: 180px; background: #f0f0f0; cursor: default; font-weight: 600; border-color: #555; }
+  .top-info .clickable-input.rep-input:hover { box-shadow: none; border-color: #555; }
   .top-info .clickable-input.briefing-input { width: 60px; }
 
-  .ft-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 8.5px;
-    margin-top: 4px;
-    table-layout: fixed;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  }
-
-  .ft-table th {
-    background: #eee;
-    font-weight: 600;
-    font-size: 8px;
-    border: 1px solid #333;
-    padding: 2px;
-  }
-
-  .ft-table td {
-    border: 1px solid #333;
-    padding: 2px;
-    text-align: center;
-    height: 1.6em;
-    font-size: 8.5px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  }
-
-  .ft-table td input {
-    width: 100%;
-    border: none;
-    background: transparent;
-    font-size: 8.5px;
-    text-align: center;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    padding: 1px;
-  }
-
-  .ft-cell-clickable {
-    cursor: pointer;
-    transition: background 0.15s;
-    border-radius: 4px;
-  }
-
+  .ft-table { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-top: 4px; table-layout: fixed; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }
+  .ft-table th { background: #eee; font-weight: 600; font-size: 8px; border: 1px solid #333; padding: 2px; }
+  .ft-table td { border: 1px solid #333; padding: 2px; text-align: center; height: 1.6em; font-size: 8.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }
+  .ft-table td input { width: 100%; border: none; background: transparent; font-size: 8.5px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; padding: 1px; }
+  .ft-cell-clickable { cursor: pointer; transition: background 0.15s; border-radius: 4px; }
   .ft-cell-clickable:hover { background: rgba(37,99,235,0.08); }
-
-  .ft-cell-clickable input {
-    cursor: pointer;
-    width: 100%;
-    border: none;
-    background: transparent;
-    font-size: 8.5px;
-    text-align: center;
-    font-family: inherit;
-    padding: 4px 2px;
-  }
-
+  .ft-cell-clickable input { cursor: pointer; width: 100%; border: none; background: transparent; font-size: 8.5px; text-align: center; font-family: inherit; padding: 4px 2px; }
   .ft-cell-clickable input:focus { outline: none; }
 
   /* ── Modals (unchanged from original) ── */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(4px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    padding: 20px;
-  }
-
-  .modal-box {
-    background: #fff;
-    color: #111;
-    border-radius: var(--radius);
-    padding: 24px;
-    width: 100%;
-    max-width: 400px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-  }
-
-  .modal-box.dark {
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border-bright);
-  }
-
-  .modal-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
-  .modal-sub {
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 16px;
-  }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-box { background: #fff; color: #111; border-radius: var(--radius); padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+  .modal-box.dark { background: var(--surface); color: var(--text); border: 1px solid var(--border-bright); }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .modal-sub { font-family: 'DM Mono', monospace; font-size: 13px; color: #666; margin-bottom: 16px; }
   .modal-box.dark .modal-sub { color: var(--text-muted); }
 
-  .pos-grid {
-    display: grid;
-    gap: 10px;
-    margin-bottom: 18px;
-  }
+  .pos-grid { display: grid; gap: 10px; margin-bottom: 18px; }
   .pos-grid.narrow { grid-template-columns: repeat(3, 1fr); }
   .pos-grid.wide { grid-template-columns: repeat(4, 1fr); }
 
-  .pos-btn, .door-btn, .letter-btn {
-    padding: 14px 8px;
-    font-size: 15px;
-    font-weight: 700;
-    border-radius: var(--radius-sm);
-    border: 2px solid #ddd;
-    background: #f7f7f7;
-    color: #333;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
+  .pos-btn, .door-btn, .letter-btn { padding: 14px 8px; font-size: 15px; font-weight: 700; border-radius: var(--radius-sm); border: 2px solid #ddd; background: #f7f7f7; color: #333; cursor: pointer; transition: all 0.15s; }
   .pos-btn:active, .door-btn:active, .letter-btn:active { transform: scale(0.95); }
-  .pos-btn.selected {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-    box-shadow: 0 0 0 4px var(--accent-glow);
-  }
-
-  .letter-btn:hover {
-    border-color: var(--accent);
-    background: var(--accent-dim);
-    color: var(--accent);
-  }
-
+  .pos-btn.selected { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 0 4px var(--accent-glow); }
+  .letter-btn:hover { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
   .door-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
   .door-btn.assigned { background: #fff6cc; border-color: #f5a623; }
   .door-btn.selected { background: #dbeafe; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-
   .modal-box .secondary-btn { width: 100%; margin-top: 6px; }
 
-  .letter-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-
-  .keypad-display {
-    font-family: 'DM Mono', monospace;
-    font-size: 32px;
-    font-weight: 700;
-    text-align: center;
-    padding: 16px;
-    background: var(--surface2);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    margin-bottom: 16px;
-    color: var(--accent);
-    min-height: 70px;
-    letter-spacing: 4px;
-  }
-
-  .keypad-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-
-  .keypad-btn {
-    padding: 14px;
-    font-size: 20px;
-    font-weight: 700;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    color: var(--text);
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: 'DM Mono', monospace;
-    user-select: none;
-  }
-
+  .letter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+  .keypad-display { font-family: 'DM Mono', monospace; font-size: 32px; font-weight: 700; text-align: center; padding: 16px; background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 16px; color: var(--accent); min-height: 70px; letter-spacing: 4px; }
+  .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .keypad-btn { padding: 14px; font-size: 20px; font-weight: 700; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); color: var(--text); cursor: pointer; transition: all 0.15s; font-family: 'DM Mono', monospace; user-select: none; }
   .keypad-btn:active { transform: scale(0.92); background: var(--surface); }
-  .keypad-btn.accent {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-  }
+  .keypad-btn.accent { background: var(--accent); color: #fff; border-color: var(--accent); }
   .keypad-btn.accent:active { background: var(--accent-hover); }
-  .keypad-btn.danger {
-    background: var(--red);
-    color: #fff;
-    border-color: var(--red);
-  }
+  .keypad-btn.danger { background: var(--red); color: #fff; border-color: var(--red); }
   .keypad-btn.danger:active { opacity: 0.7; }
   .keypad-btn.wide { grid-column: span 3; }
-
-  .keypad-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 8px;
-  }
-
+  .keypad-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
   .keypad-actions .keypad-btn { padding: 12px; font-size: 16px; }
-
-  .keypad-btn .sub {
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--text-muted);
-    display: block;
-  }
-
+  .keypad-btn .sub { font-size: 12px; font-weight: 400; color: var(--text-muted); display: block; }
   .modal-box.dark .keypad-btn .sub { color: #666; }
 
   /* ── Toast ── */
-  .toast {
-    position: fixed;
-    bottom: 28px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: var(--surface);
-    border: 1px solid var(--border-bright);
-    backdrop-filter: blur(12px);
-    padding: 12px 24px;
-    border-radius: 60px;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    z-index: 2000;
-    transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-    white-space: nowrap;
-    color: var(--text);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  }
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface); border: 1px solid var(--border-bright); backdrop-filter: blur(12px); padding: 12px 24px; border-radius: 60px; font-family: 'DM Mono', monospace; font-size: 12px; z-index: 2000; transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1); white-space: nowrap; color: var(--text); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast.success { border-color: var(--green); color: var(--green); }
   .toast.error { border-color: var(--red); color: var(--red); }
 
   /* ── A4 Export Card ── */
-  .a4-export-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    position: relative;
-    padding-top: 28px;
-  }
-
-  select {
-    background: var(--surface2);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 8px 14px;
-    font-family: 'Syne', sans-serif;
-    font-weight: 500;
-    font-size: 14px;
-    cursor: pointer;
-    outline: none;
-  }
+  .a4-export-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; padding-top: 28px; }
+  select { background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 14px; font-family: 'Syne', sans-serif; font-weight: 500; font-size: 14px; cursor: pointer; outline: none; }
   select:focus { border-color: var(--accent); }
 
-  .template-section {
-    margin-top: 24px;
-    border-top: 2px solid var(--border);
-    padding-top: 20px;
-  }
+  .template-section { margin-top: 24px; border-top: 2px solid var(--border); padding-top: 20px; }
+  .template-section .template-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+  .template-section .template-header h3 { font-size: 18px; font-weight: 700; color: var(--text); }
+  .template-preview-area { display: flex; flex-wrap: wrap; gap: 16px; justify-content: flex-start; }
+  .template-preview-area img { border: 1px solid var(--border); border-radius: var(--radius-sm); max-width: 200px; height: auto; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 
-  .template-section .template-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-
-  .template-section .template-header h3 {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  .template-preview-area {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    justify-content: flex-start;
-  }
-
-  .template-preview-area canvas {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    max-width: 200px;
-    height: auto;
-    background: white;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  }
-
-  .fine-tune-group {
-    background: var(--surface2);
-    border-radius: var(--radius-sm);
-    padding: 16px;
-    margin-top: 12px;
-    border: 1px solid var(--border);
-  }
-
-  .fine-tune-group label {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .fine-tune-group input[type="range"] {
-    flex: 1;
-    min-width: 120px;
-    background: transparent;
-    cursor: pointer;
-    accent-color: var(--accent);
-  }
-
-  .fine-tune-group .value-display {
-    min-width: 36px;
-    text-align: center;
-    font-weight: 700;
-    color: var(--accent);
-  }
-
-  .fine-tune-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px 24px;
-    margin-top: 6px;
-  }
-
+  .fine-tune-group { background: var(--surface2); border-radius: var(--radius-sm); padding: 16px; margin-top: 12px; border: 1px solid var(--border); }
+  .fine-tune-group label { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .fine-tune-group input[type="range"] { flex: 1; min-width: 120px; background: transparent; cursor: pointer; accent-color: var(--accent); }
+  .fine-tune-group .value-display { min-width: 36px; text-align: center; font-weight: 700; color: var(--accent); }
+  .fine-tune-row { display: flex; flex-wrap: wrap; gap: 16px 24px; margin-top: 6px; }
   .fine-tune-row label { flex: 1; min-width: 140px; }
 
-  .help-section {
-    margin: 16px 0 24px;
-  }
-  .help-toggle {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-  }
-  .help-toggle-label {
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    color: var(--text-muted);
-  }
+  .help-section { margin: 16px 0 24px; }
+  .help-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .help-toggle-label { font-size: 14px; font-weight: 500; cursor: pointer; color: var(--text-muted); }
   .help-toggle-label:hover { color: var(--accent); }
 
-  .toggle-switch {
-    position: relative;
-    width: 40px;
-    height: 22px;
-    display: inline-block;
-    flex-shrink: 0;
-  }
+  .toggle-switch { position: relative; width: 40px; height: 22px; display: inline-block; flex-shrink: 0; }
   .toggle-switch input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: #ccc;
-    transition: .3s;
-    border-radius: 22px;
-  }
-  .toggle-slider:before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 3px;
-    bottom: 3px;
-    background: white;
-    transition: .3s;
-    border-radius: 50%;
-  }
+  .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; transition: .3s; border-radius: 22px; }
+  .toggle-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; transition: .3s; border-radius: 50%; }
   .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
   .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
 
-  .help-content {
-    background: var(--surface2);
-    border-radius: var(--radius-sm);
-    padding: 16px;
-    margin-top: 8px;
-    display: none;
-    border: 1px solid var(--border);
-  }
+  .help-content { background: var(--surface2); border-radius: var(--radius-sm); padding: 16px; margin-top: 8px; display: none; border: 1px solid var(--border); }
   .help-content.visible { display: block; }
-
   .help-content a { color: var(--accent); text-decoration: none; }
   .help-content a:hover { text-decoration: underline; }
 
-  .empty-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 24px;
-  }
+  .empty-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; }
 
-  footer {
-    text-align: center;
-    margin-top: 48px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 0.08em;
-  }
+  footer { text-align: center; margin-top: 48px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; }
 
   .noprint { display: block; }
   @media print { .noprint { display: none !important; } }
@@ -1007,10 +290,7 @@
   <!-- ===== HELP / HOW‑TO TOGGLE ===== -->
   <div class="help-section noprint">
     <div class="help-toggle">
-      <label class="toggle-switch">
-        <input type="checkbox" id="toggleHelp">
-        <span class="toggle-slider"></span>
-      </label>
+      <label class="toggle-switch"><input type="checkbox" id="toggleHelp"><span class="toggle-slider"></span></label>
       <label class="help-toggle-label" for="toggleHelp">How to Use This Tool</label>
     </div>
     <div id="helpContent" class="help-content">
@@ -1088,10 +368,8 @@
       <button class="btn-primary" id="generateFormsBtn">⚡ Generate Forms</button>
     </div>
 
-    <!-- Dynamic container for template sections -->
     <div id="templateSectionsContainer"></div>
 
-    <!-- Global download buttons -->
     <div id="globalDownloadArea" style="display:none; margin-top:16px;" class="btnrow">
       <button class="btn-primary" id="downloadAllPngBtn">⬇️ Download All PNGs (sequential)</button>
       <button class="btn-success" id="downloadAllPdfBtn">⬇️ Download All PDF</button>
@@ -1110,7 +388,7 @@
 
 </div>
 
-<!-- ===== MODALS (unchanged from original) ===== -->
+<!-- ===== MODALS ===== -->
 <div class="modal-overlay" id="posModalOverlay">
   <div class="modal-box">
     <div class="modal-title">Working Position</div>
@@ -1192,7 +470,7 @@
 
 <script>
 // ============================================================
-//  FULL ORIGINAL PARSER + INTERNAL REPORT (unchanged)
+//  FULL ORIGINAL PARSER + INTERNAL REPORT (with all modals)
 //  Only colors and fonts changed; iFlight removed.
 // ============================================================
 (function(){
@@ -1222,7 +500,7 @@
     toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
   }
 
-  // ===== Utilities (original) =====
+  // ===== Utilities =====
   function norm(s){ return (s===undefined||s===null) ? '' : String(s).trim(); }
   function esc(s){ return String(s===undefined||s===null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function timeOnly(dt){ if(!dt) return ''; const parts = dt.trim().split(/\s+/); return parts.length>1 ? parts[parts.length-1] : dt; }
@@ -1235,8 +513,14 @@
   }
 
   const RANKS = 'CAPT|FO|SO|CDT|OBS|IFS|LS|FSS|FS|SS|CS|AS';
+  const COCKPIT_RANKS = ['CAPT','FO','SO','CDT','OBS'];
+  const POSITIONS_NARROW = ['ICC', 'P1','P2','P3','P4','A1','A2'];
+  const POSITIONS_WIDE = ['ICC', 'IFS B', 'LSB', 'LSC', 'LSD', 'AG', 'BG1', 'BG2', 'CG', 'DG', 'BC', 'BC1', 'CC', 'DC', 'DC2'];
+  const DOORS_NARROW = ['1L','1R','2L','2R'];
+  const DOORS_WIDE = ['1L','1R','2L','2R','3L','3R','4L','4R'];
+  const RANK_PRIORITY = { 'CAPT':1, 'FO':2, 'SO':3, 'CDT':4, 'OBS':5, 'IFS':6, 'LS':7, 'FS':8, 'FSS':9, 'SS':10, 'CS':11, 'AS':12 };
 
-  // ===== PDF parser (original, unchanged) =====
+  // ===== PDF parser =====
   function parseCrewTripReport(raw){
     let text = raw.replace(/\r?\n/g,' ')
       .replace(/([A-Za-z])(\d{7})\b/g,'$1 $2')
@@ -1393,29 +677,34 @@
     };
   }
 
-  // ===== Shared state (original) =====
+  // ===== Shared state =====
   let state = null;
   let iccChosenCrew = null;
   let altIccCrewId = null;
   let snyCrewIds = {};
   let doorAssignments = {};
 
-  // ===== Original buildReport() – untouched =====
-  // (copied verbatim from your original code)
+  function isNarrowbody(ac){ if(!ac) return false; const a = ac.trim().toUpperCase(); return a === '737' || a.indexOf('73') === 0 || a.indexOf('7M') === 0; }
+
+  // ===== Full original buildReport() – restored with all modals =====
   function buildReport(){
     const d = state;
-    const cabinCrew = d.crew.filter(c => ['CAPT','FO','SO','CDT','OBS'].indexOf(c.opRank.toUpperCase()) === -1);
+    const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
     const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
     const fos = d.crew.filter(c => c.opRank.toUpperCase() === 'FO');
     const cdts = d.crew.filter(c => c.opRank.toUpperCase() === 'CDT');
+    const ac0 = d.itin.length ? d.itin[0].ac : '';
+    const isNarrow = isNarrowbody(ac0);
 
     const sortedCabin = cabinCrew.slice().sort((a,b) => {
       const rankA = a.opRank.toUpperCase();
       const rankB = b.opRank.toUpperCase();
-      const priA = { 'IFS':1, 'LS':2, 'FS':3, 'FSS':4, 'SS':5, 'CS':6, 'AS':7 }[rankA] || 99;
-      const priB = { 'IFS':1, 'LS':2, 'FS':3, 'FSS':4, 'SS':5, 'CS':6, 'AS':7 }[rankB] || 99;
+      const priA = RANK_PRIORITY[rankA] || 99;
+      const priB = RANK_PRIORITY[rankB] || 99;
       if(priA !== priB) return priA - priB;
-      if(rankA === 'FS' || rankA === 'FSS') return parseInt(a.crewId,10) - parseInt(b.crewId,10);
+      if(rankA === 'FS' || rankA === 'FSS'){
+        return parseInt(a.crewId,10) - parseInt(b.crewId,10);
+      }
       return 0;
     });
 
@@ -1423,7 +712,6 @@
     const lsCrew = sortedCabin.filter(c => c.opRank.toUpperCase() === 'LS');
 
     let iccDisplay = null;
-    // check if any crew has "ICC" position
     let iccPositionCrew = null;
     for (let id in state.positions) {
       if (state.positions && state.positions[id] === 'ICC') {
@@ -1583,42 +871,64 @@
     html += `</div>`;
     reportEl.innerHTML = html;
 
-    // Attach event listeners (original logic)
+    // ---- Attach event listeners (full original logic) ----
+
+    // BAY input
     const bayInput = document.getElementById('bayInput');
     if(bayInput){
       bayInput.addEventListener('click', function(e){
         e.stopPropagation();
-        // open bay letter modal (simplified)
-        // This part is kept as original – but we won't implement all the modals here
-        // They are defined in the HTML but we keep the references.
-        // For brevity, we'll just show a toast.
-        showToast('BAY input clicked – modal logic preserved from original', 'default');
+        const currentVal = this.value;
+        const letterMatch = currentVal.match(/^([A-Z])/);
+        if (letterMatch) {
+          selectedBayLetter = letterMatch[1];
+        } else {
+          selectedBayLetter = '';
+        }
+        keypadTarget = this;
+        document.getElementById('bayLetterModalOverlay').style.display = 'flex';
       });
     }
 
+    // BRIEFING input
     const briefingInput = document.getElementById('briefingInput');
     if(briefingInput){
       briefingInput.addEventListener('click', function(e){
         e.stopPropagation();
-        showToast('Briefing input clicked – modal logic preserved', 'default');
+        openNumberKeypad(this, 'briefing', this.value);
       });
     }
 
-    // ICC cell click
+    // ICC display cell
     const iccDisplayCell = document.getElementById('iccDisplayCell');
     if(iccDisplayCell && iccCandidates.length > 0){
       iccDisplayCell.addEventListener('click', function(){
-        showToast('ICC selection – modal logic preserved', 'default');
+        const rankLabel = iccCandidates[0].opRank;
+        openIccSelectionModal(iccCandidates, 'Select ' + rankLabel + ' as Crew In Charge');
       });
     }
 
-    // Flight time cells (keypad)
+    // Flight time cells
     document.querySelectorAll('.ft-cell-clickable').forEach(cell => {
       const input = cell.querySelector('.ft-input');
       if(input){
         cell.addEventListener('click', function(e){
           e.stopPropagation();
-          showToast('Flight time cell – keypad logic preserved', 'default');
+          const currentValue = input.value;
+          openNumberKeypad(input, 'time', currentValue);
+        });
+        input.addEventListener('click', function(e){
+          e.stopPropagation();
+          const currentValue = input.value;
+          openNumberKeypad(input, 'time', currentValue);
+        });
+        input.addEventListener('input', function(){
+          const key = this.dataset.key;
+          if(key && state.fields) state.fields[key] = this.value;
+        });
+        input.addEventListener('change', function(){
+          const key = this.dataset.key;
+          if(key && state.fields) state.fields[key] = this.value;
         });
       }
     });
@@ -1626,29 +936,305 @@
     // Position cells
     document.querySelectorAll('.pos-cell').forEach(el => {
       el.addEventListener('click', function(){
-        showToast('Position cell – modal logic preserved', 'default');
+        openPositionModal(this.getAttribute('data-crewid'), this.getAttribute('data-crewname'));
       });
     });
 
     // Door cells
     document.querySelectorAll('.door-cell').forEach(el => {
       el.addEventListener('click', function(){
-        showToast('Door cell – modal logic preserved', 'default');
+        openDoorModal(this.getAttribute('data-crewid'), this.getAttribute('data-crewname'));
       });
     });
 
+    // Stats
     statFlights.textContent = d.itin.length;
     statCrew.textContent = d.crew.length;
     statCabin.textContent = sortedCabin.length;
     statsContainer.style.display = 'flex';
   }
 
-  // ===== Shared state setter =====
+  // ===== All modal functions (restored) =====
+
+  // Position modal
+  let currentModalCrewId = null;
+  window.openPositionModal = function(crewId, crewName){
+    const ac0 = state.itin.length ? state.itin[0].ac : '';
+    const isNarrow = isNarrowbody(ac0);
+    const posList = isNarrow ? POSITIONS_NARROW : POSITIONS_WIDE;
+    const gridClass = isNarrow ? 'narrow' : 'wide';
+    currentModalCrewId = crewId;
+    document.getElementById('modalCrewName').textContent = crewName;
+    const grid = document.getElementById('posGrid');
+    grid.className = 'pos-grid ' + gridClass;
+    grid.innerHTML = '';
+    posList.forEach(pos => {
+      const btn = document.createElement('button');
+      btn.className = 'pos-btn' + (state.positions && state.positions[crewId] === pos ? ' selected' : '');
+      btn.textContent = pos;
+      btn.addEventListener('click', () => assignPosition(crewId, pos));
+      grid.appendChild(btn);
+    });
+    const isSny = !!snyCrewIds[crewId];
+    document.getElementById('snyToggleBtn').textContent = isSny ? 'Remove SNY' : 'Set as SNY';
+    document.getElementById('snyToggleBtn').className = 'alt-icc-toggle-btn' + (isSny ? ' active' : '');
+    const isAltIcc = (altIccCrewId === crewId);
+    document.getElementById('altIccToggleBtn').textContent = isAltIcc ? 'Remove Alternate ICC' : 'Set as Alternate ICC';
+    document.getElementById('altIccToggleBtn').className = 'alt-icc-toggle-btn' + (isAltIcc ? ' active' : '');
+    document.getElementById('posModalOverlay').style.display = 'flex';
+  };
+
+  window.assignPosition = function(crewId, pos){
+    if (pos === 'ICC') {
+      for (let id in state.positions) {
+        if (state.positions[id] === 'ICC') state.positions[id] = '';
+      }
+    }
+    state.positions[crewId] = pos;
+    document.getElementById('posModalOverlay').style.display = 'none';
+    buildReport();
+  };
+
+  document.getElementById('snyToggleBtn').addEventListener('click', function(){
+    if (!currentModalCrewId) return;
+    if (snyCrewIds[currentModalCrewId]) {
+      delete snyCrewIds[currentModalCrewId];
+    } else {
+      snyCrewIds[currentModalCrewId] = true;
+    }
+    document.getElementById('posModalOverlay').style.display = 'none';
+    buildReport();
+  });
+
+  document.getElementById('altIccToggleBtn').addEventListener('click', function(){
+    if (!currentModalCrewId) return;
+    if (altIccCrewId === currentModalCrewId) {
+      altIccCrewId = null;
+    } else {
+      altIccCrewId = currentModalCrewId;
+    }
+    document.getElementById('posModalOverlay').style.display = 'none';
+    buildReport();
+  });
+
+  document.getElementById('modalCloseBtn').addEventListener('click', function(){
+    document.getElementById('posModalOverlay').style.display = 'none';
+  });
+
+  // ICC selection modal
+  function openIccSelectionModal(candidates, title) {
+    document.getElementById('iccModalSub').textContent = title || 'Choose Crew In Charge';
+    const grid = document.getElementById('iccGrid');
+    grid.innerHTML = '';
+    candidates.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'icc-btn' + (iccChosenCrew && iccChosenCrew.crewId === c.crewId ? ' selected' : '');
+      const pos = state.positions && state.positions[c.crewId] ? ' (' + state.positions[c.crewId] + ')' : '';
+      btn.textContent = c.crewId + ' · ' + c.opRank + ' · ' + c.crewName + pos;
+      btn.addEventListener('click', function(){
+        iccChosenCrew = c;
+        if (state.positions[c.crewId] !== 'ICC') {
+          for (let id in state.positions) {
+            if (state.positions[id] === 'ICC') state.positions[id] = '';
+          }
+          state.positions[c.crewId] = 'ICC';
+        }
+        document.getElementById('iccModalOverlay').style.display = 'none';
+        buildReport();
+      });
+      grid.appendChild(btn);
+    });
+    document.getElementById('iccModalOverlay').style.display = 'flex';
+  }
+
+  document.getElementById('iccModalCloseBtn').addEventListener('click', function(){
+    document.getElementById('iccModalOverlay').style.display = 'none';
+  });
+
+  // Door modal
+  window.openDoorModal = function(crewId, crewName){
+    const ac0 = state.itin.length ? state.itin[0].ac : '';
+    const isNarrow = isNarrowbody(ac0);
+    const doors = isNarrow ? DOORS_NARROW : DOORS_WIDE;
+    document.getElementById('doorModalCrewName').textContent = crewName;
+    const grid = document.getElementById('doorGrid');
+    grid.innerHTML = '';
+    doors.forEach(door => {
+      const assignedCrew = doorAssignments[door] || null;
+      const isAssignedToCurrent = (assignedCrew === crewId);
+      const isAssignedToOther = (assignedCrew && assignedCrew !== crewId);
+      const btn = document.createElement('button');
+      btn.className = 'door-btn';
+      if(isAssignedToCurrent) btn.classList.add('selected');
+      if(isAssignedToOther) btn.classList.add('assigned');
+      let label = door;
+      if(isAssignedToCurrent || isAssignedToOther) label += ' ✅';
+      btn.textContent = label;
+      btn.addEventListener('click', function(){
+        if(isAssignedToCurrent){
+          doorAssignments[door] = null;
+        } else if(isAssignedToOther){
+          doorAssignments[door] = crewId;
+        } else {
+          for(let d in doorAssignments){
+            if(doorAssignments[d] === crewId){
+              doorAssignments[d] = null;
+              break;
+            }
+          }
+          doorAssignments[door] = crewId;
+        }
+        document.getElementById('doorModalOverlay').style.display = 'none';
+        buildReport();
+      });
+      grid.appendChild(btn);
+    });
+    document.getElementById('doorModalOverlay').style.display = 'flex';
+  };
+
+  document.getElementById('doorModalCloseBtn').addEventListener('click', function(){
+    document.getElementById('doorModalOverlay').style.display = 'none';
+  });
+
+  // Number keypad (for bay, briefing, time)
+  let keypadBuffer = '';
+  let keypadTarget = null;
+  let keypadMode = 'bay';
+  let selectedBayLetter = '';
+
+  function openNumberKeypad(targetElement, mode, currentValue) {
+    keypadTarget = targetElement;
+    keypadMode = mode;
+    if (mode === 'time') {
+      document.getElementById('numberKeypadTitle').textContent = '⌨️ Enter Time';
+      document.getElementById('numberKeypadSub').textContent = 'Tap numbers to enter HH:MM';
+      const digits = (currentValue || '').replace(/:/g, '');
+      keypadBuffer = digits.length <= 4 ? digits : digits.substring(0, 4);
+    } else if (mode === 'bay') {
+      document.getElementById('numberKeypadTitle').textContent = 'Enter Bay Number';
+      document.getElementById('numberKeypadSub').textContent = 'Tap numbers after letter selection';
+      const digits = (currentValue || '').replace(/[A-Z]/g, '');
+      keypadBuffer = digits || '';
+    } else if (mode === 'briefing') {
+      document.getElementById('numberKeypadTitle').textContent = 'Briefing Station';
+      document.getElementById('numberKeypadSub').textContent = 'Tap numbers to enter station';
+      keypadBuffer = currentValue || '';
+    }
+    updateNumberKeypadDisplay();
+    document.getElementById('numberKeypadModalOverlay').style.display = 'flex';
+  }
+
+  function updateNumberKeypadDisplay() {
+    if (keypadMode === 'time') {
+      const buffer = keypadBuffer;
+      let formatted = buffer;
+      if (buffer.length === 1) formatted = '0' + buffer + ':00';
+      else if (buffer.length === 2) formatted = buffer + ':00';
+      else if (buffer.length === 3) formatted = '0' + buffer[0] + ':' + buffer.substring(1);
+      else if (buffer.length >= 4) formatted = buffer.substring(0, 2) + ':' + buffer.substring(2, 4);
+      else formatted = buffer || '00:00';
+      document.getElementById('numberKeypadDisplay').textContent = formatted;
+    } else {
+      document.getElementById('numberKeypadDisplay').textContent = keypadBuffer || '0';
+    }
+  }
+
+  function closeNumberKeypad(save = false) {
+    if (save && keypadTarget) {
+      let finalValue = keypadBuffer;
+      if (keypadMode === 'time') {
+        const buffer = keypadBuffer;
+        if (buffer.length === 0) finalValue = '';
+        else if (buffer.length === 1) finalValue = '0' + buffer + ':00';
+        else if (buffer.length === 2) finalValue = buffer + ':00';
+        else if (buffer.length === 3) finalValue = '0' + buffer[0] + ':' + buffer.substring(1);
+        else if (buffer.length >= 4) finalValue = buffer.substring(0, 2) + ':' + buffer.substring(2, 4);
+        else finalValue = buffer;
+      } else if (keypadMode === 'bay' && selectedBayLetter) {
+        finalValue = selectedBayLetter + finalValue;
+      }
+      if (finalValue) {
+        keypadTarget.value = finalValue;
+        keypadTarget.dispatchEvent(new Event('input', { bubbles: true }));
+        keypadTarget.dispatchEvent(new Event('change', { bubbles: true }));
+      } else {
+        keypadTarget.value = '';
+        keypadTarget.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      if (keypadMode === 'bay') selectedBayLetter = '';
+    }
+    document.getElementById('numberKeypadModalOverlay').style.display = 'none';
+    keypadTarget = null;
+    keypadBuffer = '';
+  }
+
+  function numberKeypadPress(key) {
+    if (key === 'clear') {
+      keypadBuffer = keypadBuffer.slice(0, -1);
+    } else if (key === 'cancel') {
+      closeNumberKeypad(false);
+      return;
+    } else if (key === 'save') {
+      closeNumberKeypad(true);
+      return;
+    } else if (key >= '0' && key <= '9') {
+      if (keypadMode === 'time') {
+        if (keypadBuffer.length < 4) keypadBuffer += key;
+      } else {
+        keypadBuffer += key;
+      }
+    }
+    updateNumberKeypadDisplay();
+  }
+
+  // Keypad event listeners
+  document.querySelectorAll('.keypad-btn[data-key]').forEach(btn => {
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      numberKeypadPress(this.dataset.key);
+    });
+  });
+
+  document.getElementById('numberKeypadModalOverlay').addEventListener('click', function(e){
+    if (e.target === this) closeNumberKeypad(false);
+  });
+
+  // Bay letter buttons
+  document.querySelectorAll('.letter-btn[data-letter]').forEach(btn => {
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      selectedBayLetter = this.dataset.letter;
+      document.getElementById('bayLetterModalOverlay').style.display = 'none';
+      const currentValue = keypadTarget ? keypadTarget.value.replace(/[A-Z]/g, '') : '';
+      openNumberKeypad(keypadTarget, 'bay', currentValue);
+    });
+  });
+
+  document.getElementById('bayLetterCancelBtn').addEventListener('click', function(){
+    document.getElementById('bayLetterModalOverlay').style.display = 'none';
+    keypadTarget = null;
+  });
+
+  document.getElementById('bayLetterModalOverlay').addEventListener('click', function(e){
+    if (e.target === this) {
+      document.getElementById('bayLetterModalOverlay').style.display = 'none';
+      keypadTarget = null;
+    }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (document.getElementById('numberKeypadModalOverlay').style.display !== 'flex') return;
+    if (e.key >= '0' && e.key <= '9') { numberKeypadPress(e.key); e.preventDefault(); }
+    else if (e.key === 'Backspace') { numberKeypadPress('clear'); e.preventDefault(); }
+    else if (e.key === 'Enter') { numberKeypadPress('save'); e.preventDefault(); }
+    else if (e.key === 'Escape') { numberKeypadPress('cancel'); e.preventDefault(); }
+  });
+
+  // ===== State setter =====
   function setStateAndRender(parsed, source){
     state = parsed;
     state.fields = {};
     state.positions = {};
-    // We keep doorAssignments separate for simplicity
     iccChosenCrew = null;
     altIccCrewId = null;
     snyCrewIds = {};
@@ -1673,7 +1259,6 @@
     return html;
   }
 
-  // ===== Field update =====
   window.updateField = function(key, val){
     if(state && state.fields) state.fields[key] = val;
   };
@@ -1767,10 +1352,9 @@
 
   // ============================================================
   //  A4 FORMS MODULE – Destination‑based, Multi‑Template
-  //  This is the only new addition – does not touch parser/report.
+  //  (kept as separate module, does not touch parser/report)
   // ============================================================
 
-  // A4 dimensions (landscape @ 150 DPI)
   const A4_W = 1754;
   const A4_H = 1240;
 
@@ -1846,7 +1430,6 @@
     });
   }
 
-  const RANK_PRIORITY = { 'CAPT':1, 'FO':2, 'SO':3, 'CDT':4, 'OBS':5, 'IFS':6, 'LS':7, 'FS':8, 'FSS':9, 'SS':10, 'CS':11, 'AS':12 };
   const PILOT_RANKS = ['CAPT','FO','SO','CDT','OBS'];
 
   function sortByRank(crew) {
@@ -1979,7 +1562,13 @@
       label.style.color = 'var(--text-muted)';
       label.style.fontFamily = "'DM Mono', monospace";
       wrapper.appendChild(label);
-      wrapper.appendChild(cv.cloneNode(true));
+      const img = document.createElement('img');
+      img.src = cv.toDataURL('image/png');
+      img.style.maxWidth = '200px';
+      img.style.height = 'auto';
+      img.style.border = '1px solid var(--border)';
+      img.style.borderRadius = 'var(--radius-sm)';
+      wrapper.appendChild(img);
       preview.appendChild(wrapper);
     });
     section.appendChild(preview);
@@ -2005,19 +1594,21 @@
     const inputs = group.querySelectorAll('input[type="range"]');
     inputs.forEach(inp => {
       inp.addEventListener('input', function() {
-        const id = this.id;
-        const val = this.value;
-        const displayId = id.replace('_', 'Val_');
+        const parts = this.id.split('_');
+        const tplId = parts.slice(1).join('_');
+        const val = parseInt(this.value);
+        const displayId = this.id.replace('_', 'Val_');
         const display = document.getElementById(displayId);
         if (display) display.textContent = val;
-        const tplId = templateId;
+
         if (!templateOffsets[tplId]) templateOffsets[tplId] = { nameX:0, nameY:0, rankX:0, rankY:0, fontSizeAdj:0 };
-        const key = id.split('_')[0];
-        if (key === 'nameX') templateOffsets[tplId].nameX = parseInt(val);
-        else if (key === 'nameY') templateOffsets[tplId].nameY = parseInt(val);
-        else if (key === 'rankX') templateOffsets[tplId].rankX = parseInt(val);
-        else if (key === 'rankY') templateOffsets[tplId].rankY = parseInt(val);
-        else if (key === 'fontSizeAdj') templateOffsets[tplId].fontSizeAdj = parseInt(val);
+        const key = this.id.split('_')[0];
+        if (key === 'nameX') templateOffsets[tplId].nameX = val;
+        else if (key === 'nameY') templateOffsets[tplId].nameY = val;
+        else if (key === 'rankX') templateOffsets[tplId].rankX = val;
+        else if (key === 'rankY') templateOffsets[tplId].rankY = val;
+        else if (key === 'fontSizeAdj') templateOffsets[tplId].fontSizeAdj = val;
+
         regenerateTemplate(tplId);
       });
     });
@@ -2027,7 +1618,20 @@
 
   function regenerateTemplate(templateId) {
     const tpl = TEMPLATES[templateId];
-    if (!tpl || !tpl.bgImageData || !state || !state.crew) return;
+    if (!tpl || !tpl.bgImageData || !state || !state.crew) {
+      if (tpl && !tpl.bgImageData) {
+        loadTemplateFromPath(templateId).then(() => {
+          const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, fontSizeAdj:0 };
+          const canvases = generatePagesForTemplate(tpl, state.crew, offsets);
+          generatedData[templateId] = { template: tpl, canvases };
+          renderTemplateSection(templateId);
+          updateGlobalDownloadVisibility();
+        }).catch(err => {
+          showToast('Failed to load background for ' + tpl.label + ': ' + err.message, 'error');
+        });
+      }
+      return;
+    }
     const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, fontSizeAdj:0 };
     const canvases = generatePagesForTemplate(tpl, state.crew, offsets);
     generatedData[templateId] = { template: tpl, canvases };
