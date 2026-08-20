@@ -362,21 +362,6 @@
   .pic-btn { padding: 10px 14px; font-size: 14px; font-weight: 600; border-radius: var(--radius-sm); border: 2px solid #ddd; background: #f7f7f7; color: #333; cursor: pointer; transition: all 0.15s; text-align: left; }
   .pic-btn:hover { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
   .pic-btn.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
-
-  /* ── Builder enhanced controls ── */
-  .slot-section { margin-bottom: 12px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
-  .slot-section .section-title { font-weight: 600; font-size: 14px; color: var(--text); cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; }
-  .slot-section .section-title .toggle-icon { transition: transform 0.2s; }
-  .slot-section .section-title .toggle-icon.open { transform: rotate(180deg); }
-  .slot-section .slot-controls { display: none; margin-top: 8px; }
-  .slot-section .slot-controls.open { display: block; }
-  .slot-section .slot-controls .param-row { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin-bottom: 4px; }
-  .slot-section .slot-controls .param-row label { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
-  .slot-section .slot-controls .param-row input[type="number"] { width: 55px; padding: 3px 4px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; text-align: center; }
-  .slot-section .slot-controls .param-row .fine-tune-sliders { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 4px; }
-  .slot-section .slot-controls .param-row .fine-tune-sliders label { font-size: 11px; display: flex; align-items: center; gap: 4px; }
-  .slot-section .slot-controls .param-row .fine-tune-sliders input[type="range"] { width: 80px; accent-color: var(--accent); }
-  .slot-section .slot-controls .param-row .fine-tune-sliders input[type="number"] { width: 45px; padding: 2px 4px; font-size: 11px; }
 </style>
 </head>
 <body>
@@ -510,9 +495,6 @@
         <option value="AMD">AMD</option>
         <option value="ATQ">ATQ</option>
       </select>
-      <label style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text-muted);margin-left:12px;">
-        <input type="checkbox" id="builderPicEnable"> Enable PIC Top Page
-      </label>
     </div>
     <div class="btnrow">
       <div class="file-upload-wrapper">
@@ -539,216 +521,71 @@
         <div class="control-group">
           <label>Click to set Start X/Y for:</label>
           <select id="builderActiveSlotType" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;">
-            <option value="normal_name">Name</option>
-            <option value="normal_rank">Rank</option>
-            <option value="normal_number">Number</option>
-            <option value="normal_crewId">Crew ID</option>
-            <option value="pic_name">PIC Name</option>
-            <option value="pic_rank">PIC Rank</option>
-            <option value="pic_crewId">PIC Crew ID</option>
+            <option value="name">Name</option>
+            <option value="rank">Rank</option>
+            <option value="number">Number</option>
+            <option value="crewId">Crew ID</option>
           </select>
         </div>
 
-        <!-- Normal Slots Section -->
-        <div class="slot-section" id="normalSection">
-          <div class="section-title" onclick="toggleSection('normalSection')">
-            <span>📋 Normal Slots</span>
-            <span class="toggle-icon">▼</span>
-          </div>
-          <div class="slot-controls open" id="normalControls">
-            <!-- Name -->
-            <div class="slot-section" id="normalNameSection" style="border-left:3px solid #2563eb;">
-              <div class="section-title" onclick="toggleSection('normalNameSection')">
-                <span>Name</span>
-                <span class="toggle-icon">▼</span>
-              </div>
-              <div class="slot-controls open" id="normalNameControls">
-                <!-- Enable, Start X/Y, Rows, Gap, Width, Height, Font Size -->
-                <div class="param-row">
-                  <label><input type="checkbox" id="normalNameEnabled" checked> Enable</label>
-                  <label>Start X: <input type="number" id="normalNameX" value="83" min="0" max="1754"></label>
-                  <label>Start Y: <input type="number" id="normalNameY" value="314" min="0" max="1240"></label>
-                  <label>Rows: <input type="number" id="normalNameRows" value="16" min="1" max="50"></label>
-                  <label>Gap Y: <input type="number" id="normalNameGapY" value="37" min="1" max="200"></label>
-                </div>
-                <div class="param-row">
-                  <label>Width: <input type="number" id="normalNameWidth" value="400" min="10" max="800"></label>
-                  <label>Height: <input type="number" id="normalNameHeight" value="35" min="10" max="200"></label>
-                  <label>Font Size: <input type="number" id="normalNameFontSize" value="12" min="6" max="40"></label>
-                </div>
-                <div class="param-row fine-tune-sliders">
-                  <label>X: <input type="range" id="normalNameFineX" min="-50" max="50" value="0" step="1"><input type="number" id="normalNameFineXVal" value="0" step="1" style="width:45px;"></label>
-                  <label>Y: <input type="range" id="normalNameFineY" min="-50" max="50" value="0" step="1"><input type="number" id="normalNameFineYVal" value="0" step="1" style="width:45px;"></label>
-                  <label>Font Size: <input type="range" id="normalNameFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="normalNameFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
-                </div>
-              </div>
-            </div>
-            <!-- Rank -->
-            <div class="slot-section" id="normalRankSection" style="border-left:3px solid #16a34a;">
-              <div class="section-title" onclick="toggleSection('normalRankSection')">
-                <span>Rank</span>
-                <span class="toggle-icon">▼</span>
-              </div>
-              <div class="slot-controls open" id="normalRankControls">
-                <div class="param-row">
-                  <label><input type="checkbox" id="normalRankEnabled" checked> Enable</label>
-                  <label>Start X: <input type="number" id="normalRankX" value="497" min="0" max="1754"></label>
-                  <label>Start Y: <input type="number" id="normalRankY" value="314" min="0" max="1240"></label>
-                  <label>Rows: <input type="number" id="normalRankRows" value="16" min="1" max="50"></label>
-                  <label>Gap Y: <input type="number" id="normalRankGapY" value="37" min="1" max="200"></label>
-                </div>
-                <div class="param-row">
-                  <label>Width: <input type="number" id="normalRankWidth" value="80" min="10" max="800"></label>
-                  <label>Height: <input type="number" id="normalRankHeight" value="35" min="10" max="200"></label>
-                  <label>Font Size: <input type="number" id="normalRankFontSize" value="12" min="6" max="40"></label>
-                </div>
-                <div class="param-row fine-tune-sliders">
-                  <label>X: <input type="range" id="normalRankFineX" min="-50" max="50" value="0" step="1"><input type="number" id="normalRankFineXVal" value="0" step="1" style="width:45px;"></label>
-                  <label>Y: <input type="range" id="normalRankFineY" min="-50" max="50" value="0" step="1"><input type="number" id="normalRankFineYVal" value="0" step="1" style="width:45px;"></label>
-                  <label>Font Size: <input type="range" id="normalRankFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="normalRankFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
-                </div>
-              </div>
-            </div>
-            <!-- Number -->
-            <div class="slot-section" id="normalNumberSection" style="border-left:3px solid #f59e0b;">
-              <div class="section-title" onclick="toggleSection('normalNumberSection')">
-                <span>Number</span>
-                <span class="toggle-icon">▼</span>
-              </div>
-              <div class="slot-controls open" id="normalNumberControls">
-                <div class="param-row">
-                  <label><input type="checkbox" id="normalNumberEnabled" checked> Enable</label>
-                  <label>Start X: <input type="number" id="normalNumberX" value="123" min="0" max="1754"></label>
-                  <label>Start Y: <input type="number" id="normalNumberY" value="353" min="0" max="1240"></label>
-                  <label>Rows: <input type="number" id="normalNumberRows" value="16" min="1" max="50"></label>
-                  <label>Gap Y: <input type="number" id="normalNumberGapY" value="37" min="1" max="200"></label>
-                </div>
-                <div class="param-row">
-                  <label>Width: <input type="number" id="normalNumberWidth" value="40" min="10" max="800"></label>
-                  <label>Height: <input type="number" id="normalNumberHeight" value="30" min="10" max="200"></label>
-                  <label>Font Size: <input type="number" id="normalNumberFontSize" value="12" min="6" max="40"></label>
-                </div>
-                <div class="param-row fine-tune-sliders">
-                  <label>X: <input type="range" id="normalNumberFineX" min="-50" max="50" value="0" step="1"><input type="number" id="normalNumberFineXVal" value="0" step="1" style="width:45px;"></label>
-                  <label>Y: <input type="range" id="normalNumberFineY" min="-50" max="50" value="0" step="1"><input type="number" id="normalNumberFineYVal" value="0" step="1" style="width:45px;"></label>
-                  <label>Font Size: <input type="range" id="normalNumberFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="normalNumberFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
-                </div>
-              </div>
-            </div>
-            <!-- Crew ID -->
-            <div class="slot-section" id="normalCrewIdSection" style="border-left:3px solid #8b5cf6;">
-              <div class="section-title" onclick="toggleSection('normalCrewIdSection')">
-                <span>Crew ID</span>
-                <span class="toggle-icon">▼</span>
-              </div>
-              <div class="slot-controls open" id="normalCrewIdControls">
-                <div class="param-row">
-                  <label><input type="checkbox" id="normalCrewIdEnabled" checked> Enable</label>
-                  <label>Start X: <input type="number" id="normalCrewIdX" value="1088" min="0" max="1754"></label>
-                  <label>Start Y: <input type="number" id="normalCrewIdY" value="363" min="0" max="1240"></label>
-                  <label>Rows: <input type="number" id="normalCrewIdRows" value="16" min="1" max="50"></label>
-                  <label>Gap Y: <input type="number" id="normalCrewIdGapY" value="37" min="1" max="200"></label>
-                </div>
-                <div class="param-row">
-                  <label>Width: <input type="number" id="normalCrewIdWidth" value="100" min="10" max="800"></label>
-                  <label>Height: <input type="number" id="normalCrewIdHeight" value="30" min="10" max="200"></label>
-                  <label>Font Size: <input type="number" id="normalCrewIdFontSize" value="12" min="6" max="40"></label>
-                </div>
-                <div class="param-row fine-tune-sliders">
-                  <label>X: <input type="range" id="normalCrewIdFineX" min="-50" max="50" value="0" step="1"><input type="number" id="normalCrewIdFineXVal" value="0" step="1" style="width:45px;"></label>
-                  <label>Y: <input type="range" id="normalCrewIdFineY" min="-50" max="50" value="0" step="1"><input type="number" id="normalCrewIdFineYVal" value="0" step="1" style="width:45px;"></label>
-                  <label>Font Size: <input type="range" id="normalCrewIdFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="normalCrewIdFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
-                </div>
-              </div>
-            </div>
+        <!-- Slot enable toggles -->
+        <div class="control-group">
+          <div class="checkbox-group">
+            <label><input type="checkbox" id="builderEnableName" checked> Name</label>
+            <label><input type="checkbox" id="builderEnableRank" checked> Rank</label>
+            <label><input type="checkbox" id="builderEnableNumber" checked> Number</label>
+            <label><input type="checkbox" id="builderEnableCrewId" checked> Crew ID</label>
           </div>
         </div>
 
-        <!-- PIC Slots Section (hidden by default) -->
-        <div class="slot-section" id="picSection" style="display:none;">
-          <div class="section-title" onclick="toggleSection('picSection')">
-            <span>👤 PIC Top Page Slots</span>
-            <span class="toggle-icon">▼</span>
+        <!-- Common slot parameters (applied to all enabled slots) -->
+        <div class="control-group">
+          <label>Rows: <input type="number" id="builderRows" value="17" min="1" max="50"></label>
+          <label>Gap Y: <input type="number" id="builderGapY" value="30" min="1" max="200"></label>
+          <label>Width: <input type="number" id="builderWidth" value="300" min="10" max="800"></label>
+          <label>Height: <input type="number" id="builderHeight" value="30" min="10" max="200"></label>
+          <label>Font Size: <input type="number" id="builderFontSize" value="14" min="6" max="40"></label>
+        </div>
+
+        <!-- Individual Start X/Y for each slot type -->
+        <div class="control-group">
+          <label><strong>Name</strong> Start X: <input type="number" id="builderNameX" value="243" min="0" max="1754"></label>
+          <label>Start Y: <input type="number" id="builderNameY" value="354" min="0" max="1240"></label>
+        </div>
+        <div class="control-group">
+          <label><strong>Rank</strong> Start X: <input type="number" id="builderRankX" value="180" min="0" max="1754"></label>
+          <label>Start Y: <input type="number" id="builderRankY" value="354" min="0" max="1240"></label>
+        </div>
+        <div class="control-group">
+          <label><strong>Number</strong> Start X: <input type="number" id="builderNumberX" value="123" min="0" max="1754"></label>
+          <label>Start Y: <input type="number" id="builderNumberY" value="353" min="0" max="1240"></label>
+        </div>
+        <div class="control-group">
+          <label><strong>Crew ID</strong> Start X: <input type="number" id="builderCrewIdX" value="1088" min="0" max="1754"></label>
+          <label>Start Y: <input type="number" id="builderCrewIdY" value="363" min="0" max="1240"></label>
+        </div>
+
+        <!-- Global settings -->
+        <div class="control-group">
+          <div class="checkbox-group">
+            <label><input type="checkbox" id="builderGlobalNumbering"> Global Numbering</label>
+            <label><input type="checkbox" id="builderGroupPilots" checked> Group Pilots Separately</label>
           </div>
-          <div class="slot-controls open" id="picControls">
-            <!-- PIC Name -->
-            <div class="slot-section" id="picNameSection" style="border-left:3px solid #2563eb;">
-              <div class="section-title" onclick="toggleSection('picNameSection')">
-                <span>Name</span>
-                <span class="toggle-icon">▼</span>
-              </div>
-              <div class="slot-controls open" id="picNameControls">
-                <div class="param-row">
-                  <label><input type="checkbox" id="picNameEnabled" checked> Enable</label>
-                  <label>Start X: <input type="number" id="picNameX" value="100" min="0" max="1754"></label>
-                  <label>Start Y: <input type="number" id="picNameY" value="100" min="0" max="1240"></label>
-                  <label>Rows: <input type="number" id="picNameRows" value="1" min="1" max="5"></label>
-                  <label>Gap Y: <input type="number" id="picNameGapY" value="0" min="0" max="50"></label>
-                </div>
-                <div class="param-row">
-                  <label>Width: <input type="number" id="picNameWidth" value="200" min="10" max="800"></label>
-                  <label>Height: <input type="number" id="picNameHeight" value="30" min="10" max="200"></label>
-                  <label>Font Size: <input type="number" id="picNameFontSize" value="14" min="6" max="40"></label>
-                </div>
-                <div class="param-row fine-tune-sliders">
-                  <label>X: <input type="range" id="picNameFineX" min="-50" max="50" value="0" step="1"><input type="number" id="picNameFineXVal" value="0" step="1" style="width:45px;"></label>
-                  <label>Y: <input type="range" id="picNameFineY" min="-50" max="50" value="0" step="1"><input type="number" id="picNameFineYVal" value="0" step="1" style="width:45px;"></label>
-                  <label>Font Size: <input type="range" id="picNameFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="picNameFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
-                </div>
-              </div>
-            </div>
-            <!-- PIC Rank -->
-            <div class="slot-section" id="picRankSection" style="border-left:3px solid #16a34a;">
-              <div class="section-title" onclick="toggleSection('picRankSection')">
-                <span>Rank</span>
-                <span class="toggle-icon">▼</span>
-              </div>
-              <div class="slot-controls open" id="picRankControls">
-                <div class="param-row">
-                  <label><input type="checkbox" id="picRankEnabled" checked> Enable</label>
-                  <label>Start X: <input type="number" id="picRankX" value="320" min="0" max="1754"></label>
-                  <label>Start Y: <input type="number" id="picRankY" value="100" min="0" max="1240"></label>
-                  <label>Rows: <input type="number" id="picRankRows" value="1" min="1" max="5"></label>
-                  <label>Gap Y: <input type="number" id="picRankGapY" value="0" min="0" max="50"></label>
-                </div>
-                <div class="param-row">
-                  <label>Width: <input type="number" id="picRankWidth" value="80" min="10" max="800"></label>
-                  <label>Height: <input type="number" id="picRankHeight" value="30" min="10" max="200"></label>
-                  <label>Font Size: <input type="number" id="picRankFontSize" value="14" min="6" max="40"></label>
-                </div>
-                <div class="param-row fine-tune-sliders">
-                  <label>X: <input type="range" id="picRankFineX" min="-50" max="50" value="0" step="1"><input type="number" id="picRankFineXVal" value="0" step="1" style="width:45px;"></label>
-                  <label>Y: <input type="range" id="picRankFineY" min="-50" max="50" value="0" step="1"><input type="number" id="picRankFineYVal" value="0" step="1" style="width:45px;"></label>
-                  <label>Font Size: <input type="range" id="picRankFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="picRankFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
-                </div>
-              </div>
-            </div>
-            <!-- PIC Crew ID -->
-            <div class="slot-section" id="picCrewIdSection" style="border-left:3px solid #8b5cf6;">
-              <div class="section-title" onclick="toggleSection('picCrewIdSection')">
-                <span>Crew ID</span>
-                <span class="toggle-icon">▼</span>
-              </div>
-              <div class="slot-controls open" id="picCrewIdControls">
-                <div class="param-row">
-                  <label><input type="checkbox" id="picCrewIdEnabled" checked> Enable</label>
-                  <label>Start X: <input type="number" id="picCrewIdX" value="500" min="0" max="1754"></label>
-                  <label>Start Y: <input type="number" id="picCrewIdY" value="100" min="0" max="1240"></label>
-                  <label>Rows: <input type="number" id="picCrewIdRows" value="1" min="1" max="5"></label>
-                  <label>Gap Y: <input type="number" id="picCrewIdGapY" value="0" min="0" max="50"></label>
-                </div>
-                <div class="param-row">
-                  <label>Width: <input type="number" id="picCrewIdWidth" value="100" min="10" max="800"></label>
-                  <label>Height: <input type="number" id="picCrewIdHeight" value="30" min="10" max="200"></label>
-                  <label>Font Size: <input type="number" id="picCrewIdFontSize" value="14" min="6" max="40"></label>
-                </div>
-                <div class="param-row fine-tune-sliders">
-                  <label>X: <input type="range" id="picCrewIdFineX" min="-50" max="50" value="0" step="1"><input type="number" id="picCrewIdFineXVal" value="0" step="1" style="width:45px;"></label>
-                  <label>Y: <input type="range" id="picCrewIdFineY" min="-50" max="50" value="0" step="1"><input type="number" id="picCrewIdFineYVal" value="0" step="1" style="width:45px;"></label>
-                  <label>Font Size: <input type="range" id="picCrewIdFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="picCrewIdFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
-                </div>
-              </div>
-            </div>
+        </div>
+
+        <!-- Fine‑tune offsets -->
+        <div class="control-group fine-tune-group">
+          <label style="font-weight:600;color:var(--text);">Fine‑Tune Offsets</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px;">
+            <label>Name X: <input type="number" id="builderFineNameX" value="0" step="1"></label>
+            <label>Name Y: <input type="number" id="builderFineNameY" value="0" step="1"></label>
+            <label>Rank X: <input type="number" id="builderFineRankX" value="0" step="1"></label>
+            <label>Rank Y: <input type="number" id="builderFineRankY" value="0" step="1"></label>
+            <label>Number X: <input type="number" id="builderFineNumberX" value="0" step="1"></label>
+            <label>Number Y: <input type="number" id="builderFineNumberY" value="0" step="1"></label>
+            <label>Crew ID X: <input type="number" id="builderFineCrewIdX" value="0" step="1"></label>
+            <label>Crew ID Y: <input type="number" id="builderFineCrewIdY" value="0" step="1"></label>
+            <label style="grid-column:span 2;">Font Size Adj: <input type="number" id="builderFineFontSize" value="0" step="1"></label>
           </div>
         </div>
 
@@ -2587,10 +2424,10 @@
   });
 
   // ============================================================
-  //  🧱 FORM BUILDER – Enhanced (per‑slot config, PIC support)
+  //  🧱 FORM BUILDER MODULE (non‑interfering)
   // ============================================================
 
-  // === Builder DOM refs ===
+  // === DOM refs ===
   const builderCanvas = document.getElementById('builderCanvas');
   const builderCtx = builderCanvas.getContext('2d');
   builderCanvas.width = A4_W;
@@ -2600,29 +2437,79 @@
   const builderTemplateName = document.getElementById('builderTemplateName');
   const builderDestination = document.getElementById('builderDestination');
   const builderStatus = document.getElementById('builderStatus');
-  const builderPicEnable = document.getElementById('builderPicEnable');
 
-  // === Helper: get values from a slot config ===
-  function getSlotValues(prefix) {
-    return {
-      enabled: document.getElementById(prefix + 'Enabled').checked,
-      startX: parseInt(document.getElementById(prefix + 'X').value) || 0,
-      startY: parseInt(document.getElementById(prefix + 'Y').value) || 0,
-      rows: parseInt(document.getElementById(prefix + 'Rows').value) || 1,
-      gapY: parseInt(document.getElementById(prefix + 'GapY').value) || 30,
-      width: parseInt(document.getElementById(prefix + 'Width').value) || 100,
-      height: parseInt(document.getElementById(prefix + 'Height').value) || 30,
-      fontSize: parseInt(document.getElementById(prefix + 'FontSize').value) || 12,
-      fineX: parseInt(document.getElementById(prefix + 'FineX').value) || 0,
-      fineY: parseInt(document.getElementById(prefix + 'FineY').value) || 0,
-      fineFontSize: parseInt(document.getElementById(prefix + 'FineFontSize').value) || 0
-    };
-  }
+  // Slot enable checkboxes
+  const builderEnableName = document.getElementById('builderEnableName');
+  const builderEnableRank = document.getElementById('builderEnableRank');
+  const builderEnableNumber = document.getElementById('builderEnableNumber');
+  const builderEnableCrewId = document.getElementById('builderEnableCrewId');
+
+  // Common parameters
+  const builderRows = document.getElementById('builderRows');
+  const builderGapY = document.getElementById('builderGapY');
+  const builderWidth = document.getElementById('builderWidth');
+  const builderHeight = document.getElementById('builderHeight');
+  const builderFontSize = document.getElementById('builderFontSize');
+
+  // Start X/Y for each type
+  const builderNameX = document.getElementById('builderNameX');
+  const builderNameY = document.getElementById('builderNameY');
+  const builderRankX = document.getElementById('builderRankX');
+  const builderRankY = document.getElementById('builderRankY');
+  const builderNumberX = document.getElementById('builderNumberX');
+  const builderNumberY = document.getElementById('builderNumberY');
+  const builderCrewIdX = document.getElementById('builderCrewIdX');
+  const builderCrewIdY = document.getElementById('builderCrewIdY');
+
+  // Global settings
+  const builderGlobalNumbering = document.getElementById('builderGlobalNumbering');
+  const builderGroupPilots = document.getElementById('builderGroupPilots');
+
+  // Fine‑tune
+  const builderFineNameX = document.getElementById('builderFineNameX');
+  const builderFineNameY = document.getElementById('builderFineNameY');
+  const builderFineRankX = document.getElementById('builderFineRankX');
+  const builderFineRankY = document.getElementById('builderFineRankY');
+  const builderFineNumberX = document.getElementById('builderFineNumberX');
+  const builderFineNumberY = document.getElementById('builderFineNumberY');
+  const builderFineCrewIdX = document.getElementById('builderFineCrewIdX');
+  const builderFineCrewIdY = document.getElementById('builderFineCrewIdY');
+  const builderFineFontSize = document.getElementById('builderFineFontSize');
+
+  // Output
+  const builderOutput = document.getElementById('builderOutput');
+
+  // Buttons
+  const builderApplyBtn = document.getElementById('builderApplyBtn');
+  const builderExportBtn = document.getElementById('builderExportBtn');
+  const builderCopyBtn = document.getElementById('builderCopyBtn');
+  const builderSaveBtn = document.getElementById('builderSaveBtn');
+  const builderLoadSavedBtn = document.getElementById('builderLoadSavedBtn');
+  const builderDeleteBtn = document.getElementById('builderDeleteBtn');
+  const builderActiveSlotType = document.getElementById('builderActiveSlotType');
+  const builderSavedList = document.getElementById('builderSavedList');
 
   // === Builder state ===
-  let builderBgImageData = null;
+  let builderBgImageData = null; // ImageData of the uploaded canvas
+  let builderCurrentConfig = null; // for saving/loading
 
-  // === Render preview ===
+  // === Helper: generate slot array from a config ===
+  function builderGenerateSlots(startX, startY, rows, gapY, width, height, fontSize, fineOffsets) {
+    const offsets = fineOffsets || {};
+    const slots = [];
+    for (let i = 0; i < rows; i++) {
+      slots.push({
+        x: startX + (offsets.x || 0),
+        y: startY + (i * gapY) + (offsets.y || 0),
+        w: width,
+        h: height,
+        fontSize: fontSize + (offsets.fontSizeAdj || 0)
+      });
+    }
+    return slots;
+  }
+
+  // === Main preview render ===
   function builderRenderPreview() {
     const canvas = builderCanvas;
     const ctx = builderCtx;
@@ -2640,92 +2527,80 @@
       ctx.fillText('Upload a canvas to begin', canvas.width/2, canvas.height/2);
     }
 
-    // Normal slots
-    const normalTypes = ['Name', 'Rank', 'Number', 'CrewId'];
-    const normalColors = { Name: '#2563eb', Rank: '#16a34a', Number: '#f59e0b', CrewId: '#8b5cf6' };
-    normalTypes.forEach(type => {
-      const prefix = 'normal' + type;
-      const config = getSlotValues(prefix);
-      if (!config.enabled) return;
-      const startX = config.startX + config.fineX;
-      const startY = config.startY + config.fineY;
-      const rows = config.rows;
-      const gapY = config.gapY;
-      const width = config.width;
-      const height = config.height;
-      const fontSize = config.fontSize + config.fineFontSize;
-      const color = normalColors[type];
+    // Read current parameters
+    const rows = parseInt(builderRows.value) || 1;
+    const gapY = parseInt(builderGapY.value) || 30;
+    const width = parseInt(builderWidth.value) || 300;
+    const height = parseInt(builderHeight.value) || 30;
+    const fontSize = parseInt(builderFontSize.value) || 14;
+
+    // Fine offsets
+    const fine = {
+      nameX: parseInt(builderFineNameX.value) || 0,
+      nameY: parseInt(builderFineNameY.value) || 0,
+      rankX: parseInt(builderFineRankX.value) || 0,
+      rankY: parseInt(builderFineRankY.value) || 0,
+      numberX: parseInt(builderFineNumberX.value) || 0,
+      numberY: parseInt(builderFineNumberY.value) || 0,
+      crewIdX: parseInt(builderFineCrewIdX.value) || 0,
+      crewIdY: parseInt(builderFineCrewIdY.value) || 0,
+      fontSizeAdj: parseInt(builderFineFontSize.value) || 0
+    };
+
+    // Draw slots for each enabled type
+    const types = [
+      { id: 'name', enabled: builderEnableName.checked, startX: parseInt(builderNameX.value)||0, startY: parseInt(builderNameY.value)||0, color: '#2563eb', label: 'Name', fineX: fine.nameX, fineY: fine.nameY, sample: (state && state.crew && state.crew.length) ? state.crew[0].crewName : 'Name 1' },
+      { id: 'rank', enabled: builderEnableRank.checked, startX: parseInt(builderRankX.value)||0, startY: parseInt(builderRankY.value)||0, color: '#16a34a', label: 'Rank', fineX: fine.rankX, fineY: fine.rankY, sample: (state && state.crew && state.crew.length) ? state.crew[0].opRank : 'CAPT' },
+      { id: 'number', enabled: builderEnableNumber.checked, startX: parseInt(builderNumberX.value)||0, startY: parseInt(builderNumberY.value)||0, color: '#f59e0b', label: 'No.', fineX: fine.numberX, fineY: fine.numberY, sample: '1' },
+      { id: 'crewId', enabled: builderEnableCrewId.checked, startX: parseInt(builderCrewIdX.value)||0, startY: parseInt(builderCrewIdY.value)||0, color: '#8b5cf6', label: 'ID', fineX: fine.crewIdX, fineY: fine.crewIdY, sample: (state && state.crew && state.crew.length) ? state.crew[0].crewId : '1234567' }
+    ];
+
+    types.forEach(type => {
+      if (!type.enabled) return;
+      const startX = type.startX + type.fineX;
+      const startY = type.startY + type.fineY;
+      const fSize = fontSize + fine.fontSizeAdj;
+
+      // Draw rows
       for (let i = 0; i < rows; i++) {
         const y = startY + i * gapY;
         const x = startX;
         ctx.save();
-        ctx.strokeStyle = color;
+        // Dashed box
+        ctx.strokeStyle = type.color;
         ctx.lineWidth = 2;
         ctx.setLineDash([4, 4]);
         ctx.strokeRect(x, y, width, height);
         ctx.setLineDash([]);
-        ctx.fillStyle = color + '22';
+
+        // Semi-transparent fill
+        ctx.fillStyle = type.color + '22';
         ctx.fillRect(x, y, width, height);
-        ctx.fillStyle = color;
-        ctx.font = `bold ${fontSize}px Arial`;
+
+        // Sample text
+        ctx.fillStyle = type.color;
+        ctx.font = `bold ${fSize}px Arial`;
         ctx.textBaseline = 'top';
-        const sample = (type === 'Name' ? (state && state.crew && state.crew.length ? state.crew[0].crewName : 'Name 1') :
-                       type === 'Rank' ? (state && state.crew && state.crew.length ? state.crew[0].opRank : 'CAPT') :
-                       type === 'Number' ? String(i+1) :
-                       (state && state.crew && state.crew.length ? state.crew[0].crewId : '1234567'));
-        let text = sample;
-        while (ctx.measureText(text).width > width - 10 && text.length > 1) text = text.slice(0, -1);
-        ctx.fillText(text, x + 5, y + 5);
+        const sampleText = (i === 0) ? type.sample : (type.id === 'number' ? String(i+1) : (type.id === 'rank' ? (state && state.crew && state.crew[i % state.crew.length] ? state.crew[i % state.crew.length].opRank : 'RANK') : (state && state.crew && state.crew[i % state.crew.length] ? state.crew[i % state.crew.length].crewName : 'Name')));
+
+        // Truncate if too long
+        let displayText = sampleText;
+        while (ctx.measureText(displayText).width > width - 10 && displayText.length > 1) {
+          displayText = displayText.slice(0, -1);
+        }
+        ctx.fillText(displayText, x + 5, y + 5);
+
+        // Label (small)
         ctx.fillStyle = '#333';
         ctx.font = '10px sans-serif';
         ctx.textBaseline = 'bottom';
-        ctx.fillText(type + (i+1), x + width - 30, y + height - 2);
+        ctx.fillText(type.label + (i+1), x + width - 30, y + height - 2);
+
         ctx.restore();
       }
     });
 
-    // PIC slots if enabled
-    if (builderPicEnable.checked) {
-      const picTypes = ['Name', 'Rank', 'CrewId'];
-      picTypes.forEach(type => {
-        const prefix = 'pic' + type;
-        const config = getSlotValues(prefix);
-        if (!config.enabled) return;
-        const startX = config.startX + config.fineX;
-        const startY = config.startY + config.fineY;
-        const rows = config.rows;
-        const gapY = config.gapY;
-        const width = config.width;
-        const height = config.height;
-        const fontSize = config.fontSize + config.fineFontSize;
-        const color = normalColors[type];
-        for (let i = 0; i < rows; i++) {
-          const y = startY + i * gapY;
-          const x = startX;
-          ctx.save();
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 2;
-          ctx.setLineDash([4, 4]);
-          ctx.strokeRect(x, y, width, height);
-          ctx.setLineDash([]);
-          ctx.fillStyle = color + '22';
-          ctx.fillRect(x, y, width, height);
-          ctx.fillStyle = color;
-          ctx.font = `bold ${fontSize}px Arial`;
-          ctx.textBaseline = 'top';
-          const sample = (type === 'Name' ? 'PIC Name' : type === 'Rank' ? 'CAPT' : 'PIC ID');
-          let text = sample;
-          while (ctx.measureText(text).width > width - 10 && text.length > 1) text = text.slice(0, -1);
-          ctx.fillText(text, x + 5, y + 5);
-          ctx.fillStyle = '#333';
-          ctx.font = '10px sans-serif';
-          ctx.textBaseline = 'bottom';
-          ctx.fillText('PIC ' + type, x + width - 30, y + height - 2);
-          ctx.restore();
-        }
-      });
-    }
-
+    // Update status
     builderStatus.textContent = '✅ Preview updated. Click on canvas to set Start X/Y for selected slot type.';
   }
 
@@ -2736,39 +2611,36 @@
     const scaleY = this.height / rect.height;
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
-    const type = document.getElementById('builderActiveSlotType').value;
-    const [section, slotType] = type.split('_');
-    const prefix = (section === 'pic' ? 'pic' : 'normal') + slotType.charAt(0).toUpperCase() + slotType.slice(1);
-    const xId = prefix + 'X';
-    const yId = prefix + 'Y';
+    const type = builderActiveSlotType.value;
+
+    // Clamp
     const clampedX = Math.min(Math.max(Math.round(x), 0), 1754);
     const clampedY = Math.min(Math.max(Math.round(y), 0), 1240);
-    document.getElementById(xId).value = clampedX;
-    document.getElementById(yId).value = clampedY;
+
+    switch(type) {
+      case 'name':
+        builderNameX.value = clampedX;
+        builderNameY.value = clampedY;
+        break;
+      case 'rank':
+        builderRankX.value = clampedX;
+        builderRankY.value = clampedY;
+        break;
+      case 'number':
+        builderNumberX.value = clampedX;
+        builderNumberY.value = clampedY;
+        break;
+      case 'crewId':
+        builderCrewIdX.value = clampedX;
+        builderCrewIdY.value = clampedY;
+        break;
+    }
     builderRenderPreview();
-    builderStatus.textContent = `✅ Set ${section} ${slotType} Start X=${clampedX}, Y=${clampedY}`;
+    builderStatus.textContent = `✅ Set ${type} Start X=${clampedX}, Y=${clampedY}`;
   });
 
   // === Apply & Preview button ===
-  document.getElementById('builderApplyBtn').addEventListener('click', builderRenderPreview);
-
-  // === Toggle PIC section visibility ===
-  builderPicEnable.addEventListener('change', function() {
-    const picSection = document.getElementById('picSection');
-    picSection.style.display = this.checked ? 'block' : 'none';
-    builderRenderPreview();
-  });
-
-  // === Section toggle function ===
-  window.toggleSection = function(sectionId) {
-    const section = document.getElementById(sectionId);
-    const controls = section.querySelector('.slot-controls');
-    const icon = section.querySelector('.toggle-icon');
-    if (controls) {
-      controls.classList.toggle('open');
-      if (icon) icon.classList.toggle('open');
-    }
-  };
+  builderApplyBtn.addEventListener('click', builderRenderPreview);
 
   // === Load canvas ===
   builderFileInput.addEventListener('change', function(e) {
@@ -2801,7 +2673,7 @@
     reader.readAsDataURL(file);
   });
 
-  // === Save template to localStorage (enhanced) ===
+  // === Save template to localStorage ===
   function builderSaveTemplate() {
     const name = builderTemplateName.value.trim();
     if (!name) {
@@ -2811,16 +2683,34 @@
     const config = {
       name: name,
       destination: builderDestination.value,
-      picEnabled: builderPicEnable.checked,
-      // Normal slots
-      normalName: getSlotValues('normalName'),
-      normalRank: getSlotValues('normalRank'),
-      normalNumber: getSlotValues('normalNumber'),
-      normalCrewId: getSlotValues('normalCrewId'),
-      // PIC slots (only if enabled)
-      picName: builderPicEnable.checked ? getSlotValues('picName') : null,
-      picRank: builderPicEnable.checked ? getSlotValues('picRank') : null,
-      picCrewId: builderPicEnable.checked ? getSlotValues('picCrewId') : null
+      enableName: builderEnableName.checked,
+      enableRank: builderEnableRank.checked,
+      enableNumber: builderEnableNumber.checked,
+      enableCrewId: builderEnableCrewId.checked,
+      rows: parseInt(builderRows.value) || 1,
+      gapY: parseInt(builderGapY.value) || 30,
+      width: parseInt(builderWidth.value) || 300,
+      height: parseInt(builderHeight.value) || 30,
+      fontSize: parseInt(builderFontSize.value) || 14,
+      nameX: parseInt(builderNameX.value) || 0,
+      nameY: parseInt(builderNameY.value) || 0,
+      rankX: parseInt(builderRankX.value) || 0,
+      rankY: parseInt(builderRankY.value) || 0,
+      numberX: parseInt(builderNumberX.value) || 0,
+      numberY: parseInt(builderNumberY.value) || 0,
+      crewIdX: parseInt(builderCrewIdX.value) || 0,
+      crewIdY: parseInt(builderCrewIdY.value) || 0,
+      globalNumbering: builderGlobalNumbering.checked,
+      groupPilots: builderGroupPilots.checked,
+      fineNameX: parseInt(builderFineNameX.value) || 0,
+      fineNameY: parseInt(builderFineNameY.value) || 0,
+      fineRankX: parseInt(builderFineRankX.value) || 0,
+      fineRankY: parseInt(builderFineRankY.value) || 0,
+      fineNumberX: parseInt(builderFineNumberX.value) || 0,
+      fineNumberY: parseInt(builderFineNumberY.value) || 0,
+      fineCrewIdX: parseInt(builderFineCrewIdX.value) || 0,
+      fineCrewIdY: parseInt(builderFineCrewIdY.value) || 0,
+      fineFontSize: parseInt(builderFineFontSize.value) || 0
     };
     let saved = JSON.parse(localStorage.getItem('ctr_builder_configs') || '{}');
     saved[name] = config;
@@ -2829,16 +2719,15 @@
     builderLoadSavedList();
   }
 
-  document.getElementById('builderSaveBtn').addEventListener('click', builderSaveTemplate);
+  builderSaveBtn.addEventListener('click', builderSaveTemplate);
 
   // === Load saved templates list ===
   function builderLoadSavedList() {
     const saved = JSON.parse(localStorage.getItem('ctr_builder_configs') || '{}');
     const names = Object.keys(saved);
-    const list = document.getElementById('builderSavedList');
-    list.innerHTML = '';
+    builderSavedList.innerHTML = '';
     if (names.length === 0) {
-      list.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">No saved templates.</div>';
+      builderSavedList.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">No saved templates.</div>';
       return;
     }
     names.forEach(name => {
@@ -2849,7 +2738,7 @@
           <button onclick="builderLoadTemplate('${name}')">Load</button>
           <button onclick="builderDeleteTemplate('${name}')">✕</button>
         </div>`;
-      list.appendChild(item);
+      builderSavedList.appendChild(item);
     });
   }
 
@@ -2861,61 +2750,36 @@
       showToast('Template not found.', 'error');
       return;
     }
-    // Set template name and destination
     builderTemplateName.value = name;
     builderDestination.value = config.destination || 'BOM';
-    builderPicEnable.checked = config.picEnabled || false;
-    document.getElementById('picSection').style.display = builderPicEnable.checked ? 'block' : 'none';
-
-    // Restore normal slots
-    const normalTypes = ['Name', 'Rank', 'Number', 'CrewId'];
-    normalTypes.forEach(type => {
-      const prefix = 'normal' + type;
-      const data = config[prefix];
-      if (data) {
-        document.getElementById(prefix + 'Enabled').checked = data.enabled !== undefined ? data.enabled : true;
-        document.getElementById(prefix + 'X').value = data.startX || 0;
-        document.getElementById(prefix + 'Y').value = data.startY || 0;
-        document.getElementById(prefix + 'Rows').value = data.rows || 1;
-        document.getElementById(prefix + 'GapY').value = data.gapY || 30;
-        document.getElementById(prefix + 'Width').value = data.width || 100;
-        document.getElementById(prefix + 'Height').value = data.height || 30;
-        document.getElementById(prefix + 'FontSize').value = data.fontSize || 12;
-        document.getElementById(prefix + 'FineX').value = data.fineX || 0;
-        document.getElementById(prefix + 'FineY').value = data.fineY || 0;
-        document.getElementById(prefix + 'FineFontSize').value = data.fineFontSize || 0;
-        // Sync slider values
-        document.getElementById(prefix + 'FineXVal').value = data.fineX || 0;
-        document.getElementById(prefix + 'FineYVal').value = data.fineY || 0;
-        document.getElementById(prefix + 'FineFontSizeVal').value = data.fineFontSize || 0;
-      }
-    });
-
-    // Restore PIC slots if enabled
-    if (builderPicEnable.checked) {
-      const picTypes = ['Name', 'Rank', 'CrewId'];
-      picTypes.forEach(type => {
-        const prefix = 'pic' + type;
-        const data = config[prefix];
-        if (data) {
-          document.getElementById(prefix + 'Enabled').checked = data.enabled !== undefined ? data.enabled : true;
-          document.getElementById(prefix + 'X').value = data.startX || 0;
-          document.getElementById(prefix + 'Y').value = data.startY || 0;
-          document.getElementById(prefix + 'Rows').value = data.rows || 1;
-          document.getElementById(prefix + 'GapY').value = data.gapY || 0;
-          document.getElementById(prefix + 'Width').value = data.width || 100;
-          document.getElementById(prefix + 'Height').value = data.height || 30;
-          document.getElementById(prefix + 'FontSize').value = data.fontSize || 12;
-          document.getElementById(prefix + 'FineX').value = data.fineX || 0;
-          document.getElementById(prefix + 'FineY').value = data.fineY || 0;
-          document.getElementById(prefix + 'FineFontSize').value = data.fineFontSize || 0;
-          document.getElementById(prefix + 'FineXVal').value = data.fineX || 0;
-          document.getElementById(prefix + 'FineYVal').value = data.fineY || 0;
-          document.getElementById(prefix + 'FineFontSizeVal').value = data.fineFontSize || 0;
-        }
-      });
-    }
-
+    builderEnableName.checked = config.enableName !== undefined ? config.enableName : true;
+    builderEnableRank.checked = config.enableRank !== undefined ? config.enableRank : true;
+    builderEnableNumber.checked = config.enableNumber !== undefined ? config.enableNumber : true;
+    builderEnableCrewId.checked = config.enableCrewId !== undefined ? config.enableCrewId : true;
+    builderRows.value = config.rows || 17;
+    builderGapY.value = config.gapY || 30;
+    builderWidth.value = config.width || 300;
+    builderHeight.value = config.height || 30;
+    builderFontSize.value = config.fontSize || 14;
+    builderNameX.value = config.nameX || 0;
+    builderNameY.value = config.nameY || 0;
+    builderRankX.value = config.rankX || 0;
+    builderRankY.value = config.rankY || 0;
+    builderNumberX.value = config.numberX || 0;
+    builderNumberY.value = config.numberY || 0;
+    builderCrewIdX.value = config.crewIdX || 0;
+    builderCrewIdY.value = config.crewIdY || 0;
+    builderGlobalNumbering.checked = config.globalNumbering || false;
+    builderGroupPilots.checked = config.groupPilots !== undefined ? config.groupPilots : true;
+    builderFineNameX.value = config.fineNameX || 0;
+    builderFineNameY.value = config.fineNameY || 0;
+    builderFineRankX.value = config.fineRankX || 0;
+    builderFineRankY.value = config.fineRankY || 0;
+    builderFineNumberX.value = config.fineNumberX || 0;
+    builderFineNumberY.value = config.fineNumberY || 0;
+    builderFineCrewIdX.value = config.fineCrewIdX || 0;
+    builderFineCrewIdY.value = config.fineCrewIdY || 0;
+    builderFineFontSize.value = config.fineFontSize || 0;
     builderRenderPreview();
     showToast('Loaded template: ' + name, 'success');
   };
@@ -2929,51 +2793,46 @@
     showToast('Deleted: ' + name, 'default');
   };
 
-  document.getElementById('builderLoadSavedBtn').addEventListener('click', builderLoadSavedList);
+  builderLoadSavedBtn.addEventListener('click', builderLoadSavedList);
 
   // === Delete current (clear builder) ===
-  document.getElementById('builderDeleteBtn').addEventListener('click', function() {
+  builderDeleteBtn.addEventListener('click', function() {
     if (!confirm('Clear the builder state?')) return;
     builderBgImageData = null;
     builderCanvas.getContext('2d').clearRect(0,0,A4_W,A4_H);
     builderStatus.textContent = 'Cleared. Upload a canvas to start.';
-    document.getElementById('builderOutput').value = '';
+    builderOutput.value = '';
   });
 
-  // === Export Code (enhanced) ===
-  document.getElementById('builderExportBtn').addEventListener('click', function() {
+  // === Export Code ===
+  builderExportBtn.addEventListener('click', function() {
+    const rows = parseInt(builderRows.value) || 1;
+    const gapY = parseInt(builderGapY.value) || 30;
+    const width = parseInt(builderWidth.value) || 300;
+    const height = parseInt(builderHeight.value) || 30;
+    const fontSize = parseInt(builderFontSize.value) || 14;
+
+    const fine = {
+      nameX: parseInt(builderFineNameX.value) || 0,
+      nameY: parseInt(builderFineNameY.value) || 0,
+      rankX: parseInt(builderFineRankX.value) || 0,
+      rankY: parseInt(builderFineRankY.value) || 0,
+      numberX: parseInt(builderFineNumberX.value) || 0,
+      numberY: parseInt(builderFineNumberY.value) || 0,
+      crewIdX: parseInt(builderFineCrewIdX.value) || 0,
+      crewIdY: parseInt(builderFineCrewIdY.value) || 0,
+      fontSizeAdj: parseInt(builderFineFontSize.value) || 0
+    };
+
+    const nameSlots = builderEnableName.checked ? builderGenerateSlots(parseInt(builderNameX.value)||0, parseInt(builderNameY.value)||0, rows, gapY, width, height, fontSize, {x:fine.nameX, y:fine.nameY, fontSizeAdj:fine.fontSizeAdj}) : null;
+    const rankSlots = builderEnableRank.checked ? builderGenerateSlots(parseInt(builderRankX.value)||0, parseInt(builderRankY.value)||0, rows, gapY, width, height, fontSize, {x:fine.rankX, y:fine.rankY, fontSizeAdj:fine.fontSizeAdj}) : null;
+    const numberSlots = builderEnableNumber.checked ? builderGenerateSlots(parseInt(builderNumberX.value)||0, parseInt(builderNumberY.value)||0, rows, gapY, width, height, fontSize, {x:fine.numberX, y:fine.numberY, fontSizeAdj:fine.fontSizeAdj}) : null;
+    const crewIdSlots = builderEnableCrewId.checked ? builderGenerateSlots(parseInt(builderCrewIdX.value)||0, parseInt(builderCrewIdY.value)||0, rows, gapY, width, height, fontSize, {x:fine.crewIdX, y:fine.crewIdY, fontSizeAdj:fine.fontSizeAdj}) : null;
+
     const name = builderTemplateName.value.trim() || 'template';
     const destination = builderDestination.value;
-    const picEnabled = builderPicEnable.checked;
-
-    // Helper: generate slots from config
-    function generateSlotsFromConfig(prefix) {
-      const config = getSlotValues(prefix);
-      if (!config.enabled) return null;
-      const slots = [];
-      for (let i = 0; i < config.rows; i++) {
-        slots.push({
-          x: config.startX + config.fineX,
-          y: config.startY + i * config.gapY + config.fineY,
-          w: config.width,
-          h: config.height,
-          fontSize: config.fontSize + config.fineFontSize
-        });
-      }
-      return slots;
-    }
-
-    const normalName = generateSlotsFromConfig('normalName');
-    const normalRank = generateSlotsFromConfig('normalRank');
-    const normalNumber = generateSlotsFromConfig('normalNumber');
-    const normalCrewId = generateSlotsFromConfig('normalCrewId');
-
-    let picName = null, picRank = null, picCrewId = null;
-    if (picEnabled) {
-      picName = generateSlotsFromConfig('picName');
-      picRank = generateSlotsFromConfig('picRank');
-      picCrewId = generateSlotsFromConfig('picCrewId');
-    }
+    const globalNum = builderGlobalNumbering.checked;
+    const groupPilots = builderGroupPilots.checked;
 
     let code = `// ============================================\n`;
     code += `//  ${name} – Built with Form Builder\n`;
@@ -2984,64 +2843,38 @@
     code += `  destination: '${destination}',\n`;
     code += `  bgPath: 'templates/${name}.png',\n`;
     code += `  bgImageData: null,\n`;
-    code += `  groupPilotsSeparately: true,\n`;
-    code += `  globalNumbering: false,\n`;
-    if (picEnabled) {
-      code += `  picTopPage: true,\n`;
-      code += `  picSlots: {\n`;
-      if (picName) {
-        code += `    nameSlots: [\n`;
-        picName.forEach(s => {
-          code += `      { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
-        });
-        code += `    ],\n`;
-      }
-      if (picRank) {
-        code += `    rankSlots: [\n`;
-        picRank.forEach(s => {
-          code += `      { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
-        });
-        code += `    ],\n`;
-      }
-      if (picCrewId) {
-        code += `    crewIdSlots: [\n`;
-        picCrewId.forEach(s => {
-          code += `      { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
-        });
-        code += `    ],\n`;
-      }
-      code += `  },\n`;
-    }
-    if (normalName) {
+    code += `  groupPilotsSeparately: ${groupPilots},\n`;
+    code += `  globalNumbering: ${globalNum},\n`;
+    if (nameSlots) {
       code += `  nameSlots: [\n`;
-      normalName.forEach(s => {
+      nameSlots.forEach(s => {
         code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
       });
       code += `  ],\n`;
     } else {
       code += `  nameSlots: null,\n`;
     }
-    if (normalRank) {
+    if (rankSlots) {
       code += `  rankSlots: [\n`;
-      normalRank.forEach(s => {
+      rankSlots.forEach(s => {
         code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
       });
       code += `  ],\n`;
     } else {
       code += `  rankSlots: null,\n`;
     }
-    if (normalNumber) {
+    if (numberSlots) {
       code += `  numberSlots: [\n`;
-      normalNumber.forEach(s => {
+      numberSlots.forEach(s => {
         code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
       });
       code += `  ],\n`;
     } else {
       code += `  numberSlots: null,\n`;
     }
-    if (normalCrewId) {
+    if (crewIdSlots) {
       code += `  crewIdSlots: [\n`;
-      normalCrewId.forEach(s => {
+      crewIdSlots.forEach(s => {
         code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
       });
       code += `  ],\n`;
@@ -3050,13 +2883,12 @@
     }
     code += `};\n`;
 
-    document.getElementById('builderOutput').value = code;
+    builderOutput.value = code;
     showToast('Code generated!', 'success');
   });
 
-  // === Copy output ===
-  document.getElementById('builderCopyBtn').addEventListener('click', function() {
-    const text = document.getElementById('builderOutput').value;
+  builderCopyBtn.addEventListener('click', function() {
+    const text = builderOutput.value;
     if (!text) {
       showToast('No code to copy. Generate first.', 'error');
       return;
@@ -3064,13 +2896,13 @@
     navigator.clipboard.writeText(text).then(() => {
       showToast('Code copied to clipboard!', 'success');
     }).catch(() => {
-      document.getElementById('builderOutput').select();
+      builderOutput.select();
       document.execCommand('copy');
       showToast('Code copied!', 'success');
     });
   });
 
-  // === Auto‑populate template name ===
+  // === Auto‑populate template name from destination ===
   builderDestination.addEventListener('change', function() {
     const dest = this.value;
     if (!builderTemplateName.value) {
@@ -3078,13 +2910,25 @@
     }
   });
 
-  // === Init: load saved list ===
+  // === Init builder: load saved list on page load ===
   builderLoadSavedList();
+
+  // === Set initial preview background if any ===
+  // (If user uploaded a canvas earlier, it will be in builderBgImageData but we don't persist across page reload.
+  // We'll just show the placeholder.)
 
   // === Auto‑apply on any input change (debounced) ===
   let builderDebounce;
-  const allBuilderInputs = document.querySelectorAll('#builderControls input[type="number"], #builderControls input[type="checkbox"], #builderControls input[type="range"]');
-  allBuilderInputs.forEach(inp => {
+  const builderInputs = [
+    builderRows, builderGapY, builderWidth, builderHeight, builderFontSize,
+    builderNameX, builderNameY, builderRankX, builderRankY,
+    builderNumberX, builderNumberY, builderCrewIdX, builderCrewIdY,
+    builderEnableName, builderEnableRank, builderEnableNumber, builderEnableCrewId,
+    builderFineNameX, builderFineNameY, builderFineRankX, builderFineRankY,
+    builderFineNumberX, builderFineNumberY, builderFineCrewIdX, builderFineCrewIdY,
+    builderFineFontSize
+  ];
+  builderInputs.forEach(inp => {
     inp.addEventListener('input', function() {
       clearTimeout(builderDebounce);
       builderDebounce = setTimeout(() => {
@@ -3095,19 +2939,6 @@
       clearTimeout(builderDebounce);
       if (builderBgImageData) builderRenderPreview();
     });
-  });
-
-  // === Sync slider values with number inputs ===
-  document.querySelectorAll('.fine-tune-sliders input[type="range"]').forEach(slider => {
-    const valInput = slider.parentElement.querySelector('input[type="number"]');
-    if (valInput) {
-      slider.addEventListener('input', function() {
-        valInput.value = this.value;
-      });
-      valInput.addEventListener('input', function() {
-        slider.value = this.value;
-      });
-    }
   });
 
   // ===== End of Form Builder =====
