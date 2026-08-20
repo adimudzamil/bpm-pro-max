@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>CTR Autofill – Tutorial</title>
+<style>
+  /* ── Same light theme as CTR.html ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --surface2: #f1f5f9;
+    --border: #e2e8f0;
+    --border-bright: #cbd5e1;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.1);
+    --accent-glow: rgba(37,99,235,0.2);
+    --accent-hover: #1d4ed8;
+    --red: #dc2626;
+    --green: #16a34a;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 40px 32px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 16px;
+  }
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-top: 32px;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  p {
+    margin-bottom: 12px;
+    color: var(--text);
+    font-size: 15px;
+  }
+
+  ul, ol {
+    margin: 8px 0 16px 24px;
+    color: var(--text);
+    font-size: 15px;
+  }
+
+  li { margin-bottom: 4px; }
+
+  .note {
+    background: var(--surface2);
+    border-left: 4px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    margin: 16px 0;
+    font-size: 14px;
+  }
+
+  .note.warning {
+    border-left-color: var(--red);
+  }
+
+  .note.success {
+    border-left-color: var(--green);
+  }
+
+  .step-card {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    margin: 12px 0;
+    border: 1px solid var(--border);
+  }
+
+  .step-card .step-number {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    width: 28px;
+    height: 28px;
+    text-align: center;
+    line-height: 28px;
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+
+  .step-card strong {
+    font-size: 16px;
+  }
+
+  .button-demo {
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 13px;
+    margin: 2px 0;
+  }
+
+  .btn-blue {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-gray {
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+  }
+
+  .btn-green {
+    background: var(--green);
+    color: #fff;
+  }
+
+  .btn-upload-demo {
+    background: var(--accent);
+    color: #fff;
+    padding: 12px 28px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 15px;
+    display: inline-block;
+    box-shadow: 0 4px 12px var(--accent-glow);
+  }
+
+  .badge-demo {
+    display: inline-block;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 2px 12px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 12px 0;
+  }
+
+  @media (max-width: 600px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .container { padding: 20px 16px; }
+    h1 { font-size: 26px; }
+  }
+
+  .icon-box {
+    display: inline-block;
+    font-size: 20px;
+    margin-right: 6px;
+  }
+
+  .footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 2px solid var(--border);
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  a:hover { text-decoration: underline; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th {
+    background: var(--surface2);
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>CTR<span>.</span> Autofill</h1>
+  <div class="subtitle">📖 Complete Tutorial – How to Use This Tool</div>
+
+  <!-- ===== SECTION 1: OVERVIEW ===== -->
+  <h2>🔍 What Does This Tool Do?</h2>
+  <p>
+    This tool helps you <strong>automatically fill crew forms</strong> for different destinations (e.g., BOM, DEL, HYD).
+    You upload a PDF from the <strong>CrewTripReport</strong> system, and the tool:
+  </p>
+  <ul>
+    <li>📋 <strong>Extracts</strong> all crew names, ranks, and IDs from the PDF.</li>
+    <li>📄 <strong>Generates</strong> A4‑sized forms with each crew member's name, rank, and ID placed in the correct slots.</li>
+    <li>🖨️ <strong>Lets you print</strong> the forms directly or save them as PNG or PDF.</li>
+  </ul>
+
+  <div class="note">
+    <strong>💡 Why use this?</strong> Instead of manually writing every name on every form, you do it once – the tool does the rest.
+  </div>
+
+  <!-- ===== SECTION 2: GETTING STARTED ===== -->
+  <h2>🚀 Getting Started – Step by Step</h2>
+
+  <div class="step-card">
+    <div><span class="step-number">1</span> <strong>Upload a PDF</strong></div>
+    <p style="margin-top:6px; margin-bottom:0;">
+      Click the big blue <span class="btn-upload-demo" style="font-size:13px; padding:8px 20px;">📎 Choose File</span> button and select your <strong>CrewTripReport PDF</strong>.
+    </p>
+  </div>
+
+  <div class="step-card">
+    <div><span class="step-number">2</span> <strong>Wait for auto‑parse</strong></div>
+    <p style="margin-top:6px; margin-bottom:0;">
+      The tool will automatically read the PDF and extract the crew list. You'll see a message: <span style="color:var(--green);">✅ Parsed OK</span>.
+    </p>
+  </div>
+
+  <div class="step-card">
+    <div><span class="step-number">3</span> <strong>Select your destination</strong></div>
+    <p style="margin-top:6px; margin-bottom:0;">
+      From the dropdown, choose where you are flying to (e.g., <strong>BOM</strong> for Mumbai).
+      This tells the tool which forms to generate.
+    </p>
+  </div>
+
+  <div class="step-card">
+    <div><span class="step-number">4</span> <strong>Generate forms</strong></div>
+    <p style="margin-top:6px; margin-bottom:0;">
+      Click the <span class="button-demo btn-blue">⚡ Generate Forms</span> button.
+      The tool will load the correct templates for your destination and place every crew member into the right slots.
+    </p>
+  </div>
+
+  <div class="step-card">
+    <div><span class="step-number">5</span> <strong>Review & print</strong></div>
+    <p style="margin-top:6px; margin-bottom:0;">
+      Each form appears in its own section. You can <strong>print</strong> each form separately or download all as PNG/PDF.
+      Use the <strong>fine‑tune sliders</strong> to adjust text positions if needed.
+    </p>
+  </div>
+
+  <!-- ===== SECTION 3: ALL BUTTONS EXPLAINED ===== -->
+  <h2>🔘 All Buttons & What They Do</h2>
+
+  <h3>📄 Parser Card</h3>
+  <table>
+    <tr><th>Button / Element</th><th>What It Does</th></tr>
+    <tr>
+      <td><span class="btn-upload-demo" style="font-size:13px; padding:6px 16px;">📎 Choose File</span></td>
+      <td>Opens your file browser to select a PDF. This is the <strong>main way</strong> to import data.</td>
+    </tr>
+    <tr>
+      <td><span class="button-demo btn-gray">⚡ Parse PDF Report</span></td>
+      <td>If you pasted text instead of uploading a file, click this to parse it.</td>
+    </tr>
+    <tr>
+      <td><span class="button-demo btn-gray">Clear</span></td>
+      <td>Clears the text area and resets the parser.</td>
+    </tr>
+    <tr>
+      <td><span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);">✅ file.pdf loaded</span></td>
+      <td>Shows the name of the file you uploaded (turns green when loaded).</td>
+    </tr>
+  </table>
+
+  <h3>📄 A4 Forms Card</h3>
+  <table>
+    <tr><th>Button / Element</th><th>What It Does</th></tr>
+    <tr>
+      <td><strong>Destination dropdown</strong></td>
+      <td>Choose your destination (BOM, DEL, HYD, etc.). This selects which forms to generate.</td>
+    </tr>
+    <tr>
+      <td><span class="button-demo btn-blue">⚡ Generate Forms</span></td>
+      <td>Loads the templates for your destination and places all crew onto the forms.</td>
+    </tr>
+    <tr>
+      <td><span class="button-demo btn-green">🖨️ Print A4 Sheets</span></td>
+      <td>Opens a print window with <strong>only this form's pages</strong> – perfect for checking alignment.</td>
+    </tr>
+    <tr>
+      <td><span class="button-demo btn-blue" style="background:var(--accent);">📋 Copy Slots</span></td>
+      <td>Copies the adjusted slot coordinates to your clipboard – useful for advanced users.</td>
+    </tr>
+    <tr>
+      <td><span class="button-demo btn-blue">⬇️ Download All PNGs</span></td>
+      <td>Downloads <strong>every page</strong> as separate PNG images (one after another).</td>
+    </tr>
+    <tr>
+      <td><span class="button-demo btn-green">⬇️ Download All PDF</span></td>
+      <td>Downloads <strong>all pages</strong> combined into one PDF file.</td>
+    </tr>
+  </table>
+
+  <h3>🎛️ Fine‑Tune Controls</h3>
+  <p>
+    Each form has its own set of sliders. These let you adjust where the text appears on the page – <strong>without</strong> changing the original template.
+  </p>
+
+  <div class="grid-2">
+    <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+      <strong>Name X</strong><br>
+      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>name</strong> left (negative) or right (positive).</span>
+    </div>
+    <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+      <strong>Name Y</strong><br>
+      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>name</strong> up (negative) or down (positive).</span>
+    </div>
+    <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+      <strong>Rank X</strong><br>
+      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>rank</strong> left or right. (Only shown if rank slots exist.)</span>
+    </div>
+    <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+      <strong>Rank Y</strong><br>
+      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>rank</strong> up or down.</span>
+    </div>
+    <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+      <strong>Number X / Number Y</strong><br>
+      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>row number</strong> (1, 2, 3…) left/right or up/down. (Only if numbering slots exist.)</span>
+    </div>
+    <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+      <strong>Crew ID X / Crew ID Y</strong><br>
+      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>crew ID</strong> left/right or up/down. (Only if ID slots exist.)</span>
+    </div>
+    <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border); grid-column: span 2;">
+      <strong>Font Size</strong><br>
+      <span style="font-size:13px; color:var(--text-muted);">Makes all text on this form <strong>larger</strong> (positive) or <strong>smaller</strong> (negative).</span>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>✏️ Pro tip:</strong> You can also <strong>type</strong> a number directly into the box next to each slider for precise adjustments.
+  </div>
+
+  <!-- ===== SECTION 4: PRINTING ===== -->
+  <h2>🖨️ How to Print the Forms</h2>
+
+  <h3>Print Preview</h3>
+  <p>
+    The forms are designed for <strong>Landscape A4</strong> paper. When you click <strong>"Print A4 Sheets"</strong>:
+  </p>
+  <ul>
+    <li>A new window will open with the form(s) displayed.</li>
+    <li>The browser's <strong>print dialog</strong> will appear automatically.</li>
+    <li><strong>Check your print settings:</strong> make sure the page size is <strong>A4</strong> and orientation is <strong>Landscape</strong>.</li>
+  </ul>
+
+  <div class="note success">
+    <strong>📐 Important:</strong> If the form looks cut off or too small, adjust your browser's "Scale" setting in the print dialog to <strong>Fit to Page</strong> or <strong>100%</strong>.
+  </div>
+
+  <h3>Printing on Different Devices</h3>
+  <ul>
+    <li><strong>💻 PC / Mac:</strong> Use <kbd>Ctrl+P</kbd> (Windows) or <kbd>Cmd+P</kbd> (Mac) after clicking "Print A4 Sheets".</li>
+    <li><strong>📱 Android / iOS:</strong> Tap the <strong>menu</strong> (three dots) in the new window and select <strong>"Print"</strong>.</li>
+  </ul>
+
+  <!-- ===== SECTION 5: PERFORMANCE ===== -->
+  <h2>⏱️ Performance – Why It Might Take a Moment</h2>
+  <p>
+    Generating forms involves:
+  </p>
+  <ul>
+    <li>🖼️ Loading background images (templates).</li>
+    <li>📝 Placing every crew member's name, rank, and ID into the correct slots.</li>
+    <li>🔄 Rendering all pages as high‑quality images.</li>
+  </ul>
+
+  <div class="note">
+    <strong>⏳ Depending on your device's processing power, this can take a few seconds.</strong>
+    Older phones or tablets may take longer – this is normal. Please be patient and wait for the previews to appear.
+  </div>
+
+  <!-- ===== SECTION 6: FUTURE UPDATES ===== -->
+  <h2>🚧 Future Updates – More Destinations & Forms</h2>
+  <p>
+    This tool is actively being improved.
+  </p>
+  <ul>
+    <li><strong>More destinations</strong> – like DEL, BLR, HYD, AMD, ATQ, etc.</li>
+    <li><strong>More form types</strong> – for different Customs and Immigration requirements.</li>
+    <li><strong>Saved settings</strong> – remember your fine‑tune adjustments.</li>
+  </ul>
+  <p>
+    I welcome every feedback, the tool will continue to improve based on your feedback. Don't hesitate to dm Alif or whatsapp call Fahrin
+  </p>
+
+  <!-- ===== SECTION 7: TROUBLESHOOTING ===== -->
+  <h2>❓ Troubleshooting – Common Issues</h2>
+
+  <h3>❌ "Please parse a PDF first"</h3>
+  <p>
+    You haven't uploaded a PDF yet, or the upload failed. Click <span class="btn-upload-demo" style="font-size:13px; padding:4px 14px;">📎 Choose File</span> and select your CrewTripReport PDF.
+  </p>
+
+  <h3>❌ "No templates for this destination"</h3>
+  <p>
+    The destination you selected doesn't have any forms yet. Try selecting a different destination, or wait for a future update.
+  </p>
+
+  <h3>❌ The forms look blank</h3>
+  <p>
+    The background images may not have loaded. Make sure you are connected to the internet (if the images are hosted online).<br>
+    <strong>Tip:</strong> If you are offline, ensure the <code>templates/</code> folder is in the same directory as <code>CTR.html</code>.
+  </p>
+
+  <h3>❌ Text is misaligned on the form</h3>
+  <p>
+    Use the <strong>fine‑tune sliders</strong> to adjust the text position. Each form has its own set of controls – adjust until it looks perfect.
+  </p>
+
+  <!-- ===== SECTION 8: ABOUT ===== -->
+  <h2>👤 Why?</h2>
+  <p>
+     <strong>2100551</strong> – I want to spend more time with Her and Zayn Ikhlas. 
+    It's built with <span style="color:var(--accent);">❤️</span> to make your pre‑flight preparation faster and easier. 
+  </p>
+  <p>
+     I welcome every feedback, bugs and ideas, the tool will continue to improve based on your feedback. Don't hesitate to DM Alif or WHATSAPP CALL Fahrin. Your input helps make this tool better for everyone! ✈️
+  </p>
+
+  <div class="footer">
+    <strong>CTR Autofill</strong> · v3.0<br>
+    🔒 All processing is local — your data never leaves your device.<br>
+    Made by <strong>2100551</strong> · ✈️
+  </div>
+
+</div>
+
+</body>
+</html>
