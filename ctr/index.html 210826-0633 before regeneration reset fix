@@ -1833,9 +1833,9 @@
       // ── PIC SLOTS ──
       // 👇 EDIT THESE COORDINATES TO MATCH YOUR DESIGN
       picSlots: {
-        nameSlots: generateSlots(100, 100, 1, 0, 200, 30, 14),
-        rankSlots: generateSlots(320, 100, 1, 0, 80, 30, 14),
-        crewIdSlots: generateSlots(500, 100, 1, 0, 100, 30, 14)
+        nameSlots: generateSlots(205, 220, 1, 0, 350, 30, 14),
+        rankSlots: generateSlots(125, 220, 1, 0, 80, 30, 14),
+        crewIdSlots: null
       },
       nameSlots: generateSlots(203, 424, 15, 36, 250, 36, 14),
       rankSlots: generateSlots(88, 424, 15, 36, 110, 36, 14),
@@ -1857,7 +1857,6 @@
 
   const templateOffsets = {};
   let generatedData = {};
-  const previewElements = {};
 
   function loadTemplateFromPath(templateId) {
     return new Promise((resolve, reject) => {
@@ -1963,7 +1962,7 @@
     const fontAdj = offsets.fontSizeAdj || 0;
 
     // ---- Helper: draw a single crew member into a given slot set ----
-    function drawCrewMember(ctx, member, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber) {
+    function drawCrewMember(ctx, member, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber, tpl, offsets, fontAdj) {
       if (!member) return;
       const displayName = member.crewName || 'Unnamed';
       const displayRank = member.opRank || '';
@@ -2063,7 +2062,8 @@
         const picNameSlot = tpl.picSlots.nameSlots ? tpl.picSlots.nameSlots[0] : null;
         const picRankSlot = tpl.picSlots.rankSlots ? tpl.picSlots.rankSlots[0] : null;
         const picCrewIdSlot = tpl.picSlots.crewIdSlots ? tpl.picSlots.crewIdSlots[0] : null;
-        drawCrewMember(ctx, picCrewMember, picNameSlot, picRankSlot, null, picCrewIdSlot, 1);
+        // For number, we don't have a number slot for PIC – skip.
+        drawCrewMember(ctx, picCrewMember, picNameSlot, picRankSlot, null, picCrewIdSlot, 1, tpl, offsets, fontAdj);
       }
 
       // Draw regular crew (excluding PIC)
@@ -2084,7 +2084,9 @@
           const globalIdx = (pageIndex * perPage) + idx + 1;
           displayName = globalIdx + '. ' + displayName;
         }
-        drawCrewMember(ctx, crewMember, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber);
+        // If we have a numberSlot, the drawCrewMember will handle it.
+        // But we need to pass the pageNumber (idx+1) for the number slot.
+        drawCrewMember(ctx, crewMember, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber, tpl, offsets, fontAdj);
       });
 
       canvases.push(canvas);
@@ -2141,7 +2143,6 @@
       allGenerated = true;
       generatedData = {};
       document.getElementById('templateSectionsContainer').innerHTML = '';
-      previewElements = {};
 
       for (const tpl of templates) {
         try {
@@ -2188,7 +2189,7 @@
     showToast('Generated ' + Object.keys(generatedData).length + ' template(s) for ' + destination, 'success');
   });
 
-  // ===== renderTemplateSection: builds the section once =====
+  // ===== renderTemplateSection (unchanged, but uses generatedData) =====
   function renderTemplateSection(templateId) {
     const tpl = TEMPLATES[templateId];
     const data = generatedData[templateId];
@@ -2212,7 +2213,6 @@
 
     const preview = document.createElement('div');
     preview.className = 'template-preview-area';
-    preview.id = 'preview-' + templateId;
     data.canvases.forEach((cv, idx) => {
       const wrapper = document.createElement('div');
       wrapper.style.textAlign = 'center';
@@ -2233,10 +2233,6 @@
     });
     section.appendChild(preview);
 
-    // Store reference to preview container
-    previewElements[templateId] = preview;
-
-    // Add fine-tune group
     const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
     const group = document.createElement('div');
     group.className = 'fine-tune-group';
@@ -2337,40 +2333,6 @@
     document.getElementById('templateSectionsContainer').appendChild(section);
   }
 
-  // ===== updateTemplatePreview: updates only the images =====
-  function updateTemplatePreview(templateId) {
-    const tpl = TEMPLATES[templateId];
-    const data = generatedData[templateId];
-    if (!data) return;
-
-    const preview = previewElements[templateId];
-    if (!preview) return;
-
-    // Clear preview
-    preview.innerHTML = '';
-
-    // Rebuild images
-    data.canvases.forEach((cv, idx) => {
-      const wrapper = document.createElement('div');
-      wrapper.style.textAlign = 'center';
-      const label = document.createElement('div');
-      label.textContent = `Page ${idx+1}`;
-      label.style.fontSize = '11px';
-      label.style.color = 'var(--text-muted)';
-      label.style.fontFamily = "'DM Mono', monospace";
-      wrapper.appendChild(label);
-      const img = document.createElement('img');
-      img.src = cv.toDataURL('image/png');
-      img.style.maxWidth = '200px';
-      img.style.height = 'auto';
-      img.style.border = '1px solid var(--border)';
-      img.style.borderRadius = 'var(--radius-sm)';
-      wrapper.appendChild(img);
-      preview.appendChild(wrapper);
-    });
-  }
-
-  // ===== regenerateTemplate: update only preview =====
   function regenerateTemplate(templateId) {
     const tpl = TEMPLATES[templateId];
     if (!tpl || !tpl.bgImageData || !state || !state.crew) {
@@ -2384,11 +2346,7 @@
           }
           const canvases = result.canvases;
           generatedData[templateId] = { template: tpl, canvases };
-          if (previewElements[templateId]) {
-            updateTemplatePreview(templateId);
-          } else {
-            renderTemplateSection(templateId);
-          }
+          renderTemplateSection(templateId);
           updateGlobalDownloadVisibility();
         }).catch(err => {
           showToast('Failed to load background for ' + tpl.label + ': ' + err.message, 'error');
@@ -2404,11 +2362,7 @@
     }
     const canvases = result.canvases;
     generatedData[templateId] = { template: tpl, canvases };
-    if (previewElements[templateId]) {
-      updateTemplatePreview(templateId);
-    } else {
-      renderTemplateSection(templateId);
-    }
+    renderTemplateSection(templateId);
     updateGlobalDownloadVisibility();
   }
 
