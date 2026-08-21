@@ -335,8 +335,7 @@
   @page { size: auto; margin: 8mm; }
 
   /* ── Builder Card styles ── */
-  .builder-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; padding-top: 28px; display: none; /* HIDDEN BY DEFAULT */ }
-  .builder-card.visible { display: block; } /* Show when unlocked */
+  .builder-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; padding-top: 28px; }
   .builder-layout { display: flex; gap: 20px; flex-wrap: wrap; }
   .builder-preview { flex: 2; min-width: 300px; }
   .builder-preview canvas { width: 100%; height: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: white; cursor: crosshair; }
@@ -489,12 +488,12 @@
   </div>
 
   <!-- ============================================================ -->
-  <!--  👷 FORM BUILDER CARD (hidden by default, unlock with 7 taps) -->
+  <!--  🧱 FORM BUILDER CARD                                        -->
   <!-- ============================================================ -->
   <div class="builder-card noprint" id="builderCard">
-    <span class="method-tag">👷</span>
+    <span class="method-tag">🧱</span>
     <div class="card-header">
-      <div class="card-title"><span class="icon">👷</span> Form Builder</div>
+      <div class="card-title"><span class="icon">🧱</span> Form Builder</div>
       <span class="card-sub">design new templates · live preview · export code</span>
     </div>
 
@@ -784,11 +783,6 @@
     <div style="font-family:'DM Mono',monospace; font-size:13px; color:var(--text-dim);">
       Upload a PDF or paste its text above and tap <span style="color:var(--accent);">Parse PDF Report</span>.
     </div>
-  </div>
-
-  <!-- ===== 👷 TAP TARGET – bottom of page ===== -->
-  <div style="text-align:center; padding:16px 0 8px;">
-    <span id="brickTapTarget" style="font-size:32px; cursor:pointer; user-select:none; opacity:0.4;">👷</span>
   </div>
 
 </div>
@@ -1985,49 +1979,8 @@ atq_baggage: {
   const templateOffsets = {};
   let generatedData = {};
 
-  // ============================================================
-  //  FIXED: loadTemplateFromPath – actually loads the image
-  // ============================================================
   function loadTemplateFromPath(templateId) {
-    return new Promise((resolve) => {
-      const tpl = TEMPLATES[templateId];
-      if (!tpl) { resolve(); return; }
-      if (tpl.bgImageData) { resolve(); return; }
-
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        canvas.width = A4_W;
-        canvas.height = A4_H;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, A4_W, A4_H);
-        // Scale to fit A4 landscape (preserve aspect ratio)
-        const scaleX = A4_W / img.width;
-        const scaleY = A4_H / img.height;
-        const scale = Math.min(scaleX, scaleY);
-        const dw = img.width * scale;
-        const dh = img.height * scale;
-        const dx = (A4_W - dw) / 2;
-        const dy = (A4_H - dh) / 2;
-        ctx.drawImage(img, dx, dy, dw, dh);
-        tpl.bgImageData = ctx.getImageData(0, 0, A4_W, A4_H);
-        resolve();
-      };
-      img.onerror = function() {
-        // Fallback to white background
-        const canvas = document.createElement('canvas');
-        canvas.width = A4_W;
-        canvas.height = A4_H;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, A4_W, A4_H);
-        tpl.bgImageData = ctx.getImageData(0, 0, A4_W, A4_H);
-        resolve();
-      };
-      img.src = tpl.bgPath; // e.g., "templates/BOM_baggage.png"
-    });
+    return new Promise((resolve, reject) => {});
   }
 
   const PILOT_RANKS = ['CAPT','FO','SO','CDT','OBS'];
@@ -2046,7 +1999,7 @@ atq_baggage: {
     regenerateTemplate(tplId);
   }
 
-  // ===== MODIFIED: PIC drawn on EVERY page =====
+  // ===== Modified: generatePagesForTemplate with PIC support =====
   function generatePagesForTemplate(tpl, crew, offsets) {
     // ── PIC Top Page Logic ──
     let picCrewMember = null;
@@ -2058,13 +2011,16 @@ atq_baggage: {
         picCrewMember = captains[0];
         remainingCrew = crew.filter(c => c !== picCrewMember);
       } else if (captains.length > 1) {
+        // Check if user already selected a PIC (stored in state.picChoice)
         if (state.picChoice && captains.find(c => c.crewId === state.picChoice)) {
           picCrewMember = captains.find(c => c.crewId === state.picChoice);
           remainingCrew = crew.filter(c => c !== picCrewMember);
         } else {
+          // Need user to select – return a special flag
           return { needsPicSelection: true, captains: captains };
         }
       }
+      // If 0 captains, do nothing – no PIC to move.
     }
 
     const perPage = tpl.nameSlots.length;
@@ -2100,12 +2056,14 @@ atq_baggage: {
     const crewIdOffY = offsets.crewIdY || 0;
     const fontAdj = offsets.fontSizeAdj || 0;
 
-    function drawCrewMember(ctx, member, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber) {
+    // ---- Helper: draw a single crew member into a given slot set ----
+    function drawCrewMember(ctx, member, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber, tpl, offsets, fontAdj) {
       if (!member) return;
       const displayName = member.crewName || 'Unnamed';
       const displayRank = member.opRank || '';
       const displayCrewId = member.crewId || '';
 
+      // Name
       if (nameSlot) {
         ctx.save();
         ctx.textBaseline = 'top';
@@ -2125,6 +2083,7 @@ atq_baggage: {
         ctx.restore();
       }
 
+      // Rank
       if (rankSlot && displayRank) {
         ctx.save();
         ctx.textBaseline = 'top';
@@ -2144,6 +2103,7 @@ atq_baggage: {
         ctx.restore();
       }
 
+      // Number
       if (numberSlot) {
         const numText = String(pageNumber);
         ctx.save();
@@ -2163,6 +2123,7 @@ atq_baggage: {
         ctx.restore();
       }
 
+      // Crew ID
       if (crewIdSlot && displayCrewId) {
         ctx.save();
         ctx.textBaseline = 'top';
@@ -2183,6 +2144,7 @@ atq_baggage: {
       }
     }
 
+    // ---- Page generation ----
     pages.forEach((pageCrew, pageIndex) => {
       const canvas = document.createElement('canvas');
       canvas.width = A4_W;
@@ -2190,15 +2152,15 @@ atq_baggage: {
       const ctx = canvas.getContext('2d');
       ctx.putImageData(tpl.bgImageData, 0, 0);
 
-      // 👷 Draw PIC on EVERY page (if exists)
-      if (picCrewMember && tpl.picSlots) {
+      // If this is the first page and we have a PIC, draw PIC using picSlots
+      if (pageIndex === 0 && picCrewMember && tpl.picSlots) {
         const picNameSlot = tpl.picSlots.nameSlots ? tpl.picSlots.nameSlots[0] : null;
         const picRankSlot = tpl.picSlots.rankSlots ? tpl.picSlots.rankSlots[0] : null;
         const picCrewIdSlot = tpl.picSlots.crewIdSlots ? tpl.picSlots.crewIdSlots[0] : null;
-        drawCrewMember(ctx, picCrewMember, picNameSlot, picRankSlot, null, picCrewIdSlot, 1);
+        drawCrewMember(ctx, picCrewMember, picNameSlot, picRankSlot, null, picCrewIdSlot, 1, tpl, offsets, fontAdj);
       }
 
-      // Draw regular crew
+      // Draw regular crew (excluding PIC)
       pageCrew.forEach((crewMember, idx) => {
         if (!crewMember) return;
         const nameSlot = tpl.nameSlots[idx];
@@ -2206,12 +2168,15 @@ atq_baggage: {
         const numberSlot = tpl.numberSlots ? tpl.numberSlots[idx] : null;
         const crewIdSlot = tpl.crewIdSlots ? tpl.crewIdSlots[idx] : null;
         if (!nameSlot) return;
+
         const pageNumber = idx + 1;
+
         let displayName = crewMember.crewName || 'Unnamed';
         if (tpl.globalNumbering && !numberSlot) {
-          displayName = (pageIndex * perPage + idx + 1) + '. ' + displayName;
+          const globalIdx = (pageIndex * perPage) + idx + 1;
+          displayName = globalIdx + '. ' + displayName;
         }
-        drawCrewMember(ctx, crewMember, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber);
+        drawCrewMember(ctx, crewMember, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber, tpl, offsets, fontAdj);
       });
 
       canvases.push(canvas);
@@ -2440,6 +2405,7 @@ atq_baggage: {
 
     section.appendChild(group);
 
+    // ✅ FIX: replace existing in place instead of appendChild
     if (existing) {
       existing.parentNode.insertBefore(section, existing);
       existing.parentNode.removeChild(existing);
@@ -3197,50 +3163,6 @@ atq_baggage: {
   });
 
   // ===== End of Form Builder =====
-
-  // ============================================================
-  //  👷 BUILDER UNLOCK – 7 TAPS ON 👷
-  // ============================================================
-  (function() {
-    let tapCount = 0;
-    const TARGET_TAPS = 7;
-    const brickTarget = document.getElementById('brickTapTarget');
-    const builderCard = document.getElementById('builderCard');
-    let unlockTimer = null;
-
-    if (brickTarget) {
-      brickTarget.addEventListener('click', function(e) {
-        e.stopPropagation();
-
-        // If already unlocked, toggle visibility
-        if (builderCard.classList.contains('visible')) {
-          builderCard.classList.toggle('visible');
-          showToast(builderCard.classList.contains('visible') ? '👷 Builder shown' : '👷 Builder hidden', 'default');
-          return;
-        }
-
-        tapCount++;
-        const remaining = TARGET_TAPS - tapCount;
-
-        if (tapCount >= TARGET_TAPS) {
-          // UNLOCKED!
-          builderCard.classList.add('visible');
-          showToast('🔓 Developer tools unlocked! 👷', 'success');
-          tapCount = 0;
-          setTimeout(() => {
-            builderCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }, 300);
-        } else {
-          showToast(`👷 ${remaining} tap${remaining > 1 ? 's' : ''} remaining`, 'default');
-          clearTimeout(unlockTimer);
-          unlockTimer = setTimeout(() => {
-            tapCount = 0;
-            showToast('👷 Reset tap counter', 'default');
-          }, 5000);
-        }
-      });
-    }
-  })();
 
 })();
 </script>
