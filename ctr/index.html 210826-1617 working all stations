@@ -335,8 +335,7 @@
   @page { size: auto; margin: 8mm; }
 
   /* ── Builder Card styles ── */
-  .builder-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; padding-top: 28px; display: none; /* HIDDEN BY DEFAULT */ }
-  .builder-card.visible { display: block; } /* Show when unlocked */
+  .builder-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; padding-top: 28px; }
   .builder-layout { display: flex; gap: 20px; flex-wrap: wrap; }
   .builder-preview { flex: 2; min-width: 300px; }
   .builder-preview canvas { width: 100%; height: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: white; cursor: crosshair; }
@@ -389,8 +388,6 @@
     <div class="logo-area">
       <div class="logo">CTR<span>.</span></div>
       <div class="byline-badge">✈️ by 2100551</div>
-      <!-- 🧱 TAP TARGET (7 taps to unlock builder) -->
-      <span id="brickTapTarget" style="font-size:28px; cursor:pointer; user-select:none; display:inline-block; margin-top:4px;">🧱</span>
     </div>
     <div class="badge-group">
       <div class="badge">📄 PDF Parser</div>
@@ -491,7 +488,7 @@
   </div>
 
   <!-- ============================================================ -->
-  <!--  🧱 FORM BUILDER CARD (hidden by default, unlock with 7 taps) -->
+  <!--  🧱 FORM BUILDER CARD                                        -->
   <!-- ============================================================ -->
   <div class="builder-card noprint" id="builderCard">
     <span class="method-tag">🧱</span>
@@ -2002,7 +1999,7 @@ atq_baggage: {
     regenerateTemplate(tplId);
   }
 
-  // ===== MODIFIED: generatePagesForTemplate – PIC drawn on every page =====
+  // ===== Modified: generatePagesForTemplate with PIC support =====
   function generatePagesForTemplate(tpl, crew, offsets) {
     // ── PIC Top Page Logic ──
     let picCrewMember = null;
@@ -2155,8 +2152,8 @@ atq_baggage: {
       const ctx = canvas.getContext('2d');
       ctx.putImageData(tpl.bgImageData, 0, 0);
 
-      // 🔁 Draw PIC on EVERY page (if exists)
-      if (picCrewMember && tpl.picSlots) {
+      // If this is the first page and we have a PIC, draw PIC using picSlots
+      if (pageIndex === 0 && picCrewMember && tpl.picSlots) {
         const picNameSlot = tpl.picSlots.nameSlots ? tpl.picSlots.nameSlots[0] : null;
         const picRankSlot = tpl.picSlots.rankSlots ? tpl.picSlots.rankSlots[0] : null;
         const picCrewIdSlot = tpl.picSlots.crewIdSlots ? tpl.picSlots.crewIdSlots[0] : null;
@@ -3166,52 +3163,6 @@ atq_baggage: {
   });
 
   // ===== End of Form Builder =====
-
-  // ============================================================
-  //  🔓 BUILDER UNLOCK – 7 TAPS ON 🧱
-  // ============================================================
-  (function() {
-    let tapCount = 0;
-    const TARGET_TAPS = 7;
-    const brickTarget = document.getElementById('brickTapTarget');
-    const builderCard = document.getElementById('builderCard');
-    let unlockTimer = null;
-
-    if (brickTarget) {
-      brickTarget.addEventListener('click', function(e) {
-        e.stopPropagation();
-
-        // If already unlocked, toggle visibility
-        if (builderCard.classList.contains('visible')) {
-          builderCard.classList.toggle('visible');
-          showToast(builderCard.classList.contains('visible') ? '🧱 Builder shown' : '🧱 Builder hidden', 'default');
-          return;
-        }
-
-        tapCount++;
-        const remaining = TARGET_TAPS - tapCount;
-
-        if (tapCount >= TARGET_TAPS) {
-          // UNLOCKED!
-          builderCard.classList.add('visible');
-          showToast('🔓 Developer tools unlocked! 🧱', 'success');
-          tapCount = 0;  // Reset counter
-          // Scroll to builder card
-          setTimeout(() => {
-            builderCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }, 300);
-        } else {
-          showToast(`🧱 ${remaining} tap${remaining > 1 ? 's' : ''} remaining`, 'default');
-          // Reset counter if idle for 5 seconds
-          clearTimeout(unlockTimer);
-          unlockTimer = setTimeout(() => {
-            tapCount = 0;
-            showToast('🧱 Reset tap counter', 'default');
-          }, 5000);
-        }
-      });
-    }
-  })();
 
 })();
 </script>
