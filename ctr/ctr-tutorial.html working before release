@@ -239,12 +239,13 @@
 <div class="container">
 
   <h1>CTR<span>.</span> Autofill</h1>
-  <div class="subtitle">📖 Complete Tutorial – How to Use This Tool (v3.0)</div>
+  <div class="subtitle">📖 Complete Tutorial – How to Use This Tool</div>
 
   <!-- ===== SECTION 1: OVERVIEW ===== -->
   <h2>🔍 What Does This Tool Do?</h2>
   <p>
-    This tool helps you <strong>automatically fill crew forms</strong> for different destinations. You upload a PDF from the <strong>CrewTripReport</strong> system, and the tool:
+    This tool helps you <strong>automatically fill crew forms</strong> for different destinations (e.g., BOM, DEL, HYD).
+    You upload a PDF from the <strong>CrewTripReport</strong> system, and the tool:
   </p>
   <ul>
     <li>📋 <strong>Extracts</strong> all crew names, ranks, and IDs from the PDF.</li>
@@ -276,8 +277,7 @@
   <div class="step-card">
     <div><span class="step-number">3</span> <strong>Select your destination</strong></div>
     <p style="margin-top:6px; margin-bottom:0;">
-      From the dropdown, choose where you are flying to. Supported destinations:
-      <strong>BOM, DEL, HYD, BLR, AMD, ATQ</strong>.
+      From the dropdown, choose where you are flying to (e.g., <strong>BOM</strong> for Mumbai).
       This tells the tool which forms to generate.
     </p>
   </div>
@@ -287,7 +287,6 @@
     <p style="margin-top:6px; margin-bottom:0;">
       Click the <span class="button-demo btn-blue">⚡ Generate Forms</span> button.
       The tool will load the correct templates for your destination and place every crew member into the right slots.
-      <br><strong>Note:</strong> If a template has multiple Captains, you'll be prompted to select the <strong>Pilot In Charge (PIC)</strong> – the chosen Captain's name will appear on every page of that form.
     </p>
   </div>
 
@@ -328,11 +327,11 @@
     <tr><th>Button / Element</th><th>What It Does</th></tr>
     <tr>
       <td><strong>Destination dropdown</strong></td>
-      <td>Choose your destination (BOM, DEL, HYD, BLR, AMD, ATQ). This selects which forms to generate.</td>
+      <td>Choose your destination (BOM, DEL, HYD, etc.). This selects which forms to generate.</td>
     </tr>
     <tr>
       <td><span class="button-demo btn-blue">⚡ Generate Forms</span></td>
-      <td>Loads the templates for your destination and places all crew onto the forms. If multiple Captains exist, you'll be asked to choose the PIC.</td>
+      <td>Loads the templates for your destination and places all crew onto the forms.</td>
     </tr>
     <tr>
       <td><span class="button-demo btn-green">🖨️ Print A4 Sheets</span></td>
@@ -392,31 +391,6 @@
     <strong>✏️ Pro tip:</strong> You can also <strong>type</strong> a number directly into the box next to each slider for precise adjustments.
   </div>
 
-  <!-- ===== NEW: FORM BUILDER ===== -->
-  <h2>🧱 Hidden Developer Tools – Form Builder</h2>
-  <p>
-    The tool includes a <strong>Form Builder</strong> that lets you design your own templates. It is hidden by default – you unlock it by tapping the <span style="font-size:24px;">👷</span> emoji at the <strong>very bottom of the page</strong> <strong>7 times</strong>.
-  </p>
-  <ul>
-    <li>Each tap shows a toast message with remaining taps.</li>
-    <li>After the 7th tap, the <strong>Form Builder card</strong> appears.</li>
-    <li>You can upload a canvas (template background), define slot positions for Name, Rank, Number, Crew ID, and PIC slots, and export the code to use in the main app.</li>
-    <li>Your saved templates are stored locally in your browser.</li>
-  </ul>
-  <div class="note">
-    <strong>🔒 This is a developer feature</strong> – it's meant for advanced users who want to create new templates for destinations not yet supported.
-  </div>
-
-  <h3>Using the Form Builder</h3>
-  <ol>
-    <li><strong>Unlock it</strong> with 7 taps on the 👷 at the bottom.</li>
-    <li><strong>Upload a canvas</strong> – a PNG or JPG image of the blank form (A4 landscape recommended).</li>
-    <li><strong>Adjust slot parameters</strong> – each slot type (Name, Rank, etc.) has its own settings: start X/Y, rows, gap, width, height, and font size.</li>
-    <li><strong>Click on the canvas</strong> to set the Start X/Y for the selected slot type – the tool automatically uses the clicked coordinates.</li>
-    <li><strong>Enable PIC Top Page</strong> if you want a Captain to appear on every page.</li>
-    <li><strong>Save</strong> your template, then <strong>Export Code</strong> – copy the generated slot code and paste it into the main <code>TEMPLATES</code> object in <code>CTR.html</code>.</li>
-  </ol>
-
   <!-- ===== SECTION 4: PRINTING ===== -->
   <h2>🖨️ How to Print the Forms</h2>
 
@@ -446,7 +420,7 @@
     Generating forms involves:
   </p>
   <ul>
-    <li>🖼️ Loading background images (templates). If images are missing, the tool uses a <strong>white background</strong> as a fallback.</li>
+    <li>🖼️ Loading background images (templates).</li>
     <li>📝 Placing every crew member's name, rank, and ID into the correct slots.</li>
     <li>🔄 Rendering all pages as high‑quality images.</li>
   </ul>
@@ -462,13 +436,12 @@
     This tool is actively being improved.
   </p>
   <ul>
-    <li><strong>More destinations</strong> – we've already added HYD, BLR, AMD, ATQ on top of BOM and DEL.</li>
+    <li><strong>More destinations</strong> – like DEL, BLR, HYD, AMD, ATQ, etc.</li>
     <li><strong>More form types</strong> – for different Customs and Immigration requirements.</li>
     <li><strong>Saved settings</strong> – remember your fine‑tune adjustments.</li>
-    <li><strong>PIC selection</strong> – choose the Captain for top‑page placement.</li>
   </ul>
   <p>
-    I welcome every feedback, the tool will continue to improve based on your feedback. Don't hesitate to dm Alif or whatsapp call Fahrin.
+    I welcome every feedback, the tool will continue to improve based on your feedback. Don't hesitate to dm Alif or whatsapp call Fahrin
   </p>
 
   <!-- ===== SECTION 7: TROUBLESHOOTING ===== -->
@@ -484,20 +457,15 @@
     The destination you selected doesn't have any forms yet. Try selecting a different destination, or wait for a future update.
   </p>
 
-  <h3>❌ The forms look blank (white background)</h3>
+  <h3>❌ The forms look blank</h3>
   <p>
-    The background images may not have loaded. The tool automatically falls back to a <strong>white background</strong> so the text still appears – you can still use the forms, they'll just be blank paper.
-    To get the proper template background, ensure the <code>templates/</code> folder is in the same directory as <code>CTR.html</code> and that the images are named correctly (e.g., <code>BOM_baggage.png</code>).
+    The background images may not have loaded. Make sure you are connected to the internet (if the images are hosted online).<br>
+    <strong>Tip:</strong> If you are offline, ensure the <code>templates/</code> folder is in the same directory as <code>CTR.html</code>.
   </p>
 
   <h3>❌ Text is misaligned on the form</h3>
   <p>
     Use the <strong>fine‑tune sliders</strong> to adjust the text position. Each form has its own set of controls – adjust until it looks perfect.
-  </p>
-
-  <h3>❌ The builder won't show up</h3>
-  <p>
-    Make sure you tap the <span style="font-size:24px;">👷</span> emoji at the <strong>bottom of the page</strong> exactly <strong>7 times</strong> within 5 seconds (if you pause too long, the counter resets). After the 7th tap, the card will appear.
   </p>
 
   <!-- ===== SECTION 8: ABOUT ===== -->
