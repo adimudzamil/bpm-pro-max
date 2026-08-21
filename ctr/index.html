@@ -1850,7 +1850,37 @@
       nameSlots: generateSlots(33, 370, 14, 43, 300, 43, 14),
       rankSlots: generateSlots(333, 370, 14, 43, 105, 43, 14),
       globalNumbering: false
-    }
+    },
+    hyd_landing: {
+  id: 'hyd_landing',
+  label: 'HYD Landing',
+  destination: 'HYD',
+  bgPath: 'templates/HYD_landing.png',
+  bgImageData: null,
+  groupPilotsSeparately: true,
+  picTopPage: true,
+  // ── PIC SLOTS ──
+  picSlots: {
+    nameSlots: generateSlots(120, 260, 1, 0, 260, 30, 14),
+    rankSlots: null,
+    crewIdSlots: null
+  },
+  nameSlots: generateSlots(215, 506, 10, 38, 360, 35, 14),
+  rankSlots: generateSlots(105, 506, 10, 38, 110, 35, 14),
+  crewIdSlots: generateSlots(1182, 506, 10, 38, 110, 35, 14),
+  globalNumbering: false
+},
+hyd_baggage: {
+  id: 'hyd_baggage',
+  label: 'HYD Baggage',
+  destination: 'HYD',
+  bgPath: 'templates/HYD_baggage.png',
+  bgImageData: null,
+  groupPilotsSeparately: true,
+  nameSlots: generateSlots(70, 316, 15, 42, 312, 42, 14),
+  rankSlots: generateSlots(385, 316, 15, 42, 75, 42, 14),
+  globalNumbering: false
+}
   };
 
   const templateOffsets = {};
