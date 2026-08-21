@@ -1911,6 +1911,37 @@ blr_baggage: {
   nameSlots: generateSlots(110, 255, 14, 50, 280, 50, 14),
   rankSlots: generateSlots(390, 255, 14, 50,110, 50, 14),
   globalNumbering: false
+},
+amd_landing: {
+  id: 'amd_landing',
+  label: 'AMD Landing',
+  destination: 'AMD',
+  bgPath: 'templates/AMD_landing.png',
+  bgImageData: null,
+  groupPilotsSeparately: true,
+  picTopPage: true,
+  // ── PIC SLOTS ──
+  picSlots: {
+    nameSlots: generateSlots(220, 265, 1, 0, 180, 30, 14),
+    rankSlots: generateSlots(140, 265, 1, 0, 80, 30, 14),
+    crewIdSlots: null
+  },
+  nameSlots: generateSlots(310, 470, 9, 50, 300, 50, 14),
+  rankSlots: generateSlots(195, 470, 9, 50, 110, 50, 14),
+  numberSlots: generateSlots(115, 470, 9, 50, 75, 50, 14),
+  crewIdSlots: generateSlots(1150, 470, 9, 50, 105, 50, 14),
+  globalNumbering: false
+},
+amd_baggage: {
+  id: 'amd_baggage',
+  label: 'AMD Baggage',
+  destination: 'AMD',
+  bgPath: 'templates/AMD_baggage.png',
+  bgImageData: null,
+  groupPilotsSeparately: true,
+  nameSlots: generateSlots(110, 260, 14, 49, 280, 49, 14),
+  rankSlots: generateSlots(390, 260, 14, 49, 110, 49, 14),
+  globalNumbering: false
 }
   };
 
