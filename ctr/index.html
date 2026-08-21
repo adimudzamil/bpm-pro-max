@@ -563,7 +563,6 @@
                 <span class="toggle-icon">▼</span>
               </div>
               <div class="slot-controls open" id="normalNameControls">
-                <!-- Enable, Start X/Y, Rows, Gap, Width, Height, Font Size -->
                 <div class="param-row">
                   <label><input type="checkbox" id="normalNameEnabled" checked> Enable</label>
                   <label>Start X: <input type="number" id="normalNameX" value="83" min="0" max="1754"></label>
@@ -1831,11 +1830,10 @@
       groupPilotsSeparately: true,
       picTopPage: true,
       // ── PIC SLOTS ──
-      // 👇 EDIT THESE COORDINATES TO MATCH YOUR DESIGN
       picSlots: {
-    nameSlots: generateSlots(205, 220, 1, 0, 350, 30, 14),
-    rankSlots: generateSlots(125, 220, 1, 0, 80, 30, 14),
-    crewIdSlots: null
+        nameSlots: generateSlots(205, 220, 1, 0, 350, 30, 14),
+        rankSlots: generateSlots(125, 220, 1, 0, 80, 30, 14),
+        crewIdSlots: null
       },
       nameSlots: generateSlots(203, 424, 15, 36, 250, 36, 14),
       rankSlots: generateSlots(88, 424, 15, 36, 110, 36, 14),
@@ -1857,7 +1855,6 @@
 
   const templateOffsets = {};
   let generatedData = {};
-  const previewElements = {};
 
   function loadTemplateFromPath(templateId) {
     return new Promise((resolve, reject) => {
@@ -1963,7 +1960,7 @@
     const fontAdj = offsets.fontSizeAdj || 0;
 
     // ---- Helper: draw a single crew member into a given slot set ----
-    function drawCrewMember(ctx, member, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber) {
+    function drawCrewMember(ctx, member, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber, tpl, offsets, fontAdj) {
       if (!member) return;
       const displayName = member.crewName || 'Unnamed';
       const displayRank = member.opRank || '';
@@ -2063,7 +2060,7 @@
         const picNameSlot = tpl.picSlots.nameSlots ? tpl.picSlots.nameSlots[0] : null;
         const picRankSlot = tpl.picSlots.rankSlots ? tpl.picSlots.rankSlots[0] : null;
         const picCrewIdSlot = tpl.picSlots.crewIdSlots ? tpl.picSlots.crewIdSlots[0] : null;
-        drawCrewMember(ctx, picCrewMember, picNameSlot, picRankSlot, null, picCrewIdSlot, 1);
+        drawCrewMember(ctx, picCrewMember, picNameSlot, picRankSlot, null, picCrewIdSlot, 1, tpl, offsets, fontAdj);
       }
 
       // Draw regular crew (excluding PIC)
@@ -2075,16 +2072,14 @@
         const crewIdSlot = tpl.crewIdSlots ? tpl.crewIdSlots[idx] : null;
         if (!nameSlot) return;
 
-        // Page number (idx+1 per page)
         const pageNumber = idx + 1;
 
-        // If globalNumbering is true and no numberSlot, prepend global index to name
         let displayName = crewMember.crewName || 'Unnamed';
         if (tpl.globalNumbering && !numberSlot) {
           const globalIdx = (pageIndex * perPage) + idx + 1;
           displayName = globalIdx + '. ' + displayName;
         }
-        drawCrewMember(ctx, crewMember, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber);
+        drawCrewMember(ctx, crewMember, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber, tpl, offsets, fontAdj);
       });
 
       canvases.push(canvas);
@@ -2134,14 +2129,11 @@
       return;
     }
 
-    // We'll process templates one by one, handling PIC selection if needed.
-    // Use a loop with a flag to restart if needed.
     let allGenerated = false;
     while (!allGenerated) {
       allGenerated = true;
       generatedData = {};
       document.getElementById('templateSectionsContainer').innerHTML = '';
-      previewElements = {};
 
       for (const tpl of templates) {
         try {
@@ -2153,20 +2145,16 @@
           const result = generatePagesForTemplate(tpl, state.crew, offsets);
 
           if (result.needsPicSelection) {
-            // Need to select PIC
             allGenerated = false;
             const selected = await showPicModal(result.captains, tpl.id);
             if (selected) {
               state.picChoice = selected.crewId;
-              // Restart the whole process for this template (break out of loop)
               break;
             } else {
-              // User cancelled – skip this template
               showToast('PIC selection cancelled for ' + tpl.label, 'default');
               break;
             }
           } else {
-            // Normal case
             const canvases = result.canvases;
             generatedData[tpl.id] = { template: tpl, canvases };
             renderTemplateSection(tpl.id);
@@ -2176,10 +2164,7 @@
         }
       }
 
-      // If we broke out of the loop due to PIC selection, we need to restart the for loop.
-      // The while loop will handle this.
       if (!allGenerated) {
-        // Wait a tiny bit before restarting to let the modal close properly
         await new Promise(r => setTimeout(r, 100));
       }
     }
@@ -2188,14 +2173,14 @@
     showToast('Generated ' + Object.keys(generatedData).length + ' template(s) for ' + destination, 'success');
   });
 
-  // ===== renderTemplateSection: builds the section once =====
+  // ===== renderTemplateSection – FIXED to preserve order =====
   function renderTemplateSection(templateId) {
     const tpl = TEMPLATES[templateId];
     const data = generatedData[templateId];
     if (!data) return;
 
+    const container = document.getElementById('templateSectionsContainer');
     const existing = document.getElementById('section-' + templateId);
-    if (existing) existing.remove();
 
     const section = document.createElement('div');
     section.id = 'section-' + templateId;
@@ -2212,7 +2197,6 @@
 
     const preview = document.createElement('div');
     preview.className = 'template-preview-area';
-    preview.id = 'preview-' + templateId;
     data.canvases.forEach((cv, idx) => {
       const wrapper = document.createElement('div');
       wrapper.style.textAlign = 'center';
@@ -2233,20 +2217,14 @@
     });
     section.appendChild(preview);
 
-    // Store reference to preview container
-    previewElements[templateId] = preview;
-
-    // Add fine-tune group
     const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
     const group = document.createElement('div');
     group.className = 'fine-tune-group';
 
-    // Determine which sliders to show based on template
     const hasRankSlots = tpl.rankSlots && tpl.rankSlots.length > 0;
     const hasNumberSlots = tpl.numberSlots && tpl.numberSlots.length > 0;
     const hasCrewIdSlots = tpl.crewIdSlots && tpl.crewIdSlots.length > 0;
 
-    // Helper to create a slider + input pair
     function createSliderInputPair(label, key, min, max, value) {
       const wrapper = document.createElement('label');
       wrapper.textContent = label;
@@ -2268,14 +2246,12 @@
       input.step = 1;
       input.id = key + 'Val_' + templateId;
 
-      // Slider → Input
       slider.addEventListener('input', function() {
         const val = parseInt(this.value);
         input.value = val;
         updateOffset(templateId, key, val);
       });
 
-      // Input → Slider
       input.addEventListener('input', function() {
         let val = parseInt(this.value);
         if (isNaN(val)) return;
@@ -2293,7 +2269,6 @@
 
     const sliderConfigs = [];
 
-    // Always show Name X/Y
     sliderConfigs.push(
       { label: 'Name X', key: 'nameX', min: -50, max: 50, value: offsets.nameX },
       { label: 'Name Y', key: 'nameY', min: -50, max: 50, value: offsets.nameY }
@@ -2320,7 +2295,6 @@
       );
     }
 
-    // Always show Font Size
     sliderConfigs.push(
       { label: 'Font Size', key: 'fontSizeAdj', min: -10, max: 10, value: offsets.fontSizeAdj }
     );
@@ -2334,43 +2308,15 @@
 
     section.appendChild(group);
 
-    document.getElementById('templateSectionsContainer').appendChild(section);
+    // ✅ FIX: replace existing in place instead of appendChild
+    if (existing) {
+      existing.parentNode.insertBefore(section, existing);
+      existing.parentNode.removeChild(existing);
+    } else {
+      container.appendChild(section);
+    }
   }
 
-  // ===== updateTemplatePreview: updates only the images =====
-  function updateTemplatePreview(templateId) {
-    const tpl = TEMPLATES[templateId];
-    const data = generatedData[templateId];
-    if (!data) return;
-
-    const preview = previewElements[templateId];
-    if (!preview) return;
-
-    // Clear preview
-    preview.innerHTML = '';
-
-    // Rebuild images
-    data.canvases.forEach((cv, idx) => {
-      const wrapper = document.createElement('div');
-      wrapper.style.textAlign = 'center';
-      const label = document.createElement('div');
-      label.textContent = `Page ${idx+1}`;
-      label.style.fontSize = '11px';
-      label.style.color = 'var(--text-muted)';
-      label.style.fontFamily = "'DM Mono', monospace";
-      wrapper.appendChild(label);
-      const img = document.createElement('img');
-      img.src = cv.toDataURL('image/png');
-      img.style.maxWidth = '200px';
-      img.style.height = 'auto';
-      img.style.border = '1px solid var(--border)';
-      img.style.borderRadius = 'var(--radius-sm)';
-      wrapper.appendChild(img);
-      preview.appendChild(wrapper);
-    });
-  }
-
-  // ===== regenerateTemplate: update only preview =====
   function regenerateTemplate(templateId) {
     const tpl = TEMPLATES[templateId];
     if (!tpl || !tpl.bgImageData || !state || !state.crew) {
@@ -2384,11 +2330,7 @@
           }
           const canvases = result.canvases;
           generatedData[templateId] = { template: tpl, canvases };
-          if (previewElements[templateId]) {
-            updateTemplatePreview(templateId);
-          } else {
-            renderTemplateSection(templateId);
-          }
+          renderTemplateSection(templateId);
           updateGlobalDownloadVisibility();
         }).catch(err => {
           showToast('Failed to load background for ' + tpl.label + ': ' + err.message, 'error');
@@ -2404,11 +2346,7 @@
     }
     const canvases = result.canvases;
     generatedData[templateId] = { template: tpl, canvases };
-    if (previewElements[templateId]) {
-      updateTemplatePreview(templateId);
-    } else {
-      renderTemplateSection(templateId);
-    }
+    renderTemplateSection(templateId);
     updateGlobalDownloadVisibility();
   }
 
@@ -2516,7 +2454,6 @@
       });
       code += `],\n`;
     }
-    // Add picSlots if they exist
     if (tpl.picSlots) {
       code += `picSlots: {\n`;
       if (tpl.picSlots.nameSlots) {
@@ -2648,7 +2585,6 @@
   const builderStatus = document.getElementById('builderStatus');
   const builderPicEnable = document.getElementById('builderPicEnable');
 
-  // === Helper: get values from a slot config ===
   function getSlotValues(prefix) {
     return {
       enabled: document.getElementById(prefix + 'Enabled').checked,
@@ -2665,16 +2601,13 @@
     };
   }
 
-  // === Builder state ===
   let builderBgImageData = null;
 
-  // === Render preview ===
   function builderRenderPreview() {
     const canvas = builderCanvas;
     const ctx = builderCtx;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw background if loaded
     if (builderBgImageData) {
       ctx.putImageData(builderBgImageData, 0, 0);
     } else {
@@ -2686,7 +2619,6 @@
       ctx.fillText('Upload a canvas to begin', canvas.width/2, canvas.height/2);
     }
 
-    // Normal slots
     const normalTypes = ['Name', 'Rank', 'Number', 'CrewId'];
     const normalColors = { Name: '#2563eb', Rank: '#16a34a', Number: '#f59e0b', CrewId: '#8b5cf6' };
     normalTypes.forEach(type => {
@@ -2730,7 +2662,6 @@
       }
     });
 
-    // PIC slots if enabled
     if (builderPicEnable.checked) {
       const picTypes = ['Name', 'Rank', 'CrewId'];
       picTypes.forEach(type => {
@@ -2775,7 +2706,6 @@
     builderStatus.textContent = '✅ Preview updated. Click on canvas to set Start X/Y for selected slot type.';
   }
 
-  // === Click to set start position ===
   builderCanvas.addEventListener('click', function(e) {
     const rect = this.getBoundingClientRect();
     const scaleX = this.width / rect.width;
@@ -2795,17 +2725,14 @@
     builderStatus.textContent = `✅ Set ${section} ${slotType} Start X=${clampedX}, Y=${clampedY}`;
   });
 
-  // === Apply & Preview button ===
   document.getElementById('builderApplyBtn').addEventListener('click', builderRenderPreview);
 
-  // === Toggle PIC section visibility ===
   builderPicEnable.addEventListener('change', function() {
     const picSection = document.getElementById('picSection');
     picSection.style.display = this.checked ? 'block' : 'none';
     builderRenderPreview();
   });
 
-  // === Section toggle function ===
   window.toggleSection = function(sectionId) {
     const section = document.getElementById(sectionId);
     const controls = section.querySelector('.slot-controls');
@@ -2816,7 +2743,6 @@
     }
   };
 
-  // === Load canvas ===
   builderFileInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -2847,7 +2773,6 @@
     reader.readAsDataURL(file);
   });
 
-  // === Save template to localStorage (enhanced) ===
   function builderSaveTemplate() {
     const name = builderTemplateName.value.trim();
     if (!name) {
@@ -2858,12 +2783,10 @@
       name: name,
       destination: builderDestination.value,
       picEnabled: builderPicEnable.checked,
-      // Normal slots
       normalName: getSlotValues('normalName'),
       normalRank: getSlotValues('normalRank'),
       normalNumber: getSlotValues('normalNumber'),
       normalCrewId: getSlotValues('normalCrewId'),
-      // PIC slots (only if enabled)
       picName: builderPicEnable.checked ? getSlotValues('picName') : null,
       picRank: builderPicEnable.checked ? getSlotValues('picRank') : null,
       picCrewId: builderPicEnable.checked ? getSlotValues('picCrewId') : null
@@ -2877,7 +2800,6 @@
 
   document.getElementById('builderSaveBtn').addEventListener('click', builderSaveTemplate);
 
-  // === Load saved templates list ===
   function builderLoadSavedList() {
     const saved = JSON.parse(localStorage.getItem('ctr_builder_configs') || '{}');
     const names = Object.keys(saved);
@@ -2899,7 +2821,6 @@
     });
   }
 
-  // Global functions for onclick
   window.builderLoadTemplate = function(name) {
     const saved = JSON.parse(localStorage.getItem('ctr_builder_configs') || '{}');
     const config = saved[name];
@@ -2907,13 +2828,11 @@
       showToast('Template not found.', 'error');
       return;
     }
-    // Set template name and destination
     builderTemplateName.value = name;
     builderDestination.value = config.destination || 'BOM';
     builderPicEnable.checked = config.picEnabled || false;
     document.getElementById('picSection').style.display = builderPicEnable.checked ? 'block' : 'none';
 
-    // Restore normal slots
     const normalTypes = ['Name', 'Rank', 'Number', 'CrewId'];
     normalTypes.forEach(type => {
       const prefix = 'normal' + type;
@@ -2930,14 +2849,12 @@
         document.getElementById(prefix + 'FineX').value = data.fineX || 0;
         document.getElementById(prefix + 'FineY').value = data.fineY || 0;
         document.getElementById(prefix + 'FineFontSize').value = data.fineFontSize || 0;
-        // Sync slider values
         document.getElementById(prefix + 'FineXVal').value = data.fineX || 0;
         document.getElementById(prefix + 'FineYVal').value = data.fineY || 0;
         document.getElementById(prefix + 'FineFontSizeVal').value = data.fineFontSize || 0;
       }
     });
 
-    // Restore PIC slots if enabled
     if (builderPicEnable.checked) {
       const picTypes = ['Name', 'Rank', 'CrewId'];
       picTypes.forEach(type => {
@@ -2977,7 +2894,6 @@
 
   document.getElementById('builderLoadSavedBtn').addEventListener('click', builderLoadSavedList);
 
-  // === Delete current (clear builder) ===
   document.getElementById('builderDeleteBtn').addEventListener('click', function() {
     if (!confirm('Clear the builder state?')) return;
     builderBgImageData = null;
@@ -2986,13 +2902,11 @@
     document.getElementById('builderOutput').value = '';
   });
 
-  // === Export Code (enhanced) ===
   document.getElementById('builderExportBtn').addEventListener('click', function() {
     const name = builderTemplateName.value.trim() || 'template';
     const destination = builderDestination.value;
     const picEnabled = builderPicEnable.checked;
 
-    // Helper: generate slots from config
     function generateSlotsFromConfig(prefix) {
       const config = getSlotValues(prefix);
       if (!config.enabled) return null;
@@ -3100,7 +3014,6 @@
     showToast('Code generated!', 'success');
   });
 
-  // === Copy output ===
   document.getElementById('builderCopyBtn').addEventListener('click', function() {
     const text = document.getElementById('builderOutput').value;
     if (!text) {
@@ -3116,7 +3029,6 @@
     });
   });
 
-  // === Auto‑populate template name ===
   builderDestination.addEventListener('change', function() {
     const dest = this.value;
     if (!builderTemplateName.value) {
@@ -3124,10 +3036,8 @@
     }
   });
 
-  // === Init: load saved list ===
   builderLoadSavedList();
 
-  // === Auto‑apply on any input change (debounced) ===
   let builderDebounce;
   const allBuilderInputs = document.querySelectorAll('#builderControls input[type="number"], #builderControls input[type="checkbox"], #builderControls input[type="range"]');
   allBuilderInputs.forEach(inp => {
@@ -3143,7 +3053,6 @@
     });
   });
 
-  // === Sync slider values with number inputs ===
   document.querySelectorAll('.fine-tune-sliders input[type="range"]').forEach(slider => {
     const valInput = slider.parentElement.querySelector('input[type="number"]');
     if (valInput) {
