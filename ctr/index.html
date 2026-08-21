@@ -1880,6 +1880,37 @@ hyd_baggage: {
   nameSlots: generateSlots(70, 316, 15, 42, 312, 42, 14),
   rankSlots: generateSlots(385, 316, 15, 42, 75, 42, 14),
   globalNumbering: false
+},
+blr_landing: {
+  id: 'blr_landing',
+  label: 'BLR Landing',
+  destination: 'BLR',
+  bgPath: 'templates/BLR_landing.png',
+  bgImageData: null,
+  groupPilotsSeparately: true,
+  picTopPage: true,
+  // ── PIC SLOTS ──
+  picSlots: {
+    nameSlots: generateSlots(310, 260, 1, 0, 180, 30, 14),
+    rankSlots: generateSlots(125, 222, 1, 0, 80, 30, 14),
+    crewIdSlots: null
+  },
+  nameSlots: generateSlots(390, 470, 9, 49, 300, 49, 14),
+  rankSlots: generateSlots(275, 470, 9, 49, 110, 49, 14),
+  numberSlots: generateSlots(200, 470, 9, 49, 75, 49, 14),
+  crewIdSlots: generateSlots(1220, 470, 9, 49, 110, 49, 14),
+  globalNumbering: false
+},
+blr_baggage: {
+  id: 'blr_baggage',
+  label: 'BLR Baggage',
+  destination: 'BLR',
+  bgPath: 'templates/BLR_baggage.png',
+  bgImageData: null,
+  groupPilotsSeparately: true,
+  nameSlots: generateSlots(110, 255, 14, 50, 280, 50, 14),
+  rankSlots: generateSlots(390, 3255, 14, 50,110, 50, 14),
+  globalNumbering: false
 }
   };
 
