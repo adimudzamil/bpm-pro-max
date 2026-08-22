@@ -378,19 +378,6 @@
   .slot-section .slot-controls .param-row .fine-tune-sliders label { font-size: 11px; display: flex; align-items: center; gap: 4px; }
   .slot-section .slot-controls .param-row .fine-tune-sliders input[type="range"] { width: 80px; accent-color: var(--accent); }
   .slot-section .slot-controls .param-row .fine-tune-sliders input[type="number"] { width: 45px; padding: 2px 4px; font-size: 11px; }
-
-  /* ── FILTER MODAL (new) ── */
-  #filterModalOverlay .modal-box { max-width: 90%; width: 900px; max-height: 90vh; display: flex; flex-direction: column; }
-  #filterModalOverlay .modal-scroll { overflow: auto; flex: 1; margin: 8px 0 16px; }
-  #filterModalOverlay table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  #filterModalOverlay th { background: var(--surface2); position: sticky; top: 0; z-index: 2; padding: 6px 8px; border-bottom: 2px solid var(--border); text-align: center; font-weight: 600; }
-  #filterModalOverlay td { padding: 4px 6px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
-  #filterModalOverlay .crew-cell { text-align: left; font-weight: 500; }
-  #filterModalOverlay .rank-cell, #filterModalOverlay .id-cell { color: var(--text-muted); font-size: 12px; }
-  #filterModalOverlay input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
-  #filterModalOverlay .template-header-checkbox { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; font-weight: 400; color: var(--text-muted); }
-  #filterModalOverlay .template-header-checkbox input { width: 18px; height: 18px; }
-  .filter-actions { display: flex; gap: 12px; justify-content: flex-end; padding-top: 12px; border-top: 1px solid var(--border); }
 </style>
 </head>
 <body>
@@ -421,7 +408,7 @@
       <ul style="margin-left:20px; font-family:'DM Mono',monospace; font-size:13px; color:var(--text-muted);">
         <li>1. <strong>Choose File, Upload a PDF</strong>, or "Parse PDF Report". Check PC download folder after clicking crewtripreport, the latest one should be yours. Check the crewtripreport or edit it before printing.</li>
         <li>2. For IND forms, Select your destination (e.g., BOM) from the dropdown after uploading crewtripreport pdf</li>
-        <li>3. Click <strong>"Generate Forms"</strong> – a filter will appear to select which crew members appear in each template</li>
+        <li>3. Click <strong>"Generate Forms"</strong> – all templates for that destination will load</li>
         <li>4. Fine‑tune each form individually using its sliders or type values directly</li>
         <li>5. Print each form separately, or download all as PNG/PDF</li>
       </ul>
@@ -885,24 +872,6 @@
     <div class="modal-sub" id="picModalSub">Choose the Captain for top page placement</div>
     <div class="pic-grid" id="picGrid"></div>
     <button class="secondary-btn" id="picModalCloseBtn">Cancel</button>
-  </div>
-</div>
-
-<!-- ===== FILTER MODAL (new) ===== -->
-<div class="modal-overlay" id="filterModalOverlay">
-  <div class="modal-box">
-    <div class="modal-title">✏️ Select Crew to Include per Template</div>
-    <div class="modal-sub">Uncheck a name to remove them from that form. All names are included by default.</div>
-    <div class="modal-scroll" id="filterModalScroll">
-      <table id="filterTable">
-        <thead id="filterTableHead"></thead>
-        <tbody id="filterTableBody"></tbody>
-      </table>
-    </div>
-    <div class="filter-actions">
-      <button class="btn-secondary" id="filterCancelBtn">Cancel</button>
-      <button class="btn-primary" id="filterGenerateBtn">✅ Generate Forms</button>
-    </div>
   </div>
 </div>
 
@@ -2017,101 +1986,6 @@ atq_baggage: {
   let generatedData = {};
 
   // ============================================================
-  //  FILTER MODAL LOGIC (new)
-  // ============================================================
-  let filterState = {}; // templateId → Set(crewId)
-
-  function buildFilterModal(templates) {
-    const head = document.getElementById('filterTableHead');
-    const body = document.getElementById('filterTableBody');
-    head.innerHTML = '';
-    body.innerHTML = '';
-
-    if (!state || !state.crew || state.crew.length === 0) {
-      head.innerHTML = '<tr><th>No crew data</th></tr>';
-      return;
-    }
-
-    // Build column headers: Crew, Rank, ID, then one column per template
-    let headerRow = document.createElement('tr');
-    headerRow.innerHTML = `<th style="text-align:left;">Crew</th><th>Rank</th><th>ID</th>`;
-    templates.forEach(tpl => {
-      const th = document.createElement('th');
-      th.innerHTML = `<div class="template-header-checkbox">
-        <input type="checkbox" class="filter-select-all" data-tplid="${tpl.id}" checked>
-        <span>${tpl.label}</span>
-      </div>`;
-      headerRow.appendChild(th);
-    });
-    head.appendChild(headerRow);
-
-    // For each crew member, create a row
-    state.crew.forEach(crew => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="crew-cell">${esc(crew.crewName)}</td>
-        <td class="rank-cell">${esc(crew.opRank)}</td>
-        <td class="id-cell">${esc(crew.crewId)}</td>
-      `;
-      templates.forEach(tpl => {
-        const td = document.createElement('td');
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.className = 'filter-crew-check';
-        cb.dataset.crewId = crew.crewId;
-        cb.dataset.tplId = tpl.id;
-        cb.checked = true; // default included
-        // Store initial state
-        if (!filterState[tpl.id]) filterState[tpl.id] = new Set();
-        filterState[tpl.id].add(crew.crewId);
-        td.appendChild(cb);
-        tr.appendChild(td);
-      });
-      body.appendChild(tr);
-    });
-
-    // Attach select-all listeners
-    document.querySelectorAll('.filter-select-all').forEach(cb => {
-      cb.addEventListener('change', function() {
-        const tplId = this.dataset.tplid;
-        const checked = this.checked;
-        document.querySelectorAll(`.filter-crew-check[data-tplid="${tplId}"]`).forEach(chk => {
-          chk.checked = checked;
-          // Update filterState
-          const crewId = chk.dataset.crewId;
-          if (checked) {
-            if (!filterState[tplId]) filterState[tplId] = new Set();
-            filterState[tplId].add(crewId);
-          } else {
-            if (filterState[tplId]) filterState[tplId].delete(crewId);
-          }
-        });
-      });
-    });
-
-    // Attach individual checkbox listeners
-    document.querySelectorAll('.filter-crew-check').forEach(chk => {
-      chk.addEventListener('change', function() {
-        const tplId = this.dataset.tplId;
-        const crewId = this.dataset.crewId;
-        if (this.checked) {
-          if (!filterState[tplId]) filterState[tplId] = new Set();
-          filterState[tplId].add(crewId);
-        } else {
-          if (filterState[tplId]) filterState[tplId].delete(crewId);
-        }
-        // Update "select all" state for this template
-        const allCbs = document.querySelectorAll(`.filter-crew-check[data-tplid="${tplId}"]`);
-        const allChecked = Array.from(allCbs).every(c => c.checked);
-        const selectAll = document.querySelector(`.filter-select-all[data-tplid="${tplId}"]`);
-        if (selectAll) selectAll.checked = allChecked;
-      });
-    });
-
-    document.getElementById('filterModalOverlay').style.display = 'flex';
-  }
-
-  // ============================================================
   //  FIXED: loadTemplateFromPath – actually loads the image
   // ============================================================
   function loadTemplateFromPath(templateId) {
@@ -2373,7 +2247,7 @@ atq_baggage: {
     });
   }
 
-  // ===== Modified: generateFormsBtn handler – now shows filter modal =====
+  // ===== Modified: generateFormsBtn handler =====
   document.getElementById('generateFormsBtn').addEventListener('click', async function() {
     if (!state || !state.crew || state.crew.length === 0) {
       showToast('Please parse a PDF first.', 'error');
@@ -2387,82 +2261,48 @@ atq_baggage: {
       return;
     }
 
-    // Reset filter state
-    filterState = {};
-    templates.forEach(tpl => {
-      filterState[tpl.id] = new Set(state.crew.map(c => c.crewId));
-    });
+    let allGenerated = false;
+    while (!allGenerated) {
+      allGenerated = true;
+      generatedData = {};
+      document.getElementById('templateSectionsContainer').innerHTML = '';
 
-    // Show filter modal
-    buildFilterModal(templates);
+      for (const tpl of templates) {
+        try {
+          await loadTemplateFromPath(tpl.id);
+          if (!templateOffsets[tpl.id]) {
+            templateOffsets[tpl.id] = { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
+          }
+          const offsets = templateOffsets[tpl.id];
+          const result = generatePagesForTemplate(tpl, state.crew, offsets);
 
-    // Wait for user to click Generate or Cancel (handled by event listeners below)
-  });
-
-  // Filter modal button handlers
-  document.getElementById('filterGenerateBtn').addEventListener('click', async function() {
-    const destination = document.getElementById('destinationSelect').value;
-    const templates = Object.values(TEMPLATES).filter(t => t.destination === destination);
-    document.getElementById('filterModalOverlay').style.display = 'none';
-
-    // Build filtered crew per template
-    let allGenerated = true;
-    generatedData = {};
-    document.getElementById('templateSectionsContainer').innerHTML = '';
-
-    for (const tpl of templates) {
-      try {
-        await loadTemplateFromPath(tpl.id);
-        if (!templateOffsets[tpl.id]) {
-          templateOffsets[tpl.id] = { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
-        }
-        const offsets = templateOffsets[tpl.id];
-        // Get included crew IDs from filterState
-        const includedIds = filterState[tpl.id] || new Set();
-        const filteredCrew = state.crew.filter(c => includedIds.has(c.crewId));
-
-        const result = generatePagesForTemplate(tpl, filteredCrew, offsets);
-
-        if (result.needsPicSelection) {
-          allGenerated = false;
-          const selected = await showPicModal(result.captains, tpl.id);
-          if (selected) {
-            state.picChoice = selected.crewId;
-            // Retry generation for this template
-            const retryResult = generatePagesForTemplate(tpl, filteredCrew, offsets);
-            if (!retryResult.needsPicSelection) {
-              generatedData[tpl.id] = { template: tpl, canvases: retryResult.canvases, filteredCrew: filteredCrew };
-              renderTemplateSection(tpl.id);
+          if (result.needsPicSelection) {
+            allGenerated = false;
+            const selected = await showPicModal(result.captains, tpl.id);
+            if (selected) {
+              state.picChoice = selected.crewId;
+              break;
             } else {
-              showToast('PIC selection failed for ' + tpl.label, 'error');
+              showToast('PIC selection cancelled for ' + tpl.label, 'default');
+              break;
             }
           } else {
-            showToast('PIC selection cancelled for ' + tpl.label, 'default');
+            const canvases = result.canvases;
+            generatedData[tpl.id] = { template: tpl, canvases };
+            renderTemplateSection(tpl.id);
           }
-        } else {
-          generatedData[tpl.id] = { template: tpl, canvases: result.canvases, filteredCrew: filteredCrew };
-          renderTemplateSection(tpl.id);
+        } catch (err) {
+          showToast('Failed to load ' + tpl.label + ': ' + err.message, 'error');
         }
-      } catch (err) {
-        showToast('Failed to load ' + tpl.label + ': ' + err.message, 'error');
+      }
+
+      if (!allGenerated) {
+        await new Promise(r => setTimeout(r, 100));
       }
     }
 
     updateGlobalDownloadVisibility();
     showToast('Generated ' + Object.keys(generatedData).length + ' template(s) for ' + destination, 'success');
-  });
-
-  document.getElementById('filterCancelBtn').addEventListener('click', function() {
-    document.getElementById('filterModalOverlay').style.display = 'none';
-    showToast('Generation cancelled.', 'default');
-  });
-
-  // Close filter modal on overlay click
-  document.getElementById('filterModalOverlay').addEventListener('click', function(e) {
-    if (e.target === this) {
-      this.style.display = 'none';
-      showToast('Generation cancelled.', 'default');
-    }
   });
 
   // ===== renderTemplateSection – FIXED to preserve order =====
@@ -2614,16 +2454,13 @@ atq_baggage: {
       if (tpl && !tpl.bgImageData) {
         loadTemplateFromPath(templateId).then(() => {
           const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
-          // Use filtered crew from stored data
-          const data = generatedData[templateId];
-          const filteredCrew = data ? data.filteredCrew : state.crew;
-          const result = generatePagesForTemplate(tpl, filteredCrew, offsets);
+          const result = generatePagesForTemplate(tpl, state.crew, offsets);
           if (result.needsPicSelection) {
             showToast('Please select PIC first via Generate Forms.', 'error');
             return;
           }
           const canvases = result.canvases;
-          generatedData[templateId] = { template: tpl, canvases, filteredCrew };
+          generatedData[templateId] = { template: tpl, canvases };
           renderTemplateSection(templateId);
           updateGlobalDownloadVisibility();
         }).catch(err => {
@@ -2633,15 +2470,13 @@ atq_baggage: {
       return;
     }
     const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
-    const data = generatedData[templateId];
-    const filteredCrew = data ? data.filteredCrew : state.crew;
-    const result = generatePagesForTemplate(tpl, filteredCrew, offsets);
+    const result = generatePagesForTemplate(tpl, state.crew, offsets);
     if (result.needsPicSelection) {
       showToast('Please select PIC first via Generate Forms.', 'error');
       return;
     }
     const canvases = result.canvases;
-    generatedData[templateId] = { template: tpl, canvases, filteredCrew };
+    generatedData[templateId] = { template: tpl, canvases };
     renderTemplateSection(templateId);
     updateGlobalDownloadVisibility();
   }
