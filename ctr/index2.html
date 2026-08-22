@@ -409,7 +409,7 @@
       <div class="badge">📄 PDF Parser</div>
       <div class="badge">📊 Gendec XLSX</div>
       <div class="badge">🔒 Offline</div>
-      <div class="badge accent">v3.1</div>
+      <div class="badge accent">v3.2</div>
     </div>
   </header>
 
@@ -2014,58 +2014,103 @@
     reader.readAsArrayBuffer(file);
   });
 
-  // ===== Gendec Parser (NEW) =====
+  // ============================================================
+  //  GENDEC PARSER (FIXED – header row detection)
+  // ============================================================
 
   function parseGendecXLSX(data) {
     try {
       const workbook = XLSX.read(data, { type: 'array' });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
-      if (!json || json.length === 0) {
+      // Read as array of arrays (rows)
+      const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+      if (!rows || rows.length === 0) {
         throw new Error('No data rows found in the Gendec file.');
       }
 
-      // Locate columns by header name (case-insensitive, trimmed)
-      const headers = Object.keys(json[0]).map(h => h.trim());
-      const findCol = (names) => {
-        const lowerNames = names.map(n => n.toLowerCase());
-        for (let h of headers) {
-          const lowerH = h.toLowerCase();
-          if (lowerNames.some(n => lowerH.includes(n))) return h;
+      // ---- Step 1: Find the header row ----
+      let headerRowIndex = -1;
+      let headerRow = null;
+      const headerKeywords = ['name', 'staff number', 'staff no', 'crew id', 'employee number', 'passport', 'expiry', 'nat', 'nationality'];
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || row.length === 0) continue;
+        // Check if this row contains at least two of the keywords (case-insensitive)
+        const rowText = row.map(cell => String(cell).toLowerCase()).join(' ');
+        const matches = headerKeywords.filter(kw => rowText.includes(kw));
+        // We require at least 'staff number' or 'staff no' or 'crew id' to be present
+        const hasStaff = rowText.includes('staff number') || rowText.includes('staff no') || rowText.includes('crew id') || rowText.includes('employee number');
+        if (hasStaff && matches.length >= 2) {
+          headerRowIndex = i;
+          headerRow = row;
+          break;
         }
-        // fallback: try exact match
-        for (let h of headers) {
-          if (names.some(n => h === n)) return h;
+      }
+
+      // Fallback: if not found, try to find a row that has at least 3 keywords
+      if (headerRowIndex === -1) {
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          if (!row || row.length === 0) continue;
+          const rowText = row.map(cell => String(cell).toLowerCase()).join(' ');
+          const matches = headerKeywords.filter(kw => rowText.includes(kw));
+          if (matches.length >= 3) {
+            headerRowIndex = i;
+            headerRow = row;
+            break;
+          }
         }
-        return null;
+      }
+
+      if (headerRowIndex === -1 || !headerRow) {
+        throw new Error('Could not find the header row containing column names (e.g., "STAFF NUMBER", "PASSPORT NO", "NAT").');
+      }
+
+      // ---- Step 2: Map column indices ----
+      const findColIndex = (names) => {
+        for (let i = 0; i < headerRow.length; i++) {
+          const cell = String(headerRow[i] || '').trim();
+          const lower = cell.toLowerCase();
+          for (let name of names) {
+            if (lower.includes(name.toLowerCase())) return i;
+          }
+        }
+        return -1;
       };
 
-      const nameCol = findCol(['NAME', 'CREW NAME', 'PASSENGER NAME']);
-      const staffCol = findCol(['STAFF NUMBER', 'STAFF NO', 'CREW ID', 'EMPLOYEE NUMBER']);
-      const passportCol = findCol(['PASSPORT NO', 'PASSPORT NUMBER', 'PASSPORT']);
-      const expiryCol = findCol(['PASSPORT EXPIRY', 'EXPIRY DATE', 'EXPIRY']);
-      const natCol = findCol(['NAT', 'NATIONALITY']);
+      const nameCol = findColIndex(['name']);
+      const staffCol = findColIndex(['staff number', 'staff no', 'crew id', 'employee number']);
+      const passportCol = findColIndex(['passport']);
+      const expiryCol = findColIndex(['expiry']);
+      const natCol = findColIndex(['nat', 'nationality']);
 
-      if (!staffCol) {
-        throw new Error('Could not find "STAFF NUMBER" column in the Gendec file.');
+      if (staffCol === -1) {
+        throw new Error('Could not find "STAFF NUMBER" column in the header row.');
       }
-      if (!passportCol && !expiryCol && !natCol) {
+      if (passportCol === -1 && expiryCol === -1 && natCol === -1) {
         throw new Error('Could not find any of the expected columns: PASSPORT NO, PASSPORT EXPIRY, NAT');
       }
 
+      // ---- Step 3: Parse data rows ----
       const map = {};
-      const rows = [];
-      json.forEach((row, idx) => {
+      const rowsData = [];
+      for (let i = headerRowIndex + 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || row.length === 0) continue;
         const staffNo = String(row[staffCol] || '').trim();
-        const name = String(row[nameCol] || '').trim();
-        const passport = String(row[passportCol] || '').trim();
-        const expiryRaw = String(row[expiryCol] || '').trim();
-        const nationality = String(row[natCol] || '').trim();
+        const name = nameCol !== -1 ? String(row[nameCol] || '').trim() : '';
+        const passport = passportCol !== -1 ? String(row[passportCol] || '').trim() : '';
+        const expiryRaw = expiryCol !== -1 ? String(row[expiryCol] || '').trim() : '';
+        const nationality = natCol !== -1 ? String(row[natCol] || '').trim() : '';
 
-        // Format expiry: "2030-02-07 00:00:00" -> "07 FEB 2030"
+        // Skip rows with no staff number and no name
+        if (!staffNo && !name) continue;
+
+        // Format expiry
         let expiryFormatted = expiryRaw;
         if (expiryRaw) {
-          // Try to parse as date
           const d = new Date(expiryRaw);
           if (!isNaN(d)) {
             const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
@@ -2077,24 +2122,18 @@
         }
 
         if (staffNo) {
-          map[staffNo] = {
-            passport: passport,
-            expiry: expiryFormatted,
-            nationality: nationality
-          };
+          map[staffNo] = { passport, expiry: expiryFormatted, nationality };
         } else if (name) {
-          // Store by name as fallback
-          map['name_'+name] = {
-            passport: passport,
-            expiry: expiryFormatted,
-            nationality: nationality,
-            _name: name
-          };
+          map['name_' + name] = { passport, expiry: expiryFormatted, nationality, _name: name };
         }
-        rows.push({ staffNo, name, passport, expiry: expiryFormatted, nationality });
-      });
+        rowsData.push({ staffNo, name, passport, expiry: expiryFormatted, nationality });
+      }
 
-      return { map, rows };
+      if (Object.keys(map).length === 0) {
+        throw new Error('No valid crew data rows found after the header row.');
+      }
+
+      return { map, rows: rowsData };
     } catch (e) {
       throw new Error('Error parsing Gendec: ' + e.message);
     }
@@ -2172,8 +2211,6 @@
         // Merge if state exists
         if (state && state.crew) {
           mergeGendecData();
-          // Rebuild report to reflect new data (but report doesn't show these fields)
-          // Actually we need to update the crew objects and rebuild the report to keep state consistent
           buildReport(); // rebuild to show updated crew (though report doesn't display new fields)
           showToast('Gendec parsed and merged!', 'success');
         } else {
