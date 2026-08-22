@@ -6,7 +6,6 @@
 <title>CTR Autofill</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<!-- SheetJS for XLSX parsing -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   /* ── Reset & Variables – Light Theme ── */
@@ -409,7 +408,7 @@
       <div class="badge">📄 PDF Parser</div>
       <div class="badge">📊 Gendec XLSX</div>
       <div class="badge">🔒 Offline</div>
-      <div class="badge accent">v3.2</div>
+      <div class="badge accent">v3.3</div>
     </div>
   </header>
 
@@ -1109,8 +1108,7 @@
 <script>
 // ============================================================
 //  FULL ORIGINAL PARSER + INTERNAL REPORT (with all modals)
-//  Only colors and fonts changed; iFlight removed.
-//  Added Gendec parser and new slot types.
+//  Added improved Gendec parser with scoring and robust header detection.
 // ============================================================
 (function(){
   "use strict";
@@ -2015,100 +2013,124 @@
   });
 
   // ============================================================
-  //  GENDEC PARSER (FIXED – header row detection)
+  //  GENDEC PARSER – Improved with scoring and robust header detection
   // ============================================================
 
   function parseGendecXLSX(data) {
     try {
       const workbook = XLSX.read(data, { type: 'array' });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      // Read as array of arrays (rows)
       const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
 
       if (!rows || rows.length === 0) {
         throw new Error('No data rows found in the Gendec file.');
       }
 
-      // ---- Step 1: Find the header row ----
-      let headerRowIndex = -1;
-      let headerRow = null;
-      const headerKeywords = ['name', 'staff number', 'staff no', 'crew id', 'employee number', 'passport', 'expiry', 'nat', 'nationality'];
+      // ---- Keyword groups ----
+      const staffKeywords = ['staff number', 'staff no', 'crew id', 'employee number'];
+      const passportKeywords = ['passport'];
+      const expiryKeywords = ['expiry'];
+      const natKeywords = ['nat', 'nationality'];
+      const nameKeywords = ['name'];
+
+      // ---- Score each row ----
+      function rowScore(row) {
+        const rowStr = row.map(cell => String(cell).toLowerCase()).join(' ');
+        let score = 0;
+        let hasStaff = false;
+        let hasPassport = false;
+        let hasExpiry = false;
+        let hasNat = false;
+
+        if (staffKeywords.some(kw => rowStr.includes(kw))) { hasStaff = true; score++; }
+        if (passportKeywords.some(kw => rowStr.includes(kw))) { hasPassport = true; score++; }
+        if (expiryKeywords.some(kw => rowStr.includes(kw))) { hasExpiry = true; score++; }
+        if (natKeywords.some(kw => rowStr.includes(kw))) { hasNat = true; score++; }
+        if (nameKeywords.some(kw => rowStr.includes(kw))) { score++; }
+
+        return { score, hasStaff, hasPassport, hasExpiry, hasNat };
+      }
+
+      let bestRowIndex = -1;
+      let bestScore = -1;
+      let bestHasStaff = false;
+      let bestHasGendec = false;
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         if (!row || row.length === 0) continue;
-        // Check if this row contains at least two of the keywords (case-insensitive)
-        const rowText = row.map(cell => String(cell).toLowerCase()).join(' ');
-        const matches = headerKeywords.filter(kw => rowText.includes(kw));
-        // We require at least 'staff number' or 'staff no' or 'crew id' to be present
-        const hasStaff = rowText.includes('staff number') || rowText.includes('staff no') || rowText.includes('crew id') || rowText.includes('employee number');
-        if (hasStaff && matches.length >= 2) {
-          headerRowIndex = i;
-          headerRow = row;
-          break;
+        const { score, hasStaff, hasPassport, hasExpiry, hasNat } = rowScore(row);
+        const hasGendec = hasPassport || hasExpiry || hasNat;
+        if (hasStaff && hasGendec && score > bestScore) {
+          bestScore = score;
+          bestRowIndex = i;
+          bestHasStaff = hasStaff;
+          bestHasGendec = hasGendec;
         }
       }
 
-      // Fallback: if not found, try to find a row that has at least 3 keywords
-      if (headerRowIndex === -1) {
+      // Fallback: if no row has both, try to find a row with staff and name
+      if (bestRowIndex === -1) {
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i];
           if (!row || row.length === 0) continue;
-          const rowText = row.map(cell => String(cell).toLowerCase()).join(' ');
-          const matches = headerKeywords.filter(kw => rowText.includes(kw));
-          if (matches.length >= 3) {
-            headerRowIndex = i;
-            headerRow = row;
+          const rowStr = row.map(cell => String(cell).toLowerCase()).join(' ');
+          const hasStaff = staffKeywords.some(kw => rowStr.includes(kw));
+          const hasName = nameKeywords.some(kw => rowStr.includes(kw));
+          if (hasStaff && hasName) {
+            bestRowIndex = i;
+            bestHasStaff = true;
+            bestHasGendec = false;
             break;
           }
         }
       }
 
-      if (headerRowIndex === -1 || !headerRow) {
-        throw new Error('Could not find the header row containing column names (e.g., "STAFF NUMBER", "PASSPORT NO", "NAT").');
+      if (bestRowIndex === -1) {
+        throw new Error('Could not find a header row containing "STAFF NUMBER" (or similar).');
       }
 
-      // ---- Step 2: Map column indices ----
-      const findColIndex = (names) => {
+      const headerRow = rows[bestRowIndex];
+      console.log('✅ Selected header row (index ' + bestRowIndex + '):', headerRow);
+
+      // ---- Find column indices ----
+      function findColIndex(keywords) {
         for (let i = 0; i < headerRow.length; i++) {
           const cell = String(headerRow[i] || '').trim();
           const lower = cell.toLowerCase();
-          for (let name of names) {
-            if (lower.includes(name.toLowerCase())) return i;
+          for (let kw of keywords) {
+            if (lower.includes(kw.toLowerCase())) return i;
           }
         }
         return -1;
-      };
+      }
 
-      const nameCol = findColIndex(['name']);
-      const staffCol = findColIndex(['staff number', 'staff no', 'crew id', 'employee number']);
-      const passportCol = findColIndex(['passport']);
-      const expiryCol = findColIndex(['expiry']);
-      const natCol = findColIndex(['nat', 'nationality']);
+      const staffCol = findColIndex(staffKeywords);
+      const nameCol = findColIndex(nameKeywords);
+      const passportCol = findColIndex(passportKeywords);
+      const expiryCol = findColIndex(expiryKeywords);
+      const natCol = findColIndex(natKeywords);
 
       if (staffCol === -1) {
         throw new Error('Could not find "STAFF NUMBER" column in the header row.');
       }
-      if (passportCol === -1 && expiryCol === -1 && natCol === -1) {
-        throw new Error('Could not find any of the expected columns: PASSPORT NO, PASSPORT EXPIRY, NAT');
-      }
 
-      // ---- Step 3: Parse data rows ----
+      console.log('Column indices: staff='+staffCol, 'name='+nameCol, 'passport='+passportCol, 'expiry='+expiryCol, 'nat='+natCol);
+
+      // ---- Parse data rows ----
       const map = {};
       const rowsData = [];
-      for (let i = headerRowIndex + 1; i < rows.length; i++) {
+      for (let i = bestRowIndex + 1; i < rows.length; i++) {
         const row = rows[i];
         if (!row || row.length === 0) continue;
-        const staffNo = String(row[staffCol] || '').trim();
+        const staffNo = staffCol !== -1 ? String(row[staffCol] || '').trim() : '';
         const name = nameCol !== -1 ? String(row[nameCol] || '').trim() : '';
         const passport = passportCol !== -1 ? String(row[passportCol] || '').trim() : '';
         const expiryRaw = expiryCol !== -1 ? String(row[expiryCol] || '').trim() : '';
         const nationality = natCol !== -1 ? String(row[natCol] || '').trim() : '';
 
-        // Skip rows with no staff number and no name
-        if (!staffNo && !name) continue;
+        if (!staffNo && !name && !passport && !expiryRaw && !nationality) continue;
 
-        // Format expiry
         let expiryFormatted = expiryRaw;
         if (expiryRaw) {
           const d = new Date(expiryRaw);
@@ -2126,6 +2148,7 @@
         } else if (name) {
           map['name_' + name] = { passport, expiry: expiryFormatted, nationality, _name: name };
         }
+
         rowsData.push({ staffNo, name, passport, expiry: expiryFormatted, nationality });
       }
 
@@ -2144,7 +2167,6 @@
     const map = gendecData.map;
     let matched = 0;
     state.crew.forEach(crew => {
-      // Try by crewId
       if (map[crew.crewId]) {
         const data = map[crew.crewId];
         crew.passport = data.passport || '';
@@ -2152,7 +2174,6 @@
         crew.nationality = data.nationality || '';
         matched++;
       } else {
-        // Try by name (case-insensitive)
         const nameKey = 'name_' + crew.crewName.toUpperCase();
         if (map[nameKey]) {
           const data = map[nameKey];
@@ -2161,7 +2182,6 @@
           crew.nationality = data.nationality || '';
           matched++;
         } else {
-          // Fallback: loop through all name entries
           let found = false;
           for (let key in map) {
             if (key.startsWith('name_') && map[key]._name && map[key]._name.toUpperCase() === crew.crewName.toUpperCase()) {
@@ -2202,16 +2222,14 @@
         const data = new Uint8Array(e.target.result);
         const result = parseGendecXLSX(data);
         gendecData = result;
-        // Show debug
         gendecDbgContent.innerHTML = '<p style="font-size:11px;color:#888;">Parsed Gendec (' + result.rows.length + ' rows)</p>' +
           renderDebugTable(result.rows, ['staffNo','name','passport','expiry','nationality']);
         gendecDbgWrap.style.display = '';
         gendecStatus.textContent = 'Parsed ' + result.rows.length + ' rows. Merging with crew data…';
         gendecStatus.className = 'status ok';
-        // Merge if state exists
         if (state && state.crew) {
           mergeGendecData();
-          buildReport(); // rebuild to show updated crew (though report doesn't display new fields)
+          buildReport();
           showToast('Gendec parsed and merged!', 'success');
         } else {
           showToast('Gendec parsed, but no crew data yet. Parse a PDF first.', 'default');
@@ -2291,10 +2309,9 @@
       nameSlots: generateSlots(83, 314, 16, 37, 400, 35, 20),
       rankSlots: generateSlots(497, 314, 16, 37, 80, 35, 20),
       globalNumbering: false,
-      // --- NEW optional slots (null by default) ---
       passportSlots: null,   // Example: [{x: 500, y: 314, w: 100, h: 35, fontSize: 10}]
-      expirySlots: null,     // Example: [{x: 610, y: 314, w: 100, h: 35, fontSize: 10}]
-      nationalitySlots: null,// Example: [{x: 720, y: 314, w: 120, h: 35, fontSize: 10}]
+      expirySlots: null,
+      nationalitySlots: null,
       picPassportSlots: null,
       picExpirySlots: null,
       picNationalitySlots: null,
@@ -2730,7 +2747,6 @@
     const crewIdOffX = offsets.crewIdX || 0;
     const crewIdOffY = offsets.crewIdY || 0;
     const fontAdj = offsets.fontSizeAdj || 0;
-    // New offsets
     const passportOffX = offsets.passportX || 0;
     const passportOffY = offsets.passportY || 0;
     const expiryOffX = offsets.expiryX || 0;
@@ -2850,7 +2866,6 @@
         ctx.restore();
       }
 
-      // NEW: Passport, Expiry, Nationality
       if (passportSlot && displayPassport) {
         drawTextInSlot(ctx, displayPassport, passportSlot, passportOffX, passportOffY, fontAdj);
       }
@@ -2869,7 +2884,6 @@
       const ctx = canvas.getContext('2d');
       ctx.putImageData(tpl.bgImageData, 0, 0);
 
-      // Draw PIC (if any) – using the same slot arrays
       if (picCrewMember && tpl.picSlots) {
         const picNameSlot = tpl.picSlots.nameSlots ? tpl.picSlots.nameSlots[0] : null;
         const picRankSlot = tpl.picSlots.rankSlots ? tpl.picSlots.rankSlots[0] : null;
@@ -2881,7 +2895,6 @@
                        picPassportSlot, picExpirySlot, picNationalitySlot, 1);
       }
 
-      // Draw regular crew
       pageCrew.forEach((crewMember, idx) => {
         if (!crewMember) return;
         const nameSlot = tpl.nameSlots[idx];
@@ -3328,7 +3341,6 @@
       });
       code += `],\n`;
     }
-    // New slots
     if (tpl.passportSlots) {
       const passportSlotsAdj = adjustSlots(tpl.passportSlots, passportOffX, passportOffY);
       code += `passportSlots: [\n`;
@@ -3387,7 +3399,6 @@
       }
       code += `},\n`;
     }
-    // PIC new slots (if any)
     if (tpl.picPassportSlots) {
       const picPassportAdj = adjustSlots(tpl.picPassportSlots, passportOffX, passportOffY);
       code += `picPassportSlots: [\n`;
@@ -4112,6 +4123,5 @@
 
 })();
 </script>
-<script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
 </body>
 </html>
