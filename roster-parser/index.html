@@ -130,7 +130,18 @@
     --panel:#0f2a52; --panel2:#153865; --line:#2a4d7a; --text:#ffffff; --dim:#a8c0e0;
     --accent:#f5c518; --warn:#e8383a; --tablebg:#081832; --fullday:#ffb347; --leg2:#d0e0f5;
   }
-  
+  #resultsWrap.theme-stewardess{
+    --panel:#0d2b1f; --panel2:#163d2c; --line:#2f5a44; --text:#f5f2ea; --dim:#9fc2ab;
+    --accent:#e0559e; --warn:#a855c9; --tablebg:#082016; --fullday:#ff8fc7; --leg2:#d8ecdf;
+  }
+  #resultsWrap.theme-purser{
+    --panel:#3d1410; --panel2:#5c2318; --line:#7a3b28; --text:#faf3ec; --dim:#d9a880;
+    --accent:#6ec6e0; --warn:#ff9a4d; --tablebg:#2c0e0b; --fullday:#9ad9f0; --leg2:#f5ded0;
+  }
+  #resultsWrap.theme-steward{
+    --panel:#14202e; --panel2:#1e3049; --line:#3a5068; --text:#f2f4f6; --dim:#a8bccc;
+    --accent:#d4af37; --warn:#7ec8e3; --tablebg:#0c1620; --fullday:#e8c766; --leg2:#dbe6ee;
+  }
   #resultsWrap.theme-cyberpunk{
     --panel:#12002a; --panel2:#1a0038; --line:#5a0099; --text:#00fff9; --dim:#b088e0;
     --accent:#ff00e6; --warn:#faff00; --tablebg:#050010; --fullday:#ff2079; --leg2:#66fff5;
@@ -2805,12 +2816,15 @@ function showDutyPopup(element) {
    13) COLOUR THEMES
 ===================================================================== */
 const THEMES = [
-  {id:'default', name:'Default (dark)', swatches:['#0b0c0e','#1b1e22','#c6ff3d','#f2f3f5']},
-  {id:'bw', name:'Black & White', swatches:['#ffffff','#f0f0f0','#000000','#000000']},
-  {id:'lv', name:'Earthy', swatches:['#2b1d10','#4a3320','#d4af37','#f3e6c8']},
-  {id:'gucci', name:'Fields', swatches:['#0e2818','#194028','#c8102e','#f5f0e6']},
-  {id:'mas', name:'Office', swatches:['#0f2a52','#153865','#f5c518','#ffffff']},
-  {id:'cyberpunk', name:'Cyberpunk', swatches:['#12002a','#1a0038','#ff00e6','#00fff9']}
+  { id: 'default', name: 'Default (dark)', swatches: ['#0b0c0e', '#1b1e22', '#c6ff3d', '#f2f3f5'] },
+  { id: 'bw', name: 'Black & White', swatches: ['#ffffff', '#f0f0f0', '#000000', '#000000'] },
+  { id: 'lv', name: 'Earthy', swatches: ['#2b1d10', '#4a3320', '#d4af37', '#f3e6c8'] },
+  { id: 'gucci', name: 'Fields', swatches: ['#0e2818', '#194028', '#c8102e', '#f5f0e6'] },
+  { id: 'mas', name: 'Office', swatches: ['#0f2a52', '#153865', '#f5c518', '#ffffff'] },
+  { id: 'cyberpunk', name: 'Cyberpunk', swatches: ['#12002a', '#1a0038', '#ff00e6', '#00fff9'] },
+  { id: 'stewardess', name: 'Stewardess', swatches: ['#0d2b1f', '#163d2c', '#e0559e', '#a855c9'] },
+  { id: 'purser', name: 'Purser', swatches: ['#3d1410', '#5c2318', '#6ec6e0', '#ff9a4d'] },
+  { id: 'steward', name: 'Steward', swatches: ['#14202e', '#1e3049', '#d4af37', '#7ec8e3'] }
 ];
 
 function applyTheme(themeId, persist){
