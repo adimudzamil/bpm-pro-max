@@ -6,6 +6,7 @@
 <title>CTR Autofill</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   /* ── Reset & Variables – Light Theme ── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,7 +41,6 @@
 
   .container { max-width: 960px; margin: 0 auto; padding: 0 24px 60px; }
 
-  /* ── Header ── */
   header { padding: 32px 0 24px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
   .logo-area { display: flex; flex-direction: column; gap: 4px; }
   .logo { font-size: clamp(32px, 7vw, 48px); font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
@@ -50,7 +50,6 @@
   .badge { font-family: 'DM Mono', monospace; background: var(--surface2); border: 1px solid var(--border); border-radius: 100px; padding: 4px 14px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: var(--text-muted); }
   .badge.accent { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
 
-  /* ── Cards ── */
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; transition: border-color 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; padding-top: 28px; }
   .card:hover { border-color: var(--border-bright); }
   .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
@@ -76,7 +75,6 @@
 
   .btn-small { padding: 6px 14px; font-size: 12px; }
 
-  /* ── Upload button (large primary) ── */
   .btn-upload {
     background: var(--accent);
     border: none;
@@ -93,26 +91,14 @@
     transition: all 0.2s;
     box-shadow: 0 4px 12px var(--accent-glow);
   }
-  .btn-upload:hover {
-    background: var(--accent-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px var(--accent-glow);
-  }
+  .btn-upload:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 6px 20px var(--accent-glow); }
   .btn-upload:active { transform: scale(0.96); }
 
   .file-upload-wrapper { display: inline-block; }
   .file-upload-wrapper input[type="file"] { position: absolute; width: 0.1px; height: 0.1px; opacity: 0; overflow: hidden; z-index: -1; }
 
-  .file-status-wrapper {
-    margin-top: 8px;
-    font-family: 'DM Mono', monospace;
-    font-size: 14px;
-    color: var(--text-muted);
-  }
-  .file-status-wrapper .has-file {
-    color: var(--accent);
-    font-weight: 600;
-  }
+  .file-status-wrapper { margin-top: 8px; font-family: 'DM Mono', monospace; font-size: 14px; color: var(--text-muted); }
+  .file-status-wrapper .has-file { color: var(--accent); font-weight: 600; }
 
   .stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0 20px; }
   .stat-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 18px; flex: 1; min-width: 100px; }
@@ -123,11 +109,9 @@
   .status.err { color: var(--red); }
   .status.ok { color: var(--green); }
 
-  /* ── Report Card (internal) ── */
   .report-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
   .report-card .report-inner { background: #ffffff; border-radius: var(--radius-sm); overflow: auto; padding: 8px; max-width: 100%; }
 
-  /* ── Inline report styles (unchanged from original) ── */
   #report { background: #fff; color: #111; border-radius: 6px; overflow: auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 10px; }
   #report .rpad { padding: 8px 10px; }
   .rtitle { text-align: center; border-bottom: 1px solid #111; padding-bottom: 4px; margin-bottom: 6px; }
@@ -182,24 +166,9 @@
   .ft-cell-clickable input { cursor: pointer; width: 100%; border: none; background: transparent; font-size: 8.5px; text-align: center; font-family: inherit; padding: 4px 2px; }
   .ft-cell-clickable input:focus { outline: none; }
 
-  /* ── Secondary button (for modals) ── */
-  .secondary-btn {
-    background: transparent;
-    border: 1px solid var(--border-bright);
-    padding: 10px 20px;
-    border-radius: 50px;
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    color: var(--text);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .secondary-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
+  .secondary-btn { background: transparent; border: 1px solid var(--border-bright); padding: 10px 20px; border-radius: 50px; font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); cursor: pointer; transition: all 0.2s; }
+  .secondary-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* ── Modals (unchanged from original) ── */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
   .modal-box { background: #fff; color: #111; border-radius: var(--radius); padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
   .modal-box.dark { background: var(--surface); color: var(--text); border: 1px solid var(--border-bright); }
@@ -235,13 +204,11 @@
   .keypad-btn .sub { font-size: 12px; font-weight: 400; color: var(--text-muted); display: block; }
   .modal-box.dark .keypad-btn .sub { color: #666; }
 
-  /* ── Toast ── */
   .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface); border: 1px solid var(--border-bright); backdrop-filter: blur(12px); padding: 12px 24px; border-radius: 60px; font-family: 'DM Mono', monospace; font-size: 12px; z-index: 2000; transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1); white-space: nowrap; color: var(--text); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast.success { border-color: var(--green); color: var(--green); }
   .toast.error { border-color: var(--red); color: var(--red); }
 
-  /* ── A4 Export Card ── */
   .a4-export-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; padding-top: 28px; }
   select { background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 14px; font-family: 'Syne', sans-serif; font-weight: 500; font-size: 14px; cursor: pointer; outline: none; }
   select:focus { border-color: var(--accent); }
@@ -250,30 +217,23 @@
   .template-section .template-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
   .template-section .template-header h3 { font-size: 18px; font-weight: 700; color: var(--text); }
   .template-preview-area { display: flex; flex-wrap: wrap; gap: 16px; justify-content: flex-start; }
-  .template-preview-area img { border: 1px solid var(--border); border-radius: var(--radius-sm); max-width: 200px; height: auto; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .template-preview-area img { border: 1px solid var(--border); border-radius: var(--radius-sm); max-width: 400px; height: auto; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .template-preview-area .preview-wrapper { text-align: center; max-width: 400px; flex: 1 0 auto; }
 
-  .fine-tune-group { background: var(--surface2); border-radius: var(--radius-sm); padding: 16px; margin-top: 12px; border: 1px solid var(--border); }
+  .fine-tune-group { background: var(--surface2); border-radius: var(--radius-sm); padding: 16px; margin-top: 12px; border: 1px solid var(--border); max-width: 500px; }
   .fine-tune-group label { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .fine-tune-group input[type="range"] { flex: 1; min-width: 120px; background: transparent; cursor: pointer; accent-color: var(--accent); }
-  .fine-tune-group .value-input {
-    width: 50px;
-    text-align: center;
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--accent);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 2px 4px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .fine-tune-group .value-input:focus {
-    border-color: var(--accent);
-  }
+  .fine-tune-group .value-input { width: 50px; text-align: center; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 700; color: var(--accent); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 2px 4px; outline: none; transition: border-color 0.2s; }
+  .fine-tune-group .value-input:focus { border-color: var(--accent); }
   .fine-tune-row { display: flex; flex-wrap: wrap; gap: 16px 24px; margin-top: 6px; }
   .fine-tune-row label { flex: 1; min-width: 140px; }
+
+  /* compact dropdown + single slider */
+  .fine-tune-compact { display: flex; flex-direction: column; gap: 8px; }
+  .fine-tune-compact .control-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .fine-tune-compact .control-row select { flex: 1; min-width: 120px; padding: 6px 10px; font-size: 13px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); }
+  .fine-tune-compact .control-row input[type="range"] { flex: 2; min-width: 100px; }
+  .fine-tune-compact .control-row .value-input { width: 55px; }
 
   .help-section { margin: 16px 0 24px; }
   .help-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -299,7 +259,6 @@
   .noprint { display: block; }
   @media print { .noprint { display: none !important; } }
 
-  /* ── Print styles for internal report (unchanged from original) ── */
   @media print {
     html, body { height: auto !important; min-height: auto !important; }
     body::before, body::after { display: none !important; }
@@ -334,9 +293,8 @@
   }
   @page { size: auto; margin: 8mm; }
 
-  /* ── Builder Card styles ── */
-  .builder-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; padding-top: 28px; display: none; /* HIDDEN BY DEFAULT */ }
-  .builder-card.visible { display: block; } /* Show when unlocked */
+  .builder-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; padding-top: 28px; display: none; }
+  .builder-card.visible { display: block; }
   .builder-layout { display: flex; gap: 20px; flex-wrap: wrap; }
   .builder-preview { flex: 2; min-width: 300px; }
   .builder-preview canvas { width: 100%; height: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: white; cursor: crosshair; }
@@ -357,14 +315,12 @@
   .saved-templates-list .saved-item button:hover { text-decoration: underline; }
   .builder-status { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
 
-  /* ── PIC Modal ── */
   #picModalOverlay .modal-box { max-width: 450px; }
   .pic-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
   .pic-btn { padding: 10px 14px; font-size: 14px; font-weight: 600; border-radius: var(--radius-sm); border: 2px solid #ddd; background: #f7f7f7; color: #333; cursor: pointer; transition: all 0.15s; text-align: left; }
   .pic-btn:hover { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
   .pic-btn.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-  /* ── Builder enhanced controls ── */
   .slot-section { margin-bottom: 12px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
   .slot-section .section-title { font-weight: 600; font-size: 14px; color: var(--text); cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; }
   .slot-section .section-title .toggle-icon { transition: transform 0.2s; }
@@ -379,38 +335,42 @@
   .slot-section .slot-controls .param-row .fine-tune-sliders input[type="range"] { width: 80px; accent-color: var(--accent); }
   .slot-section .slot-controls .param-row .fine-tune-sliders input[type="number"] { width: 45px; padding: 2px 4px; font-size: 11px; }
 
-  /* ── FILTER MODAL (new) ── */
-  #filterModalOverlay .modal-box { max-width: 90%; width: 900px; max-height: 90vh; display: flex; flex-direction: column; }
+  #filterModalOverlay .modal-box { max-width: 90%; width: 100%; max-height: 90vh; display: flex; flex-direction: column; }
   #filterModalOverlay .modal-scroll { overflow: auto; flex: 1; margin: 8px 0 16px; }
-  #filterModalOverlay table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  #filterModalOverlay th { background: var(--surface2); position: sticky; top: 0; z-index: 2; padding: 6px 8px; border-bottom: 2px solid var(--border); text-align: center; font-weight: 600; }
-  #filterModalOverlay td { padding: 4px 6px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
-  #filterModalOverlay .crew-cell { text-align: left; font-weight: 500; }
-  #filterModalOverlay .rank-cell, #filterModalOverlay .id-cell { color: var(--text-muted); font-size: 12px; }
-  #filterModalOverlay input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
-  #filterModalOverlay .template-header-checkbox { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; font-weight: 400; color: var(--text-muted); }
-  #filterModalOverlay .template-header-checkbox input { width: 18px; height: 18px; }
+  #filterModalOverlay table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+  #filterModalOverlay th { background: var(--surface2); position: sticky; top: 0; z-index: 2; padding: 6px 4px; border-bottom: 2px solid var(--border); text-align: center; font-weight: 600; }
+  #filterModalOverlay td { padding: 4px 2px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
+  #filterModalOverlay .crew-cell { text-align: left; font-weight: 500; padding-left: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 120px; }
+  #filterModalOverlay .rank-cell, #filterModalOverlay .id-cell { color: var(--text-muted); font-size: 11px; text-align: center; }
+  #filterModalOverlay input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; margin: 0 auto; }
+  #filterModalOverlay .template-header-checkbox { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; font-weight: 400; color: var(--text-muted); }
+  #filterModalOverlay .template-header-checkbox input { width: 14px; height: 14px; }
   .filter-actions { display: flex; gap: 12px; justify-content: flex-end; padding-top: 12px; border-top: 1px solid var(--border); }
+  .filter-reminder { font-size: 12px; color: var(--text-muted); background: var(--surface2); border-radius: var(--radius-sm); padding: 8px 12px; margin: 6px 0 12px; border-left: 3px solid var(--accent); }
+  .filter-reminder strong { color: var(--text); }
+  .filter-global-toggle { margin: 8px 0 12px; display: flex; align-items: center; gap: 10px; justify-content: flex-start; }
+  .filter-global-toggle label { font-size: 14px; font-weight: 500; cursor: pointer; }
+
+  @media (max-width: 600px) {
+    #filterModalOverlay .modal-box { max-width: 95vw; width: 100%; padding: 16px; }
+    #filterModalOverlay .crew-cell { min-width: 80px; font-size: 12px; white-space: normal; }
+    #filterModalOverlay .rank-cell, #filterModalOverlay .id-cell { font-size: 10px; }
+    #filterModalOverlay th { font-size: 11px; }
+    #filterModalOverlay .template-header-checkbox { font-size: 9px; }
+    .template-preview-area img { max-width: 100%; }
+    .fine-tune-group { max-width: 100%; }
+  }
 </style>
 </head>
 <body>
 
 <div class="container">
 
-  <!-- ===== HEADER ===== -->
   <header class="noprint">
-    <div class="logo-area">
-      <div class="logo">CTR<span>.</span></div>
-      <div class="byline-badge">✈️ by 2100551</div>
-    </div>
-    <div class="badge-group">
-      <div class="badge">📄 PDF Parser</div>
-      <div class="badge">🔒 Offline</div>
-      <div class="badge accent">v3.0</div>
-    </div>
+    <div class="logo-area"><div class="logo">CTR<span>.</span></div><div class="byline-badge">✈️ by 2100551</div></div>
+    <div class="badge-group"><div class="badge">📄 PDF Parser</div><div class="badge">📊 Gendec XLSX</div><div class="badge">🔒 Offline</div><div class="badge accent">v3.6</div></div>
   </header>
 
-  <!-- ===== HELP / HOW‑TO TOGGLE ===== -->
   <div class="help-section noprint">
     <div class="help-toggle">
       <label class="toggle-switch"><input type="checkbox" id="toggleHelp"><span class="toggle-slider"></span></label>
@@ -419,27 +379,27 @@
     <div id="helpContent" class="help-content">
       <p><strong>Quick Guide</strong></p>
       <ul style="margin-left:20px; font-family:'DM Mono',monospace; font-size:13px; color:var(--text-muted);">
-        <li>1. <strong>Choose File, Upload a PDF</strong>, or "Parse PDF Report". Check PC download folder after clicking crewtripreport, the latest one should be yours. Check the crewtripreport or edit it before printing.</li>
-        <li>2. For IND forms, Select your destination (e.g., BOM) from the dropdown after uploading crewtripreport pdf</li>
-        <li>3. Click <strong>"Generate Forms"</strong> – a filter will appear to select which crew members appear in each template</li>
-        <li>4. Fine‑tune each form individually using its sliders or type values directly</li>
-        <li>5. Print each form separately, or download all as PNG/PDF</li>
+        <li>1. <strong>Upload PDF</strong> (CrewTripReport) → parse crew data.</li>
+        <li>2. <strong>Upload Gendec .xlsx</strong> → auto‑parsed and merged.</li>
+        <li>3. Select destination → click <strong>"Generate Forms"</strong> → filter modal appears.</li>
+        <li>4. Choose which crew members appear in each template, then click Generate.</li>
+        <li>5. Fine‑tune positions with the compact controls, print or download.</li>
       </ul>
       <p style="margin-top:12px;">📖 <a href="#" onclick="window.open('ctr-tutorial.html','_blank'); return false;">Open full tutorial in new tab</a></p>
     </div>
   </div>
 
-  <!-- ===== PARSER CARD (PDF only) ===== -->
+  <!-- ===== PARSER CARD (PDF) ===== -->
   <div class="card noprint">
     <span class="method-tag">📄</span>
     <div class="card-header">
-      <div class="card-title"><span class="icon">📄</span> Upload PDF or Paste Text</div>
+      <div class="card-title"><span class="icon">📄</span> Upload PDF (CrewTripReport)</div>
       <span class="card-sub">CrewTripReport export</span>
     </div>
     <textarea id="pdfBox" placeholder="Paste text from the PDF CrewTripReport here, or upload a PDF…"></textarea>
     <div class="btnrow">
       <div class="file-upload-wrapper">
-        <label for="pdfFile" class="btn-upload">📎 Choose File</label>
+        <label for="pdfFile" class="btn-upload">📎 Choose CrewTripReport PDF</label>
         <input type="file" id="pdfFile" accept=".pdf">
       </div>
       <button class="btn-secondary" id="parsePdfBtn">⚡ Parse PDF Report</button>
@@ -452,6 +412,31 @@
     <details id="pdfDbgWrap" style="display:none; margin-top:10px;" class="noprint">
       <summary style="color:var(--text-muted); font-family:'DM Mono',monospace; font-size:11px; cursor:pointer;">Parsed data (debug)</summary>
       <div id="pdfDbgContent"></div>
+    </details>
+  </div>
+
+  <!-- ===== GENDEC PARSER CARD ===== -->
+  <div class="card noprint">
+    <span class="method-tag">📊</span>
+    <div class="card-header">
+      <div class="card-title"><span class="icon">📊</span> Upload Gendec (.xlsx)</div>
+      <span class="card-sub">Passport, Expiry, Nationality</span>
+    </div>
+    <div class="btnrow">
+      <div class="file-upload-wrapper">
+        <label for="gendecFile" class="btn-upload">📎 Choose Gendec XLSX</label>
+        <input type="file" id="gendecFile" accept=".xlsx,.xls">
+      </div>
+      <button class="btn-secondary" id="parseGendecBtn">⚡ Parse Gendec</button>
+      <button class="btn-secondary" id="clearGendecBtn">Clear</button>
+    </div>
+    <div class="file-status-wrapper">
+      <span class="file-status" id="gendecFileStatus">No file chosen</span>
+    </div>
+    <div class="status noprint" id="gendecStatus"></div>
+    <details id="gendecDbgWrap" style="display:none; margin-top:10px;" class="noprint">
+      <summary style="color:var(--text-muted); font-family:'DM Mono',monospace; font-size:11px; cursor:pointer;">Gendec data (debug)</summary>
+      <div id="gendecDbgContent"></div>
     </details>
   </div>
 
@@ -511,7 +496,6 @@
       <span class="card-sub">design new templates · live preview · export code</span>
     </div>
 
-    <!-- Top: Template metadata and upload -->
     <div class="btnrow" style="margin-bottom:12px;">
       <label style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text-muted);">Template Name:</label>
       <input type="text" id="builderTemplateName" placeholder="e.g., DEL_baggage" style="padding:6px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;flex:1;min-width:150px;">
@@ -539,17 +523,12 @@
     </div>
     <div id="builderStatus" class="builder-status">Upload a canvas to start building.</div>
 
-    <!-- Main layout: preview + controls -->
     <div class="builder-layout">
-      <!-- Preview canvas -->
       <div class="builder-preview">
         <canvas id="builderCanvas"></canvas>
         <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Click on the canvas to set Start X/Y for the selected slot type below.</div>
       </div>
-
-      <!-- Controls -->
       <div class="builder-controls" id="builderControls">
-        <!-- Slot type selector for click placement -->
         <div class="control-group">
           <label>Click to set Start X/Y for:</label>
           <select id="builderActiveSlotType" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;">
@@ -557,20 +536,24 @@
             <option value="normal_rank">Rank</option>
             <option value="normal_number">Number</option>
             <option value="normal_crewId">Crew ID</option>
+            <option value="normal_passport">Passport</option>
+            <option value="normal_expiry">Expiry</option>
+            <option value="normal_nationality">Nationality</option>
             <option value="pic_name">PIC Name</option>
             <option value="pic_rank">PIC Rank</option>
             <option value="pic_crewId">PIC Crew ID</option>
+            <option value="pic_passport">PIC Passport</option>
+            <option value="pic_expiry">PIC Expiry</option>
+            <option value="pic_nationality">PIC Nationality</option>
           </select>
         </div>
 
-        <!-- Normal Slots Section -->
         <div class="slot-section" id="normalSection">
           <div class="section-title" onclick="toggleSection('normalSection')">
             <span>📋 Normal Slots</span>
             <span class="toggle-icon">▼</span>
           </div>
           <div class="slot-controls open" id="normalControls">
-            <!-- Name -->
             <div class="slot-section" id="normalNameSection" style="border-left:3px solid #2563eb;">
               <div class="section-title" onclick="toggleSection('normalNameSection')">
                 <span>Name</span>
@@ -596,7 +579,6 @@
                 </div>
               </div>
             </div>
-            <!-- Rank -->
             <div class="slot-section" id="normalRankSection" style="border-left:3px solid #16a34a;">
               <div class="section-title" onclick="toggleSection('normalRankSection')">
                 <span>Rank</span>
@@ -622,7 +604,6 @@
                 </div>
               </div>
             </div>
-            <!-- Number -->
             <div class="slot-section" id="normalNumberSection" style="border-left:3px solid #f59e0b;">
               <div class="section-title" onclick="toggleSection('normalNumberSection')">
                 <span>Number</span>
@@ -648,7 +629,6 @@
                 </div>
               </div>
             </div>
-            <!-- Crew ID -->
             <div class="slot-section" id="normalCrewIdSection" style="border-left:3px solid #8b5cf6;">
               <div class="section-title" onclick="toggleSection('normalCrewIdSection')">
                 <span>Crew ID</span>
@@ -674,17 +654,90 @@
                 </div>
               </div>
             </div>
+            <div class="slot-section" id="normalPassportSection" style="border-left:3px solid #f97316;">
+              <div class="section-title" onclick="toggleSection('normalPassportSection')">
+                <span>Passport</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="normalPassportControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="normalPassportEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="normalPassportX" value="500" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="normalPassportY" value="314" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="normalPassportRows" value="16" min="1" max="50"></label>
+                  <label>Gap Y: <input type="number" id="normalPassportGapY" value="37" min="1" max="200"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="normalPassportWidth" value="120" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="normalPassportHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="normalPassportFontSize" value="10" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="normalPassportFineX" min="-50" max="50" value="0" step="1"><input type="number" id="normalPassportFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="normalPassportFineY" min="-50" max="50" value="0" step="1"><input type="number" id="normalPassportFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="normalPassportFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="normalPassportFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <div class="slot-section" id="normalExpirySection" style="border-left:3px solid #84cc16;">
+              <div class="section-title" onclick="toggleSection('normalExpirySection')">
+                <span>Expiry</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="normalExpiryControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="normalExpiryEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="normalExpiryX" value="630" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="normalExpiryY" value="314" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="normalExpiryRows" value="16" min="1" max="50"></label>
+                  <label>Gap Y: <input type="number" id="normalExpiryGapY" value="37" min="1" max="200"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="normalExpiryWidth" value="120" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="normalExpiryHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="normalExpiryFontSize" value="10" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="normalExpiryFineX" min="-50" max="50" value="0" step="1"><input type="number" id="normalExpiryFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="normalExpiryFineY" min="-50" max="50" value="0" step="1"><input type="number" id="normalExpiryFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="normalExpiryFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="normalExpiryFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <div class="slot-section" id="normalNationalitySection" style="border-left:3px solid #a855f7;">
+              <div class="section-title" onclick="toggleSection('normalNationalitySection')">
+                <span>Nationality</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="normalNationalityControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="normalNationalityEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="normalNationalityX" value="760" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="normalNationalityY" value="314" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="normalNationalityRows" value="16" min="1" max="50"></label>
+                  <label>Gap Y: <input type="number" id="normalNationalityGapY" value="37" min="1" max="200"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="normalNationalityWidth" value="120" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="normalNationalityHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="normalNationalityFontSize" value="10" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="normalNationalityFineX" min="-50" max="50" value="0" step="1"><input type="number" id="normalNationalityFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="normalNationalityFineY" min="-50" max="50" value="0" step="1"><input type="number" id="normalNationalityFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="normalNationalityFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="normalNationalityFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- PIC Slots Section (hidden by default) -->
         <div class="slot-section" id="picSection" style="display:none;">
           <div class="section-title" onclick="toggleSection('picSection')">
             <span>👤 PIC Top Page Slots</span>
             <span class="toggle-icon">▼</span>
           </div>
           <div class="slot-controls open" id="picControls">
-            <!-- PIC Name -->
             <div class="slot-section" id="picNameSection" style="border-left:3px solid #2563eb;">
               <div class="section-title" onclick="toggleSection('picNameSection')">
                 <span>Name</span>
@@ -710,7 +763,6 @@
                 </div>
               </div>
             </div>
-            <!-- PIC Rank -->
             <div class="slot-section" id="picRankSection" style="border-left:3px solid #16a34a;">
               <div class="section-title" onclick="toggleSection('picRankSection')">
                 <span>Rank</span>
@@ -736,7 +788,6 @@
                 </div>
               </div>
             </div>
-            <!-- PIC Crew ID -->
             <div class="slot-section" id="picCrewIdSection" style="border-left:3px solid #8b5cf6;">
               <div class="section-title" onclick="toggleSection('picCrewIdSection')">
                 <span>Crew ID</span>
@@ -762,22 +813,94 @@
                 </div>
               </div>
             </div>
+            <div class="slot-section" id="picPassportSection" style="border-left:3px solid #f97316;">
+              <div class="section-title" onclick="toggleSection('picPassportSection')">
+                <span>Passport</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="picPassportControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="picPassportEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="picPassportX" value="310" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="picPassportY" value="100" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="picPassportRows" value="1" min="1" max="5"></label>
+                  <label>Gap Y: <input type="number" id="picPassportGapY" value="0" min="0" max="50"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="picPassportWidth" value="120" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="picPassportHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="picPassportFontSize" value="12" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="picPassportFineX" min="-50" max="50" value="0" step="1"><input type="number" id="picPassportFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="picPassportFineY" min="-50" max="50" value="0" step="1"><input type="number" id="picPassportFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="picPassportFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="picPassportFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <div class="slot-section" id="picExpirySection" style="border-left:3px solid #84cc16;">
+              <div class="section-title" onclick="toggleSection('picExpirySection')">
+                <span>Expiry</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="picExpiryControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="picExpiryEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="picExpiryX" value="440" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="picExpiryY" value="100" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="picExpiryRows" value="1" min="1" max="5"></label>
+                  <label>Gap Y: <input type="number" id="picExpiryGapY" value="0" min="0" max="50"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="picExpiryWidth" value="120" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="picExpiryHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="picExpiryFontSize" value="12" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="picExpiryFineX" min="-50" max="50" value="0" step="1"><input type="number" id="picExpiryFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="picExpiryFineY" min="-50" max="50" value="0" step="1"><input type="number" id="picExpiryFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="picExpiryFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="picExpiryFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <div class="slot-section" id="picNationalitySection" style="border-left:3px solid #a855f7;">
+              <div class="section-title" onclick="toggleSection('picNationalitySection')">
+                <span>Nationality</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="picNationalityControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="picNationalityEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="picNationalityX" value="570" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="picNationalityY" value="100" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="picNationalityRows" value="1" min="1" max="5"></label>
+                  <label>Gap Y: <input type="number" id="picNationalityGapY" value="0" min="0" max="50"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="picNationalityWidth" value="120" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="picNationalityHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="picNationalityFontSize" value="12" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="picNationalityFineX" min="-50" max="50" value="0" step="1"><input type="number" id="picNationalityFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="picNationalityFineY" min="-50" max="50" value="0" step="1"><input type="number" id="picNationalityFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="picNationalityFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="picNationalityFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Actions -->
         <div class="btnrow">
           <button class="btn-primary" id="builderApplyBtn">Apply & Preview</button>
           <button class="btn-success" id="builderExportBtn">📋 Export Code</button>
         </div>
 
-        <!-- Saved templates list -->
         <div class="control-group" style="margin-top:8px;">
           <label style="font-weight:600;">Saved Templates</label>
           <div id="builderSavedList" class="saved-templates-list"></div>
         </div>
 
-        <!-- Output area -->
         <div class="builder-output">
           <label style="font-weight:600;font-size:13px;">Generated Slot Code</label>
           <textarea id="builderOutput" readonly></textarea>
@@ -807,7 +930,6 @@
 </div>
 
 <!-- ===== MODALS ===== -->
-<!-- (All modals remain exactly as original) -->
 <div class="modal-overlay" id="posModalOverlay">
   <div class="modal-box">
     <div class="modal-title">Working Position</div>
@@ -878,7 +1000,6 @@
   </div>
 </div>
 
-<!-- ===== PIC SELECTION MODAL ===== -->
 <div class="modal-overlay" id="picModalOverlay">
   <div class="modal-box">
     <div class="modal-title">Select Pilot In Command (PIC)</div>
@@ -888,11 +1009,17 @@
   </div>
 </div>
 
-<!-- ===== FILTER MODAL (new) ===== -->
 <div class="modal-overlay" id="filterModalOverlay">
   <div class="modal-box">
     <div class="modal-title">✏️ Select Crew to Include per Template</div>
     <div class="modal-sub">Uncheck a name to remove them from that form. All names are included by default.</div>
+    <div class="filter-reminder">
+      ⓘ <strong>Reminders:</strong> Indian Nationalities not required in Landing forms. Change of Tech Crew shall be in separate forms.
+    </div>
+    <div class="filter-global-toggle">
+      <input type="checkbox" id="filterGroupPilots" checked>
+      <label for="filterGroupPilots">Separate pilots and cabin crew onto different pages</label>
+    </div>
     <div class="modal-scroll" id="filterModalScroll">
       <table id="filterTable">
         <thead id="filterTableHead"></thead>
@@ -918,7 +1045,9 @@
 <script>
 // ============================================================
 //  FULL ORIGINAL PARSER + INTERNAL REPORT (with all modals)
-//  Only colors and fonts changed; iFlight removed.
+//  Added improved Gendec parser with header split handling.
+//  Enhanced filter modal with rank sorting, global toggle, reminders.
+//  Compact fine-tune panel with dropdown + single slider + persistence.
 // ============================================================
 (function(){
   "use strict";
@@ -937,6 +1066,11 @@
   const statFlights = document.getElementById('statFlights');
   const statCrew = document.getElementById('statCrew');
   const statCabin = document.getElementById('statCabin');
+  const gendecFile = document.getElementById('gendecFile');
+  const gendecStatus = document.getElementById('gendecStatus');
+  const gendecFileStatus = document.getElementById('gendecFileStatus');
+  const gendecDbgWrap = document.getElementById('gendecDbgWrap');
+  const gendecDbgContent = document.getElementById('gendecDbgContent');
 
   // ===== Toast =====
   function showToast(msg, type='default'){
@@ -967,7 +1101,7 @@
   const DOORS_WIDE = ['1L','1R','2L','2R','3L','3R','4L','4R'];
   const RANK_PRIORITY = { 'CAPT':1, 'FO':2, 'SO':3, 'CDT':4, 'OBS':5, 'IFS':6, 'LS':7, 'FS':8, 'FSS':9, 'SS':10, 'CS':11, 'AS':12 };
 
-  // ===== PDF parser =====
+  // ===== PDF parser (unchanged) =====
   function parseCrewTripReport(raw){
     let text = raw.replace(/\r?\n/g,' ')
       .replace(/([A-Za-z])(\d{7})\b/g,'$1 $2')
@@ -1130,10 +1264,9 @@
   let altIccCrewId = null;
   let snyCrewIds = {};
   let doorAssignments = {};
-
-  // PIC selection state
-  let pendingPicTemplateId = null;      // template that needs PIC selection
-  let pendingPicResolve = null;         // resolve function for the modal promise
+  let pendingPicTemplateId = null;
+  let pendingPicResolve = null;
+  let gendecData = null;
 
   function isNarrowbody(ac){ if(!ac) return false; const a = ac.trim().toUpperCase(); return a === '737' || a.indexOf('73') === 0 || a.indexOf('7M') === 0; }
 
@@ -1322,9 +1455,7 @@
     html += `</div>`;
     reportEl.innerHTML = html;
 
-    // ---- Attach event listeners (full original logic) ----
-
-    // BAY input
+    // ---- Attach event listeners ----
     const bayInput = document.getElementById('bayInput');
     if(bayInput){
       bayInput.addEventListener('click', function(e){
@@ -1341,7 +1472,6 @@
       });
     }
 
-    // BRIEFING input
     const briefingInput = document.getElementById('briefingInput');
     if(briefingInput){
       briefingInput.addEventListener('click', function(e){
@@ -1350,7 +1480,6 @@
       });
     }
 
-    // ICC display cell
     const iccDisplayCell = document.getElementById('iccDisplayCell');
     if(iccDisplayCell && iccCandidates.length > 0){
       iccDisplayCell.addEventListener('click', function(){
@@ -1359,7 +1488,6 @@
       });
     }
 
-    // Flight time cells
     document.querySelectorAll('.ft-cell-clickable').forEach(cell => {
       const input = cell.querySelector('.ft-input');
       if(input){
@@ -1384,21 +1512,18 @@
       }
     });
 
-    // Position cells
     document.querySelectorAll('.pos-cell').forEach(el => {
       el.addEventListener('click', function(){
         openPositionModal(this.getAttribute('data-crewid'), this.getAttribute('data-crewname'));
       });
     });
 
-    // Door cells
     document.querySelectorAll('.door-cell').forEach(el => {
       el.addEventListener('click', function(){
         openDoorModal(this.getAttribute('data-crewid'), this.getAttribute('data-crewname'));
       });
     });
 
-    // Stats
     statFlights.textContent = d.itin.length;
     statCrew.textContent = d.crew.length;
     statCabin.textContent = sortedCabin.length;
@@ -1406,8 +1531,6 @@
   }
 
   // ===== All modal functions (restored) =====
-
-  // Position modal
   let currentModalCrewId = null;
   window.openPositionModal = function(crewId, crewName){
     const ac0 = state.itin.length ? state.itin[0].ac : '';
@@ -1472,7 +1595,6 @@
     document.getElementById('posModalOverlay').style.display = 'none';
   });
 
-  // ICC selection modal
   function openIccSelectionModal(candidates, title) {
     document.getElementById('iccModalSub').textContent = title || 'Choose Crew In Charge';
     const grid = document.getElementById('iccGrid');
@@ -1502,7 +1624,6 @@
     document.getElementById('iccModalOverlay').style.display = 'none';
   });
 
-  // Door modal
   window.openDoorModal = function(crewId, crewName){
     const ac0 = state.itin.length ? state.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
@@ -1547,7 +1668,6 @@
     document.getElementById('doorModalOverlay').style.display = 'none';
   });
 
-  // Number keypad (for bay, briefing, time)
   let keypadBuffer = '';
   let keypadTarget = null;
   let keypadMode = 'bay';
@@ -1638,7 +1758,6 @@
     updateNumberKeypadDisplay();
   }
 
-  // Keypad event listeners
   document.querySelectorAll('.keypad-btn[data-key]').forEach(btn => {
     btn.addEventListener('click', function(e){
       e.stopPropagation();
@@ -1650,7 +1769,6 @@
     if (e.target === this) closeNumberKeypad(false);
   });
 
-  // Bay letter buttons
   document.querySelectorAll('.letter-btn[data-letter]').forEach(btn => {
     btn.addEventListener('click', function(e){
       e.stopPropagation();
@@ -1686,12 +1804,14 @@
     state = parsed;
     state.fields = {};
     state.positions = {};
-    // Reset PIC choice when a new report is parsed
     state.picChoice = null;
     iccChosenCrew = null;
     altIccCrewId = null;
     snyCrewIds = {};
     doorAssignments = {};
+    if (gendecData) {
+      mergeGendecData();
+    }
     buildReport();
     reportCard.style.display = 'block';
     emptyCard.style.display = 'none';
@@ -1716,7 +1836,7 @@
     if(state && state.fields) state.fields[key] = val;
   };
 
-  // ===== Parser event handlers =====
+  // ===== Parser event handlers (PDF) =====
   document.getElementById('parsePdfBtn').addEventListener('click', function(){
     handlePdfParse(pdfBox.value);
   });
@@ -1809,11 +1929,266 @@
     reader.readAsArrayBuffer(file);
   });
 
+  // ============================================================
+  //  GENDEC PARSER – Fixed for split headers and merged cells
+  // ============================================================
+  function parseGendecXLSX(data) {
+    try {
+      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      let rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+      // Fill merged cells
+      const merges = firstSheet['!merges'] || [];
+      merges.forEach(m => {
+        const topVal = (rows[m.s.r] && rows[m.s.r][m.s.c] !== undefined) ? rows[m.s.r][m.s.c] : '';
+        if (topVal === '' || topVal === null || topVal === undefined) return;
+        for (let r = m.s.r; r <= m.e.r; r++) {
+          if (!rows[r]) rows[r] = [];
+          for (let c = m.s.c; c <= m.e.c; c++) {
+            if (rows[r][c] === undefined || rows[r][c] === '' || rows[r][c] === null) {
+              rows[r][c] = topVal;
+            }
+          }
+        }
+      });
+
+      if (!rows || rows.length === 0) {
+        throw new Error('No data rows found in the Gendec file.');
+      }
+
+      function textHas(text, kw) {
+        if (!text) return false;
+        const t = text.toLowerCase();
+        const k = kw.toLowerCase();
+        if (k.length <= 3) return new RegExp('\\b' + k + '\\b', 'i').test(t);
+        return t.includes(k);
+      }
+
+      const staffKeywords = ['staff number', 'staff no', 'crew id', 'employee number'];
+      const nameKeywords = ['name'];
+      const passportKeywords = ['passport'];
+      const expiryKeywords = ['expiry'];
+      const natKeywords = ['nationality', 'nat'];
+
+      // Find the row containing STAFF NUMBER
+      let staffRowIndex = -1;
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || row.length === 0) continue;
+        const rowStr = row.map(c => String(c)).join(' ');
+        if (staffKeywords.some(kw => textHas(rowStr, kw))) { staffRowIndex = i; break; }
+      }
+      if (staffRowIndex === -1) {
+        throw new Error('Could not find a header row containing "STAFF NUMBER" (or similar).');
+      }
+
+      // Build combined header from rows above
+      const headerStart = Math.max(0, staffRowIndex - 6);
+      let numCols = 0;
+      for (let r = headerStart; r <= staffRowIndex; r++) {
+        if (rows[r]) numCols = Math.max(numCols, rows[r].length);
+      }
+      const colHeaderText = [];
+      for (let c = 0; c < numCols; c++) {
+        let texts = [];
+        for (let r = headerStart; r <= staffRowIndex; r++) {
+          const v = rows[r] ? rows[r][c] : '';
+          if (v !== undefined && v !== null && String(v).trim() !== '') texts.push(String(v).trim());
+        }
+        colHeaderText.push(texts.join(' '));
+      }
+
+      function findColIndex(keywords, excludeKeywords) {
+        excludeKeywords = excludeKeywords || [];
+        for (let i = 0; i < colHeaderText.length; i++) {
+          const txt = colHeaderText[i];
+          if (!txt) continue;
+          const hasKw = keywords.some(kw => textHas(txt, kw));
+          const hasExcl = excludeKeywords.some(kw => textHas(txt, kw));
+          if (hasKw && !hasExcl) return i;
+        }
+        return -1;
+      }
+
+      const staffCol = findColIndex(staffKeywords);
+      const nameCol = findColIndex(nameKeywords);
+      const passportCol = findColIndex(passportKeywords, expiryKeywords);
+      const expiryCol = findColIndex(expiryKeywords);
+      const natCol = findColIndex(natKeywords);
+
+      if (staffCol === -1) {
+        throw new Error('Could not find "STAFF NUMBER" column in the header.');
+      }
+
+      console.log('Column indices: staff='+staffCol, 'name='+nameCol, 'passport='+passportCol, 'expiry='+expiryCol, 'nat='+natCol);
+
+      const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      const map = {};
+      const rowsData = [];
+      for (let i = staffRowIndex + 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || row.length === 0) continue;
+        const staffNo = staffCol !== -1 ? String(row[staffCol] || '').trim() : '';
+        const name = nameCol !== -1 ? String(row[nameCol] || '').trim() : '';
+        const passport = passportCol !== -1 ? String(row[passportCol] || '').trim() : '';
+        const nationality = natCol !== -1 ? String(row[natCol] || '').trim() : '';
+
+        let expiryRaw = expiryCol !== -1 ? row[expiryCol] : '';
+        let expiryFormatted = '';
+        if (expiryRaw !== undefined && expiryRaw !== null && expiryRaw !== '') {
+          let d = (expiryRaw instanceof Date) ? expiryRaw : new Date(expiryRaw);
+          if (!isNaN(d)) {
+            const day = String(d.getDate()).padStart(2, '0');
+            expiryFormatted = `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
+          } else {
+            expiryFormatted = String(expiryRaw).trim();
+          }
+        }
+
+        if (!staffNo && !name && !passport && !expiryFormatted && !nationality) continue;
+
+        if (staffNo) {
+          map[staffNo] = { passport, expiry: expiryFormatted, nationality };
+        } else if (name) {
+          map['name_' + name] = { passport, expiry: expiryFormatted, nationality, _name: name };
+        }
+
+        rowsData.push({ staffNo, name, passport, expiry: expiryFormatted, nationality });
+      }
+
+      if (Object.keys(map).length === 0) {
+        throw new Error('No valid crew data rows found after the header row.');
+      }
+
+      return { map, rows: rowsData };
+    } catch (e) {
+      throw new Error('Error parsing Gendec: ' + e.message);
+    }
+  }
+
+  function mergeGendecData() {
+    if (!state || !state.crew || !gendecData) return;
+    const map = gendecData.map;
+    let matched = 0;
+    state.crew.forEach(crew => {
+      if (map[crew.crewId]) {
+        const data = map[crew.crewId];
+        crew.passport = data.passport || '';
+        crew.expiry = data.expiry || '';
+        crew.nationality = data.nationality || '';
+        matched++;
+      } else {
+        const nameKey = 'name_' + crew.crewName.toUpperCase();
+        if (map[nameKey]) {
+          const data = map[nameKey];
+          crew.passport = data.passport || '';
+          crew.expiry = data.expiry || '';
+          crew.nationality = data.nationality || '';
+          matched++;
+        } else {
+          let found = false;
+          for (let key in map) {
+            if (key.startsWith('name_') && map[key]._name && map[key]._name.toUpperCase() === crew.crewName.toUpperCase()) {
+              const data = map[key];
+              crew.passport = data.passport || '';
+              crew.expiry = data.expiry || '';
+              crew.nationality = data.nationality || '';
+              matched++;
+              found = true;
+              break;
+            }
+          }
+          if (!found) {
+            crew.passport = '';
+            crew.expiry = '';
+            crew.nationality = '';
+          }
+        }
+      }
+    });
+    showToast('Merged Gendec data for ' + matched + ' crew member(s).', 'success');
+  }
+
+  // Gendec event handlers
+  document.getElementById('parseGendecBtn').addEventListener('click', function() {
+    parseGendecFile();
+  });
+
+  // Auto-parse on file selection
+  gendecFile.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      gendecFileStatus.textContent = '✅ ' + file.name;
+      gendecFileStatus.className = 'file-status has-file';
+      parseGendecFile(); // auto-parse
+    } else {
+      gendecFileStatus.textContent = 'No file chosen';
+      gendecFileStatus.className = 'file-status';
+    }
+  });
+
+  function parseGendecFile() {
+    const file = gendecFile.files[0];
+    if (!file) {
+      gendecStatus.textContent = 'Please select a Gendec file first.';
+      gendecStatus.className = 'status err';
+      showToast('No file selected', 'error');
+      return;
+    }
+    gendecStatus.textContent = 'Reading Gendec…';
+    gendecStatus.className = 'status';
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const result = parseGendecXLSX(data);
+        gendecData = result;
+        gendecDbgContent.innerHTML = '<p style="font-size:11px;color:#888;">Parsed Gendec (' + result.rows.length + ' rows)</p>' +
+          renderDebugTable(result.rows, ['staffNo','name','passport','expiry','nationality']);
+        gendecDbgWrap.style.display = '';
+        gendecStatus.textContent = 'Parsed ' + result.rows.length + ' rows. Merging with crew data…';
+        gendecStatus.className = 'status ok';
+        if (state && state.crew) {
+          mergeGendecData();
+          buildReport();
+          showToast('Gendec parsed and merged!', 'success');
+        } else {
+          showToast('Gendec parsed, but no crew data yet. Parse a PDF first.', 'default');
+        }
+      } catch(err) {
+        gendecStatus.textContent = 'Error: ' + err.message;
+        gendecStatus.className = 'status err';
+        showToast('Gendec error: ' + err.message, 'error');
+        console.error(err);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  document.getElementById('clearGendecBtn').addEventListener('click', function() {
+    gendecData = null;
+    gendecFile.value = '';
+    gendecFileStatus.textContent = 'No file chosen';
+    gendecFileStatus.className = 'file-status';
+    gendecStatus.textContent = '';
+    gendecStatus.className = 'status';
+    gendecDbgWrap.style.display = 'none';
+    if (state && state.crew) {
+      state.crew.forEach(c => {
+        c.passport = '';
+        c.expiry = '';
+        c.nationality = '';
+      });
+      buildReport();
+      showToast('Gendec data cleared.', 'default');
+    }
+  });
+
   document.getElementById('printBtn').addEventListener('click', () => window.print());
 
   // ============================================================
   //  A4 FORMS MODULE – Destination‑based, Multi‑Template
-  //  (kept as separate module, does not touch parser/report)
   // ============================================================
 
   const A4_W = 1754;
@@ -1833,6 +2208,7 @@
     return slots;
   }
 
+  // ===== TEMPLATES – with new slot arrays (null by default, with examples) =====
   const TEMPLATES = {
     bom_baggage: {
       id: 'bom_baggage',
@@ -1843,7 +2219,13 @@
       groupPilotsSeparately: true,
       nameSlots: generateSlots(83, 314, 16, 37, 400, 35, 20),
       rankSlots: generateSlots(497, 314, 16, 37, 80, 35, 20),
-      globalNumbering: false
+      globalNumbering: false,
+      passportSlots: null,
+      expirySlots: null,
+      nationalitySlots: null,
+      picPassportSlots: null,
+      picExpirySlots: null,
+      picNationalitySlots: null,
     },
     bom_landing: {
       id: 'bom_landing',
@@ -1856,7 +2238,13 @@
       rankSlots: generateSlots(180, 354, 17, 30, 40, 30, 14),
       numberSlots: generateSlots(123, 353, 17, 30, 40, 30, 14),
       crewIdSlots: generateSlots(1088, 363, 17, 30, 100, 30, 14),
-      globalNumbering: false
+      globalNumbering: false,
+      passportSlots: generateSlots(635, 360, 17, 30, 160, 30, 14),
+      expirySlots: generateSlots(895, 360, 17, 30, 100, 30, 14),
+      nationalitySlots: generateSlots(535, 359, 17, 30, 100, 30, 14),
+      picPassportSlots: null,
+      picExpirySlots: null,
+      picNationalitySlots: null,
     },
     del_landing: {
       id: 'del_landing',
@@ -1866,7 +2254,6 @@
       bgImageData: null,
       groupPilotsSeparately: true,
       picTopPage: true,
-      // ── PIC SLOTS ──
       picSlots: {
         nameSlots: generateSlots(205, 222, 1, 0, 350, 30, 14),
         rankSlots: generateSlots(125, 222, 1, 0, 80, 30, 14),
@@ -1875,7 +2262,13 @@
       nameSlots: generateSlots(203, 424, 15, 36, 250, 36, 14),
       rankSlots: generateSlots(88, 424, 15, 36, 110, 36, 14),
       crewIdSlots: generateSlots(1015, 424, 15, 36, 125, 36, 14),
-      globalNumbering: false
+      globalNumbering: false,
+      passportSlots: generateSlots(570, 425, 15, 36, 115, 36, 14),
+      expirySlots: generateSlots(841, 426, 15, 36, 170, 36, 14),
+      nationalitySlots: generateSlots(455, 425, 15, 36, 115, 36, 14),
+      picPassportSlots: generateSlots(1027, 220, 1, 0, 145, 30, 14),
+      picExpirySlots: null,
+      picNationalitySlots: generateSlots(560, 220, 1, 0, 220, 30, 14),
     },
     del_baggage: {
       id: 'del_baggage',
@@ -1886,140 +2279,193 @@
       groupPilotsSeparately: true,
       nameSlots: generateSlots(33, 370, 14, 43, 300, 43, 14),
       rankSlots: generateSlots(333, 370, 14, 43, 105, 43, 14),
-      globalNumbering: false
+      globalNumbering: false,
+      passportSlots: null,
+      expirySlots: null,
+      nationalitySlots: null,
+      picPassportSlots: null,
+      picExpirySlots: null,
+      picNationalitySlots: null,
     },
     hyd_landing: {
-  id: 'hyd_landing',
-  label: 'HYD Landing',
-  destination: 'HYD',
-  bgPath: 'templates/HYD_landing.png',
-  bgImageData: null,
-  groupPilotsSeparately: true,
-  picTopPage: true,
-  // ── PIC SLOTS ──
-  picSlots: {
-    nameSlots: generateSlots(120, 260, 1, 0, 260, 30, 14),
-    rankSlots: null,
-    crewIdSlots: null
-  },
-  nameSlots: generateSlots(215, 506, 10, 38, 360, 35, 14),
-  rankSlots: generateSlots(105, 506, 10, 38, 110, 35, 14),
-  crewIdSlots: generateSlots(1182, 506, 10, 38, 110, 35, 14),
-  globalNumbering: false
-},
-hyd_baggage: {
-  id: 'hyd_baggage',
-  label: 'HYD Baggage',
-  destination: 'HYD',
-  bgPath: 'templates/HYD_baggage.png',
-  bgImageData: null,
-  groupPilotsSeparately: true,
-  nameSlots: generateSlots(70, 316, 15, 42, 312, 42, 14),
-  rankSlots: generateSlots(385, 316, 15, 42, 75, 42, 14),
-  globalNumbering: false
-},
-blr_landing: {
-  id: 'blr_landing',
-  label: 'BLR Landing',
-  destination: 'BLR',
-  bgPath: 'templates/BLR_landing.png',
-  bgImageData: null,
-  groupPilotsSeparately: true,
-  picTopPage: true,
-  // ── PIC SLOTS ──
-  picSlots: {
-    nameSlots: generateSlots(305, 265, 1, 0, 180, 30, 14),
-    rankSlots: generateSlots(225, 265, 1, 0, 80, 30, 14),
-    crewIdSlots: null
-  },
-  nameSlots: generateSlots(390, 470, 9, 49, 300, 49, 14),
-  rankSlots: generateSlots(275, 470, 9, 49, 110, 49, 14),
-  numberSlots: generateSlots(200, 470, 9, 49, 75, 49, 14),
-  crewIdSlots: generateSlots(1220, 470, 9, 49, 110, 49, 14),
-  globalNumbering: false
-},
-blr_baggage: {
-  id: 'blr_baggage',
-  label: 'BLR Baggage',
-  destination: 'BLR',
-  bgPath: 'templates/BLR_baggage.png',
-  bgImageData: null,
-  groupPilotsSeparately: true,
-  nameSlots: generateSlots(110, 255, 14, 50, 280, 50, 14),
-  rankSlots: generateSlots(390, 255, 14, 50,110, 50, 14),
-  globalNumbering: false
-},
-amd_landing: {
-  id: 'amd_landing',
-  label: 'AMD Landing',
-  destination: 'AMD',
-  bgPath: 'templates/AMD_landing.png',
-  bgImageData: null,
-  groupPilotsSeparately: true,
-  picTopPage: true,
-  // ── PIC SLOTS ──
-  picSlots: {
-    nameSlots: generateSlots(220, 265, 1, 0, 180, 30, 14),
-    rankSlots: generateSlots(140, 265, 1, 0, 80, 30, 14),
-    crewIdSlots: null
-  },
-  nameSlots: generateSlots(310, 470, 9, 50, 300, 50, 14),
-  rankSlots: generateSlots(195, 470, 9, 50, 110, 50, 14),
-  numberSlots: generateSlots(115, 470, 9, 50, 75, 50, 14),
-  crewIdSlots: generateSlots(1150, 470, 9, 50, 105, 50, 14),
-  globalNumbering: false
-},
-amd_baggage: {
-  id: 'amd_baggage',
-  label: 'AMD Baggage',
-  destination: 'AMD',
-  bgPath: 'templates/AMD_baggage.png',
-  bgImageData: null,
-  groupPilotsSeparately: true,
-  nameSlots: generateSlots(110, 260, 14, 49, 280, 49, 14),
-  rankSlots: generateSlots(390, 260, 14, 49, 110, 49, 14),
-  globalNumbering: false
-},
-atq_landing: {
-  id: 'atq_landing',
-  label: 'ATQ Landing',
-  destination: 'ATQ',
-  bgPath: 'templates/ATQ_landing.png',
-  bgImageData: null,
-  groupPilotsSeparately: true,
-  picTopPage: true,
-  // ── PIC SLOTS ──
-  picSlots: {
-    nameSlots: generateSlots(220, 265, 1, 0, 180, 30, 14),
-    rankSlots: generateSlots(140, 265, 1, 0, 80, 30, 14),
-    crewIdSlots: null
-  },
-  nameSlots: generateSlots(315, 485, 9, 52, 320, 50, 14),
-  rankSlots: generateSlots(195, 485, 9, 52, 115, 50, 14),
-  numberSlots: generateSlots(120, 485, 9, 52, 70, 50, 14),
-  crewIdSlots: generateSlots(1190, 485, 9, 52, 115, 50, 14),
-  globalNumbering: false
-},
-atq_baggage: {
-  id: 'atq_baggage',
-  label: 'ATQ Baggage',
-  destination: 'ATQ',
-  bgPath: 'templates/ATQ_baggage.png',
-  bgImageData: null,
-  groupPilotsSeparately: true,
-  nameSlots: generateSlots(33, 360, 14, 43, 300, 43, 14),
-  rankSlots: generateSlots(333, 360, 14, 43, 110, 43, 14),
-  globalNumbering: false
-}
+      id: 'hyd_landing',
+      label: 'HYD Landing',
+      destination: 'HYD',
+      bgPath: 'templates/HYD_landing.png',
+      bgImageData: null,
+      groupPilotsSeparately: true,
+      picTopPage: true,
+      picSlots: {
+        nameSlots: generateSlots(120, 260, 1, 0, 260, 30, 14),
+        rankSlots: null,
+        crewIdSlots: null,
+      },
+      nameSlots: generateSlots(215, 506, 10, 38, 360, 35, 14),
+      rankSlots: generateSlots(105, 506, 10, 38, 110, 35, 14),
+      crewIdSlots: generateSlots(1182, 506, 10, 38, 110, 35, 14),
+      globalNumbering: false,
+      passportSlots: generateSlots(695, 506, 10, 38, 155, 35, 14),
+      expirySlots: generateSlots(1020, 506, 10, 38, 160, 35, 14),
+      nationalitySlots: generateSlots(570, 506, 10, 38, 155, 35, 14),
+      picPassportSlots: generateSlots(890, 260, 1, 0, 150, 30, 14),
+      picExpirySlots: generateSlots(400, 295, 1, 0, 250, 30, 14),
+      picNationalitySlots: generateSlots(405, 260, 1, 0, 215, 30, 14),
+    },
+    hyd_baggage: {
+      id: 'hyd_baggage',
+      label: 'HYD Baggage',
+      destination: 'HYD',
+      bgPath: 'templates/HYD_baggage.png',
+      bgImageData: null,
+      groupPilotsSeparately: true,
+      nameSlots: generateSlots(70, 316, 15, 42, 312, 42, 14),
+      rankSlots: generateSlots(385, 316, 15, 42, 75, 42, 14),
+      globalNumbering: false,
+      passportSlots: null,
+      expirySlots: null,
+      nationalitySlots: null,
+      picPassportSlots: null,
+      picExpirySlots: null,
+      picNationalitySlots: null,
+    },
+    blr_landing: {
+      id: 'blr_landing',
+      label: 'BLR Landing',
+      destination: 'BLR',
+      bgPath: 'templates/BLR_landing.png',
+      bgImageData: null,
+      groupPilotsSeparately: true,
+      picTopPage: true,
+      picSlots: {
+        nameSlots: generateSlots(305, 265, 1, 0, 180, 30, 14),
+        rankSlots: generateSlots(225, 265, 1, 0, 80, 30, 14),
+        crewIdSlots: null,
+      },
+      nameSlots: generateSlots(390, 470, 9, 49, 300, 49, 14),
+      rankSlots: generateSlots(275, 470, 9, 49, 110, 49, 14),
+      numberSlots: generateSlots(200, 470, 9, 49, 75, 49, 14),
+      crewIdSlots: generateSlots(1220, 470, 9, 49, 110, 49, 14),
+      globalNumbering: false,
+      passportSlots: generateSlots(810, 470, 9, 49, 155, 49, 14),
+      expirySlots: generateSlots(1100, 470, 9, 49, 120, 49, 14),
+      nationalitySlots: generateSlots(690, 470, 9, 49, 120, 49, 14),
+      picPassportSlots: generateSlots(970, 260, 1, 0, 120, 30, 14),
+      picExpirySlots: generateSlots(512, 290, 1, 0, 160, 30, 14),
+      picNationalitySlots: generateSlots(512, 260, 1, 0, 175, 30, 14),
+    },
+    blr_baggage: {
+      id: 'blr_baggage',
+      label: 'BLR Baggage',
+      destination: 'BLR',
+      bgPath: 'templates/BLR_baggage.png',
+      bgImageData: null,
+      groupPilotsSeparately: true,
+      nameSlots: generateSlots(110, 255, 14, 50, 280, 50, 14),
+      rankSlots: generateSlots(390, 255, 14, 50,110, 50, 14),
+      globalNumbering: false,
+      passportSlots: null,
+      expirySlots: null,
+      nationalitySlots: null,
+      picPassportSlots: null,
+      picExpirySlots: null,
+      picNationalitySlots: null,
+    },
+    amd_landing: {
+      id: 'amd_landing',
+      label: 'AMD Landing',
+      destination: 'AMD',
+      bgPath: 'templates/AMD_landing.png',
+      bgImageData: null,
+      groupPilotsSeparately: true,
+      picTopPage: true,
+      picSlots: {
+        nameSlots: generateSlots(220, 265, 1, 0, 180, 30, 14),
+        rankSlots: generateSlots(140, 265, 1, 0, 80, 30, 14),
+        crewIdSlots: null
+      },
+      nameSlots: generateSlots(310, 470, 9, 50, 300, 50, 14),
+      rankSlots: generateSlots(195, 470, 9, 50, 110, 50, 14),
+      numberSlots: generateSlots(115, 470, 9, 50, 75, 50, 14),
+      crewIdSlots: generateSlots(1150, 470, 9, 50, 105, 50, 14),
+      globalNumbering: false,
+      passportSlots: generateSlots(730, 470, 1, 0, 155, 50, 14),
+      expirySlots: generateSlots(1025, 470, 9, 50, 120, 50, 14),
+      nationalitySlots: generateSlots(610, 470, 9, 50, 120, 50, 14),
+      picPassportSlots:generateSlots(890, 265, 1, 0, 130, 30, 14),
+      picExpirySlots: generateSlots(430, 295, 1, 0, 160, 25, 14),
+      picNationalitySlots: generateSlots(420, 265, 1, 0, 190, 30, 14),
+    },
+    amd_baggage: {
+      id: 'amd_baggage',
+      label: 'AMD Baggage',
+      destination: 'AMD',
+      bgPath: 'templates/AMD_baggage.png',
+      bgImageData: null,
+      groupPilotsSeparately: true,
+      nameSlots: generateSlots(110, 260, 14, 49, 280, 49, 14),
+      rankSlots: generateSlots(390, 260, 14, 49, 110, 49, 14),
+      globalNumbering: false,
+      passportSlots: null,
+      expirySlots: null,
+      nationalitySlots: null,
+      picPassportSlots: null,
+      picExpirySlots: null,
+      picNationalitySlots: null,
+    },
+    atq_landing: {
+      id: 'atq_landing',
+      label: 'ATQ Landing',
+      destination: 'ATQ',
+      bgPath: 'templates/ATQ_landing.png',
+      bgImageData: null,
+      groupPilotsSeparately: true,
+      picTopPage: true,
+      picSlots: {
+        nameSlots: generateSlots(220, 265, 1, 0, 180, 30, 14),
+        rankSlots: generateSlots(140, 265, 1, 0, 80, 30, 14),
+        crewIdSlots: null
+      },
+      nameSlots: generateSlots(315, 485, 9, 52, 320, 50, 14),
+      rankSlots: generateSlots(195, 485, 9, 52, 115, 50, 14),
+      numberSlots: generateSlots(120, 485, 9, 52, 70, 50, 14),
+      crewIdSlots: generateSlots(1190, 485, 9, 52, 115, 50, 14),
+      globalNumbering: false,
+      passportSlots: generateSlots(755, 485, 9, 52, 165, 50, 14),
+      expirySlots: generateSlots(1065, 485, 9, 52, 120, 50, 14),
+      nationalitySlots: generateSlots(630, 485, 9, 52, 120, 50, 14),
+      picPassportSlots: generateSlots(925, 270, 1, 0, 135, 30, 14),
+      picExpirySlots: generateSlots(450, 300, 1, 0, 160, 25, 14),
+      picNationalitySlots: generateSlots(435, 270, 1, 0, 195, 30, 14),
+    },
+    atq_baggage: {
+      id: 'atq_baggage',
+      label: 'ATQ Baggage',
+      destination: 'ATQ',
+      bgPath: 'templates/ATQ_baggage.png',
+      bgImageData: null,
+      groupPilotsSeparately: true,
+      nameSlots: generateSlots(33, 360, 14, 43, 300, 43, 14),
+      rankSlots: generateSlots(333, 360, 14, 43, 110, 43, 14),
+      globalNumbering: false,
+      passportSlots: null,
+      expirySlots: null,
+      nationalitySlots: null,
+      picPassportSlots: null,
+      picExpirySlots: null,
+      picNationalitySlots: null,
+    }
   };
 
   const templateOffsets = {};
   let generatedData = {};
+  // Store the currently selected fine-tune key per template
+  const selectedFineTune = {};
 
   // ============================================================
-  //  FILTER MODAL LOGIC (new)
+  //  FILTER MODAL LOGIC (with sorting and global toggle)
   // ============================================================
-  let filterState = {}; // templateId → Set(crewId)
+  let filterState = {};
+  let filterGroupPilots = true; // default
 
   function buildFilterModal(templates) {
     const head = document.getElementById('filterTableHead');
@@ -2032,11 +2478,24 @@ atq_baggage: {
       return;
     }
 
-    // Build column headers: Crew, Rank, ID, then one column per template
+    // Sort crew by rank using RANK_PRIORITY
+    const sortedCrew = state.crew.slice().sort((a,b) => {
+      const priA = RANK_PRIORITY[a.opRank] || 99;
+      const priB = RANK_PRIORITY[b.opRank] || 99;
+      return priA - priB;
+    });
+
+    // Set global toggle default
+    document.getElementById('filterGroupPilots').checked = filterGroupPilots;
+    document.getElementById('filterGroupPilots').addEventListener('change', function() {
+      filterGroupPilots = this.checked;
+    });
+
     let headerRow = document.createElement('tr');
-    headerRow.innerHTML = `<th style="text-align:left;">Crew</th><th>Rank</th><th>ID</th>`;
+    headerRow.innerHTML = `<th style="text-align:left; width:30%;">Crew</th><th style="width:10%;">Rank</th><th style="width:10%;">ID</th>`;
     templates.forEach(tpl => {
       const th = document.createElement('th');
+      th.style.width = (60 / templates.length) + '%';
       th.innerHTML = `<div class="template-header-checkbox">
         <input type="checkbox" class="filter-select-all" data-tplid="${tpl.id}" checked>
         <span>${tpl.label}</span>
@@ -2045,8 +2504,7 @@ atq_baggage: {
     });
     head.appendChild(headerRow);
 
-    // For each crew member, create a row
-    state.crew.forEach(crew => {
+    sortedCrew.forEach(crew => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="crew-cell">${esc(crew.crewName)}</td>
@@ -2060,8 +2518,7 @@ atq_baggage: {
         cb.className = 'filter-crew-check';
         cb.dataset.crewId = crew.crewId;
         cb.dataset.tplId = tpl.id;
-        cb.checked = true; // default included
-        // Store initial state
+        cb.checked = true;
         if (!filterState[tpl.id]) filterState[tpl.id] = new Set();
         filterState[tpl.id].add(crew.crewId);
         td.appendChild(cb);
@@ -2070,14 +2527,12 @@ atq_baggage: {
       body.appendChild(tr);
     });
 
-    // Attach select-all listeners
     document.querySelectorAll('.filter-select-all').forEach(cb => {
       cb.addEventListener('change', function() {
         const tplId = this.dataset.tplid;
         const checked = this.checked;
         document.querySelectorAll(`.filter-crew-check[data-tplid="${tplId}"]`).forEach(chk => {
           chk.checked = checked;
-          // Update filterState
           const crewId = chk.dataset.crewId;
           if (checked) {
             if (!filterState[tplId]) filterState[tplId] = new Set();
@@ -2089,7 +2544,6 @@ atq_baggage: {
       });
     });
 
-    // Attach individual checkbox listeners
     document.querySelectorAll('.filter-crew-check').forEach(chk => {
       chk.addEventListener('change', function() {
         const tplId = this.dataset.tplId;
@@ -2100,7 +2554,6 @@ atq_baggage: {
         } else {
           if (filterState[tplId]) filterState[tplId].delete(crewId);
         }
-        // Update "select all" state for this template
         const allCbs = document.querySelectorAll(`.filter-crew-check[data-tplid="${tplId}"]`);
         const allChecked = Array.from(allCbs).every(c => c.checked);
         const selectAll = document.querySelector(`.filter-select-all[data-tplid="${tplId}"]`);
@@ -2112,7 +2565,7 @@ atq_baggage: {
   }
 
   // ============================================================
-  //  FIXED: loadTemplateFromPath – actually loads the image
+  //  loadTemplateFromPath – loads the image
   // ============================================================
   function loadTemplateFromPath(templateId) {
     return new Promise((resolve) => {
@@ -2129,7 +2582,6 @@ atq_baggage: {
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, A4_W, A4_H);
-        // Scale to fit A4 landscape (preserve aspect ratio)
         const scaleX = A4_W / img.width;
         const scaleY = A4_H / img.height;
         const scale = Math.min(scaleX, scaleY);
@@ -2142,7 +2594,6 @@ atq_baggage: {
         resolve();
       };
       img.onerror = function() {
-        // Fallback to white background
         const canvas = document.createElement('canvas');
         canvas.width = A4_W;
         canvas.height = A4_H;
@@ -2152,7 +2603,7 @@ atq_baggage: {
         tpl.bgImageData = ctx.getImageData(0, 0, A4_W, A4_H);
         resolve();
       };
-      img.src = tpl.bgPath; // e.g., "templates/BOM_baggage.png"
+      img.src = tpl.bgPath;
     });
   }
 
@@ -2167,14 +2618,13 @@ atq_baggage: {
   }
 
   function updateOffset(tplId, key, val) {
-    if (!templateOffsets[tplId]) templateOffsets[tplId] = { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
+    if (!templateOffsets[tplId]) templateOffsets[tplId] = { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0, passportX:0, passportY:0, expiryX:0, expiryY:0, nationalityX:0, nationalityY:0, picPassportX:0, picPassportY:0, picExpiryX:0, picExpiryY:0, picNationalityX:0, picNationalityY:0 };
     templateOffsets[tplId][key] = val;
     regenerateTemplate(tplId);
   }
 
-  // ===== MODIFIED: PIC drawn on EVERY page =====
-  function generatePagesForTemplate(tpl, crew, offsets) {
-    // ── PIC Top Page Logic ──
+  // ===== GENERATE PAGES (extended with new slots) =====
+  function generatePagesForTemplate(tpl, crew, offsets, groupPilotsOverride) {
     let picCrewMember = null;
     let remainingCrew = crew;
 
@@ -2201,7 +2651,10 @@ atq_baggage: {
     const totalCrew = remainingCrew.length;
 
     let pages = [];
-    if (tpl.groupPilotsSeparately && totalCrew > perPage) {
+    // Use override if provided, else fallback to template default
+    const groupSeparate = (groupPilotsOverride !== undefined) ? groupPilotsOverride : tpl.groupPilotsSeparately;
+
+    if (groupSeparate && totalCrew > perPage) {
       const page1 = [...sortedPilots];
       while (page1.length < perPage) page1.push(null);
       pages.push(page1);
@@ -2225,12 +2678,48 @@ atq_baggage: {
     const crewIdOffX = offsets.crewIdX || 0;
     const crewIdOffY = offsets.crewIdY || 0;
     const fontAdj = offsets.fontSizeAdj || 0;
+    const passportOffX = offsets.passportX || 0;
+    const passportOffY = offsets.passportY || 0;
+    const expiryOffX = offsets.expiryX || 0;
+    const expiryOffY = offsets.expiryY || 0;
+    const nationalityOffX = offsets.nationalityX || 0;
+    const nationalityOffY = offsets.nationalityY || 0;
+    const picPassportOffX = offsets.picPassportX || 0;
+    const picPassportOffY = offsets.picPassportY || 0;
+    const picExpiryOffX = offsets.picExpiryX || 0;
+    const picExpiryOffY = offsets.picExpiryY || 0;
+    const picNationalityOffX = offsets.picNationalityX || 0;
+    const picNationalityOffY = offsets.picNationalityY || 0;
 
-    function drawCrewMember(ctx, member, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber) {
+    function drawTextInSlot(ctx, text, slot, offX, offY, fontAdjVal) {
+      if (!slot || !text) return;
+      ctx.save();
+      ctx.textBaseline = 'top';
+      let fontSize = Math.max(6, slot.fontSize + fontAdjVal);
+      ctx.font = `bold ${fontSize}px Arial`;
+      const x = slot.x + offX;
+      const y = slot.y + offY;
+      let displayText = String(text);
+      while (ctx.measureText(displayText).width > slot.w - 10 && fontSize > 6) {
+        fontSize--;
+        ctx.font = `bold ${fontSize}px Arial`;
+      }
+      ctx.shadowColor = 'white';
+      ctx.shadowBlur = 6;
+      ctx.fillStyle = '#000000';
+      ctx.fillText(displayText, x + 5, y + 5);
+      ctx.restore();
+    }
+
+    function drawCrewMember(ctx, member, nameSlot, rankSlot, numberSlot, crewIdSlot,
+                            passportSlot, expirySlot, nationalitySlot, pageNumber) {
       if (!member) return;
       const displayName = member.crewName || 'Unnamed';
       const displayRank = member.opRank || '';
       const displayCrewId = member.crewId || '';
+      const displayPassport = member.passport || '';
+      const displayExpiry = member.expiry || '';
+      const displayNationality = member.nationality || '';
 
       if (nameSlot) {
         ctx.save();
@@ -2307,6 +2796,16 @@ atq_baggage: {
         ctx.fillText(text, crewIdX + 5, crewIdY + 5);
         ctx.restore();
       }
+
+      if (passportSlot && displayPassport) {
+        drawTextInSlot(ctx, displayPassport, passportSlot, passportOffX, passportOffY, fontAdj);
+      }
+      if (expirySlot && displayExpiry) {
+        drawTextInSlot(ctx, displayExpiry, expirySlot, expiryOffX, expiryOffY, fontAdj);
+      }
+      if (nationalitySlot && displayNationality) {
+        drawTextInSlot(ctx, displayNationality, nationalitySlot, nationalityOffX, nationalityOffY, fontAdj);
+      }
     }
 
     pages.forEach((pageCrew, pageIndex) => {
@@ -2316,28 +2815,34 @@ atq_baggage: {
       const ctx = canvas.getContext('2d');
       ctx.putImageData(tpl.bgImageData, 0, 0);
 
-      // 👷 Draw PIC on EVERY page (if exists)
       if (picCrewMember && tpl.picSlots) {
         const picNameSlot = tpl.picSlots.nameSlots ? tpl.picSlots.nameSlots[0] : null;
         const picRankSlot = tpl.picSlots.rankSlots ? tpl.picSlots.rankSlots[0] : null;
         const picCrewIdSlot = tpl.picSlots.crewIdSlots ? tpl.picSlots.crewIdSlots[0] : null;
-        drawCrewMember(ctx, picCrewMember, picNameSlot, picRankSlot, null, picCrewIdSlot, 1);
+        const picPassportSlot = tpl.picPassportSlots ? tpl.picPassportSlots[0] : null;
+        const picExpirySlot = tpl.picExpirySlots ? tpl.picExpirySlots[0] : null;
+        const picNationalitySlot = tpl.picNationalitySlots ? tpl.picNationalitySlots[0] : null;
+        drawCrewMember(ctx, picCrewMember, picNameSlot, picRankSlot, null, picCrewIdSlot,
+                       picPassportSlot, picExpirySlot, picNationalitySlot, 1);
       }
 
-      // Draw regular crew
       pageCrew.forEach((crewMember, idx) => {
         if (!crewMember) return;
         const nameSlot = tpl.nameSlots[idx];
         const rankSlot = tpl.rankSlots ? tpl.rankSlots[idx] : null;
         const numberSlot = tpl.numberSlots ? tpl.numberSlots[idx] : null;
         const crewIdSlot = tpl.crewIdSlots ? tpl.crewIdSlots[idx] : null;
+        const passportSlot = tpl.passportSlots ? tpl.passportSlots[idx] : null;
+        const expirySlot = tpl.expirySlots ? tpl.expirySlots[idx] : null;
+        const nationalitySlot = tpl.nationalitySlots ? tpl.nationalitySlots[idx] : null;
         if (!nameSlot) return;
         const pageNumber = idx + 1;
         let displayName = crewMember.crewName || 'Unnamed';
         if (tpl.globalNumbering && !numberSlot) {
           displayName = (pageIndex * perPage + idx + 1) + '. ' + displayName;
         }
-        drawCrewMember(ctx, crewMember, nameSlot, rankSlot, numberSlot, crewIdSlot, pageNumber);
+        drawCrewMember(ctx, crewMember, nameSlot, rankSlot, numberSlot, crewIdSlot,
+                       passportSlot, expirySlot, nationalitySlot, pageNumber);
       });
 
       canvases.push(canvas);
@@ -2373,7 +2878,7 @@ atq_baggage: {
     });
   }
 
-  // ===== Modified: generateFormsBtn handler – now shows filter modal =====
+  // ===== Generate Forms handler (with filter modal) =====
   document.getElementById('generateFormsBtn').addEventListener('click', async function() {
     if (!state || !state.crew || state.crew.length === 0) {
       showToast('Please parse a PDF first.', 'error');
@@ -2387,26 +2892,19 @@ atq_baggage: {
       return;
     }
 
-    // Reset filter state
     filterState = {};
     templates.forEach(tpl => {
       filterState[tpl.id] = new Set(state.crew.map(c => c.crewId));
     });
 
-    // Show filter modal
     buildFilterModal(templates);
-
-    // Wait for user to click Generate or Cancel (handled by event listeners below)
   });
 
-  // Filter modal button handlers
   document.getElementById('filterGenerateBtn').addEventListener('click', async function() {
     const destination = document.getElementById('destinationSelect').value;
     const templates = Object.values(TEMPLATES).filter(t => t.destination === destination);
     document.getElementById('filterModalOverlay').style.display = 'none';
 
-    // Build filtered crew per template
-    let allGenerated = true;
     generatedData = {};
     document.getElementById('templateSectionsContainer').innerHTML = '';
 
@@ -2414,22 +2912,20 @@ atq_baggage: {
       try {
         await loadTemplateFromPath(tpl.id);
         if (!templateOffsets[tpl.id]) {
-          templateOffsets[tpl.id] = { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
+          templateOffsets[tpl.id] = { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0, passportX:0, passportY:0, expiryX:0, expiryY:0, nationalityX:0, nationalityY:0, picPassportX:0, picPassportY:0, picExpiryX:0, picExpiryY:0, picNationalityX:0, picNationalityY:0 };
         }
         const offsets = templateOffsets[tpl.id];
-        // Get included crew IDs from filterState
         const includedIds = filterState[tpl.id] || new Set();
         const filteredCrew = state.crew.filter(c => includedIds.has(c.crewId));
 
-        const result = generatePagesForTemplate(tpl, filteredCrew, offsets);
+        // Pass the global toggle value
+        const result = generatePagesForTemplate(tpl, filteredCrew, offsets, filterGroupPilots);
 
         if (result.needsPicSelection) {
-          allGenerated = false;
           const selected = await showPicModal(result.captains, tpl.id);
           if (selected) {
             state.picChoice = selected.crewId;
-            // Retry generation for this template
-            const retryResult = generatePagesForTemplate(tpl, filteredCrew, offsets);
+            const retryResult = generatePagesForTemplate(tpl, filteredCrew, offsets, filterGroupPilots);
             if (!retryResult.needsPicSelection) {
               generatedData[tpl.id] = { template: tpl, canvases: retryResult.canvases, filteredCrew: filteredCrew };
               renderTemplateSection(tpl.id);
@@ -2457,7 +2953,6 @@ atq_baggage: {
     showToast('Generation cancelled.', 'default');
   });
 
-  // Close filter modal on overlay click
   document.getElementById('filterModalOverlay').addEventListener('click', function(e) {
     if (e.target === this) {
       this.style.display = 'none';
@@ -2465,7 +2960,7 @@ atq_baggage: {
     }
   });
 
-  // ===== renderTemplateSection – FIXED to preserve order =====
+  // ===== renderTemplateSection – with compact dropdown + single slider + persistence =====
   function renderTemplateSection(templateId) {
     const tpl = TEMPLATES[templateId];
     const data = generatedData[templateId];
@@ -2491,7 +2986,7 @@ atq_baggage: {
     preview.className = 'template-preview-area';
     data.canvases.forEach((cv, idx) => {
       const wrapper = document.createElement('div');
-      wrapper.style.textAlign = 'center';
+      wrapper.className = 'preview-wrapper';
       const label = document.createElement('div');
       label.textContent = `Page ${idx+1}`;
       label.style.fontSize = '11px';
@@ -2500,7 +2995,7 @@ atq_baggage: {
       wrapper.appendChild(label);
       const img = document.createElement('img');
       img.src = cv.toDataURL('image/png');
-      img.style.maxWidth = '200px';
+      img.style.maxWidth = '100%';
       img.style.height = 'auto';
       img.style.border = '1px solid var(--border)';
       img.style.borderRadius = 'var(--radius-sm)';
@@ -2509,96 +3004,133 @@ atq_baggage: {
     });
     section.appendChild(preview);
 
-    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
+    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0, passportX:0, passportY:0, expiryX:0, expiryY:0, nationalityX:0, nationalityY:0, picPassportX:0, picPassportY:0, picExpiryX:0, picExpiryY:0, picNationalityX:0, picNationalityY:0 };
+
+    // Build list of available adjustment keys with labels
+    const availableAdjustments = [];
+    // Always include name X/Y and font size
+    availableAdjustments.push({ key: 'nameX', label: 'Name X' });
+    availableAdjustments.push({ key: 'nameY', label: 'Name Y' });
+    if (tpl.rankSlots && tpl.rankSlots.length > 0) {
+      availableAdjustments.push({ key: 'rankX', label: 'Rank X' });
+      availableAdjustments.push({ key: 'rankY', label: 'Rank Y' });
+    }
+    if (tpl.numberSlots && tpl.numberSlots.length > 0) {
+      availableAdjustments.push({ key: 'numberX', label: 'Number X' });
+      availableAdjustments.push({ key: 'numberY', label: 'Number Y' });
+    }
+    if (tpl.crewIdSlots && tpl.crewIdSlots.length > 0) {
+      availableAdjustments.push({ key: 'crewIdX', label: 'Crew ID X' });
+      availableAdjustments.push({ key: 'crewIdY', label: 'Crew ID Y' });
+    }
+    if (tpl.passportSlots && tpl.passportSlots.length > 0) {
+      availableAdjustments.push({ key: 'passportX', label: 'Passport X' });
+      availableAdjustments.push({ key: 'passportY', label: 'Passport Y' });
+    }
+    if (tpl.expirySlots && tpl.expirySlots.length > 0) {
+      availableAdjustments.push({ key: 'expiryX', label: 'Expiry X' });
+      availableAdjustments.push({ key: 'expiryY', label: 'Expiry Y' });
+    }
+    if (tpl.nationalitySlots && tpl.nationalitySlots.length > 0) {
+      availableAdjustments.push({ key: 'nationalityX', label: 'Nationality X' });
+      availableAdjustments.push({ key: 'nationalityY', label: 'Nationality Y' });
+    }
+    // Font size always
+    availableAdjustments.push({ key: 'fontSizeAdj', label: 'Font Size' });
+
+    // Get the stored selected key, or default to first
+    if (!selectedFineTune[templateId] || !availableAdjustments.some(a => a.key === selectedFineTune[templateId])) {
+      selectedFineTune[templateId] = availableAdjustments[0].key;
+    }
+    const selectedKey = selectedFineTune[templateId];
+
+    // Create compact fine-tune group
     const group = document.createElement('div');
     group.className = 'fine-tune-group';
 
-    const hasRankSlots = tpl.rankSlots && tpl.rankSlots.length > 0;
-    const hasNumberSlots = tpl.numberSlots && tpl.numberSlots.length > 0;
-    const hasCrewIdSlots = tpl.crewIdSlots && tpl.crewIdSlots.length > 0;
+    const compactDiv = document.createElement('div');
+    compactDiv.className = 'fine-tune-compact';
 
-    function createSliderInputPair(label, key, min, max, value) {
-      const wrapper = document.createElement('label');
-      wrapper.textContent = label;
-
-      const slider = document.createElement('input');
-      slider.type = 'range';
-      slider.min = min;
-      slider.max = max;
-      slider.value = value;
-      slider.step = 1;
-      slider.id = key + '_' + templateId;
-
-      const input = document.createElement('input');
-      input.type = 'number';
-      input.className = 'value-input';
-      input.min = min;
-      input.max = max;
-      input.value = value;
-      input.step = 1;
-      input.id = key + 'Val_' + templateId;
-
-      slider.addEventListener('input', function() {
-        const val = parseInt(this.value);
-        input.value = val;
-        updateOffset(templateId, key, val);
-      });
-
-      input.addEventListener('input', function() {
-        let val = parseInt(this.value);
-        if (isNaN(val)) return;
-        if (val < min) val = min;
-        if (val > max) val = max;
-        slider.value = val;
-        this.value = val;
-        updateOffset(templateId, key, val);
-      });
-
-      wrapper.appendChild(slider);
-      wrapper.appendChild(input);
-      return wrapper;
-    }
-
-    const sliderConfigs = [];
-
-    sliderConfigs.push(
-      { label: 'Name X', key: 'nameX', min: -50, max: 50, value: offsets.nameX },
-      { label: 'Name Y', key: 'nameY', min: -50, max: 50, value: offsets.nameY }
-    );
-
-    if (hasRankSlots) {
-      sliderConfigs.push(
-        { label: 'Rank X', key: 'rankX', min: -50, max: 50, value: offsets.rankX || 0 },
-        { label: 'Rank Y', key: 'rankY', min: -50, max: 50, value: offsets.rankY || 0 }
-      );
-    }
-
-    if (hasNumberSlots) {
-      sliderConfigs.push(
-        { label: 'Number X', key: 'numberX', min: -50, max: 50, value: offsets.numberX || 0 },
-        { label: 'Number Y', key: 'numberY', min: -50, max: 50, value: offsets.numberY || 0 }
-      );
-    }
-
-    if (hasCrewIdSlots) {
-      sliderConfigs.push(
-        { label: 'Crew ID X', key: 'crewIdX', min: -50, max: 50, value: offsets.crewIdX || 0 },
-        { label: 'Crew ID Y', key: 'crewIdY', min: -50, max: 50, value: offsets.crewIdY || 0 }
-      );
-    }
-
-    sliderConfigs.push(
-      { label: 'Font Size', key: 'fontSizeAdj', min: -10, max: 10, value: offsets.fontSizeAdj }
-    );
-
-    const row = document.createElement('div');
-    row.className = 'fine-tune-row';
-    sliderConfigs.forEach(cfg => {
-      row.appendChild(createSliderInputPair(cfg.label, cfg.key, cfg.min, cfg.max, cfg.value));
+    // Dropdown
+    const selectRow = document.createElement('div');
+    selectRow.className = 'control-row';
+    const select = document.createElement('select');
+    select.id = 'fineTuneSelect_' + templateId;
+    availableAdjustments.forEach(adj => {
+      const opt = document.createElement('option');
+      opt.value = adj.key;
+      opt.textContent = adj.label;
+      if (adj.key === selectedKey) opt.selected = true;
+      select.appendChild(opt);
     });
-    group.appendChild(row);
+    selectRow.appendChild(select);
+    compactDiv.appendChild(selectRow);
 
+    // Slider and value input
+    const sliderRow = document.createElement('div');
+    sliderRow.className = 'control-row';
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = -50;
+    slider.max = 50;
+    slider.step = 1;
+    slider.id = 'fineTuneSlider_' + templateId;
+    const valueInput = document.createElement('input');
+    valueInput.type = 'number';
+    valueInput.className = 'value-input';
+    valueInput.min = -50;
+    valueInput.max = 50;
+    valueInput.step = 1;
+    valueInput.id = 'fineTuneValue_' + templateId;
+    sliderRow.appendChild(slider);
+    sliderRow.appendChild(valueInput);
+    compactDiv.appendChild(sliderRow);
+
+    group.appendChild(compactDiv);
     section.appendChild(group);
+
+    // Set initial values based on selected key
+    const initialVal = offsets[selectedKey] || 0;
+    slider.value = initialVal;
+    valueInput.value = initialVal;
+
+    // Event handlers
+    function updateFromSlider() {
+      const key = select.value;
+      const val = parseInt(slider.value);
+      valueInput.value = val;
+      selectedFineTune[templateId] = key;
+      updateOffset(templateId, key, val);
+    }
+
+    function updateFromInput() {
+      const key = select.value;
+      let val = parseInt(valueInput.value);
+      if (isNaN(val)) return;
+      if (val < -50) val = -50;
+      if (val > 50) val = 50;
+      slider.value = val;
+      valueInput.value = val;
+      selectedFineTune[templateId] = key;
+      updateOffset(templateId, key, val);
+    }
+
+    function onSelectChange() {
+      const key = select.value;
+      selectedFineTune[templateId] = key;
+      const val = offsets[key] || 0;
+      slider.value = val;
+      valueInput.value = val;
+    }
+
+    select.addEventListener('change', onSelectChange);
+    slider.addEventListener('input', updateFromSlider);
+    valueInput.addEventListener('input', updateFromInput);
+
+    // Store references for later if needed
+    section._fineTuneSelect = select;
+    section._fineTuneSlider = slider;
+    section._fineTuneValue = valueInput;
 
     if (existing) {
       existing.parentNode.insertBefore(section, existing);
@@ -2613,11 +3145,10 @@ atq_baggage: {
     if (!tpl || !tpl.bgImageData || !state || !state.crew) {
       if (tpl && !tpl.bgImageData) {
         loadTemplateFromPath(templateId).then(() => {
-          const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
-          // Use filtered crew from stored data
+          const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0, passportX:0, passportY:0, expiryX:0, expiryY:0, nationalityX:0, nationalityY:0, picPassportX:0, picPassportY:0, picExpiryX:0, picExpiryY:0, picNationalityX:0, picNationalityY:0 };
           const data = generatedData[templateId];
           const filteredCrew = data ? data.filteredCrew : state.crew;
-          const result = generatePagesForTemplate(tpl, filteredCrew, offsets);
+          const result = generatePagesForTemplate(tpl, filteredCrew, offsets, filterGroupPilots);
           if (result.needsPicSelection) {
             showToast('Please select PIC first via Generate Forms.', 'error');
             return;
@@ -2632,10 +3163,10 @@ atq_baggage: {
       }
       return;
     }
-    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
+    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0, passportX:0, passportY:0, expiryX:0, expiryY:0, nationalityX:0, nationalityY:0, picPassportX:0, picPassportY:0, picExpiryX:0, picExpiryY:0, picNationalityX:0, picNationalityY:0 };
     const data = generatedData[templateId];
     const filteredCrew = data ? data.filteredCrew : state.crew;
-    const result = generatePagesForTemplate(tpl, filteredCrew, offsets);
+    const result = generatePagesForTemplate(tpl, filteredCrew, offsets, filterGroupPilots);
     if (result.needsPicSelection) {
       showToast('Please select PIC first via Generate Forms.', 'error');
       return;
@@ -2693,7 +3224,7 @@ atq_baggage: {
   window.copyAdjustedSlots = function(templateId) {
     const tpl = TEMPLATES[templateId];
     if (!tpl) return;
-    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0 };
+    const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0, passportX:0, passportY:0, expiryX:0, expiryY:0, nationalityX:0, nationalityY:0, picPassportX:0, picPassportY:0, picExpiryX:0, picExpiryY:0, picNationalityX:0, picNationalityY:0 };
     const nameOffX = offsets.nameX || 0;
     const nameOffY = offsets.nameY || 0;
     const rankOffX = offsets.rankX || 0;
@@ -2702,6 +3233,12 @@ atq_baggage: {
     const numberOffY = offsets.numberY || 0;
     const crewIdOffX = offsets.crewIdX || 0;
     const crewIdOffY = offsets.crewIdY || 0;
+    const passportOffX = offsets.passportX || 0;
+    const passportOffY = offsets.passportY || 0;
+    const expiryOffX = offsets.expiryX || 0;
+    const expiryOffY = offsets.expiryY || 0;
+    const nationalityOffX = offsets.nationalityX || 0;
+    const nationalityOffY = offsets.nationalityY || 0;
     const fontAdj = offsets.fontSizeAdj || 0;
 
     function adjustSlots(slots, offX, offY) {
@@ -2716,36 +3253,72 @@ atq_baggage: {
     }
 
     let code = `// Adjusted slots for "${tpl.label}"\n`;
-    code += `nameSlots: [\n`;
-    adjustSlots(tpl.nameSlots, nameOffX, nameOffY).forEach((s, i) => {
-      code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
-      if (i < tpl.nameSlots.length - 1) code += ',';
-      code += '\n';
-    });
-    code += `],\n`;
-    if (tpl.rankSlots) {
-      code += `rankSlots: [\n`;
-      adjustSlots(tpl.rankSlots, rankOffX, rankOffY).forEach((s, i) => {
+    const nameSlotsAdj = adjustSlots(tpl.nameSlots, nameOffX, nameOffY);
+    if (nameSlotsAdj) {
+      code += `nameSlots: [\n`;
+      nameSlotsAdj.forEach((s, i) => {
         code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
-        if (i < tpl.rankSlots.length - 1) code += ',';
+        if (i < nameSlotsAdj.length - 1) code += ',';
+        code += '\n';
+      });
+      code += `],\n`;
+    }
+    if (tpl.rankSlots) {
+      const rankSlotsAdj = adjustSlots(tpl.rankSlots, rankOffX, rankOffY);
+      code += `rankSlots: [\n`;
+      rankSlotsAdj.forEach((s, i) => {
+        code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
+        if (i < rankSlotsAdj.length - 1) code += ',';
         code += '\n';
       });
       code += `],\n`;
     }
     if (tpl.numberSlots) {
+      const numberSlotsAdj = adjustSlots(tpl.numberSlots, numberOffX, numberOffY);
       code += `numberSlots: [\n`;
-      adjustSlots(tpl.numberSlots, numberOffX, numberOffY).forEach((s, i) => {
+      numberSlotsAdj.forEach((s, i) => {
         code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
-        if (i < tpl.numberSlots.length - 1) code += ',';
+        if (i < numberSlotsAdj.length - 1) code += ',';
         code += '\n';
       });
       code += `],\n`;
     }
     if (tpl.crewIdSlots) {
+      const crewIdSlotsAdj = adjustSlots(tpl.crewIdSlots, crewIdOffX, crewIdOffY);
       code += `crewIdSlots: [\n`;
-      adjustSlots(tpl.crewIdSlots, crewIdOffX, crewIdOffY).forEach((s, i) => {
+      crewIdSlotsAdj.forEach((s, i) => {
         code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
-        if (i < tpl.crewIdSlots.length - 1) code += ',';
+        if (i < crewIdSlotsAdj.length - 1) code += ',';
+        code += '\n';
+      });
+      code += `],\n`;
+    }
+    if (tpl.passportSlots) {
+      const passportSlotsAdj = adjustSlots(tpl.passportSlots, passportOffX, passportOffY);
+      code += `passportSlots: [\n`;
+      passportSlotsAdj.forEach((s, i) => {
+        code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
+        if (i < passportSlotsAdj.length - 1) code += ',';
+        code += '\n';
+      });
+      code += `],\n`;
+    }
+    if (tpl.expirySlots) {
+      const expirySlotsAdj = adjustSlots(tpl.expirySlots, expiryOffX, expiryOffY);
+      code += `expirySlots: [\n`;
+      expirySlotsAdj.forEach((s, i) => {
+        code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
+        if (i < expirySlotsAdj.length - 1) code += ',';
+        code += '\n';
+      });
+      code += `],\n`;
+    }
+    if (tpl.nationalitySlots) {
+      const nationalitySlotsAdj = adjustSlots(tpl.nationalitySlots, nationalityOffX, nationalityOffY);
+      code += `nationalitySlots: [\n`;
+      nationalitySlotsAdj.forEach((s, i) => {
+        code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} }`;
+        if (i < nationalitySlotsAdj.length - 1) code += ',';
         code += '\n';
       });
       code += `],\n`;
@@ -2753,27 +3326,54 @@ atq_baggage: {
     if (tpl.picSlots) {
       code += `picSlots: {\n`;
       if (tpl.picSlots.nameSlots) {
+        const picNameAdj = adjustSlots(tpl.picSlots.nameSlots, nameOffX, nameOffY);
         code += `  nameSlots: [\n`;
-        adjustSlots(tpl.picSlots.nameSlots, nameOffX, nameOffY).forEach((s, i) => {
+        picNameAdj.forEach(s => {
           code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
         });
         code += `  ],\n`;
       }
       if (tpl.picSlots.rankSlots) {
+        const picRankAdj = adjustSlots(tpl.picSlots.rankSlots, rankOffX, rankOffY);
         code += `  rankSlots: [\n`;
-        adjustSlots(tpl.picSlots.rankSlots, rankOffX, rankOffY).forEach((s, i) => {
+        picRankAdj.forEach(s => {
           code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
         });
         code += `  ],\n`;
       }
       if (tpl.picSlots.crewIdSlots) {
+        const picCrewIdAdj = adjustSlots(tpl.picSlots.crewIdSlots, crewIdOffX, crewIdOffY);
         code += `  crewIdSlots: [\n`;
-        adjustSlots(tpl.picSlots.crewIdSlots, crewIdOffX, crewIdOffY).forEach((s, i) => {
+        picCrewIdAdj.forEach(s => {
           code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
         });
         code += `  ],\n`;
       }
       code += `},\n`;
+    }
+    if (tpl.picPassportSlots) {
+      const picPassportAdj = adjustSlots(tpl.picPassportSlots, passportOffX, passportOffY);
+      code += `picPassportSlots: [\n`;
+      picPassportAdj.forEach(s => {
+        code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+      });
+      code += `],\n`;
+    }
+    if (tpl.picExpirySlots) {
+      const picExpiryAdj = adjustSlots(tpl.picExpirySlots, expiryOffX, expiryOffY);
+      code += `picExpirySlots: [\n`;
+      picExpiryAdj.forEach(s => {
+        code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+      });
+      code += `],\n`;
+    }
+    if (tpl.picNationalitySlots) {
+      const picNationalityAdj = adjustSlots(tpl.picNationalitySlots, nationalityOffX, nationalityOffY);
+      code += `picNationalitySlots: [\n`;
+      picNationalityAdj.forEach(s => {
+        code += `  { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+      });
+      code += `],\n`;
     }
 
     navigator.clipboard.writeText(code).then(() => {
@@ -2866,10 +3466,9 @@ atq_baggage: {
   });
 
   // ============================================================
-  //  🧱 FORM BUILDER – Enhanced (per‑slot config, PIC support)
+  //  🧱 FORM BUILDER – Enhanced with new slot types (unchanged)
   // ============================================================
 
-  // === Builder DOM refs ===
   const builderCanvas = document.getElementById('builderCanvas');
   const builderCtx = builderCanvas.getContext('2d');
   builderCanvas.width = A4_W;
@@ -2915,8 +3514,8 @@ atq_baggage: {
       ctx.fillText('Upload a canvas to begin', canvas.width/2, canvas.height/2);
     }
 
-    const normalTypes = ['Name', 'Rank', 'Number', 'CrewId'];
-    const normalColors = { Name: '#2563eb', Rank: '#16a34a', Number: '#f59e0b', CrewId: '#8b5cf6' };
+    const normalTypes = ['Name', 'Rank', 'Number', 'CrewId', 'Passport', 'Expiry', 'Nationality'];
+    const normalColors = { Name: '#2563eb', Rank: '#16a34a', Number: '#f59e0b', CrewId: '#8b5cf6', Passport: '#f97316', Expiry: '#84cc16', Nationality: '#a855f7' };
     normalTypes.forEach(type => {
       const prefix = 'normal' + type;
       const config = getSlotValues(prefix);
@@ -2943,10 +3542,14 @@ atq_baggage: {
         ctx.fillStyle = color;
         ctx.font = `bold ${fontSize}px Arial`;
         ctx.textBaseline = 'top';
-        const sample = (type === 'Name' ? (state && state.crew && state.crew.length ? state.crew[0].crewName : 'Name 1') :
-                       type === 'Rank' ? (state && state.crew && state.crew.length ? state.crew[0].opRank : 'CAPT') :
-                       type === 'Number' ? String(i+1) :
-                       (state && state.crew && state.crew.length ? state.crew[0].crewId : '1234567'));
+        let sample = '';
+        if (type === 'Name') sample = state && state.crew && state.crew.length ? state.crew[0].crewName : 'Name 1';
+        else if (type === 'Rank') sample = state && state.crew && state.crew.length ? state.crew[0].opRank : 'CAPT';
+        else if (type === 'Number') sample = String(i+1);
+        else if (type === 'CrewId') sample = state && state.crew && state.crew.length ? state.crew[0].crewId : '1234567';
+        else if (type === 'Passport') sample = 'PASSPORT';
+        else if (type === 'Expiry') sample = '31 DEC 2030';
+        else if (type === 'Nationality') sample = 'MALAYSIA';
         let text = sample;
         while (ctx.measureText(text).width > width - 10 && text.length > 1) text = text.slice(0, -1);
         ctx.fillText(text, x + 5, y + 5);
@@ -2959,7 +3562,8 @@ atq_baggage: {
     });
 
     if (builderPicEnable.checked) {
-      const picTypes = ['Name', 'Rank', 'CrewId'];
+      const picTypes = ['Name', 'Rank', 'CrewId', 'Passport', 'Expiry', 'Nationality'];
+      const picColors = { Name: '#2563eb', Rank: '#16a34a', CrewId: '#8b5cf6', Passport: '#f97316', Expiry: '#84cc16', Nationality: '#a855f7' };
       picTypes.forEach(type => {
         const prefix = 'pic' + type;
         const config = getSlotValues(prefix);
@@ -2971,7 +3575,7 @@ atq_baggage: {
         const width = config.width;
         const height = config.height;
         const fontSize = config.fontSize + config.fineFontSize;
-        const color = normalColors[type];
+        const color = picColors[type];
         for (let i = 0; i < rows; i++) {
           const y = startY + i * gapY;
           const x = startX;
@@ -2986,7 +3590,13 @@ atq_baggage: {
           ctx.fillStyle = color;
           ctx.font = `bold ${fontSize}px Arial`;
           ctx.textBaseline = 'top';
-          const sample = (type === 'Name' ? 'PIC Name' : type === 'Rank' ? 'CAPT' : 'PIC ID');
+          let sample = '';
+          if (type === 'Name') sample = 'PIC Name';
+          else if (type === 'Rank') sample = 'CAPT';
+          else if (type === 'CrewId') sample = 'PIC ID';
+          else if (type === 'Passport') sample = 'PASSPORT';
+          else if (type === 'Expiry') sample = '31 DEC 2030';
+          else if (type === 'Nationality') sample = 'MALAYSIA';
           let text = sample;
           while (ctx.measureText(text).width > width - 10 && text.length > 1) text = text.slice(0, -1);
           ctx.fillText(text, x + 5, y + 5);
@@ -3083,9 +3693,15 @@ atq_baggage: {
       normalRank: getSlotValues('normalRank'),
       normalNumber: getSlotValues('normalNumber'),
       normalCrewId: getSlotValues('normalCrewId'),
+      normalPassport: getSlotValues('normalPassport'),
+      normalExpiry: getSlotValues('normalExpiry'),
+      normalNationality: getSlotValues('normalNationality'),
       picName: builderPicEnable.checked ? getSlotValues('picName') : null,
       picRank: builderPicEnable.checked ? getSlotValues('picRank') : null,
-      picCrewId: builderPicEnable.checked ? getSlotValues('picCrewId') : null
+      picCrewId: builderPicEnable.checked ? getSlotValues('picCrewId') : null,
+      picPassport: builderPicEnable.checked ? getSlotValues('picPassport') : null,
+      picExpiry: builderPicEnable.checked ? getSlotValues('picExpiry') : null,
+      picNationality: builderPicEnable.checked ? getSlotValues('picNationality') : null
     };
     let saved = JSON.parse(localStorage.getItem('ctr_builder_configs') || '{}');
     saved[name] = config;
@@ -3129,7 +3745,7 @@ atq_baggage: {
     builderPicEnable.checked = config.picEnabled || false;
     document.getElementById('picSection').style.display = builderPicEnable.checked ? 'block' : 'none';
 
-    const normalTypes = ['Name', 'Rank', 'Number', 'CrewId'];
+    const normalTypes = ['Name', 'Rank', 'Number', 'CrewId', 'Passport', 'Expiry', 'Nationality'];
     normalTypes.forEach(type => {
       const prefix = 'normal' + type;
       const data = config[prefix];
@@ -3152,7 +3768,7 @@ atq_baggage: {
     });
 
     if (builderPicEnable.checked) {
-      const picTypes = ['Name', 'Rank', 'CrewId'];
+      const picTypes = ['Name', 'Rank', 'CrewId', 'Passport', 'Expiry', 'Nationality'];
       picTypes.forEach(type => {
         const prefix = 'pic' + type;
         const data = config[prefix];
@@ -3223,12 +3839,18 @@ atq_baggage: {
     const normalRank = generateSlotsFromConfig('normalRank');
     const normalNumber = generateSlotsFromConfig('normalNumber');
     const normalCrewId = generateSlotsFromConfig('normalCrewId');
+    const normalPassport = generateSlotsFromConfig('normalPassport');
+    const normalExpiry = generateSlotsFromConfig('normalExpiry');
+    const normalNationality = generateSlotsFromConfig('normalNationality');
 
-    let picName = null, picRank = null, picCrewId = null;
+    let picName = null, picRank = null, picCrewId = null, picPassport = null, picExpiry = null, picNationality = null;
     if (picEnabled) {
       picName = generateSlotsFromConfig('picName');
       picRank = generateSlotsFromConfig('picRank');
       picCrewId = generateSlotsFromConfig('picCrewId');
+      picPassport = generateSlotsFromConfig('picPassport');
+      picExpiry = generateSlotsFromConfig('picExpiry');
+      picNationality = generateSlotsFromConfig('picNationality');
     }
 
     let code = `// ============================================\n`;
@@ -3262,6 +3884,27 @@ atq_baggage: {
       if (picCrewId) {
         code += `    crewIdSlots: [\n`;
         picCrewId.forEach(s => {
+          code += `      { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+        });
+        code += `    ],\n`;
+      }
+      if (picPassport) {
+        code += `    picPassportSlots: [\n`;
+        picPassport.forEach(s => {
+          code += `      { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+        });
+        code += `    ],\n`;
+      }
+      if (picExpiry) {
+        code += `    picExpirySlots: [\n`;
+        picExpiry.forEach(s => {
+          code += `      { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+        });
+        code += `    ],\n`;
+      }
+      if (picNationality) {
+        code += `    picNationalitySlots: [\n`;
+        picNationality.forEach(s => {
           code += `      { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
         });
         code += `    ],\n`;
@@ -3303,6 +3946,33 @@ atq_baggage: {
       code += `  ],\n`;
     } else {
       code += `  crewIdSlots: null,\n`;
+    }
+    if (normalPassport) {
+      code += `  passportSlots: [\n`;
+      normalPassport.forEach(s => {
+        code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+      });
+      code += `  ],\n`;
+    } else {
+      code += `  passportSlots: null,\n`;
+    }
+    if (normalExpiry) {
+      code += `  expirySlots: [\n`;
+      normalExpiry.forEach(s => {
+        code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+      });
+      code += `  ],\n`;
+    } else {
+      code += `  expirySlots: null,\n`;
+    }
+    if (normalNationality) {
+      code += `  nationalitySlots: [\n`;
+      normalNationality.forEach(s => {
+        code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+      });
+      code += `  ],\n`;
+    } else {
+      code += `  nationalitySlots: null,\n`;
     }
     code += `};\n`;
 
@@ -3361,8 +4031,6 @@ atq_baggage: {
     }
   });
 
-  // ===== End of Form Builder =====
-
   // ============================================================
   //  👷 BUILDER UNLOCK – 7 TAPS ON 👷
   // ============================================================
@@ -3377,7 +4045,6 @@ atq_baggage: {
       brickTarget.addEventListener('click', function(e) {
         e.stopPropagation();
 
-        // If already unlocked, toggle visibility
         if (builderCard.classList.contains('visible')) {
           builderCard.classList.toggle('visible');
           showToast(builderCard.classList.contains('visible') ? '👷 Builder shown' : '👷 Builder hidden', 'default');
@@ -3388,7 +4055,6 @@ atq_baggage: {
         const remaining = TARGET_TAPS - tapCount;
 
         if (tapCount >= TARGET_TAPS) {
-          // UNLOCKED!
           builderCard.classList.add('visible');
           showToast('🔓 Developer tools unlocked! 👷', 'success');
           tapCount = 0;
@@ -3409,6 +4075,5 @@ atq_baggage: {
 
 })();
 </script>
-<script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
 </body>
 </html>
