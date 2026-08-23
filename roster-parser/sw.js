@@ -1,4 +1,4 @@
-const CACHE_NAME = 'roster-parser-v4';
+const CACHE_NAME = 'roster-parser-v5';
 const SHARE_TARGET = '/bpm-pro-max/roster-parser/share-target'; // must match manifest.action
 
 const STATIC_ASSETS = [
