@@ -239,38 +239,37 @@
 <div class="container">
 
   <h1>CTR<span>.</span> Autofill</h1>
-  <div class="subtitle">📖 Complete Tutorial – How to Use This Tool (v3.6)</div>
+  <div class="subtitle">📖 Complete Tutorial – How to Use This Tool (v3.0)</div>
 
   <!-- ===== SECTION 1: OVERVIEW ===== -->
   <h2>🔍 What Does This Tool Do?</h2>
   <p>
-    This tool helps you <strong>automatically fill crew forms</strong> for different destinations. You upload a PDF from the <strong>CrewTripReport</strong> system, and optionally a <strong>Gendec .xlsx</strong> file to add passport, expiry, and nationality data. The tool:
+    This tool helps you <strong>automatically fill crew forms</strong> for different destinations. You upload a PDF from the <strong>CrewTripReport</strong> system, and the tool:
   </p>
   <ul>
     <li>📋 <strong>Extracts</strong> all crew names, ranks, and IDs from the PDF.</li>
-    <li>📄 <strong>Generates</strong> A4‑sized forms with each crew member's name, rank, ID, passport, expiry, and nationality placed in the correct slots (if available).</li>
+    <li>📄 <strong>Generates</strong> A4‑sized forms with each crew member's name, rank, and ID placed in the correct slots.</li>
     <li>🖨️ <strong>Lets you print</strong> the forms directly or save them as PNG or PDF.</li>
-    <li>🎛️ <strong>Fine‑tune</strong> the position of every text field individually per form.</li>
   </ul>
 
   <div class="note">
     <strong>💡 Why use this?</strong> Instead of manually writing every name on every form, you do it once – the tool does the rest.
   </div>
 
-  <!-- ===== SECTION 2: GETTING STARTED – UPDATED STEPS ===== -->
+  <!-- ===== SECTION 2: GETTING STARTED ===== -->
   <h2>🚀 Getting Started – Step by Step</h2>
 
   <div class="step-card">
     <div><span class="step-number">1</span> <strong>Upload a PDF</strong></div>
     <p style="margin-top:6px; margin-bottom:0;">
-      Click the big blue <span class="btn-upload-demo" style="font-size:13px; padding:8px 20px;">📎 Choose CrewTripReport PDF</span> button and select your <strong>CrewTripReport PDF</strong>. The tool will auto‑parse it.
+      Click the big blue <span class="btn-upload-demo" style="font-size:13px; padding:8px 20px;">📎 Choose File</span> button and select your <strong>CrewTripReport PDF</strong>.
     </p>
   </div>
 
   <div class="step-card">
-    <div><span class="step-number">2</span> <strong>(Optional) Upload Gendec XLSX</strong></div>
+    <div><span class="step-number">2</span> <strong>Wait for auto‑parse</strong></div>
     <p style="margin-top:6px; margin-bottom:0;">
-      If you have a Gendec file (<code>.xlsx</code>) with passport numbers, expiry dates, and nationalities, upload it using the separate Gendec card. The tool will <strong>automatically merge</strong> this data with the crew list.
+      The tool will automatically read the PDF and extract the crew list. You'll see a message: <span style="color:var(--green);">✅ Parsed OK</span>.
     </p>
   </div>
 
@@ -284,53 +283,30 @@
   </div>
 
   <div class="step-card">
-    <div><span class="step-number">4</span> <strong>Generate forms – with filtering</strong></div>
+    <div><span class="step-number">4</span> <strong>Generate forms</strong></div>
     <p style="margin-top:6px; margin-bottom:0;">
-      Click the <span class="button-demo btn-blue">⚡ Generate Forms</span> button. A <strong>filter modal</strong> will appear where you can:
-    </p>
-    <ul>
-      <li><strong>Uncheck</strong> any crew member you want to <em>exclude</em> from that specific form.</li>
-      <li>Toggle <strong>"Separate pilots and cabin crew onto different pages"</strong> – this lets you choose whether pilots and cabin crew appear on the same page or on separate pages (useful for different form requirements).</li>
-    </ul>
-    <p>After you confirm, the tool loads the templates and places every crew member into the correct slots.</p>
-  </div>
-
-  <div class="step-card">
-    <div><span class="step-number">5</span> <strong>Select PIC (if needed)</strong></div>
-    <p style="margin-top:6px; margin-bottom:0;">
-      If a template has multiple Captains and the template uses a <strong>PIC Top Page</strong>, you'll be prompted to choose the <strong>Pilot In Charge (PIC)</strong> – the selected Captain's name will appear on every page of that form.
+      Click the <span class="button-demo btn-blue">⚡ Generate Forms</span> button.
+      The tool will load the correct templates for your destination and place every crew member into the right slots.
+      <br><strong>Note:</strong> If a template has multiple Captains, you'll be prompted to select the <strong>Pilot In Charge (PIC)</strong> – the chosen Captain's name will appear on every page of that form.
     </p>
   </div>
 
   <div class="step-card">
-    <div><span class="step-number">6</span> <strong>Review & adjust fine‑tune</strong></div>
+    <div><span class="step-number">5</span> <strong>Review & print</strong></div>
     <p style="margin-top:6px; margin-bottom:0;">
-      Each generated form appears in its own section. You can:
-    </p>
-    <ul>
-      <li><strong>Print</strong> each form separately using the <span class="button-demo btn-green">🖨️ Print A4 Sheets</span> button.</li>
-      <li>Use the <strong>fine‑tune dropdown + slider</strong> to adjust text positions (Name X/Y, Rank X/Y, Number X/Y, etc.) for that form. Changes are applied live.</li>
-      <li>Copy the adjusted slot coordinates to clipboard with <span class="button-demo btn-blue" style="background:var(--accent);">📋 Copy Slots</span> – useful for developers.</li>
-    </ul>
-  </div>
-
-  <div class="step-card">
-    <div><span class="step-number">7</span> <strong>Download all pages</strong></div>
-    <p style="margin-top:6px; margin-bottom:0;">
-      Use the global buttons at the bottom of the A4 Forms card:
-      <span class="button-demo btn-blue">⬇️ Download All PNGs</span> (each page as a separate PNG) or
-      <span class="button-demo btn-green">⬇️ Download All PDF</span> (all pages combined into one PDF).
+      Each form appears in its own section. You can <strong>print</strong> each form separately or download all as PNG/PDF.
+      Use the <strong>fine‑tune sliders</strong> to adjust text positions if needed.
     </p>
   </div>
 
-  <!-- ===== SECTION 3: ALL BUTTONS & FEATURES ===== -->
+  <!-- ===== SECTION 3: ALL BUTTONS EXPLAINED ===== -->
   <h2>🔘 All Buttons & What They Do</h2>
 
-  <h3>📄 Parser Card (PDF)</h3>
+  <h3>📄 Parser Card</h3>
   <table>
     <tr><th>Button / Element</th><th>What It Does</th></tr>
     <tr>
-      <td><span class="btn-upload-demo" style="font-size:13px; padding:6px 16px;">📎 Choose CrewTripReport PDF</span></td>
+      <td><span class="btn-upload-demo" style="font-size:13px; padding:6px 16px;">📎 Choose File</span></td>
       <td>Opens your file browser to select a PDF. This is the <strong>main way</strong> to import data.</td>
     </tr>
     <tr>
@@ -347,23 +323,6 @@
     </tr>
   </table>
 
-  <h3>📊 Gendec Card (XLSX)</h3>
-  <table>
-    <tr><th>Button / Element</th><th>What It Does</th></tr>
-    <tr>
-      <td><span class="btn-upload-demo" style="font-size:13px; padding:6px 16px;">📎 Choose Gendec XLSX</span></td>
-      <td>Upload your Gendec file. The tool will read passport, expiry, and nationality columns and <strong>merge</strong> them with the crew data (by Staff Number or Name).</td>
-    </tr>
-    <tr>
-      <td><span class="button-demo btn-gray">⚡ Parse Gendec</span></td>
-      <td>Manually trigger parsing (auto‑parse happens on file selection).</td>
-    </tr>
-    <tr>
-      <td><span class="button-demo btn-gray">Clear</span></td>
-      <td>Clears the Gendec data from memory.</td>
-    </tr>
-  </table>
-
   <h3>📄 A4 Forms Card</h3>
   <table>
     <tr><th>Button / Element</th><th>What It Does</th></tr>
@@ -373,7 +332,7 @@
     </tr>
     <tr>
       <td><span class="button-demo btn-blue">⚡ Generate Forms</span></td>
-      <td>Opens the <strong>filter modal</strong> where you can include/exclude crew and toggle separate pilots/cabin. After confirmation, it generates the forms.</td>
+      <td>Loads the templates for your destination and places all crew onto the forms. If multiple Captains exist, you'll be asked to choose the PIC.</td>
     </tr>
     <tr>
       <td><span class="button-demo btn-green">🖨️ Print A4 Sheets</span></td>
@@ -393,66 +352,47 @@
     </tr>
   </table>
 
-  <h3>🎛️ Fine‑Tune Controls (per form)</h3>
+  <h3>🎛️ Fine‑Tune Controls</h3>
   <p>
-    Each form has its own compact fine‑tune panel. You choose which offset to adjust from a <strong>dropdown</strong>, then use the <strong>slider</strong> or type a number directly in the box next to it.
+    Each form has its own set of sliders. These let you adjust where the text appears on the page – <strong>without</strong> changing the original template.
   </p>
+
   <div class="grid-2">
     <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
-      <strong>Name X / Name Y</strong><br>
-      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>name</strong> horizontally/vertically.</span>
+      <strong>Name X</strong><br>
+      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>name</strong> left (negative) or right (positive).</span>
     </div>
     <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
-      <strong>Rank X / Rank Y</strong><br>
-      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>rank</strong> horizontally/vertically.</span>
+      <strong>Name Y</strong><br>
+      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>name</strong> up (negative) or down (positive).</span>
+    </div>
+    <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+      <strong>Rank X</strong><br>
+      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>rank</strong> left or right. (Only shown if rank slots exist.)</span>
+    </div>
+    <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+      <strong>Rank Y</strong><br>
+      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>rank</strong> up or down.</span>
     </div>
     <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
       <strong>Number X / Number Y</strong><br>
-      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>row number</strong> (1, 2, 3…).</span>
+      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>row number</strong> (1, 2, 3…) left/right or up/down. (Only if numbering slots exist.)</span>
     </div>
     <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
-      <strong>Crew ID X / Y</strong><br>
-      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>crew ID</strong>.</span>
-    </div>
-    <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
-      <strong>Passport X / Y</strong><br>
-      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>passport number</strong> (if present).</span>
-    </div>
-    <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
-      <strong>Expiry X / Y</strong><br>
-      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>expiry date</strong> (if present).</span>
-    </div>
-    <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
-      <strong>Nationality X / Y</strong><br>
-      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>nationality</strong> (if present).</span>
+      <strong>Crew ID X / Crew ID Y</strong><br>
+      <span style="font-size:13px; color:var(--text-muted);">Moves the <strong>crew ID</strong> left/right or up/down. (Only if ID slots exist.)</span>
     </div>
     <div style="background:var(--surface2); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border); grid-column: span 2;">
       <strong>Font Size</strong><br>
       <span style="font-size:13px; color:var(--text-muted);">Makes all text on this form <strong>larger</strong> (positive) or <strong>smaller</strong> (negative).</span>
     </div>
   </div>
+
   <div class="note">
     <strong>✏️ Pro tip:</strong> You can also <strong>type</strong> a number directly into the box next to each slider for precise adjustments.
   </div>
 
-  <!-- ===== INTERACTIVE REPORT (NEW) ===== -->
-  <h2>🖱️ Interactive Report – Click to Edit</h2>
-  <p>
-    After parsing the PDF, the <strong>internal report</strong> (below the PDF card) is not just a static preview – many elements are <strong>clickable</strong> and let you adjust data directly.
-  </p>
-  <ul>
-    <li><strong>BAY</strong> – click to open a letter selector (A, B, C, G, H) and a number keypad to enter the bay number.</li>
-    <li><strong>BRIEFING STATION</strong> – click to open a number keypad to enter the station.</li>
-    <li><strong>Position cells</strong> (under CABIN CREW) – click to assign a working position (e.g., ICC, P1, A1, etc.) and optionally set as SNY or Alternate ICC.</li>
-    <li><strong>Door cells</strong> – click to assign a door (1L, 1R, 2L, etc.) to a crew member.</li>
-    <li><strong>ICC cell</strong> (under Captain/ICC table) – if multiple eligible candidates exist, click to choose the Crew In Charge.</li>
-    <li><strong>Flight Time cells</strong> – click any cell in the Flight Time Details table to open a keypad and enter a time.</li>
-  </ul>
-  <div class="note">
-    <strong>💡 Why this matters:</strong> You can fine‑tune assignments and data <strong>before</strong> generating the A4 forms, ensuring everything is correct.
-  </div>
-
-  <!-- ===== HIDDEN FORM BUILDER ===== -->
+  <!-- ===== NEW: FORM BUILDER ===== -->
   <h2>🧱 Hidden Developer Tools – Form Builder</h2>
   <p>
     The tool includes a <strong>Form Builder</strong> that lets you design your own templates. It is hidden by default – you unlock it by tapping the <span style="font-size:24px;">👷</span> emoji at the <strong>very bottom of the page</strong> <strong>7 times</strong>.
@@ -460,15 +400,22 @@
   <ul>
     <li>Each tap shows a toast message with remaining taps.</li>
     <li>After the 7th tap, the <strong>Form Builder card</strong> appears.</li>
-    <li>You can upload a canvas (template background), define slot positions for Name, Rank, Number, Crew ID, Passport, Expiry, Nationality, and PIC slots.</li>
-    <li><strong>Click on the canvas</strong> to set the Start X/Y for the selected slot type – the tool automatically uses the clicked coordinates.</li>
-    <li>Adjust all parameters (rows, gap, width, height, font size) and fine‑tune offsets.</li>
-    <li><strong>Save</strong> your template locally, then <strong>Export Code</strong> – copy the generated slot code and paste it into the main <code>TEMPLATES</code> object in <code>CTR.html</code>.</li>
-    <li>Saved templates appear in the list – you can load or delete them anytime.</li>
+    <li>You can upload a canvas (template background), define slot positions for Name, Rank, Number, Crew ID, and PIC slots, and export the code to use in the main app.</li>
+    <li>Your saved templates are stored locally in your browser.</li>
   </ul>
   <div class="note">
     <strong>🔒 This is a developer feature</strong> – it's meant for advanced users who want to create new templates for destinations not yet supported.
   </div>
+
+  <h3>Using the Form Builder</h3>
+  <ol>
+    <li><strong>Unlock it</strong> with 7 taps on the 👷 at the bottom.</li>
+    <li><strong>Upload a canvas</strong> – a PNG or JPG image of the blank form (A4 landscape recommended).</li>
+    <li><strong>Adjust slot parameters</strong> – each slot type (Name, Rank, etc.) has its own settings: start X/Y, rows, gap, width, height, and font size.</li>
+    <li><strong>Click on the canvas</strong> to set the Start X/Y for the selected slot type – the tool automatically uses the clicked coordinates.</li>
+    <li><strong>Enable PIC Top Page</strong> if you want a Captain to appear on every page.</li>
+    <li><strong>Save</strong> your template, then <strong>Export Code</strong> – copy the generated slot code and paste it into the main <code>TEMPLATES</code> object in <code>CTR.html</code>.</li>
+  </ol>
 
   <!-- ===== SECTION 4: PRINTING ===== -->
   <h2>🖨️ How to Print the Forms</h2>
@@ -500,7 +447,7 @@
   </p>
   <ul>
     <li>🖼️ Loading background images (templates). If images are missing, the tool uses a <strong>white background</strong> as a fallback.</li>
-    <li>📝 Placing every crew member's name, rank, ID, passport, expiry, and nationality into the correct slots.</li>
+    <li>📝 Placing every crew member's name, rank, and ID into the correct slots.</li>
     <li>🔄 Rendering all pages as high‑quality images.</li>
   </ul>
 
@@ -553,11 +500,6 @@
     Make sure you tap the <span style="font-size:24px;">👷</span> emoji at the <strong>bottom of the page</strong> exactly <strong>7 times</strong> within 5 seconds (if you pause too long, the counter resets). After the 7th tap, the card will appear.
   </p>
 
-  <h3>❌ The filter modal doesn't appear</h3>
-  <p>
-    The filter modal only appears after you click <span class="button-demo btn-blue">⚡ Generate Forms</span> and crew data is available. Make sure you have parsed a PDF first.
-  </p>
-
   <!-- ===== SECTION 8: ABOUT ===== -->
   <h2>👤 Why?</h2>
   <p>
@@ -569,7 +511,7 @@
   </p>
 
   <div class="footer">
-    <strong>CTR Autofill</strong> · v3.6<br>
+    <strong>CTR Autofill</strong> · v3.0<br>
     🔒 All processing is local — your data never leaves your device.<br>
     Made by <strong>2100551</strong> · ✈️
   </div>
