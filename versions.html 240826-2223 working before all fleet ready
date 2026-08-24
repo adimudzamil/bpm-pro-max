@@ -291,47 +291,6 @@
             </div>
         </div>
         
-        <!-- NEW VERSION 4.0.7 - 24 August 2026 -->
-        <div class="version">
-            <h3>🔗 Version 4.0.7 - Tutorial Revamp & Full Fleet Interactive Support</h3>
-            <div class="date">Released: 24 August 2026</div>
-            
-            <div class="improvement">
-                <span class="improvement-badge">IMPROVEMENT</span>
-                <strong>Removed Embedded Tutorial Iframe</strong>
-                <ul>
-                    <li>Replaced the heavy iframe loading <code>tutorial.html</code> with a simple direct link.</li>
-                    <li>Clicking the link opens the full guide in a new tab/window, reducing page load time and memory usage.</li>
-                    <li>Removed all related loading spinners and event listeners for a cleaner, faster UI.</li>
-                </ul>
-            </div>
-            
-            <div class="improvement">
-                <span class="improvement-badge">IMPROVEMENT</span>
-                <strong>Updated Tutorial Content – All Fleets Now Supported</strong>
-                <ul>
-                    <li>Removed the “FLEET NOTE” warning that only 737 had interactive features.</li>
-                    <li>Confirmed that <strong>every</strong> aircraft type (737, A330‑300, A330‑200, A330‑900, A350‑900, A350‑MAH) now supports the full interactive seat chart system.</li>
-                    <li>All modes – View, Colours, Edit, Swap, and Order – are fully functional across the entire fleet.</li>
-                </ul>
-            </div>
-            
-            <div class="info">
-                <span class="info-badge">NOTE</span>
-                <strong>Fleet Readiness Confirmed</strong>
-                <p style="margin-top: 6px;">The interactive popup system (Order, Edit, Colour, Peek, Swap) is now available for all supported aircraft. No fleet is left behind – every seat chart opens with the same powerful feature set. This update finalises the transition from the 737‑only pilot to a full‑fleet rollout.</p>
-            </div>
-            
-            <div class="fix">
-                <span class="fix-badge">FIX</span>
-                <strong>Minor Stability Improvements</strong>
-                <ul>
-                    <li>Fixed an issue where the tutorial toggle would occasionally show a loading spinner that never disappeared.</li>
-                    <li>Ensured the version history iframe still loads correctly (unchanged).</li>
-                </ul>
-            </div>
-        </div>
-        
         <!-- Version 4.0.6 - The Interactive Seat Chart Overhaul (23 July 2026) -->
         <div class="version">
             <h3>🎛️ Version 4.0.6 - Interactive 737 Popup (Order, Edit, Colour & Peek)</h3>
@@ -339,7 +298,7 @@
             
             <div class="info">
                 <span class="info-badge">⚠️ FLEET NOTE</span>
-                <strong>This version introduced the interactive system initially for 737 only.</strong> As of Version 4.0.7, all fleets are now supported. See above.
+                <strong>Right now, ONLY the 737 Business Class (<code>sc-737.html</code>) features this advanced interactive system.</strong> A330, A350, and other fleet seat charts are currently in active development and will receive these same features in an upcoming update.
             </div>
             
             <div class="feature">
