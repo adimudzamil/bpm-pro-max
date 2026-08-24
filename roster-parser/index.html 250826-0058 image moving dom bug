@@ -1545,13 +1545,6 @@ function render(){
 
   if(RAW_WARNINGS.length) RAW_WARNINGS.forEach(w=>log(w,'warn'));
   log('Parsed '+DAYS.length+' days ('+fmtDate(DAYS[0].date)+' – '+fmtDate(DAYS[DAYS.length-1].date)+').', 'ok');
-
-  // AUTO-FIT: if the table is wider than the viewport, fit it automatically.
-  const table = document.getElementById('outTable');
-  const wrap = document.getElementById('resultsWrap');
-  if (table && wrap && table.scrollWidth > wrap.clientWidth) {
-    if (!fitOn) toggleFit();
-  }
 }
 
 function renderLegend(codesUsed){
@@ -1624,64 +1617,35 @@ function toggleFit(){
   document.getElementById('toolbarRow').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-/* =====================================================================
-   NEW: Off‑screen image capture (does NOT touch the visible DOM)
-===================================================================== */
-async function captureElementOffscreen(element, filename) {
-  // Clone the element deeply (including all styles)
-  const clone = element.cloneNode(true);
-  clone.style.transform = 'none';
-  clone.style.width = 'auto';
-  clone.style.display = 'block';
-
-  // Create an off‑screen container
-  const container = document.createElement('div');
-  container.style.cssText = `
-    position: absolute;
-    left: -9999px;
-    top: 0;
-    width: auto;
-    height: auto;
-    overflow: visible;
-    background: ${getComputedStyle(element).backgroundColor || '#141619'};
-    padding: 20px;
-    z-index: -1;
-  `;
-  container.appendChild(clone);
-  document.body.appendChild(container);
-
-  // Let the layout settle
-  await new Promise(resolve => setTimeout(resolve, 50));
-
-  // Capture the clone
-  const canvas = await html2canvas(clone, {
-    scale: 4,
-    backgroundColor: getComputedStyle(element).getPropertyValue('--panel') || '#141619',
-    useCORS: true,
-    logging: false,
-    width: clone.scrollWidth,
-    height: clone.scrollHeight,
-    windowWidth: clone.scrollWidth,
-    windowHeight: clone.scrollHeight,
-  });
-
-  // Clean up
-  container.remove();
-
-  // Download the image
+/* ===== Generic image capture helper (returns Promise) ===== */
+function captureElementAsImage(element, filename, scale, targetWidth, targetHeight) {
   return new Promise((resolve, reject) => {
-    canvas.toBlob(blob => {
-      if (!blob) { reject(new Error('Failed to create blob')); return; }
-      if (navigator.share) {
-        const file = new File([blob], filename, { type: 'image/png' });
-        navigator.share({ files: [file], title: filename })
-          .then(resolve)
-          .catch(() => fallbackDownload(blob, filename));
-      } else {
-        fallbackDownload(blob, filename);
-        resolve();
-      }
-    });
+    const opts = {
+      scale: scale || 4,
+      backgroundColor: getComputedStyle(element).getPropertyValue('--panel') || '#141619',
+      useCORS: true,
+      logging: false,
+    };
+    // Tell html2canvas to render at the content's true full size, rather
+    // than whatever the element's current (possibly clipped/scrolled)
+    // on-screen box is. This is what actually prevents cropping — a CSS
+    // transform:scale() pre-shrink is NOT reliable for html2canvas sizing.
+    if (targetWidth) { opts.width = targetWidth; opts.windowWidth = targetWidth; }
+    if (targetHeight) { opts.height = targetHeight; opts.windowHeight = targetHeight; }
+    html2canvas(element, opts).then(canvas => {
+      canvas.toBlob(blob => {
+        if (!blob) { reject(new Error('Failed to create blob')); return; }
+        if (navigator.share) {
+          const file = new File([blob], filename, { type: 'image/png' });
+          navigator.share({ files: [file], title: filename })
+            .then(() => resolve())
+            .catch(() => fallbackDownload(blob, filename));
+        } else {
+          fallbackDownload(blob, filename);
+          resolve();
+        }
+      });
+    }).catch(reject);
   });
 }
 
@@ -1693,31 +1657,96 @@ function fallbackDownload(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
 
-async function exportPNG() {
+/* =====================================================================
+   FIXED fitAndCapture: clear Fit transform, set explicit inline width,
+   clamp export scale for iOS canvas limits, and restore everything.
+===================================================================== */
+async function fitAndCapture(element, filename, exportScale) {
+  const allElements = [element, ...element.querySelectorAll('.tableWrap')];
+  const restoreInfo = [];
+
+  allElements.forEach(el => {
+    restoreInfo.push({ el, overflow: el.style.overflow, borderRadius: el.style.borderRadius });
+    el.style.overflow = 'visible';
+    el.style.borderRadius = '0';
+  });
+
+  // Clear any leftover "Fit screen" transform/width so measurement below
+  // reflects the true natural size, not a shrunk state.
+  const prevTransform = element.style.transform;
+  const prevWidth = element.style.width;
+  element.style.transform = '';
+  element.style.width = '';
+
+  await new Promise(resolve => setTimeout(resolve, 50));
+
+  const table = element.querySelector('table');
+  const naturalWidth = Math.max(element.scrollWidth, table ? table.scrollWidth + 4 : 0);
+  const naturalHeight = element.scrollHeight;
+
+  // Force the wrap to actually lay out at its full natural width via a
+  // real inline style — the same trick the "Fit screen" button uses.
+  // Relying on html2canvas's windowWidth to reflow percentage-based
+  // ancestors is what was letting columns get clipped when Fit wasn't
+  // pressed first.
+  element.style.width = naturalWidth + 'px';
+  await new Promise(resolve => setTimeout(resolve, 50));
+
+  // iOS Safari (and some Android WebViews) silently truncate/blank
+  // canvases beyond ~4096px per side or ~16.7M total pixels. Clamp the
+  // scale so wide/tall rosters never get cropped or come out blank.
+  const MAX_DIM = 4096;
+  const MAX_AREA = MAX_DIM * MAX_DIM;
+  let effScale = exportScale;
+  if (naturalWidth > 0 && naturalHeight > 0) {
+    effScale = Math.min(effScale, MAX_DIM / naturalWidth, MAX_DIM / naturalHeight);
+    effScale = Math.min(effScale, Math.sqrt(MAX_AREA / (naturalWidth * naturalHeight)));
+  }
+  effScale = Math.max(effScale, 1);
+  if (effScale < exportScale) {
+    log(`Image scale reduced to ${effScale.toFixed(2)}x (from ${exportScale}x) to avoid the device's canvas size limit.`, 'warn');
+  }
+
+  try {
+    await captureElementAsImage(element, filename, effScale, naturalWidth, naturalHeight);
+  } catch (err) {
+    log('Export failed: ' + err.message, 'err');
+  } finally {
+    element.style.transform = prevTransform;
+    element.style.width = prevWidth;
+    restoreInfo.forEach(({ el, overflow, borderRadius }) => {
+      el.style.overflow = overflow || '';
+      el.style.borderRadius = borderRadius || '';
+    });
+  }
+}
+
+/* ===== Export Functions ===== */
+function exportPNG() {
   const wrap = document.getElementById('resultsWrap');
   if (!wrap) return;
   const filename = 'roster-' + (DAYS.length ? DAYS[0].key : 'export') + '.png';
-  await captureElementOffscreen(wrap, filename);
+  fitAndCapture(wrap, filename, 4);
 }
 
-async function exportOverlapImage() {
+function exportOverlapImage() {
   const card = document.getElementById('overlapCard');
   const results = document.getElementById('overlapResults');
   if (!results || !results.innerHTML.trim()) {
     log('No overlap results to export.', 'warn');
     return;
   }
-  await captureElementOffscreen(card, 'together-time.png');
+  fitAndCapture(card, 'together-time.png', 4);
 }
 
-async function exportAllowanceImage() {
+function exportAllowanceImage() {
   const card = document.getElementById('allowanceCard');
   const body = document.getElementById('allowanceBody');
   if (!body || !body.innerHTML.trim()) {
     log('No allowance results to export.', 'warn');
     return;
   }
-  await captureElementOffscreen(card, 'allowance-' + (DAYS.length ? DAYS[0].key : 'estimate') + '.png');
+  fitAndCapture(card, 'allowance-' + (DAYS.length ? DAYS[0].key : 'estimate') + '.png', 4);
 }
 
 function exportPDF(){
