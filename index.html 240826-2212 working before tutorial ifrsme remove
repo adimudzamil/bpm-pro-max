@@ -93,11 +93,14 @@
             </div>
             <div class="full-tutorial">
                 <h4>📖 Complete Guide & Troubleshooting</h4>
-                <p style="margin: 8px 0;">
-                    For the full guide and troubleshooting, please open 
-                    <a href="tutorial.html" target="_blank" style="font-weight:600; color:#2563EB; text-decoration:underline;">tutorial.html</a> 
-                    in a new window.
-                </p>
+                <div class="iframe-container">
+                    <div id="iframe-loading"><div class="spinner"></div><p>Loading complete tutorial...</p></div>
+                    <iframe src="tutorial.html" id="tutorialIframe" title="Complete Tutorial & Troubleshooting" scrolling="yes" loading="lazy" onload="hideIframeLoading()"></iframe>
+                </div>
+                <div class="iframe-controls">
+                    <button onclick="reloadIframe()" class="btn-small btn-info">🔄 Reload</button>
+                    <button onclick="openTutorialInNewTab()" class="btn-small btn-success">🔗 Open in New Tab</button>
+                </div>
             </div>
         </div>
         
@@ -1352,9 +1355,25 @@
         
         let customZones = [];
         let debounceTimer;
-        let versionIframeLoaded = false;
+        let tutorialIframeLoaded = false;
         
-        // =================== IFRAME MANAGEMENT (version only) ===================
+        // =================== IFRAME MANAGEMENT ===================
+        function reloadIframe() {
+            const iframe = document.getElementById('tutorialIframe');
+            iframe.src = iframe.src;
+            tutorialIframeLoaded = false;
+            showIframeLoading();
+            showSuccess('Tutorial reloaded');
+        }
+        function openTutorialInNewTab() { window.open('tutorial.html', '_blank'); }
+        function showIframeLoading() {
+            const loadingDiv = document.getElementById('iframe-loading');
+            if (loadingDiv) loadingDiv.style.display = 'flex';
+        }
+        function hideIframeLoading() {
+            const loadingDiv = document.getElementById('iframe-loading');
+            if (loadingDiv) { loadingDiv.style.display = 'none'; tutorialIframeLoaded = true; }
+        }
         function reloadVersionIframe() {
             const iframe = document.getElementById('versionIframe');
             iframe.src = iframe.src;
@@ -1372,6 +1391,8 @@
             if (loadingDiv) { loadingDiv.style.display = 'none'; versionIframeLoaded = true; }
         }
         
+        let versionIframeLoaded = false;
+        
         function toggleHelp(type) {
             const tutorial = document.getElementById('tutorialContent');
             const version = document.getElementById('versionContent');
@@ -1382,7 +1403,7 @@
                 tutorial.style.display = isChecked ? 'block' : 'none';
                 tutorialLabel.textContent = isChecked ? 'Hide' : 'Show';
                 if (isChecked) {
-                    // No loading indicator for tutorial iframe anymore
+                    if (!tutorialIframeLoaded) showIframeLoading();
                     document.getElementById('toggleVersion').checked = false;
                     version.style.display = 'none';
                     versionLabel.textContent = 'Show';
@@ -1398,6 +1419,7 @@
         
         window.addEventListener('message', function(event) {
             if (event.data === 'versionsLoaded') hideVersionIframeLoading();
+            else if (event.data === 'tutorialLoaded') hideIframeLoading();
         });
         
         // =================== AIRCRAFT DETECTION ===================
