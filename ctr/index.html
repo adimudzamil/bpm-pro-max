@@ -217,23 +217,15 @@
   .template-section .template-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
   .template-section .template-header h3 { font-size: 18px; font-weight: 700; color: var(--text); }
   .template-preview-area { display: flex; flex-wrap: wrap; gap: 16px; justify-content: flex-start; }
-  .template-preview-area img { border: 1px solid var(--border); border-radius: var(--radius-sm); max-width: 400px; height: auto; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-  .template-preview-area .preview-wrapper { text-align: center; max-width: 400px; flex: 1 0 auto; }
+  .template-preview-area img { border: 1px solid var(--border); border-radius: var(--radius-sm); max-width: 200px; height: auto; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 
-  .fine-tune-group { background: var(--surface2); border-radius: var(--radius-sm); padding: 16px; margin-top: 12px; border: 1px solid var(--border); max-width: 500px; }
+  .fine-tune-group { background: var(--surface2); border-radius: var(--radius-sm); padding: 16px; margin-top: 12px; border: 1px solid var(--border); }
   .fine-tune-group label { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .fine-tune-group input[type="range"] { flex: 1; min-width: 120px; background: transparent; cursor: pointer; accent-color: var(--accent); }
   .fine-tune-group .value-input { width: 50px; text-align: center; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 700; color: var(--accent); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 2px 4px; outline: none; transition: border-color 0.2s; }
   .fine-tune-group .value-input:focus { border-color: var(--accent); }
   .fine-tune-row { display: flex; flex-wrap: wrap; gap: 16px 24px; margin-top: 6px; }
   .fine-tune-row label { flex: 1; min-width: 140px; }
-
-  /* compact dropdown + single slider */
-  .fine-tune-compact { display: flex; flex-direction: column; gap: 8px; }
-  .fine-tune-compact .control-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .fine-tune-compact .control-row select { flex: 1; min-width: 120px; padding: 6px 10px; font-size: 13px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); }
-  .fine-tune-compact .control-row input[type="range"] { flex: 2; min-width: 100px; }
-  .fine-tune-compact .control-row .value-input { width: 55px; }
 
   .help-section { margin: 16px 0 24px; }
   .help-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -335,31 +327,17 @@
   .slot-section .slot-controls .param-row .fine-tune-sliders input[type="range"] { width: 80px; accent-color: var(--accent); }
   .slot-section .slot-controls .param-row .fine-tune-sliders input[type="number"] { width: 45px; padding: 2px 4px; font-size: 11px; }
 
-  #filterModalOverlay .modal-box { max-width: 90%; width: 100%; max-height: 90vh; display: flex; flex-direction: column; }
+  #filterModalOverlay .modal-box { max-width: 90%; width: 900px; max-height: 90vh; display: flex; flex-direction: column; }
   #filterModalOverlay .modal-scroll { overflow: auto; flex: 1; margin: 8px 0 16px; }
-  #filterModalOverlay table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
-  #filterModalOverlay th { background: var(--surface2); position: sticky; top: 0; z-index: 2; padding: 6px 4px; border-bottom: 2px solid var(--border); text-align: center; font-weight: 600; }
-  #filterModalOverlay td { padding: 4px 2px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
-  #filterModalOverlay .crew-cell { text-align: left; font-weight: 500; padding-left: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 120px; }
-  #filterModalOverlay .rank-cell, #filterModalOverlay .id-cell { color: var(--text-muted); font-size: 11px; text-align: center; }
-  #filterModalOverlay input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; margin: 0 auto; }
-  #filterModalOverlay .template-header-checkbox { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; font-weight: 400; color: var(--text-muted); }
-  #filterModalOverlay .template-header-checkbox input { width: 14px; height: 14px; }
+  #filterModalOverlay table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  #filterModalOverlay th { background: var(--surface2); position: sticky; top: 0; z-index: 2; padding: 6px 8px; border-bottom: 2px solid var(--border); text-align: center; font-weight: 600; }
+  #filterModalOverlay td { padding: 4px 6px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
+  #filterModalOverlay .crew-cell { text-align: left; font-weight: 500; }
+  #filterModalOverlay .rank-cell, #filterModalOverlay .id-cell { color: var(--text-muted); font-size: 12px; }
+  #filterModalOverlay input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+  #filterModalOverlay .template-header-checkbox { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; font-weight: 400; color: var(--text-muted); }
+  #filterModalOverlay .template-header-checkbox input { width: 18px; height: 18px; }
   .filter-actions { display: flex; gap: 12px; justify-content: flex-end; padding-top: 12px; border-top: 1px solid var(--border); }
-  .filter-reminder { font-size: 12px; color: var(--text-muted); background: var(--surface2); border-radius: var(--radius-sm); padding: 8px 12px; margin: 6px 0 12px; border-left: 3px solid var(--accent); }
-  .filter-reminder strong { color: var(--text); }
-  .filter-global-toggle { margin: 8px 0 12px; display: flex; align-items: center; gap: 10px; justify-content: flex-start; }
-  .filter-global-toggle label { font-size: 14px; font-weight: 500; cursor: pointer; }
-
-  @media (max-width: 600px) {
-    #filterModalOverlay .modal-box { max-width: 95vw; width: 100%; padding: 16px; }
-    #filterModalOverlay .crew-cell { min-width: 80px; font-size: 12px; white-space: normal; }
-    #filterModalOverlay .rank-cell, #filterModalOverlay .id-cell { font-size: 10px; }
-    #filterModalOverlay th { font-size: 11px; }
-    #filterModalOverlay .template-header-checkbox { font-size: 9px; }
-    .template-preview-area img { max-width: 100%; }
-    .fine-tune-group { max-width: 100%; }
-  }
 </style>
 </head>
 <body>
@@ -368,7 +346,7 @@
 
   <header class="noprint">
     <div class="logo-area"><div class="logo">CTR<span>.</span></div><div class="byline-badge">✈️ by 2100551</div></div>
-    <div class="badge-group"><div class="badge">📄 PDF Parser</div><div class="badge">📊 Gendec XLSX</div><div class="badge">🔒 Offline</div><div class="badge accent">v3.6</div></div>
+    <div class="badge-group"><div class="badge">📄 PDF Parser</div><div class="badge">📊 Gendec XLSX</div><div class="badge">🔒 Offline</div><div class="badge accent">v3.4</div></div>
   </header>
 
   <div class="help-section noprint">
@@ -380,10 +358,11 @@
       <p><strong>Quick Guide</strong></p>
       <ul style="margin-left:20px; font-family:'DM Mono',monospace; font-size:13px; color:var(--text-muted);">
         <li>1. <strong>Upload PDF</strong> (CrewTripReport) → parse crew data.</li>
-        <li>2. <strong>Upload Gendec .xlsx</strong> → auto‑parsed and merged.</li>
+        <li>2. <strong>Upload Gendec .xlsx</strong> → parse passport/expiry/nationality → automatically merged.</li>
         <li>3. Select destination → click <strong>"Generate Forms"</strong> → filter modal appears.</li>
         <li>4. Choose which crew members appear in each template, then click Generate.</li>
-        <li>5. Fine‑tune positions with the compact controls, print or download.</li>
+        <li>5. If you have added passport/expiry/nat slots to a template, they will be filled.</li>
+        <li>6. Fine‑tune positions with sliders, print or download.</li>
       </ul>
       <p style="margin-top:12px;">📖 <a href="#" onclick="window.open('ctr-tutorial.html','_blank'); return false;">Open full tutorial in new tab</a></p>
     </div>
@@ -399,7 +378,7 @@
     <textarea id="pdfBox" placeholder="Paste text from the PDF CrewTripReport here, or upload a PDF…"></textarea>
     <div class="btnrow">
       <div class="file-upload-wrapper">
-        <label for="pdfFile" class="btn-upload">📎 Choose CrewTripReport PDF</label>
+        <label for="pdfFile" class="btn-upload">📎 Choose File</label>
         <input type="file" id="pdfFile" accept=".pdf">
       </div>
       <button class="btn-secondary" id="parsePdfBtn">⚡ Parse PDF Report</button>
@@ -1013,13 +992,6 @@
   <div class="modal-box">
     <div class="modal-title">✏️ Select Crew to Include per Template</div>
     <div class="modal-sub">Uncheck a name to remove them from that form. All names are included by default.</div>
-    <div class="filter-reminder">
-      ⓘ <strong>Reminders:</strong> Indian Nationalities not required in Landing forms. Change of Tech Crew shall be in separate forms.
-    </div>
-    <div class="filter-global-toggle">
-      <input type="checkbox" id="filterGroupPilots" checked>
-      <label for="filterGroupPilots">Separate pilots and cabin crew onto different pages</label>
-    </div>
     <div class="modal-scroll" id="filterModalScroll">
       <table id="filterTable">
         <thead id="filterTableHead"></thead>
@@ -1046,8 +1018,6 @@
 // ============================================================
 //  FULL ORIGINAL PARSER + INTERNAL REPORT (with all modals)
 //  Added improved Gendec parser with header split handling.
-//  Enhanced filter modal with rank sorting, global toggle, reminders.
-//  Compact fine-tune panel with dropdown + single slider + persistence.
 // ============================================================
 (function(){
   "use strict";
@@ -2112,23 +2082,6 @@
 
   // Gendec event handlers
   document.getElementById('parseGendecBtn').addEventListener('click', function() {
-    parseGendecFile();
-  });
-
-  // Auto-parse on file selection
-  gendecFile.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-      gendecFileStatus.textContent = '✅ ' + file.name;
-      gendecFileStatus.className = 'file-status has-file';
-      parseGendecFile(); // auto-parse
-    } else {
-      gendecFileStatus.textContent = 'No file chosen';
-      gendecFileStatus.className = 'file-status';
-    }
-  });
-
-  function parseGendecFile() {
     const file = gendecFile.files[0];
     if (!file) {
       gendecStatus.textContent = 'Please select a Gendec file first.';
@@ -2164,7 +2117,18 @@
       }
     };
     reader.readAsArrayBuffer(file);
-  }
+  });
+
+  gendecFile.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      gendecFileStatus.textContent = '✅ ' + file.name;
+      gendecFileStatus.className = 'file-status has-file';
+    } else {
+      gendecFileStatus.textContent = 'No file chosen';
+      gendecFileStatus.className = 'file-status';
+    }
+  });
 
   document.getElementById('clearGendecBtn').addEventListener('click', function() {
     gendecData = null;
@@ -2263,12 +2227,12 @@
       rankSlots: generateSlots(88, 424, 15, 36, 110, 36, 14),
       crewIdSlots: generateSlots(1015, 424, 15, 36, 125, 36, 14),
       globalNumbering: false,
-      passportSlots: generateSlots(570, 425, 15, 36, 115, 36, 14),
-      expirySlots: generateSlots(841, 426, 15, 36, 170, 36, 14),
-      nationalitySlots: generateSlots(455, 425, 15, 36, 115, 36, 14),
-      picPassportSlots: generateSlots(1027, 220, 1, 0, 145, 30, 14),
+      passportSlots: null,
+      expirySlots: null,
+      nationalitySlots: null,
+      picPassportSlots: null,
       picExpirySlots: null,
-      picNationalitySlots: generateSlots(560, 220, 1, 0, 220, 30, 14),
+      picNationalitySlots: null,
     },
     del_baggage: {
       id: 'del_baggage',
@@ -2298,18 +2262,18 @@
       picSlots: {
         nameSlots: generateSlots(120, 260, 1, 0, 260, 30, 14),
         rankSlots: null,
-        crewIdSlots: null,
+        crewIdSlots: null
       },
       nameSlots: generateSlots(215, 506, 10, 38, 360, 35, 14),
       rankSlots: generateSlots(105, 506, 10, 38, 110, 35, 14),
       crewIdSlots: generateSlots(1182, 506, 10, 38, 110, 35, 14),
       globalNumbering: false,
-      passportSlots: generateSlots(695, 506, 10, 38, 155, 35, 14),
-      expirySlots: generateSlots(1020, 506, 10, 38, 160, 35, 14),
-      nationalitySlots: generateSlots(570, 506, 10, 38, 155, 35, 14),
-      picPassportSlots: generateSlots(890, 260, 1, 0, 150, 30, 14),
-      picExpirySlots: generateSlots(400, 295, 1, 0, 250, 30, 14),
-      picNationalitySlots: generateSlots(405, 260, 1, 0, 215, 30, 14),
+      passportSlots: null,
+      expirySlots: null,
+      nationalitySlots: null,
+      picPassportSlots: null,
+      picExpirySlots: null,
+      picNationalitySlots: null,
     },
     hyd_baggage: {
       id: 'hyd_baggage',
@@ -2339,19 +2303,19 @@
       picSlots: {
         nameSlots: generateSlots(305, 265, 1, 0, 180, 30, 14),
         rankSlots: generateSlots(225, 265, 1, 0, 80, 30, 14),
-        crewIdSlots: null,
+        crewIdSlots: null
       },
       nameSlots: generateSlots(390, 470, 9, 49, 300, 49, 14),
       rankSlots: generateSlots(275, 470, 9, 49, 110, 49, 14),
       numberSlots: generateSlots(200, 470, 9, 49, 75, 49, 14),
       crewIdSlots: generateSlots(1220, 470, 9, 49, 110, 49, 14),
       globalNumbering: false,
-      passportSlots: generateSlots(810, 470, 9, 49, 155, 49, 14),
-      expirySlots: generateSlots(1100, 470, 9, 49, 120, 49, 14),
-      nationalitySlots: generateSlots(690, 470, 9, 49, 120, 49, 14),
-      picPassportSlots: generateSlots(970, 260, 1, 0, 120, 30, 14),
-      picExpirySlots: generateSlots(512, 290, 1, 0, 160, 30, 14),
-      picNationalitySlots: generateSlots(512, 260, 1, 0, 175, 30, 14),
+      passportSlots: null,
+      expirySlots: null,
+      nationalitySlots: null,
+      picPassportSlots: null,
+      picExpirySlots: null,
+      picNationalitySlots: null,
     },
     blr_baggage: {
       id: 'blr_baggage',
@@ -2388,12 +2352,12 @@
       numberSlots: generateSlots(115, 470, 9, 50, 75, 50, 14),
       crewIdSlots: generateSlots(1150, 470, 9, 50, 105, 50, 14),
       globalNumbering: false,
-      passportSlots: generateSlots(730, 470, 1, 0, 155, 50, 14),
-      expirySlots: generateSlots(1025, 470, 9, 50, 120, 50, 14),
-      nationalitySlots: generateSlots(610, 470, 9, 50, 120, 50, 14),
-      picPassportSlots:generateSlots(890, 265, 1, 0, 130, 30, 14),
-      picExpirySlots: generateSlots(430, 295, 1, 0, 160, 25, 14),
-      picNationalitySlots: generateSlots(420, 265, 1, 0, 190, 30, 14),
+      passportSlots: null,
+      expirySlots: null,
+      nationalitySlots: null,
+      picPassportSlots: null,
+      picExpirySlots: null,
+      picNationalitySlots: null,
     },
     amd_baggage: {
       id: 'amd_baggage',
@@ -2430,12 +2394,12 @@
       numberSlots: generateSlots(120, 485, 9, 52, 70, 50, 14),
       crewIdSlots: generateSlots(1190, 485, 9, 52, 115, 50, 14),
       globalNumbering: false,
-      passportSlots: generateSlots(755, 485, 9, 52, 165, 50, 14),
-      expirySlots: generateSlots(1065, 485, 9, 52, 120, 50, 14),
-      nationalitySlots: generateSlots(630, 485, 9, 52, 120, 50, 14),
-      picPassportSlots: generateSlots(925, 270, 1, 0, 135, 30, 14),
-      picExpirySlots: generateSlots(450, 300, 1, 0, 160, 25, 14),
-      picNationalitySlots: generateSlots(435, 270, 1, 0, 195, 30, 14),
+      passportSlots: null,
+      expirySlots: null,
+      nationalitySlots: null,
+      picPassportSlots: null,
+      picExpirySlots: null,
+      picNationalitySlots: null,
     },
     atq_baggage: {
       id: 'atq_baggage',
@@ -2458,14 +2422,11 @@
 
   const templateOffsets = {};
   let generatedData = {};
-  // Store the currently selected fine-tune key per template
-  const selectedFineTune = {};
 
   // ============================================================
-  //  FILTER MODAL LOGIC (with sorting and global toggle)
+  //  FILTER MODAL LOGIC (unchanged)
   // ============================================================
   let filterState = {};
-  let filterGroupPilots = true; // default
 
   function buildFilterModal(templates) {
     const head = document.getElementById('filterTableHead');
@@ -2478,24 +2439,10 @@
       return;
     }
 
-    // Sort crew by rank using RANK_PRIORITY
-    const sortedCrew = state.crew.slice().sort((a,b) => {
-      const priA = RANK_PRIORITY[a.opRank] || 99;
-      const priB = RANK_PRIORITY[b.opRank] || 99;
-      return priA - priB;
-    });
-
-    // Set global toggle default
-    document.getElementById('filterGroupPilots').checked = filterGroupPilots;
-    document.getElementById('filterGroupPilots').addEventListener('change', function() {
-      filterGroupPilots = this.checked;
-    });
-
     let headerRow = document.createElement('tr');
-    headerRow.innerHTML = `<th style="text-align:left; width:30%;">Crew</th><th style="width:10%;">Rank</th><th style="width:10%;">ID</th>`;
+    headerRow.innerHTML = `<th style="text-align:left;">Crew</th><th>Rank</th><th>ID</th>`;
     templates.forEach(tpl => {
       const th = document.createElement('th');
-      th.style.width = (60 / templates.length) + '%';
       th.innerHTML = `<div class="template-header-checkbox">
         <input type="checkbox" class="filter-select-all" data-tplid="${tpl.id}" checked>
         <span>${tpl.label}</span>
@@ -2504,7 +2451,7 @@
     });
     head.appendChild(headerRow);
 
-    sortedCrew.forEach(crew => {
+    state.crew.forEach(crew => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="crew-cell">${esc(crew.crewName)}</td>
@@ -2624,7 +2571,7 @@
   }
 
   // ===== GENERATE PAGES (extended with new slots) =====
-  function generatePagesForTemplate(tpl, crew, offsets, groupPilotsOverride) {
+  function generatePagesForTemplate(tpl, crew, offsets) {
     let picCrewMember = null;
     let remainingCrew = crew;
 
@@ -2651,10 +2598,7 @@
     const totalCrew = remainingCrew.length;
 
     let pages = [];
-    // Use override if provided, else fallback to template default
-    const groupSeparate = (groupPilotsOverride !== undefined) ? groupPilotsOverride : tpl.groupPilotsSeparately;
-
-    if (groupSeparate && totalCrew > perPage) {
+    if (tpl.groupPilotsSeparately && totalCrew > perPage) {
       const page1 = [...sortedPilots];
       while (page1.length < perPage) page1.push(null);
       pages.push(page1);
@@ -2918,14 +2862,13 @@
         const includedIds = filterState[tpl.id] || new Set();
         const filteredCrew = state.crew.filter(c => includedIds.has(c.crewId));
 
-        // Pass the global toggle value
-        const result = generatePagesForTemplate(tpl, filteredCrew, offsets, filterGroupPilots);
+        const result = generatePagesForTemplate(tpl, filteredCrew, offsets);
 
         if (result.needsPicSelection) {
           const selected = await showPicModal(result.captains, tpl.id);
           if (selected) {
             state.picChoice = selected.crewId;
-            const retryResult = generatePagesForTemplate(tpl, filteredCrew, offsets, filterGroupPilots);
+            const retryResult = generatePagesForTemplate(tpl, filteredCrew, offsets);
             if (!retryResult.needsPicSelection) {
               generatedData[tpl.id] = { template: tpl, canvases: retryResult.canvases, filteredCrew: filteredCrew };
               renderTemplateSection(tpl.id);
@@ -2960,7 +2903,7 @@
     }
   });
 
-  // ===== renderTemplateSection – with compact dropdown + single slider + persistence =====
+  // ===== renderTemplateSection – with new sliders =====
   function renderTemplateSection(templateId) {
     const tpl = TEMPLATES[templateId];
     const data = generatedData[templateId];
@@ -2986,7 +2929,7 @@
     preview.className = 'template-preview-area';
     data.canvases.forEach((cv, idx) => {
       const wrapper = document.createElement('div');
-      wrapper.className = 'preview-wrapper';
+      wrapper.style.textAlign = 'center';
       const label = document.createElement('div');
       label.textContent = `Page ${idx+1}`;
       label.style.fontSize = '11px';
@@ -2995,7 +2938,7 @@
       wrapper.appendChild(label);
       const img = document.createElement('img');
       img.src = cv.toDataURL('image/png');
-      img.style.maxWidth = '100%';
+      img.style.maxWidth = '200px';
       img.style.height = 'auto';
       img.style.border = '1px solid var(--border)';
       img.style.borderRadius = 'var(--radius-sm)';
@@ -3005,132 +2948,112 @@
     section.appendChild(preview);
 
     const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0, passportX:0, passportY:0, expiryX:0, expiryY:0, nationalityX:0, nationalityY:0, picPassportX:0, picPassportY:0, picExpiryX:0, picExpiryY:0, picNationalityX:0, picNationalityY:0 };
-
-    // Build list of available adjustment keys with labels
-    const availableAdjustments = [];
-    // Always include name X/Y and font size
-    availableAdjustments.push({ key: 'nameX', label: 'Name X' });
-    availableAdjustments.push({ key: 'nameY', label: 'Name Y' });
-    if (tpl.rankSlots && tpl.rankSlots.length > 0) {
-      availableAdjustments.push({ key: 'rankX', label: 'Rank X' });
-      availableAdjustments.push({ key: 'rankY', label: 'Rank Y' });
-    }
-    if (tpl.numberSlots && tpl.numberSlots.length > 0) {
-      availableAdjustments.push({ key: 'numberX', label: 'Number X' });
-      availableAdjustments.push({ key: 'numberY', label: 'Number Y' });
-    }
-    if (tpl.crewIdSlots && tpl.crewIdSlots.length > 0) {
-      availableAdjustments.push({ key: 'crewIdX', label: 'Crew ID X' });
-      availableAdjustments.push({ key: 'crewIdY', label: 'Crew ID Y' });
-    }
-    if (tpl.passportSlots && tpl.passportSlots.length > 0) {
-      availableAdjustments.push({ key: 'passportX', label: 'Passport X' });
-      availableAdjustments.push({ key: 'passportY', label: 'Passport Y' });
-    }
-    if (tpl.expirySlots && tpl.expirySlots.length > 0) {
-      availableAdjustments.push({ key: 'expiryX', label: 'Expiry X' });
-      availableAdjustments.push({ key: 'expiryY', label: 'Expiry Y' });
-    }
-    if (tpl.nationalitySlots && tpl.nationalitySlots.length > 0) {
-      availableAdjustments.push({ key: 'nationalityX', label: 'Nationality X' });
-      availableAdjustments.push({ key: 'nationalityY', label: 'Nationality Y' });
-    }
-    // Font size always
-    availableAdjustments.push({ key: 'fontSizeAdj', label: 'Font Size' });
-
-    // Get the stored selected key, or default to first
-    if (!selectedFineTune[templateId] || !availableAdjustments.some(a => a.key === selectedFineTune[templateId])) {
-      selectedFineTune[templateId] = availableAdjustments[0].key;
-    }
-    const selectedKey = selectedFineTune[templateId];
-
-    // Create compact fine-tune group
     const group = document.createElement('div');
     group.className = 'fine-tune-group';
 
-    const compactDiv = document.createElement('div');
-    compactDiv.className = 'fine-tune-compact';
+    const hasRankSlots = tpl.rankSlots && tpl.rankSlots.length > 0;
+    const hasNumberSlots = tpl.numberSlots && tpl.numberSlots.length > 0;
+    const hasCrewIdSlots = tpl.crewIdSlots && tpl.crewIdSlots.length > 0;
+    const hasPassportSlots = tpl.passportSlots && tpl.passportSlots.length > 0;
+    const hasExpirySlots = tpl.expirySlots && tpl.expirySlots.length > 0;
+    const hasNationalitySlots = tpl.nationalitySlots && tpl.nationalitySlots.length > 0;
 
-    // Dropdown
-    const selectRow = document.createElement('div');
-    selectRow.className = 'control-row';
-    const select = document.createElement('select');
-    select.id = 'fineTuneSelect_' + templateId;
-    availableAdjustments.forEach(adj => {
-      const opt = document.createElement('option');
-      opt.value = adj.key;
-      opt.textContent = adj.label;
-      if (adj.key === selectedKey) opt.selected = true;
-      select.appendChild(opt);
+    function createSliderInputPair(label, key, min, max, value) {
+      const wrapper = document.createElement('label');
+      wrapper.textContent = label;
+
+      const slider = document.createElement('input');
+      slider.type = 'range';
+      slider.min = min;
+      slider.max = max;
+      slider.value = value;
+      slider.step = 1;
+      slider.id = key + '_' + templateId;
+
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.className = 'value-input';
+      input.min = min;
+      input.max = max;
+      input.value = value;
+      input.step = 1;
+      input.id = key + 'Val_' + templateId;
+
+      slider.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        input.value = val;
+        updateOffset(templateId, key, val);
+      });
+
+      input.addEventListener('input', function() {
+        let val = parseInt(this.value);
+        if (isNaN(val)) return;
+        if (val < min) val = min;
+        if (val > max) val = max;
+        slider.value = val;
+        this.value = val;
+        updateOffset(templateId, key, val);
+      });
+
+      wrapper.appendChild(slider);
+      wrapper.appendChild(input);
+      return wrapper;
+    }
+
+    const sliderConfigs = [];
+
+    sliderConfigs.push(
+      { label: 'Name X', key: 'nameX', min: -50, max: 50, value: offsets.nameX },
+      { label: 'Name Y', key: 'nameY', min: -50, max: 50, value: offsets.nameY }
+    );
+    if (hasRankSlots) {
+      sliderConfigs.push(
+        { label: 'Rank X', key: 'rankX', min: -50, max: 50, value: offsets.rankX || 0 },
+        { label: 'Rank Y', key: 'rankY', min: -50, max: 50, value: offsets.rankY || 0 }
+      );
+    }
+    if (hasNumberSlots) {
+      sliderConfigs.push(
+        { label: 'Number X', key: 'numberX', min: -50, max: 50, value: offsets.numberX || 0 },
+        { label: 'Number Y', key: 'numberY', min: -50, max: 50, value: offsets.numberY || 0 }
+      );
+    }
+    if (hasCrewIdSlots) {
+      sliderConfigs.push(
+        { label: 'Crew ID X', key: 'crewIdX', min: -50, max: 50, value: offsets.crewIdX || 0 },
+        { label: 'Crew ID Y', key: 'crewIdY', min: -50, max: 50, value: offsets.crewIdY || 0 }
+      );
+    }
+    if (hasPassportSlots) {
+      sliderConfigs.push(
+        { label: 'Passport X', key: 'passportX', min: -50, max: 50, value: offsets.passportX || 0 },
+        { label: 'Passport Y', key: 'passportY', min: -50, max: 50, value: offsets.passportY || 0 }
+      );
+    }
+    if (hasExpirySlots) {
+      sliderConfigs.push(
+        { label: 'Expiry X', key: 'expiryX', min: -50, max: 50, value: offsets.expiryX || 0 },
+        { label: 'Expiry Y', key: 'expiryY', min: -50, max: 50, value: offsets.expiryY || 0 }
+      );
+    }
+    if (hasNationalitySlots) {
+      sliderConfigs.push(
+        { label: 'Nationality X', key: 'nationalityX', min: -50, max: 50, value: offsets.nationalityX || 0 },
+        { label: 'Nationality Y', key: 'nationalityY', min: -50, max: 50, value: offsets.nationalityY || 0 }
+      );
+    }
+    sliderConfigs.push(
+      { label: 'Font Size', key: 'fontSizeAdj', min: -10, max: 10, value: offsets.fontSizeAdj }
+    );
+
+    const row = document.createElement('div');
+    row.className = 'fine-tune-row';
+    sliderConfigs.forEach(cfg => {
+      row.appendChild(createSliderInputPair(cfg.label, cfg.key, cfg.min, cfg.max, cfg.value));
     });
-    selectRow.appendChild(select);
-    compactDiv.appendChild(selectRow);
+    group.appendChild(row);
 
-    // Slider and value input
-    const sliderRow = document.createElement('div');
-    sliderRow.className = 'control-row';
-    const slider = document.createElement('input');
-    slider.type = 'range';
-    slider.min = -50;
-    slider.max = 50;
-    slider.step = 1;
-    slider.id = 'fineTuneSlider_' + templateId;
-    const valueInput = document.createElement('input');
-    valueInput.type = 'number';
-    valueInput.className = 'value-input';
-    valueInput.min = -50;
-    valueInput.max = 50;
-    valueInput.step = 1;
-    valueInput.id = 'fineTuneValue_' + templateId;
-    sliderRow.appendChild(slider);
-    sliderRow.appendChild(valueInput);
-    compactDiv.appendChild(sliderRow);
-
-    group.appendChild(compactDiv);
     section.appendChild(group);
-
-    // Set initial values based on selected key
-    const initialVal = offsets[selectedKey] || 0;
-    slider.value = initialVal;
-    valueInput.value = initialVal;
-
-    // Event handlers
-    function updateFromSlider() {
-      const key = select.value;
-      const val = parseInt(slider.value);
-      valueInput.value = val;
-      selectedFineTune[templateId] = key;
-      updateOffset(templateId, key, val);
-    }
-
-    function updateFromInput() {
-      const key = select.value;
-      let val = parseInt(valueInput.value);
-      if (isNaN(val)) return;
-      if (val < -50) val = -50;
-      if (val > 50) val = 50;
-      slider.value = val;
-      valueInput.value = val;
-      selectedFineTune[templateId] = key;
-      updateOffset(templateId, key, val);
-    }
-
-    function onSelectChange() {
-      const key = select.value;
-      selectedFineTune[templateId] = key;
-      const val = offsets[key] || 0;
-      slider.value = val;
-      valueInput.value = val;
-    }
-
-    select.addEventListener('change', onSelectChange);
-    slider.addEventListener('input', updateFromSlider);
-    valueInput.addEventListener('input', updateFromInput);
-
-    // Store references for later if needed
-    section._fineTuneSelect = select;
-    section._fineTuneSlider = slider;
-    section._fineTuneValue = valueInput;
 
     if (existing) {
       existing.parentNode.insertBefore(section, existing);
@@ -3148,7 +3071,7 @@
           const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0, passportX:0, passportY:0, expiryX:0, expiryY:0, nationalityX:0, nationalityY:0, picPassportX:0, picPassportY:0, picExpiryX:0, picExpiryY:0, picNationalityX:0, picNationalityY:0 };
           const data = generatedData[templateId];
           const filteredCrew = data ? data.filteredCrew : state.crew;
-          const result = generatePagesForTemplate(tpl, filteredCrew, offsets, filterGroupPilots);
+          const result = generatePagesForTemplate(tpl, filteredCrew, offsets);
           if (result.needsPicSelection) {
             showToast('Please select PIC first via Generate Forms.', 'error');
             return;
@@ -3166,7 +3089,7 @@
     const offsets = templateOffsets[templateId] || { nameX:0, nameY:0, rankX:0, rankY:0, numberX:0, numberY:0, crewIdX:0, crewIdY:0, fontSizeAdj:0, passportX:0, passportY:0, expiryX:0, expiryY:0, nationalityX:0, nationalityY:0, picPassportX:0, picPassportY:0, picExpiryX:0, picExpiryY:0, picNationalityX:0, picNationalityY:0 };
     const data = generatedData[templateId];
     const filteredCrew = data ? data.filteredCrew : state.crew;
-    const result = generatePagesForTemplate(tpl, filteredCrew, offsets, filterGroupPilots);
+    const result = generatePagesForTemplate(tpl, filteredCrew, offsets);
     if (result.needsPicSelection) {
       showToast('Please select PIC first via Generate Forms.', 'error');
       return;
@@ -3466,7 +3389,7 @@
   });
 
   // ============================================================
-  //  🧱 FORM BUILDER – Enhanced with new slot types (unchanged)
+  //  🧱 FORM BUILDER – Enhanced with new slot types
   // ============================================================
 
   const builderCanvas = document.getElementById('builderCanvas');
