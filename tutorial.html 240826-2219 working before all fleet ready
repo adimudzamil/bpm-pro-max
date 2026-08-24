@@ -201,19 +201,6 @@
             color: #991b1b;
         }
 
-        .success-note {
-            padding: 15px;
-            background: #dcfce7;
-            border: 2px solid #22c55e;
-            border-radius: 6px;
-            margin: 20px 0;
-            color: #166534;
-        }
-
-        .success-note strong {
-            color: #14532d;
-        }
-
         @media (max-width: 768px) {
             .container { padding: 15px; }
             h1 { font-size: 20px; padding: 15px; }
@@ -235,14 +222,12 @@
     <div class="container">
         <a href="index.html" class="back-button">← Back to Main Tool</a>
         
-        <h1>📘 Complete User Guide & Manual <span class="version-badge">Updated August 24, 2026</span></h1>
+        <h1>📘 Complete User Guide & Manual <span class="version-badge">Updated July 23, 2026</span></h1>
         
         <div class="section">
             <h2>🚀 What is BPM-Pro?</h2>
             <p>BPM-Pro is a powerful in-flight tool designed to quickly turn a BPM (Passenger Manifest) into a readable, printable, and interactive report. It helps cabin crew instantly identify special meals, Platinum/EMER tier passengers, and track in-flight meal orders.</p>
-            <div class="success-note">
-                <strong>✅ All Fleets Ready:</strong> The interactive seat chart system now works for <strong>every</strong> supported aircraft type – 737, A330‑300, A330‑200, A330‑900, A350‑900, and A350‑MAH. Colours, Edit, Swap, and Order modes are fully functional across the entire fleet.
-            </div>
+            <p><strong>Note on Development:</strong> Right now, only <code>sc-737.html</code> (737 Business Class) supports the advanced Interactive Order/Edit/Color popup system. A330 and A350 popup charts are currently in development and will receive the same features in an upcoming update.</p>
         </div>
         
         <!-- ==================== PART 1: GETTING STARTED ==================== -->
@@ -365,13 +350,14 @@
             </ol>
         </div>
 
-        <!-- ==================== PART 5: INTERACTIVE POPUP SEAT CHART ==================== -->
+        <!-- ==================== PART 5: SC-737 POPUP INTERACTIVE SYSTEM ==================== -->
         <div class="section" style="border-left-color: #d97706;">
-            <h2>🎛️ Part 5: The Interactive Seat Chart (Popup) – All Fleets</h2>
-            <div class="success-note">
-                <strong>✅ Fully Fleet‑Ready:</strong> The interactive popup system now supports <strong>every</strong> aircraft type in the fleet – 737 (all variants), A330‑300, A330‑200, A330‑900, A350‑900, and A350‑MAH. All modes (View, Colours, Edit, Swap, Order) are available across the entire fleet.
+            <h2>🎛️ Part 5: The 737 Interactive Seat Chart (Popup)</h2>
+            <div class="warning-note">
+                <strong>⚠️ Fleet Compatibility Note:</strong><br>
+                Right now, <strong>only <code>sc-737.html</code> (737 Business Class)</strong> features the advanced Color, Edit, and Order system described below. A330, A350, and other fleet seat charts are currently in development and will be updated to match these features in a future version. <em>(Updated: July 23, 2026)</em>
             </div>
-            <p>When you generate a Seat Chart report for any supported aircraft, it opens in a new popup window. The popup has 4 powerful modes accessible via the top control panel:</p>
+            <p>When you generate a Seat Chart report for 737 Business Class, it opens in a new popup window. This popup has 4 powerful modes accessible via the top control panel:</p>
 
             <h3>1. View Mode</h3>
             <p><strong>Default mode.</strong> This is a static, read-only view of the passenger manifest in a visual seat grid. You see the passenger titles, surnames, tier badges (*PLAT* / *EMER*), and special meals.</p>
@@ -393,8 +379,8 @@
                 <li><strong>Swap Seats:</strong> While in Edit mode, click the <strong>"Swap"</strong> button in the control bar. Tap seat A, then tap seat B to instantly swap their passenger data.</li>
             </ul>
 
-            <h3>4. 🍽️ Order Mode (The In-Flight Meal Tracker)</h3>
-            <p>This mode transforms the chart into an interactive serving tool. <strong>Pro-Tip:</strong> Use a stylus or your finger on a tablet for the best experience.</p>
+            <h3>4. 🍽️ Order Mode (The New In-Flight Meal Tracker)</h3>
+            <p>This mode transforms the chart into an interactive serving tool. <strong>Pro-Tip: </strong> Use a stylus or your finger on a tablet for the best experience.</p>
             
             <h4>Setting up the Meal Menu:</h4>
             <ul>
@@ -426,7 +412,7 @@
                 <li><strong>Paper Saver:</strong> For flights with 100+ passengers, <strong>Compact Print Mode</strong> shrinks tables and removes extra spacing to save 20-30% paper.</li>
                 <li><strong>Missing Rows:</strong> If the seat grid looks incorrect, double-check your Aircraft selection in Advanced Settings. For example, if you have Row 4 Business passengers, select <strong>737NR</strong>.</li>
                 <li><strong>Offline Mode:</strong> Click <strong>"Download Offline Version"</strong> next to the main text box. This saves the entire tool as a standalone HTML file that works perfectly without internet.</li>
-                <li><strong>Persistent Themes:</strong> The colors you set in the popup are automatically saved in your browser's <code>localStorage</code>. If you close and reopen the popup, your custom colors and font settings are restored.</li>
+                <li><strong>Persistent Themes:</strong> The colors you set in the 737 popup are automatically saved in your browser's <code>localStorage</code>. If you close and reopen the popup, your custom colors and font settings are restored.</li>
             </ul>
         </div>
 
