@@ -102,7 +102,7 @@
   /* ===== COLOUR THEMES (scoped to #resultsWrap only) ===== */
   #resultsWrap.theme-bw{
     --panel:#FFFFFF; --panel2:#FFFFFF; --line:#000000; --text:#000000; --dim:#000000;
-    --accent:#000000; --warn:#000000; --tablebg:#ffffff; --fullday:#000000; --leg2:#000000; 
+    --accent:#000000; --warn:#000000; --tablebg:#ffffff; --fullday:#000000; --leg2:#000000;
   }
   /* Force all text to be black on white background in BW theme */
 #resultsWrap.theme-bw td,
@@ -585,7 +585,7 @@ let debugLogCount = 0;
 function debugLog(msg, type) {
   const consoleMethod = type === 'err' ? 'error' : (type === 'warn' ? 'warn' : 'log');
   console[consoleMethod]('[DEBUG] ' + msg);
-  
+
   debugLogCount++;
   const timestamp = new Date().toLocaleTimeString();
   const entry = document.createElement('div');
@@ -744,7 +744,7 @@ async function handleFile(file){
 
   const name = file.name.toLowerCase();
   let parseSuccess = false;
-  
+
   try{
     if(name.endsWith('.xlsx') || name.endsWith('.xls')){
       setFmt('XLSX', true);
@@ -790,7 +790,7 @@ async function handleFile(file){
     log('Fatal parse error: '+err.message, 'err');
   }
   document.getElementById('debugRow').style.display='block';
-  
+
   // Only clear the save name input if parsing was successful
   if (parseSuccess) {
     clearSaveNameInput();
@@ -1657,41 +1657,64 @@ function fallbackDownload(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
 
-/* ===== Fit + Capture helper (async, always restores) =====
-   Captures the element at its FULL natural size (no CSS shrink-to-fit
-   transform), letting html2canvas's own scale/width options handle
-   resolution. This guarantees nothing gets cropped, at the cost of a
-   wider/taller image for content that doesn't fit one screen width. */
+/* =====================================================================
+   FIXED fitAndCapture: clear Fit transform, set explicit inline width,
+   clamp export scale for iOS canvas limits, and restore everything.
+===================================================================== */
 async function fitAndCapture(element, filename, exportScale) {
-  // Collect all elements that may have overflow clipping or border-radius
   const allElements = [element, ...element.querySelectorAll('.tableWrap')];
   const restoreInfo = [];
 
   allElements.forEach(el => {
-    restoreInfo.push({
-      el,
-      overflow: el.style.overflow,
-      borderRadius: el.style.borderRadius,
-    });
+    restoreInfo.push({ el, overflow: el.style.overflow, borderRadius: el.style.borderRadius });
     el.style.overflow = 'visible';
     el.style.borderRadius = '0';
   });
 
-  // Wait a tick for the overflow change to reflow
+  // Clear any leftover "Fit screen" transform/width so measurement below
+  // reflects the true natural size, not a shrunk state.
+  const prevTransform = element.style.transform;
+  const prevWidth = element.style.width;
+  element.style.transform = '';
+  element.style.width = '';
+
   await new Promise(resolve => setTimeout(resolve, 50));
 
-  // Measure the TRUE full content size now that nothing is clipped.
   const table = element.querySelector('table');
   const naturalWidth = Math.max(element.scrollWidth, table ? table.scrollWidth + 4 : 0);
   const naturalHeight = element.scrollHeight;
 
+  // Force the wrap to actually lay out at its full natural width via a
+  // real inline style — the same trick the "Fit screen" button uses.
+  // Relying on html2canvas's windowWidth to reflow percentage-based
+  // ancestors is what was letting columns get clipped when Fit wasn't
+  // pressed first.
+  element.style.width = naturalWidth + 'px';
+  await new Promise(resolve => setTimeout(resolve, 50));
+
+  // iOS Safari (and some Android WebViews) silently truncate/blank
+  // canvases beyond ~4096px per side or ~16.7M total pixels. Clamp the
+  // scale so wide/tall rosters never get cropped or come out blank.
+  const MAX_DIM = 4096;
+  const MAX_AREA = MAX_DIM * MAX_DIM;
+  let effScale = exportScale;
+  if (naturalWidth > 0 && naturalHeight > 0) {
+    effScale = Math.min(effScale, MAX_DIM / naturalWidth, MAX_DIM / naturalHeight);
+    effScale = Math.min(effScale, Math.sqrt(MAX_AREA / (naturalWidth * naturalHeight)));
+  }
+  effScale = Math.max(effScale, 1);
+  if (effScale < exportScale) {
+    log(`Image scale reduced to ${effScale.toFixed(2)}x (from ${exportScale}x) to avoid the device's canvas size limit.`, 'warn');
+  }
+
   try {
-    await captureElementAsImage(element, filename, exportScale, naturalWidth, naturalHeight);
+    await captureElementAsImage(element, filename, effScale, naturalWidth, naturalHeight);
   } catch (err) {
     log('Export failed: ' + err.message, 'err');
   } finally {
-    // Restore all collected elements
-    restoreInfo.forEach(({el, overflow, borderRadius}) => {
+    element.style.transform = prevTransform;
+    element.style.width = prevWidth;
+    restoreInfo.forEach(({ el, overflow, borderRadius }) => {
       el.style.overflow = overflow || '';
       el.style.borderRadius = borderRadius || '';
     });
@@ -2270,7 +2293,7 @@ function viewSavedRoster(id){
   DETECTED_GRADE = entry.grade || null;
   render();
   document.getElementById('toolbarRow').scrollIntoView({behavior:'smooth', block:'start'});
-  
+
   // Clear the save name input when viewing a saved roster
   clearSaveNameInput();
 }
@@ -2496,7 +2519,7 @@ function computeTogetherTime(){
   }
   out.innerHTML = html;
   LAST_OVERLAP_TABLE_HTML = html;
-  
+
   // Show the heatmap and image buttons in the toolbar
   document.getElementById('heatmapBtn').style.display = 'inline-block';
   document.getElementById('overlapImageBtn').style.display = 'inline-block';
@@ -2637,15 +2660,15 @@ function renderHeatmap(){
 ===================================================================== */
 function showDutyPopup(element) {
   debugLog('🔍 showDutyPopup() called', 'info');
-  
+
   if (!element) {
     debugLog('❌ element is null or undefined', 'err');
     return;
   }
-  
+
   debugLog('  element.tagName: ' + element.tagName, 'info');
   debugLog('  element.className: ' + element.className, 'info');
-  
+
   if (!element.dataset) {
     debugLog('❌ element has no dataset property', 'err');
     return;
@@ -2653,7 +2676,7 @@ function showDutyPopup(element) {
 
   const dateKey = element.dataset.date;
   debugLog('  dateKey: ' + dateKey, 'info');
-  
+
   let overlapWindows;
   try {
     const windowsEncoded = element.dataset.windows;
@@ -2674,7 +2697,7 @@ function showDutyPopup(element) {
     debugLog('  LAST_OVERLAP_PEOPLE: ' + JSON.stringify(LAST_OVERLAP_PEOPLE), 'err');
     return;
   }
-  
+
   debugLog('  LAST_OVERLAP_PEOPLE has ' + LAST_OVERLAP_PEOPLE.length + ' crew members', 'ok');
   for (const crew of LAST_OVERLAP_PEOPLE) {
     debugLog('    👤 ' + crew.name + ' (' + crew.tz + ') - ' + (crew.days ? crew.days.length + ' days' : 'no days'), 'info');
@@ -2690,7 +2713,7 @@ function showDutyPopup(element) {
     debugLog('❌ Invalid date key: ' + dateKey, 'err');
     return;
   }
-  
+
   debugLog('✅ All validations passed! Building popup...', 'ok');
 
   const dateDisplay = fmtDate(dateObj) + ' (' + DOW[dateObj.getDay()] + ')';
