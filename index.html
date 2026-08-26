@@ -1907,9 +1907,12 @@
             if (!match) return false;
             const dobDay = parseInt(match[1]);
             const dobMonth = parseInt(match[2]) - 1;
+            const yesterday = new Date(flightDate);
+yesterday.setDate(yesterday.getDate() - 1);
             const tomorrow = new Date(flightDate);
             tomorrow.setDate(tomorrow.getDate() + 1);
             if (dobDay === flightDate.getDate() && dobMonth === flightDate.getMonth()) return true;
+            if (dobDay === yesterday.getDate() && dobMonth === yesterday.getMonth()) return true;
             if (dobDay === tomorrow.getDate() && dobMonth === tomorrow.getMonth()) return true;
             return false;
         }
