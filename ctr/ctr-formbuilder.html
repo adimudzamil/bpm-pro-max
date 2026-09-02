@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Form Builder</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👷</text></svg>">
+<style>
+  /* ===== Same style as main CTR page (reduced to builder essentials) ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --surface2: #f1f5f9;
+    --border: #e2e8f0;
+    --border-bright: #cbd5e1;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.1);
+    --accent-glow: rgba(37,99,235,0.2);
+    --accent-hover: #1d4ed8;
+    --red: #dc2626;
+    --green: #16a34a;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; padding-top: 28px; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .card-title { font-weight: 700; font-size: 18px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+  .card-title .icon { color: var(--accent); }
+  .card-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-muted); letter-spacing: 0.08em; }
+  .method-tag { position: absolute; top: -10px; left: 16px; background: var(--accent); color: #fff; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; padding: 2px 14px; border-radius: 100px; border: 2px solid var(--surface); text-transform: uppercase; z-index: 4; box-shadow: 0 0 20px var(--accent-glow); }
+  .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+  .btn-primary { background: var(--accent); border: none; padding: 10px 24px; border-radius: 50px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: #fff; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .btn-secondary { background: transparent; border: 1px solid var(--border-bright); padding: 10px 20px; border-radius: 50px; font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); cursor: pointer; transition: all 0.2s; }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-success { background: var(--green); border: none; padding: 10px 24px; border-radius: 50px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: #fff; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; }
+  .btn-success:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-small { padding: 6px 14px; font-size: 12px; }
+  .btn-upload { background: var(--accent); border: none; padding: 14px 32px; border-radius: 50px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: #fff; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px var(--accent-glow); }
+  .btn-upload:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 6px 20px var(--accent-glow); }
+  .btn-upload:active { transform: scale(0.96); }
+  .file-upload-wrapper { display: inline-block; }
+  .file-upload-wrapper input[type="file"] { position: absolute; width: 0.1px; height: 0.1px; opacity: 0; overflow: hidden; z-index: -1; }
+  .builder-layout { display: flex; gap: 20px; flex-wrap: wrap; }
+  .builder-preview { flex: 2; min-width: 300px; }
+  .builder-preview canvas { width: 100%; height: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: white; cursor: crosshair; }
+  .builder-controls { flex: 1; min-width: 280px; max-height: 700px; overflow-y: auto; padding-right: 4px; }
+  .control-group { margin-bottom: 12px; padding: 10px; background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+  .control-group label { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .control-group input[type="number"] { width: 60px; padding: 4px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; text-align: center; }
+  .control-group input[type="text"] { padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; flex: 1; }
+  .slot-section { margin-bottom: 12px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .slot-section .section-title { font-weight: 600; font-size: 14px; color: var(--text); cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; }
+  .slot-section .section-title .toggle-icon { transition: transform 0.2s; }
+  .slot-section .section-title .toggle-icon.open { transform: rotate(180deg); }
+  .slot-section .slot-controls { display: none; margin-top: 8px; }
+  .slot-section .slot-controls.open { display: block; }
+  .slot-section .slot-controls .param-row { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin-bottom: 4px; }
+  .slot-section .slot-controls .param-row label { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  .slot-section .slot-controls .param-row input[type="number"] { width: 55px; padding: 3px 4px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; text-align: center; }
+  .slot-section .slot-controls .param-row .fine-tune-sliders { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 4px; }
+  .slot-section .slot-controls .param-row .fine-tune-sliders label { font-size: 11px; display: flex; align-items: center; gap: 4px; }
+  .slot-section .slot-controls .param-row .fine-tune-sliders input[type="range"] { width: 80px; accent-color: var(--accent); }
+  .slot-section .slot-controls .param-row .fine-tune-sliders input[type="number"] { width: 45px; padding: 2px 4px; font-size: 11px; }
+  .builder-output { margin-top: 12px; background: var(--surface2); border-radius: var(--radius-sm); padding: 12px; border: 1px solid var(--border); }
+  .builder-output textarea { width: 100%; min-height: 120px; font-family: 'DM Mono', monospace; font-size: 12px; background: #1e1e1e; color: #d4d4d4; border: none; border-radius: 4px; padding: 8px; resize: vertical; }
+  .saved-templates-list { margin-top: 8px; max-height: 150px; overflow-y: auto; }
+  .saved-templates-list .saved-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .saved-templates-list .saved-item button { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 12px; }
+  .saved-templates-list .saved-item button:hover { text-decoration: underline; }
+  .builder-status { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface); border: 1px solid var(--border-bright); backdrop-filter: blur(12px); padding: 12px 24px; border-radius: 60px; font-family: 'DM Mono', monospace; font-size: 12px; z-index: 2000; transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1); white-space: nowrap; color: var(--text); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+  .badge-group { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 4px; }
+  .badge { font-family: 'DM Mono', monospace; background: var(--surface2); border: 1px solid var(--border); border-radius: 100px; padding: 4px 14px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: var(--text-muted); }
+  .badge.accent { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+  .logo { font-size: clamp(32px, 7vw, 48px); font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+  .logo span { color: var(--accent); }
+  .byline-badge { display: inline-block; background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; padding: 2px 14px; border-radius: 100px; margin-top: 2px; width: fit-content; }
+  .logo-area { display: flex; flex-direction: column; gap: 4px; }
+  header { padding: 16px 0 8px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo-area">
+      <div class="logo">👷<span>Builder</span></div>
+      <div class="byline-badge">Form Template Designer</div>
+    </div>
+    <div class="badge-group">
+      <div class="badge">📐 Slot Editor</div>
+      <div class="badge">💾 Local Storage</div>
+      <div class="badge accent">v1.0</div>
+    </div>
+  </header>
+
+  <div class="card">
+    <span class="method-tag">👷</span>
+    <div class="card-header">
+      <div class="card-title"><span class="icon">👷</span> Form Builder</div>
+      <span class="card-sub">design new templates · live preview · export code</span>
+    </div>
+
+    <div class="btnrow" style="margin-bottom:12px;">
+      <label style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text-muted);">Template Name:</label>
+      <input type="text" id="builderTemplateName" placeholder="e.g., DEL_baggage" style="padding:6px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;flex:1;min-width:150px;">
+      <label style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text-muted);">Destination:</label>
+      <select id="builderDestination" style="padding:6px 12px;">
+        <option value="BOM">BOM</option>
+        <option value="DEL">DEL</option>
+        <option value="HYD">HYD</option>
+        <option value="BLR">BLR</option>
+        <option value="AMD">AMD</option>
+        <option value="ATQ">ATQ</option>
+      </select>
+      <label style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text-muted);margin-left:12px;">
+        <input type="checkbox" id="builderPicEnable"> Enable PIC Top Page
+      </label>
+    </div>
+    <div class="btnrow">
+      <div class="file-upload-wrapper">
+        <label for="builderFileInput" class="btn-upload" style="padding:10px 24px;font-size:14px;">📎 Upload Canvas</label>
+        <input type="file" id="builderFileInput" accept=".png,.jpg,.jpeg,.webp,.pdf">
+      </div>
+      <button class="btn-secondary" id="builderLoadSavedBtn">📂 Load Saved</button>
+      <button class="btn-secondary" id="builderSaveBtn">💾 Save Template</button>
+      <button class="btn-secondary" id="builderDeleteBtn">🗑️ Delete</button>
+    </div>
+    <div id="builderStatus" class="builder-status">Upload a canvas to start building.</div>
+
+    <div class="builder-layout">
+      <div class="builder-preview">
+        <canvas id="builderCanvas"></canvas>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Click on the canvas to set Start X/Y for the selected slot type below.</div>
+      </div>
+      <div class="builder-controls" id="builderControls">
+        <div class="control-group">
+          <label>Click to set Start X/Y for:</label>
+          <select id="builderActiveSlotType" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;">
+            <option value="normal_name">Name</option>
+            <option value="normal_rank">Rank</option>
+            <option value="normal_number">Number</option>
+            <option value="normal_crewId">Crew ID</option>
+            <option value="normal_passport">Passport</option>
+            <option value="normal_expiry">Expiry</option>
+            <option value="normal_nationality">Nationality</option>
+            <option value="pic_name">PIC Name</option>
+            <option value="pic_rank">PIC Rank</option>
+            <option value="pic_crewId">PIC Crew ID</option>
+            <option value="pic_passport">PIC Passport</option>
+            <option value="pic_expiry">PIC Expiry</option>
+            <option value="pic_nationality">PIC Nationality</option>
+          </select>
+        </div>
+
+        <!-- Normal slots sections (identical to original) -->
+        <div class="slot-section" id="normalSection">
+          <div class="section-title" onclick="toggleSection('normalSection')">
+            <span>📋 Normal Slots</span>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="slot-controls open" id="normalControls">
+            <!-- Name -->
+            <div class="slot-section" id="normalNameSection" style="border-left:3px solid #2563eb;">
+              <div class="section-title" onclick="toggleSection('normalNameSection')">
+                <span>Name</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="normalNameControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="normalNameEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="normalNameX" value="83" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="normalNameY" value="314" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="normalNameRows" value="16" min="1" max="50"></label>
+                  <label>Gap Y: <input type="number" id="normalNameGapY" value="37" min="1" max="200"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="normalNameWidth" value="400" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="normalNameHeight" value="35" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="normalNameFontSize" value="12" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="normalNameFineX" min="-50" max="50" value="0" step="1"><input type="number" id="normalNameFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="normalNameFineY" min="-50" max="50" value="0" step="1"><input type="number" id="normalNameFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="normalNameFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="normalNameFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <!-- Rank -->
+            <div class="slot-section" id="normalRankSection" style="border-left:3px solid #16a34a;">
+              <div class="section-title" onclick="toggleSection('normalRankSection')">
+                <span>Rank</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="normalRankControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="normalRankEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="normalRankX" value="497" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="normalRankY" value="314" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="normalRankRows" value="16" min="1" max="50"></label>
+                  <label>Gap Y: <input type="number" id="normalRankGapY" value="37" min="1" max="200"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="normalRankWidth" value="80" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="normalRankHeight" value="35" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="normalRankFontSize" value="12" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="normalRankFineX" min="-50" max="50" value="0" step="1"><input type="number" id="normalRankFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="normalRankFineY" min="-50" max="50" value="0" step="1"><input type="number" id="normalRankFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="normalRankFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="normalRankFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <!-- Number -->
+            <div class="slot-section" id="normalNumberSection" style="border-left:3px solid #f59e0b;">
+              <div class="section-title" onclick="toggleSection('normalNumberSection')">
+                <span>Number</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="normalNumberControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="normalNumberEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="normalNumberX" value="123" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="normalNumberY" value="353" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="normalNumberRows" value="16" min="1" max="50"></label>
+                  <label>Gap Y: <input type="number" id="normalNumberGapY" value="37" min="1" max="200"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="normalNumberWidth" value="40" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="normalNumberHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="normalNumberFontSize" value="12" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="normalNumberFineX" min="-50" max="50" value="0" step="1"><input type="number" id="normalNumberFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="normalNumberFineY" min="-50" max="50" value="0" step="1"><input type="number" id="normalNumberFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="normalNumberFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="normalNumberFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <!-- Crew ID -->
+            <div class="slot-section" id="normalCrewIdSection" style="border-left:3px solid #8b5cf6;">
+              <div class="section-title" onclick="toggleSection('normalCrewIdSection')">
+                <span>Crew ID</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="normalCrewIdControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="normalCrewIdEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="normalCrewIdX" value="1088" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="normalCrewIdY" value="363" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="normalCrewIdRows" value="16" min="1" max="50"></label>
+                  <label>Gap Y: <input type="number" id="normalCrewIdGapY" value="37" min="1" max="200"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="normalCrewIdWidth" value="100" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="normalCrewIdHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="normalCrewIdFontSize" value="12" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="normalCrewIdFineX" min="-50" max="50" value="0" step="1"><input type="number" id="normalCrewIdFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="normalCrewIdFineY" min="-50" max="50" value="0" step="1"><input type="number" id="normalCrewIdFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="normalCrewIdFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="normalCrewIdFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <!-- Passport -->
+            <div class="slot-section" id="normalPassportSection" style="border-left:3px solid #f97316;">
+              <div class="section-title" onclick="toggleSection('normalPassportSection')">
+                <span>Passport</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="normalPassportControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="normalPassportEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="normalPassportX" value="500" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="normalPassportY" value="314" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="normalPassportRows" value="16" min="1" max="50"></label>
+                  <label>Gap Y: <input type="number" id="normalPassportGapY" value="37" min="1" max="200"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="normalPassportWidth" value="120" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="normalPassportHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="normalPassportFontSize" value="10" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="normalPassportFineX" min="-50" max="50" value="0" step="1"><input type="number" id="normalPassportFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="normalPassportFineY" min="-50" max="50" value="0" step="1"><input type="number" id="normalPassportFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="normalPassportFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="normalPassportFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <!-- Expiry -->
+            <div class="slot-section" id="normalExpirySection" style="border-left:3px solid #84cc16;">
+              <div class="section-title" onclick="toggleSection('normalExpirySection')">
+                <span>Expiry</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="normalExpiryControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="normalExpiryEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="normalExpiryX" value="630" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="normalExpiryY" value="314" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="normalExpiryRows" value="16" min="1" max="50"></label>
+                  <label>Gap Y: <input type="number" id="normalExpiryGapY" value="37" min="1" max="200"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="normalExpiryWidth" value="120" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="normalExpiryHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="normalExpiryFontSize" value="10" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="normalExpiryFineX" min="-50" max="50" value="0" step="1"><input type="number" id="normalExpiryFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="normalExpiryFineY" min="-50" max="50" value="0" step="1"><input type="number" id="normalExpiryFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="normalExpiryFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="normalExpiryFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <!-- Nationality -->
+            <div class="slot-section" id="normalNationalitySection" style="border-left:3px solid #a855f7;">
+              <div class="section-title" onclick="toggleSection('normalNationalitySection')">
+                <span>Nationality</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="normalNationalityControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="normalNationalityEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="normalNationalityX" value="760" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="normalNationalityY" value="314" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="normalNationalityRows" value="16" min="1" max="50"></label>
+                  <label>Gap Y: <input type="number" id="normalNationalityGapY" value="37" min="1" max="200"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="normalNationalityWidth" value="120" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="normalNationalityHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="normalNationalityFontSize" value="10" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="normalNationalityFineX" min="-50" max="50" value="0" step="1"><input type="number" id="normalNationalityFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="normalNationalityFineY" min="-50" max="50" value="0" step="1"><input type="number" id="normalNationalityFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="normalNationalityFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="normalNationalityFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PIC slots -->
+        <div class="slot-section" id="picSection" style="display:none;">
+          <div class="section-title" onclick="toggleSection('picSection')">
+            <span>👤 PIC Top Page Slots</span>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="slot-controls open" id="picControls">
+            <!-- PIC Name -->
+            <div class="slot-section" id="picNameSection" style="border-left:3px solid #2563eb;">
+              <div class="section-title" onclick="toggleSection('picNameSection')">
+                <span>Name</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="picNameControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="picNameEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="picNameX" value="100" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="picNameY" value="100" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="picNameRows" value="1" min="1" max="5"></label>
+                  <label>Gap Y: <input type="number" id="picNameGapY" value="0" min="0" max="50"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="picNameWidth" value="200" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="picNameHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="picNameFontSize" value="14" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="picNameFineX" min="-50" max="50" value="0" step="1"><input type="number" id="picNameFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="picNameFineY" min="-50" max="50" value="0" step="1"><input type="number" id="picNameFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="picNameFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="picNameFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <!-- PIC Rank -->
+            <div class="slot-section" id="picRankSection" style="border-left:3px solid #16a34a;">
+              <div class="section-title" onclick="toggleSection('picRankSection')">
+                <span>Rank</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="picRankControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="picRankEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="picRankX" value="320" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="picRankY" value="100" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="picRankRows" value="1" min="1" max="5"></label>
+                  <label>Gap Y: <input type="number" id="picRankGapY" value="0" min="0" max="50"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="picRankWidth" value="80" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="picRankHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="picRankFontSize" value="14" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="picRankFineX" min="-50" max="50" value="0" step="1"><input type="number" id="picRankFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="picRankFineY" min="-50" max="50" value="0" step="1"><input type="number" id="picRankFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="picRankFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="picRankFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <!-- PIC Crew ID -->
+            <div class="slot-section" id="picCrewIdSection" style="border-left:3px solid #8b5cf6;">
+              <div class="section-title" onclick="toggleSection('picCrewIdSection')">
+                <span>Crew ID</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="picCrewIdControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="picCrewIdEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="picCrewIdX" value="500" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="picCrewIdY" value="100" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="picCrewIdRows" value="1" min="1" max="5"></label>
+                  <label>Gap Y: <input type="number" id="picCrewIdGapY" value="0" min="0" max="50"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="picCrewIdWidth" value="100" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="picCrewIdHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="picCrewIdFontSize" value="14" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="picCrewIdFineX" min="-50" max="50" value="0" step="1"><input type="number" id="picCrewIdFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="picCrewIdFineY" min="-50" max="50" value="0" step="1"><input type="number" id="picCrewIdFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="picCrewIdFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="picCrewIdFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <!-- PIC Passport -->
+            <div class="slot-section" id="picPassportSection" style="border-left:3px solid #f97316;">
+              <div class="section-title" onclick="toggleSection('picPassportSection')">
+                <span>Passport</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="picPassportControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="picPassportEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="picPassportX" value="310" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="picPassportY" value="100" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="picPassportRows" value="1" min="1" max="5"></label>
+                  <label>Gap Y: <input type="number" id="picPassportGapY" value="0" min="0" max="50"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="picPassportWidth" value="120" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="picPassportHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="picPassportFontSize" value="12" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="picPassportFineX" min="-50" max="50" value="0" step="1"><input type="number" id="picPassportFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="picPassportFineY" min="-50" max="50" value="0" step="1"><input type="number" id="picPassportFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="picPassportFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="picPassportFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <!-- PIC Expiry -->
+            <div class="slot-section" id="picExpirySection" style="border-left:3px solid #84cc16;">
+              <div class="section-title" onclick="toggleSection('picExpirySection')">
+                <span>Expiry</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="picExpiryControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="picExpiryEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="picExpiryX" value="440" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="picExpiryY" value="100" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="picExpiryRows" value="1" min="1" max="5"></label>
+                  <label>Gap Y: <input type="number" id="picExpiryGapY" value="0" min="0" max="50"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="picExpiryWidth" value="120" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="picExpiryHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="picExpiryFontSize" value="12" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="picExpiryFineX" min="-50" max="50" value="0" step="1"><input type="number" id="picExpiryFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="picExpiryFineY" min="-50" max="50" value="0" step="1"><input type="number" id="picExpiryFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="picExpiryFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="picExpiryFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+            <!-- PIC Nationality -->
+            <div class="slot-section" id="picNationalitySection" style="border-left:3px solid #a855f7;">
+              <div class="section-title" onclick="toggleSection('picNationalitySection')">
+                <span>Nationality</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="slot-controls open" id="picNationalityControls">
+                <div class="param-row">
+                  <label><input type="checkbox" id="picNationalityEnabled" checked> Enable</label>
+                  <label>Start X: <input type="number" id="picNationalityX" value="570" min="0" max="1754"></label>
+                  <label>Start Y: <input type="number" id="picNationalityY" value="100" min="0" max="1240"></label>
+                  <label>Rows: <input type="number" id="picNationalityRows" value="1" min="1" max="5"></label>
+                  <label>Gap Y: <input type="number" id="picNationalityGapY" value="0" min="0" max="50"></label>
+                </div>
+                <div class="param-row">
+                  <label>Width: <input type="number" id="picNationalityWidth" value="120" min="10" max="800"></label>
+                  <label>Height: <input type="number" id="picNationalityHeight" value="30" min="10" max="200"></label>
+                  <label>Font Size: <input type="number" id="picNationalityFontSize" value="12" min="6" max="40"></label>
+                </div>
+                <div class="param-row fine-tune-sliders">
+                  <label>X: <input type="range" id="picNationalityFineX" min="-50" max="50" value="0" step="1"><input type="number" id="picNationalityFineXVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Y: <input type="range" id="picNationalityFineY" min="-50" max="50" value="0" step="1"><input type="number" id="picNationalityFineYVal" value="0" step="1" style="width:45px;"></label>
+                  <label>Font Size: <input type="range" id="picNationalityFineFontSize" min="-10" max="10" value="0" step="1"><input type="number" id="picNationalityFineFontSizeVal" value="0" step="1" style="width:45px;"></label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="btnrow">
+          <button class="btn-primary" id="builderApplyBtn">Apply & Preview</button>
+          <button class="btn-success" id="builderExportBtn">📋 Export Code</button>
+        </div>
+
+        <div class="control-group" style="margin-top:8px;">
+          <label style="font-weight:600;">Saved Templates</label>
+          <div id="builderSavedList" class="saved-templates-list"></div>
+        </div>
+
+        <div class="builder-output">
+          <label style="font-weight:600;font-size:13px;">Generated Slot Code</label>
+          <textarea id="builderOutput" readonly></textarea>
+          <div class="btnrow">
+            <button class="btn-secondary btn-small" id="builderCopyBtn">📋 Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer style="text-align:center;margin-top:40px;font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);">
+    🔒 All processing is local — your data never leaves your device.
+  </footer>
+</div>
+
+<!-- Toast -->
+<div id="toastMsg" class="toast"></div>
+
+<script>
+// ============================================================
+//  FORM BUILDER – full standalone version
+//  Uses same localStorage key as main page: 'ctr_builder_configs'
+// ============================================================
+(function(){
+  const A4_W = 1754;
+  const A4_H = 1240;
+
+  const builderCanvas = document.getElementById('builderCanvas');
+  const builderCtx = builderCanvas.getContext('2d');
+  builderCanvas.width = A4_W;
+  builderCanvas.height = A4_H;
+
+  const builderFileInput = document.getElementById('builderFileInput');
+  const builderTemplateName = document.getElementById('builderTemplateName');
+  const builderDestination = document.getElementById('builderDestination');
+  const builderStatus = document.getElementById('builderStatus');
+  const builderPicEnable = document.getElementById('builderPicEnable');
+
+  function showToast(msg, type='default'){
+    const toast = document.getElementById('toastMsg');
+    toast.textContent = msg;
+    toast.className = `toast ${type} show`;
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  function getSlotValues(prefix) {
+    return {
+      enabled: document.getElementById(prefix + 'Enabled').checked,
+      startX: parseInt(document.getElementById(prefix + 'X').value) || 0,
+      startY: parseInt(document.getElementById(prefix + 'Y').value) || 0,
+      rows: parseInt(document.getElementById(prefix + 'Rows').value) || 1,
+      gapY: parseInt(document.getElementById(prefix + 'GapY').value) || 30,
+      width: parseInt(document.getElementById(prefix + 'Width').value) || 100,
+      height: parseInt(document.getElementById(prefix + 'Height').value) || 30,
+      fontSize: parseInt(document.getElementById(prefix + 'FontSize').value) || 12,
+      fineX: parseInt(document.getElementById(prefix + 'FineX').value) || 0,
+      fineY: parseInt(document.getElementById(prefix + 'FineY').value) || 0,
+      fineFontSize: parseInt(document.getElementById(prefix + 'FineFontSize').value) || 0
+    };
+  }
+
+  let builderBgImageData = null;
+
+  function builderRenderPreview() {
+    const canvas = builderCanvas;
+    const ctx = builderCtx;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (builderBgImageData) {
+      ctx.putImageData(builderBgImageData, 0, 0);
+    } else {
+      ctx.fillStyle = '#f0f0f0';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#999';
+      ctx.font = '24px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Upload a canvas to begin', canvas.width/2, canvas.height/2);
+    }
+
+    const normalTypes = ['Name', 'Rank', 'Number', 'CrewId', 'Passport', 'Expiry', 'Nationality'];
+    const normalColors = { Name: '#2563eb', Rank: '#16a34a', Number: '#f59e0b', CrewId: '#8b5cf6', Passport: '#f97316', Expiry: '#84cc16', Nationality: '#a855f7' };
+    normalTypes.forEach(type => {
+      const prefix = 'normal' + type;
+      const config = getSlotValues(prefix);
+      if (!config.enabled) return;
+      const startX = config.startX + config.fineX;
+      const startY = config.startY + config.fineY;
+      const rows = config.rows;
+      const gapY = config.gapY;
+      const width = config.width;
+      const height = config.height;
+      const fontSize = config.fontSize + config.fineFontSize;
+      const color = normalColors[type];
+      for (let i = 0; i < rows; i++) {
+        const y = startY + i * gapY;
+        const x = startX;
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.strokeRect(x, y, width, height);
+        ctx.setLineDash([]);
+        ctx.fillStyle = color + '22';
+        ctx.fillRect(x, y, width, height);
+        ctx.fillStyle = color;
+        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.textBaseline = 'top';
+        let sample = '';
+        if (type === 'Name') sample = 'Name 1';
+        else if (type === 'Rank') sample = 'CAPT';
+        else if (type === 'Number') sample = String(i+1);
+        else if (type === 'CrewId') sample = '1234567';
+        else if (type === 'Passport') sample = 'PASSPORT';
+        else if (type === 'Expiry') sample = '31 DEC 2030';
+        else if (type === 'Nationality') sample = 'MALAYSIA';
+        let text = sample;
+        while (ctx.measureText(text).width > width - 10 && text.length > 1) text = text.slice(0, -1);
+        ctx.fillText(text, x + 5, y + 5);
+        ctx.fillStyle = '#333';
+        ctx.font = '10px sans-serif';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(type + (i+1), x + width - 30, y + height - 2);
+        ctx.restore();
+      }
+    });
+
+    if (builderPicEnable.checked) {
+      const picTypes = ['Name', 'Rank', 'CrewId', 'Passport', 'Expiry', 'Nationality'];
+      const picColors = { Name: '#2563eb', Rank: '#16a34a', CrewId: '#8b5cf6', Passport: '#f97316', Expiry: '#84cc16', Nationality: '#a855f7' };
+      picTypes.forEach(type => {
+        const prefix = 'pic' + type;
+        const config = getSlotValues(prefix);
+        if (!config.enabled) return;
+        const startX = config.startX + config.fineX;
+        const startY = config.startY + config.fineY;
+        const rows = config.rows;
+        const gapY = config.gapY;
+        const width = config.width;
+        const height = config.height;
+        const fontSize = config.fontSize + config.fineFontSize;
+        const color = picColors[type];
+        for (let i = 0; i < rows; i++) {
+          const y = startY + i * gapY;
+          const x = startX;
+          ctx.save();
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([4, 4]);
+          ctx.strokeRect(x, y, width, height);
+          ctx.setLineDash([]);
+          ctx.fillStyle = color + '22';
+          ctx.fillRect(x, y, width, height);
+          ctx.fillStyle = color;
+          ctx.font = `bold ${fontSize}px Arial`;
+          ctx.textBaseline = 'top';
+          let sample = '';
+          if (type === 'Name') sample = 'PIC Name';
+          else if (type === 'Rank') sample = 'CAPT';
+          else if (type === 'CrewId') sample = 'PIC ID';
+          else if (type === 'Passport') sample = 'PASSPORT';
+          else if (type === 'Expiry') sample = '31 DEC 2030';
+          else if (type === 'Nationality') sample = 'MALAYSIA';
+          let text = sample;
+          while (ctx.measureText(text).width > width - 10 && text.length > 1) text = text.slice(0, -1);
+          ctx.fillText(text, x + 5, y + 5);
+          ctx.fillStyle = '#333';
+          ctx.font = '10px sans-serif';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('PIC ' + type, x + width - 30, y + height - 2);
+          ctx.restore();
+        }
+      });
+    }
+
+    builderStatus.textContent = '✅ Preview updated. Click on canvas to set Start X/Y for selected slot type.';
+  }
+
+  builderCanvas.addEventListener('click', function(e) {
+    const rect = this.getBoundingClientRect();
+    const scaleX = this.width / rect.width;
+    const scaleY = this.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+    const type = document.getElementById('builderActiveSlotType').value;
+    const [section, slotType] = type.split('_');
+    const prefix = (section === 'pic' ? 'pic' : 'normal') + slotType.charAt(0).toUpperCase() + slotType.slice(1);
+    const xId = prefix + 'X';
+    const yId = prefix + 'Y';
+    const clampedX = Math.min(Math.max(Math.round(x), 0), 1754);
+    const clampedY = Math.min(Math.max(Math.round(y), 0), 1240);
+    document.getElementById(xId).value = clampedX;
+    document.getElementById(yId).value = clampedY;
+    builderRenderPreview();
+    builderStatus.textContent = `✅ Set ${section} ${slotType} Start X=${clampedX}, Y=${clampedY}`;
+  });
+
+  document.getElementById('builderApplyBtn').addEventListener('click', builderRenderPreview);
+
+  builderPicEnable.addEventListener('change', function() {
+    const picSection = document.getElementById('picSection');
+    picSection.style.display = this.checked ? 'block' : 'none';
+    builderRenderPreview();
+  });
+
+  window.toggleSection = function(sectionId) {
+    const section = document.getElementById(sectionId);
+    const controls = section.querySelector('.slot-controls');
+    const icon = section.querySelector('.toggle-icon');
+    if (controls) {
+      controls.classList.toggle('open');
+      if (icon) icon.classList.toggle('open');
+    }
+  };
+
+  builderFileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = A4_W;
+        canvas.height = A4_H;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, A4_W, A4_H);
+        const scaleX = A4_W / img.width;
+        const scaleY = A4_H / img.height;
+        const scale = Math.min(scaleX, scaleY);
+        const drawWidth = img.width * scale;
+        const drawHeight = img.height * scale;
+        const offsetX = (A4_W - drawWidth) / 2;
+        const offsetY = (A4_H - drawHeight) / 2;
+        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+        builderBgImageData = ctx.getImageData(0, 0, A4_W, A4_H);
+        builderRenderPreview();
+        builderStatus.textContent = '✅ Canvas loaded. Adjust settings and click "Apply & Preview".';
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function builderSaveTemplate() {
+    const name = builderTemplateName.value.trim();
+    if (!name) {
+      showToast('Please enter a template name.', 'error');
+      return;
+    }
+    const config = {
+      name: name,
+      destination: builderDestination.value,
+      picEnabled: builderPicEnable.checked,
+      normalName: getSlotValues('normalName'),
+      normalRank: getSlotValues('normalRank'),
+      normalNumber: getSlotValues('normalNumber'),
+      normalCrewId: getSlotValues('normalCrewId'),
+      normalPassport: getSlotValues('normalPassport'),
+      normalExpiry: getSlotValues('normalExpiry'),
+      normalNationality: getSlotValues('normalNationality'),
+      picName: builderPicEnable.checked ? getSlotValues('picName') : null,
+      picRank: builderPicEnable.checked ? getSlotValues('picRank') : null,
+      picCrewId: builderPicEnable.checked ? getSlotValues('picCrewId') : null,
+      picPassport: builderPicEnable.checked ? getSlotValues('picPassport') : null,
+      picExpiry: builderPicEnable.checked ? getSlotValues('picExpiry') : null,
+      picNationality: builderPicEnable.checked ? getSlotValues('picNationality') : null
+    };
+    let saved = JSON.parse(localStorage.getItem('ctr_builder_configs') || '{}');
+    saved[name] = config;
+    localStorage.setItem('ctr_builder_configs', JSON.stringify(saved));
+    showToast('Template "' + name + '" saved.', 'success');
+    builderLoadSavedList();
+  }
+
+  document.getElementById('builderSaveBtn').addEventListener('click', builderSaveTemplate);
+
+  function builderLoadSavedList() {
+    const saved = JSON.parse(localStorage.getItem('ctr_builder_configs') || '{}');
+    const names = Object.keys(saved);
+    const list = document.getElementById('builderSavedList');
+    list.innerHTML = '';
+    if (names.length === 0) {
+      list.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">No saved templates.</div>';
+      return;
+    }
+    names.forEach(name => {
+      const item = document.createElement('div');
+      item.className = 'saved-item';
+      item.innerHTML = `<span>${name}</span>
+        <div>
+          <button onclick="builderLoadTemplate('${name}')">Load</button>
+          <button onclick="builderDeleteTemplate('${name}')">✕</button>
+        </div>`;
+      list.appendChild(item);
+    });
+  }
+
+  window.builderLoadTemplate = function(name) {
+    const saved = JSON.parse(localStorage.getItem('ctr_builder_configs') || '{}');
+    const config = saved[name];
+    if (!config) {
+      showToast('Template not found.', 'error');
+      return;
+    }
+    builderTemplateName.value = name;
+    builderDestination.value = config.destination || 'BOM';
+    builderPicEnable.checked = config.picEnabled || false;
+    document.getElementById('picSection').style.display = builderPicEnable.checked ? 'block' : 'none';
+
+    const normalTypes = ['Name', 'Rank', 'Number', 'CrewId', 'Passport', 'Expiry', 'Nationality'];
+    normalTypes.forEach(type => {
+      const prefix = 'normal' + type;
+      const data = config[prefix];
+      if (data) {
+        document.getElementById(prefix + 'Enabled').checked = data.enabled !== undefined ? data.enabled : true;
+        document.getElementById(prefix + 'X').value = data.startX || 0;
+        document.getElementById(prefix + 'Y').value = data.startY || 0;
+        document.getElementById(prefix + 'Rows').value = data.rows || 1;
+        document.getElementById(prefix + 'GapY').value = data.gapY || 30;
+        document.getElementById(prefix + 'Width').value = data.width || 100;
+        document.getElementById(prefix + 'Height').value = data.height || 30;
+        document.getElementById(prefix + 'FontSize').value = data.fontSize || 12;
+        document.getElementById(prefix + 'FineX').value = data.fineX || 0;
+        document.getElementById(prefix + 'FineY').value = data.fineY || 0;
+        document.getElementById(prefix + 'FineFontSize').value = data.fineFontSize || 0;
+        document.getElementById(prefix + 'FineXVal').value = data.fineX || 0;
+        document.getElementById(prefix + 'FineYVal').value = data.fineY || 0;
+        document.getElementById(prefix + 'FineFontSizeVal').value = data.fineFontSize || 0;
+      }
+    });
+
+    if (builderPicEnable.checked) {
+      const picTypes = ['Name', 'Rank', 'CrewId', 'Passport', 'Expiry', 'Nationality'];
+      picTypes.forEach(type => {
+        const prefix = 'pic' + type;
+        const data = config[prefix];
+        if (data) {
+          document.getElementById(prefix + 'Enabled').checked = data.enabled !== undefined ? data.enabled : true;
+          document.getElementById(prefix + 'X').value = data.startX || 0;
+          document.getElementById(prefix + 'Y').value = data.startY || 0;
+          document.getElementById(prefix + 'Rows').value = data.rows || 1;
+          document.getElementById(prefix + 'GapY').value = data.gapY || 0;
+          document.getElementById(prefix + 'Width').value = data.width || 100;
+          document.getElementById(prefix + 'Height').value = data.height || 30;
+          document.getElementById(prefix + 'FontSize').value = data.fontSize || 12;
+          document.getElementById(prefix + 'FineX').value = data.fineX || 0;
+          document.getElementById(prefix + 'FineY').value = data.fineY || 0;
+          document.getElementById(prefix + 'FineFontSize').value = data.fineFontSize || 0;
+          document.getElementById(prefix + 'FineXVal').value = data.fineX || 0;
+          document.getElementById(prefix + 'FineYVal').value = data.fineY || 0;
+          document.getElementById(prefix + 'FineFontSizeVal').value = data.fineFontSize || 0;
+        }
+      });
+    }
+
+    builderRenderPreview();
+    showToast('Loaded template: ' + name, 'success');
+  };
+
+  window.builderDeleteTemplate = function(name) {
+    if (!confirm('Delete template "' + name + '"?')) return;
+    let saved = JSON.parse(localStorage.getItem('ctr_builder_configs') || '{}');
+    delete saved[name];
+    localStorage.setItem('ctr_builder_configs', JSON.stringify(saved));
+    builderLoadSavedList();
+    showToast('Deleted: ' + name, 'default');
+  };
+
+  document.getElementById('builderLoadSavedBtn').addEventListener('click', builderLoadSavedList);
+
+  document.getElementById('builderDeleteBtn').addEventListener('click', function() {
+    if (!confirm('Clear the builder state?')) return;
+    builderBgImageData = null;
+    builderCanvas.getContext('2d').clearRect(0,0,A4_W,A4_H);
+    builderStatus.textContent = 'Cleared. Upload a canvas to start.';
+    document.getElementById('builderOutput').value = '';
+  });
+
+  document.getElementById('builderExportBtn').addEventListener('click', function() {
+    const name = builderTemplateName.value.trim() || 'template';
+    const destination = builderDestination.value;
+    const picEnabled = builderPicEnable.checked;
+
+    function generateSlotsFromConfig(prefix) {
+      const config = getSlotValues(prefix);
+      if (!config.enabled) return null;
+      const slots = [];
+      for (let i = 0; i < config.rows; i++) {
+        slots.push({
+          x: config.startX + config.fineX,
+          y: config.startY + i * config.gapY + config.fineY,
+          w: config.width,
+          h: config.height,
+          fontSize: config.fontSize + config.fineFontSize
+        });
+      }
+      return slots;
+    }
+
+    const normalName = generateSlotsFromConfig('normalName');
+    const normalRank = generateSlotsFromConfig('normalRank');
+    const normalNumber = generateSlotsFromConfig('normalNumber');
+    const normalCrewId = generateSlotsFromConfig('normalCrewId');
+    const normalPassport = generateSlotsFromConfig('normalPassport');
+    const normalExpiry = generateSlotsFromConfig('normalExpiry');
+    const normalNationality = generateSlotsFromConfig('normalNationality');
+
+    let picName = null, picRank = null, picCrewId = null, picPassport = null, picExpiry = null, picNationality = null;
+    if (picEnabled) {
+      picName = generateSlotsFromConfig('picName');
+      picRank = generateSlotsFromConfig('picRank');
+      picCrewId = generateSlotsFromConfig('picCrewId');
+      picPassport = generateSlotsFromConfig('picPassport');
+      picExpiry = generateSlotsFromConfig('picExpiry');
+      picNationality = generateSlotsFromConfig('picNationality');
+    }
+
+    let code = `// ============================================\n`;
+    code += `//  ${name} – Built with Form Builder\n`;
+    code += `// ============================================\n`;
+    code += `const ${name} = {\n`;
+    code += `  id: '${name}',\n`;
+    code += `  label: '${name.replace(/_/g,' ').toUpperCase().replace(/\b\w/g, l => l.toUpperCase())}',\n`;
+    code += `  destination: '${destination}',\n`;
+    code += `  bgPath: 'templates/${name}.png',\n`;
+    code += `  bgImageData: null,\n`;
+    code += `  groupPilotsSeparately: true,\n`;
+    code += `  globalNumbering: false,\n`;
+    if (picEnabled) {
+      code += `  picTopPage: true,\n`;
+      code += `  picSlots: {\n`;
+      if (picName) {
+        code += `    nameSlots: [\n`;
+        picName.forEach(s => {
+          code += `      { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+        });
+        code += `    ],\n`;
+      }
+      if (picRank) {
+        code += `    rankSlots: [\n`;
+        picRank.forEach(s => {
+          code += `      { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+        });
+        code += `    ],\n`;
+      }
+      if (picCrewId) {
+        code += `    crewIdSlots: [\n`;
+        picCrewId.forEach(s => {
+          code += `      { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+        });
+        code += `    ],\n`;
+      }
+      if (picPassport) {
+        code += `    picPassportSlots: [\n`;
+        picPassport.forEach(s => {
+          code += `      { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+        });
+        code += `    ],\n`;
+      }
+      if (picExpiry) {
+        code += `    picExpirySlots: [\n`;
+        picExpiry.forEach(s => {
+          code += `      { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+        });
+        code += `    ],\n`;
+      }
+      if (picNationality) {
+        code += `    picNationalitySlots: [\n`;
+        picNationality.forEach(s => {
+          code += `      { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+        });
+        code += `    ],\n`;
+      }
+      code += `  },\n`;
+    }
+    if (normalName) {
+      code += `  nameSlots: [\n`;
+      normalName.forEach(s => {
+        code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+      });
+      code += `  ],\n`;
+    } else {
+      code += `  nameSlots: null,\n`;
+    }
+    if (normalRank) {
+      code += `  rankSlots: [\n`;
+      normalRank.forEach(s => {
+        code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+      });
+      code += `  ],\n`;
+    } else {
+      code += `  rankSlots: null,\n`;
+    }
+    if (normalNumber) {
+      code += `  numberSlots: [\n`;
+      normalNumber.forEach(s => {
+        code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+      });
+      code += `  ],\n`;
+    } else {
+      code += `  numberSlots: null,\n`;
+    }
+    if (normalCrewId) {
+      code += `  crewIdSlots: [\n`;
+      normalCrewId.forEach(s => {
+        code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+      });
+      code += `  ],\n`;
+    } else {
+      code += `  crewIdSlots: null,\n`;
+    }
+    if (normalPassport) {
+      code += `  passportSlots: [\n`;
+      normalPassport.forEach(s => {
+        code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+      });
+      code += `  ],\n`;
+    } else {
+      code += `  passportSlots: null,\n`;
+    }
+    if (normalExpiry) {
+      code += `  expirySlots: [\n`;
+      normalExpiry.forEach(s => {
+        code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+      });
+      code += `  ],\n`;
+    } else {
+      code += `  expirySlots: null,\n`;
+    }
+    if (normalNationality) {
+      code += `  nationalitySlots: [\n`;
+      normalNationality.forEach(s => {
+        code += `    { x: ${s.x}, y: ${s.y}, w: ${s.w}, h: ${s.h}, fontSize: ${s.fontSize} },\n`;
+      });
+      code += `  ],\n`;
+    } else {
+      code += `  nationalitySlots: null,\n`;
+    }
+    code += `};\n`;
+
+    document.getElementById('builderOutput').value = code;
+    showToast('Code generated!', 'success');
+  });
+
+  document.getElementById('builderCopyBtn').addEventListener('click', function() {
+    const text = document.getElementById('builderOutput').value;
+    if (!text) {
+      showToast('No code to copy. Generate first.', 'error');
+      return;
+    }
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Code copied to clipboard!', 'success');
+    }).catch(() => {
+      document.getElementById('builderOutput').select();
+      document.execCommand('copy');
+      showToast('Code copied!', 'success');
+    });
+  });
+
+  builderDestination.addEventListener('change', function() {
+    const dest = this.value;
+    if (!builderTemplateName.value) {
+      builderTemplateName.value = dest.toLowerCase() + '_baggage';
+    }
+  });
+
+  builderLoadSavedList();
+
+  let builderDebounce;
+  const allBuilderInputs = document.querySelectorAll('#builderControls input[type="number"], #builderControls input[type="checkbox"], #builderControls input[type="range"]');
+  allBuilderInputs.forEach(inp => {
+    inp.addEventListener('input', function() {
+      clearTimeout(builderDebounce);
+      builderDebounce = setTimeout(() => {
+        if (builderBgImageData) builderRenderPreview();
+      }, 300);
+    });
+    inp.addEventListener('change', function() {
+      clearTimeout(builderDebounce);
+      if (builderBgImageData) builderRenderPreview();
+    });
+  });
+
+  document.querySelectorAll('.fine-tune-sliders input[type="range"]').forEach(slider => {
+    const valInput = slider.parentElement.querySelector('input[type="number"]');
+    if (valInput) {
+      slider.addEventListener('input', function() {
+        valInput.value = this.value;
+      });
+      valInput.addEventListener('input', function() {
+        slider.value = this.value;
+      });
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
