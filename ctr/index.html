@@ -474,6 +474,7 @@
         <option value="BLR">BLR (Bangalore)</option>
         <option value="AMD">AMD (Ahmedabad)</option>
         <option value="ATQ">ATQ (Amritsar)</option>
+        <option value="CSX">CSX (Changsha)</option>
       </select>
       <button class="btn-primary" id="generateFormsBtn">⚡ Generate Forms</button>
     </div>
@@ -2446,6 +2447,23 @@
       groupPilotsSeparately: true,
       nameSlots: generateSlots(33, 360, 14, 43, 300, 43, 14),
       rankSlots: generateSlots(333, 360, 14, 43, 110, 43, 14),
+      globalNumbering: false,
+      passportSlots: null,
+      expirySlots: null,
+      nationalitySlots: null,
+      picPassportSlots: null,
+      picExpirySlots: null,
+      picNationalitySlots: null,
+    },
+        csx_baggage: {
+      id: 'csx_baggage',
+      label: 'CSX Baggage',
+      destination: 'CSX',
+      bgPath: 'templates/CSX_baggage.png',
+      bgImageData: null,
+      groupPilotsSeparately: true,
+      nameSlots: generateSlots(55, 320, 8, 44, 210, 44, 14),
+      rankSlots: generateSlots(265, 320, 8, 44, 220, 44, 14),
       globalNumbering: false,
       passportSlots: null,
       expirySlots: null,
