@@ -278,7 +278,7 @@
     <div><span class="step-number">3</span> <strong>Select your destination</strong></div>
     <p style="margin-top:6px; margin-bottom:0;">
       From the dropdown, choose where you are flying to. Supported destinations:
-      <strong>BOM, DEL, HYD, BLR, AMD, ATQ, CSX</strong> (Changsha).
+      <strong>BOM, DEL, HYD, BLR, AMD, ATQ</strong>.
       This tells the tool which forms to generate.
     </p>
   </div>
@@ -291,7 +291,6 @@
     <ul>
       <li><strong>Uncheck</strong> any crew member you want to <em>exclude</em> from that specific form.</li>
       <li>Toggle <strong>"Separate pilots and cabin crew onto different pages"</strong> – this lets you choose whether pilots and cabin crew appear on the same page or on separate pages (useful for different form requirements).</li>
-      <li>Use the <strong>"Select All"</strong> checkbox per template to quickly include/exclude all crew for that form.</li>
     </ul>
     <p>After you confirm, the tool loads the templates and places every crew member into the correct slots.</p>
   </div>
@@ -370,7 +369,7 @@
     <tr><th>Button / Element</th><th>What It Does</th></tr>
     <tr>
       <td><strong>Destination dropdown</strong></td>
-      <td>Choose your destination (BOM, DEL, HYD, BLR, AMD, ATQ, CSX). This selects which forms to generate.</td>
+      <td>Choose your destination (BOM, DEL, HYD, BLR, AMD, ATQ). This selects which forms to generate.</td>
     </tr>
     <tr>
       <td><span class="button-demo btn-blue">⚡ Generate Forms</span></td>
@@ -436,33 +435,24 @@
     <strong>✏️ Pro tip:</strong> You can also <strong>type</strong> a number directly into the box next to each slider for precise adjustments.
   </div>
 
-  <!-- ===== INTERACTIVE REPORT (EXPANDED) ===== -->
+  <!-- ===== INTERACTIVE REPORT (NEW) ===== -->
   <h2>🖱️ Interactive Report – Click to Edit</h2>
   <p>
     After parsing the PDF, the <strong>internal report</strong> (below the PDF card) is not just a static preview – many elements are <strong>clickable</strong> and let you adjust data directly.
   </p>
-
-  <h3>🗓️ Multi‑Day Duty Management</h3>
-  <p>
-    If the PDF contains flights spanning multiple days, a toggle <strong>"🗓️ Separate duty by day (X days)"</strong> appears at the top of the report. When enabled, each day gets its own block, and each block has a <span class="button-demo btn-green" style="padding:4px 12px; font-size:12px;">🖨️ Print This Day</span> button – perfect for printing just one day's report without the others.
-  </p>
-
-  <h3>✏️ Editable Fields</h3>
   <ul>
-    <li><strong>BAY</strong> – click the bay input to open a letter selector (A, B, C, G, H) and then a number keypad to enter the bay number. The value is stored per day.</li>
-    <li><strong>BRIEFING STATION</strong> – click to open a number keypad and enter the station code.</li>
-    <li><strong>Flight times (STD, STA, FT, ATD, ATA, etc.)</strong> – each cell is clickable; tap to open a numeric keypad and enter a time (HH:MM).</li>
-    <li><strong>Flight Time Details</strong> – every cell in the Flight Time Details table is clickable; tap to enter times or values via the keypad.</li>
-    <li><strong>Position cells</strong> (under CABIN CREW) – click to assign a working position (e.g., ICC, P1, A1, etc.) and optionally set as <strong>SNY</strong> or <strong>Alternate ICC</strong>.</li>
-    <li><strong>Door cells</strong> – click to assign a door (1L, 1R, 2L, etc.) to a crew member. The door list adapts to narrow‑body or wide‑body aircraft.</li>
-    <li><strong>ICC cell</strong> (under Captain/ICC table) – if multiple eligible candidates exist, click to choose the Crew In Charge from a modal.</li>
+    <li><strong>BAY</strong> – click to open a letter selector (A, B, C, G, H) and a number keypad to enter the bay number.</li>
+    <li><strong>BRIEFING STATION</strong> – click to open a number keypad to enter the station.</li>
+    <li><strong>Position cells</strong> (under CABIN CREW) – click to assign a working position (e.g., ICC, P1, A1, etc.) and optionally set as SNY or Alternate ICC.</li>
+    <li><strong>Door cells</strong> – click to assign a door (1L, 1R, 2L, etc.) to a crew member.</li>
+    <li><strong>ICC cell</strong> (under Captain/ICC table) – if multiple eligible candidates exist, click to choose the Crew In Charge.</li>
+    <li><strong>Flight Time cells</strong> – click any cell in the Flight Time Details table to open a keypad and enter a time.</li>
   </ul>
-
   <div class="note">
-    <strong>💡 Why this matters:</strong> You can fine‑tune assignments and data <strong>before</strong> generating the A4 forms, ensuring everything is correct. All edits are stored per day, so each day's data remains independent.
+    <strong>💡 Why this matters:</strong> You can fine‑tune assignments and data <strong>before</strong> generating the A4 forms, ensuring everything is correct.
   </div>
 
-  <!-- ===== HIDDEN FORM BUILDER (EXPANDED) ===== -->
+  <!-- ===== HIDDEN FORM BUILDER ===== -->
   <h2>🧱 Hidden Developer Tools – Form Builder</h2>
   <p>
     The tool includes a <strong>Form Builder</strong> that lets you design your own templates. It is hidden by default – you unlock it by tapping the <span style="font-size:24px;">👷</span> emoji at the <strong>very bottom of the page</strong> <strong>7 times</strong>.
@@ -472,25 +462,13 @@
     <li>After the 7th tap, the <strong>Form Builder card</strong> appears.</li>
     <li>You can upload a canvas (template background), define slot positions for Name, Rank, Number, Crew ID, Passport, Expiry, Nationality, and PIC slots.</li>
     <li><strong>Click on the canvas</strong> to set the Start X/Y for the selected slot type – the tool automatically uses the clicked coordinates.</li>
-    <li>Adjust all parameters (rows, gap, width, height, font size) and fine‑tune offsets. The builder has its own fine‑tune sliders for each slot type – adjust them and preview live.</li>
+    <li>Adjust all parameters (rows, gap, width, height, font size) and fine‑tune offsets.</li>
     <li><strong>Save</strong> your template locally, then <strong>Export Code</strong> – copy the generated slot code and paste it into the main <code>TEMPLATES</code> object in <code>CTR.html</code>.</li>
     <li>Saved templates appear in the list – you can load or delete them anytime.</li>
   </ul>
   <div class="note">
     <strong>🔒 This is a developer feature</strong> – it's meant for advanced users who want to create new templates for destinations not yet supported.
   </div>
-
-  <!-- ===== FILTER MODAL DETAILS ===== -->
-  <h2>📋 Filter Modal – Fine‑Grained Control</h2>
-  <p>
-    When you click <strong>Generate Forms</strong>, a modal appears with a table listing all crew members and checkboxes for each template.
-  </p>
-  <ul>
-    <li>Each template has a <strong>"Select All"</strong> checkbox at the top of its column – tick it to include all crew, untick to exclude all.</li>
-    <li>You can manually uncheck individual crew members to exclude them from <em>that specific form</em>.</li>
-    <li>The <strong>"Separate pilots and cabin crew onto different pages"</strong> toggle lets you choose whether pilots and cabin crew appear on separate pages or interleaved – useful when different form rules apply.</li>
-    <li>A helpful <strong>reminder</strong> is displayed: "Indian Nationalities not required in Landing forms. Change of Tech Crew shall be in separate forms." – follow these guidelines when excluding crew.</li>
-  </ul>
 
   <!-- ===== SECTION 4: PRINTING ===== -->
   <h2>🖨️ How to Print the Forms</h2>
@@ -534,10 +512,10 @@
   <!-- ===== SECTION 6: FUTURE UPDATES ===== -->
   <h2>🚧 Future Updates – More Destinations & Forms</h2>
   <p>
-    This tool is actively being improved. <strong>CSX (Changsha)</strong> is already supported as of this version.
+    This tool is actively being improved.
   </p>
   <ul>
-    <li><strong>More destinations</strong> – we've already added HYD, BLR, AMD, ATQ, and CSX on top of BOM and DEL.</li>
+    <li><strong>More destinations</strong> – we've already added HYD, BLR, AMD, ATQ on top of BOM and DEL.</li>
     <li><strong>More form types</strong> – for different Customs and Immigration requirements.</li>
     <li><strong>Saved settings</strong> – remember your fine‑tune adjustments.</li>
     <li><strong>PIC selection</strong> – choose the Captain for top‑page placement.</li>
@@ -590,27 +568,6 @@
      I welcome every feedback, bugs and ideas, the tool will continue to improve based on your feedback. Don't hesitate to DM Alif or WHATSAPP CALL Fahrin. Your input helps make this tool better for everyone! ✈️
   </p>
 
-  <!-- ===== ACKNOWLEDGEMENTS ===== -->
-  <h2>🙏 Acknowledgements</h2>
-  <p>
-    This tool would not be what it is today without the invaluable contributions, ideas, and testing from the following people:
-  </p>
-  <ul>
-    <li><strong>Alif</strong> – For the initial layout idea and testing.</li>
-    <li><strong>Fahrin</strong> – Lead tester, QC.</li>
-    <li><strong>Fathiyah, Mazlan, Zabri</strong> – For planting the ideas before CTR was even built.</li>
-    <li><strong>Hafizah</strong> – Light theme vs dark theme feedback.</li>
-    <li><strong>Jesse Lau</strong> – Android testing.</li>
-    <li><strong>Shahrizan</strong> – For the flight timings details grid shortforms.</li>
-    <li><strong>Faiz Murtaza</strong> – Destination forms upgrades and feedback.</li>
-    <li><strong>Loh Wai Yi</strong> – Separate days for trip idea.</li>
-    <li><strong>Batch LS 03/25</strong> – For the support, feedback and testing.</li>
-  </ul>
-  <p>
-    And to <strong>everyone</strong> who gave valuable feedback to improve this tool – thank you. Your input makes a real difference. ✈️
-  </p>
-
-  <!-- ===== FOOTER ===== -->
   <div class="footer">
     <strong>CTR Autofill</strong> · v3.6<br>
     🔒 All processing is local — your data never leaves your device.<br>
