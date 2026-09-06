@@ -290,10 +290,6 @@
     .captain-icc-table td { padding: 2px 4px; }
     #a4ExportCard { display: none !important; }
     #builderCard { display: none !important; }
-    #report .report-day-block { page-break-after: always; }
-    #report .report-day-block:last-child { page-break-after: auto; }
-    body.printing-single-day .report-day-block { display: none !important; }
-    body.printing-single-day .report-day-block.print-target { display: block !important; page-break-after: auto !important; }
   }
   @page { size: auto; margin: 8mm; }
 
@@ -372,7 +368,7 @@
 
   <header class="noprint">
     <div class="logo-area"><div class="logo">CTR<span>.</span></div><div class="byline-badge">✈️ by 2100551</div></div>
-    <div class="badge-group"><div class="badge">📄 PDF Parser</div><div class="badge">📊 Gendec XLSX</div><div class="badge">🔒 Offline</div><div class="badge accent">v4.2 · Separate Multi Days Flight Trip</div></div>
+    <div class="badge-group"><div class="badge">📄 PDF Parser</div><div class="badge">📊 Gendec XLSX</div><div class="badge">🔒 Offline</div><div class="badge accent">v3.6</div></div>
   </header>
 
   <div class="help-section noprint">
@@ -416,10 +412,6 @@
     <details id="pdfDbgWrap" style="display:none; margin-top:10px;" class="noprint">
       <summary style="color:var(--text-muted); font-family:'DM Mono',monospace; font-size:11px; cursor:pointer;">Parsed data (debug)</summary>
       <div id="pdfDbgContent"></div>
-    </details>
-    <details id="rawItemsDbgWrap" style="display:none; margin-top:10px;" class="noprint">
-      <summary style="color:var(--text-muted); font-family:'DM Mono',monospace; font-size:11px; cursor:pointer;">Raw PDF text items — page 1 (debug)</summary>
-      <div id="rawItemsDbgContent" style="font-family:'DM Mono',monospace; font-size:10px; white-space:pre; overflow:auto; max-height:400px; background:var(--surface2); padding:8px; border-radius:6px; margin-top:6px;"></div>
     </details>
   </div>
 
@@ -1110,296 +1102,152 @@
   const DOORS_WIDE = ['1L','1R','2L','2R','3L','3R','4L','4R'];
   const RANK_PRIORITY = { 'CAPT':1, 'FO':2, 'SO':3, 'CDT':4, 'OBS':5, 'IFS':6, 'LS':7, 'FS':8, 'FSS':9, 'SS':10, 'CS':11, 'AS':12 };
 
-  // ============================================================
-  //  PDF parser v2 — line/token based (position-independent)
-  // ============================================================
-  //
-  // Earlier versions of this parser scanned the raw pdf.js text as one
-  // long blob and used regex to find dates, flight numbers, and times
-  // wherever they fell. That assumed pdf.js emits table text roughly in
-  // reading order. Testing against real CrewTripReport PDFs (multiple
-  // report generators/layouts) showed this assumption doesn't hold: the
-  // *same* PDF's text can come out with entire columns clustered together
-  // (all flight numbers, then all dates, then all times, ...) rather than
-  // row by row, and the exact clustering isn't consistent PDF to PDF.
-  //
-  // This version instead reconstructs true visual row order from pdf.js's
-  // per-fragment x/y coordinates (see reconstructLayoutText below, used at
-  // the PDF-reading step) and then parses that ROW-ORDERED text one
-  // physical line at a time, classifying tokens by pattern (date, time,
-  // flight number, airport code, staff ID) rather than by position. Each
-  // line is now unambiguously one itinerary row or one crew row, which is
-  // what makes this robust across differently-formatted reports.
-  const RANKS_LIST = RANKS.split('|');
-  const DATE_RE = /^\d{2}-[A-Za-z]{3}-\d{4}$/;
-  const TIME_RE = /^\d{2}:\d{2}(\(\+1\))?$/;
-  const FLIGHT_RE = /^[A-Z]{2}\d{2,4}$/;
-  const AIRPORT_RE = /^[A-Z]{3}$/;
-  const STAFF_ID_RE = /^\d{6,8}$/;
-  const ACS_RE = /^\d[\dA-Z]{1,3}$/;
-  const WT_CODES = new Set(['OP','SNY','LT','SFP']);
-  const STATUS_WORDS = new Set(['SIGNING','ON','OFF','TO','FROM','HOTEL']);
-  const CREW_HEADER_RE = /^(Item|ID|Name|Rank|WT|Base|Flight|Arrives|Departs)/i;
-
-  function assignTimeCluster(times){
-    if (times.length >= 4) return { gt: times[0], debrief: times[1], fh: times[2], dh: times[3] };
-    if (times.length === 3) return { gt: '', debrief: times[0], fh: times[1], dh: times[2] };
-    if (times.length === 2) return { gt: times[0], debrief: '', fh: times[1], dh: '' };
-    if (times.length === 1) return { gt: '', debrief: '', fh: times[0], dh: '' };
-    return { gt: '', debrief: '', fh: '', dh: '' };
-  }
-
-  function parseItineraryLine(tokens){
-    let i = 0;
-    let date = '', reportTime = '';
-    if (DATE_RE.test(tokens[0])) {
-      date = tokens[0]; i++;
-      if (TIME_RE.test(tokens[i])) { reportTime = tokens[i]; i++; }
-    }
-    if (!FLIGHT_RE.test(tokens[i])) return null;
-    const flightId = tokens[i]; i++;
-    if (RANKS_LIST.includes(tokens[i])) i++; // "Opt Rank" column, not used elsewhere
-    let wt = '';
-    if (WT_CODES.has(tokens[i])) { wt = tokens[i]; i++; }
-    let from='', dep='';
-    if (AIRPORT_RE.test(tokens[i]) && TIME_RE.test(tokens[i+1])) { from = tokens[i]; dep = tokens[i+1]; i+=2; }
-    let to='', arr='';
-    if (AIRPORT_RE.test(tokens[i]) && TIME_RE.test(tokens[i+1])) { to = tokens[i]; arr = tokens[i+1]; i+=2; }
-    const times = [];
-    while (TIME_RE.test(tokens[i])) { times.push(tokens[i]); i++; }
-    const cluster = assignTimeCluster(times);
-    const rest = tokens.slice(i);
-    const acsIdx = rest.findIndex(t => ACS_RE.test(t));
-    let sdc = '', ac = '', acReg = '', hotel = '';
-    if (acsIdx !== -1) {
-      sdc = rest.slice(0, acsIdx).join(' ');
-      ac = rest[acsIdx] || '';
-      acReg = rest[acsIdx+1] || '';
-      hotel = rest.slice(acsIdx+2).join(' ');
-    } else {
-      sdc = rest.join(' ');
-    }
-    return { flightId, date, reportTime, from, dep, to, arr, gt: cluster.gt, debrief: cluster.debrief,
-             flightTime: cluster.fh, dh: cluster.dh, wt, sdc, ac, acReg, hotel };
-  }
-
-  function parseItinerarySection(lines, startIdx, endIdx){
-    const itin = [];
-    const repTimeByDate = {};
-    let currentDate = '', currentReport = '';
-    for (let i = startIdx; i < endIdx; i++) {
-      const line = (lines[i] || '').trim();
-      if (!line) continue;
-      const tokens = line.split(/\s+/);
-      const row = parseItineraryLine(tokens);
-      if (row) {
-        if (row.date) {
-          currentDate = row.date;
-          currentReport = row.reportTime;
-          if (!(currentDate in repTimeByDate)) repTimeByDate[currentDate] = currentReport;
-        }
-        row.date = currentDate;
-        row.acReg = row.acReg || '';
-        row.version = '';
-        row.groundTime = row.gt;
-        row.actStart = ''; row.actEnd = ''; row.actLoc = '';
-        itin.push(row);
-      } else if (itin.length) {
-        // A stray non-row line here is almost always wrapped Hotel text.
-        if (!/^(Date|Report|Item|Opt|Rank|WT|Dep|Arr|GT|Debrief|FH|DH|SDC|ACS|Rego|Hotel|Crew Trip Report)/i.test(line) && !line.includes('|')) {
-          const last = itin[itin.length - 1];
-          last.hotel = (last.hotel ? last.hotel + ' ' : '') + line;
-        }
-      }
-    }
-    return { itin, repTimeByDate };
-  }
-
-  function parseCrewLine(tokens){
-    let i = 0;
-    let flightId = '';
-    if (FLIGHT_RE.test(tokens[i])) { flightId = tokens[i]; i++; }
-    if (!STAFF_ID_RE.test(tokens[i])) return null;
-    const crewId = tokens[i]; i++;
-    const nameWords = [];
-    while (i < tokens.length && !RANKS_LIST.includes(tokens[i])) { nameWords.push(tokens[i]); i++; }
-    const opRank = tokens[i] || ''; i++;
-    let wt = '';
-    if (WT_CODES.has(tokens[i])) { wt = tokens[i]; i++; }
-    let base = '';
-    if (AIRPORT_RE.test(tokens[i])) { base = tokens[i]; i++; }
-    const status = tokens.slice(i).filter(t => STATUS_WORDS.has(t)).join(' ');
-    return { flightId, crewId, crewName: nameWords.join(' '), opRank, wt, base, status };
-  }
-
-  // Distributes a wrapped multi-line crew name correctly across the "orphan"
-  // (non-anchor) lines around each ID row. Verified against real reports:
-  // a lone orphan between two ID-rows belongs to whichever row has no name
-  // text of its own; a run of 2+ orphans splits evenly (floor/ceil) between
-  // the previous row's trailing fragment and the next row's leading one,
-  // regardless of whether either row's own line already carries a middle
-  // segment of its name.
-  function distributeCrewNames(rawLines){
-    const anchors = [];
-    const orphanIdx = [];
-    rawLines.forEach((line, idx) => {
-      const trimmed = line.trim();
-      if (!trimmed) return;
-      if (CREW_HEADER_RE.test(trimmed)) return;
-      if (/^(Inbound|Outbound)$/i.test(trimmed)) return;
-      const tokens = trimmed.split(/\s+/);
-      const row = parseCrewLine(tokens);
-      if (row && row.crewId) anchors.push({ idx, row, leading: [], trailing: [] });
-      else orphanIdx.push(idx);
-    });
-    if (!anchors.length) return [];
-
-    for (let k = 0; k <= anchors.length; k++) {
-      const gapStart = k === 0 ? -Infinity : anchors[k-1].idx;
-      const gapEnd = k === anchors.length ? Infinity : anchors[k].idx;
-      const gapOrphans = orphanIdx.filter(idx => idx > gapStart && idx < gapEnd);
-      if (!gapOrphans.length) continue;
-      if (k === 0) {
-        anchors[0].leading.push(...gapOrphans);
-      } else if (k === anchors.length) {
-        anchors[anchors.length-1].trailing.push(...gapOrphans);
-      } else {
-        const prev = anchors[k-1], next = anchors[k];
-        if (gapOrphans.length === 1) {
-          const prevEmpty = !prev.row.crewName;
-          const nextEmpty = !next.row.crewName;
-          if (prevEmpty && !nextEmpty) prev.trailing.push(...gapOrphans);
-          else next.leading.push(...gapOrphans);
-        } else {
-          const half = Math.floor(gapOrphans.length / 2);
-          prev.trailing.push(...gapOrphans.slice(0, half));
-          next.leading.push(...gapOrphans.slice(half));
-        }
-      }
-    }
-
-    return anchors.map(a => {
-      const leadingText = a.leading.map(idx => rawLines[idx].trim()).join(' ');
-      const trailingText = a.trailing.map(idx => rawLines[idx].trim()).join(' ');
-      const name = [leadingText, a.row.crewName, trailingText].filter(Boolean).join(' ');
-      return { crewId: a.row.crewId, crewName: name, opRank: a.row.opRank };
-    });
-  }
-
-  function parsePairingSection(lines, startIdx, endIdx){
-    const rawLines = [];
-    for (let i = startIdx; i < endIdx; i++) rawLines.push(lines[i] || '');
-    const anchors = [];
-    const orphanIdx = [];
-    rawLines.forEach((line, idx) => {
-      const trimmed = line.trim();
-      if (!trimmed) return;
-      if (/^(ID|Name|Rank|Base|Crew On My Pairing)/i.test(trimmed)) return;
-      const tokens = trimmed.split(/\s+/);
-      const idIdx = tokens.findIndex(t => STAFF_ID_RE.test(t));
-      if (idIdx !== -1) {
-        const crewId = tokens[idIdx];
-        const rankIdx = tokens.findIndex((t,k) => k>idIdx && RANKS_LIST.includes(t));
-        const nameWords = tokens.slice(idIdx+1, rankIdx !== -1 ? rankIdx : tokens.length);
-        const opRank = rankIdx !== -1 ? tokens[rankIdx] : '';
-        anchors.push({ idx, row: { crewId, crewName: nameWords.join(' '), opRank }, leading: [], trailing: [] });
-      } else {
-        orphanIdx.push(idx);
-      }
-    });
-    if (!anchors.length) return [];
-    for (let k = 0; k <= anchors.length; k++) {
-      const gapStart = k === 0 ? -Infinity : anchors[k-1].idx;
-      const gapEnd = k === anchors.length ? Infinity : anchors[k].idx;
-      const gapOrphans = orphanIdx.filter(idx => idx > gapStart && idx < gapEnd);
-      if (!gapOrphans.length) continue;
-      if (k === 0) {
-        anchors[0].leading.push(...gapOrphans);
-      } else if (k === anchors.length) {
-        anchors[anchors.length-1].trailing.push(...gapOrphans);
-      } else {
-        const prev = anchors[k-1], next = anchors[k];
-        if (gapOrphans.length === 1) {
-          const prevEmpty = !prev.row.crewName;
-          const nextEmpty = !next.row.crewName;
-          if (prevEmpty && !nextEmpty) prev.trailing.push(...gapOrphans);
-          else next.leading.push(...gapOrphans);
-        } else {
-          const half = Math.floor(gapOrphans.length / 2);
-          prev.trailing.push(...gapOrphans.slice(0, half));
-          next.leading.push(...gapOrphans.slice(half));
-        }
-      }
-    }
-    return anchors.map(a => {
-      const leadingText = a.leading.map(idx => rawLines[idx].trim()).join(' ');
-      const trailingText = a.trailing.map(idx => rawLines[idx].trim()).join(' ');
-      const name = [leadingText, a.row.crewName, trailingText].filter(Boolean).join(' ');
-      return { crewId: a.row.crewId, crewName: name, opRank: a.row.opRank };
-    });
-  }
-
+  // ===== PDF parser (unchanged) =====
   function parseCrewTripReport(raw){
-    const lines = raw.split('\n').map(l => l.replace(/\f/g,''));
+    let text = raw.replace(/\r?\n/g,' ')
+      .replace(/([A-Za-z])(\d{7})\b/g,'$1 $2')
+      .replace(/([A-Za-z])(\d{2}-[A-Za-z]{3}-\d{4})/g,'$1 $2')
+      .replace(/\s+/g,' ').trim();
 
-    const inboundIdx = lines.findIndex(l => /\bInbound\b/.test(l));
-    const pairingIdx = lines.findIndex(l => /Crew On My Pairing/i.test(l));
-    const reportGenIdx = lines.findIndex(l => /Report generated by/i.test(l));
+    const idxInbound = text.search(/\bInbound\b/i);
+    const idxOutbound = text.search(/\bOutbound\b/i);
+    const idxCrewPairing = text.search(/Crew On My Pairing/i);
+    const idxReportGen = text.search(/Report generated by/i);
 
-    const itinEnd = inboundIdx === -1 ? (reportGenIdx !== -1 ? reportGenIdx : lines.length) : inboundIdx;
-    const { itin, repTimeByDate } = parseItinerarySection(lines, 0, itinEnd);
+    const headerSection = text.substring(0, idxInbound >= 0 ? idxInbound : text.length);
+    const inboundSection = idxInbound >= 0 ? text.substring(idxInbound, idxOutbound >= 0 ? idxOutbound : text.length) : '';
+    const outboundSection = idxOutbound >= 0 ? text.substring(idxOutbound, idxCrewPairing >= 0 ? idxCrewPairing : text.length) : '';
+    const pairingSection = idxCrewPairing >= 0 ? text.substring(idxCrewPairing, idxReportGen >= 0 ? idxReportGen : text.length) : '';
 
-    const crewMap = {};
-    if (inboundIdx !== -1) {
-      const crewSectionEnd = pairingIdx !== -1 ? pairingIdx : (reportGenIdx !== -1 ? reportGenIdx : lines.length);
-      const outboundMarkerIdx = lines.findIndex((l, idx) => idx > inboundIdx && l.trim() === 'Outbound');
+    const dateIdx = headerSection.search(/\bDate\b/i);
+    const tableSection = dateIdx >= 0 ? headerSection.substring(dateIdx) : headerSection;
 
-      if (lines[inboundIdx].trim() === 'Inbound' && outboundMarkerIdx !== -1) {
-        // Clean format: the PDF reader already split the two side-by-side
-        // Inbound/Outbound tables into separate blocks (see reconstruction
-        // step) — no character-position slicing needed, each block is
-        // already just that one table's own rows in order.
-        const inboundLines = lines.slice(inboundIdx + 1, outboundMarkerIdx);
-        const outboundLines = lines.slice(outboundMarkerIdx + 1, crewSectionEnd);
-        distributeCrewNames(inboundLines).forEach(r => { if (!crewMap[r.crewId]) crewMap[r.crewId] = r; });
-        distributeCrewNames(outboundLines).forEach(r => { if (!crewMap[r.crewId]) crewMap[r.crewId] = r; });
-      } else {
-        // Fallback for text that wasn't produced by our own reconstruction
-        // (e.g. manually pasted from a PDF viewer) where Inbound/Outbound
-        // may still appear combined on one line per row — split each line
-        // at a fixed character position derived from where "Outbound" sits
-        // in the header line.
-        const splitPos = lines[inboundIdx].indexOf('Outbound');
-        const effectiveSplit = splitPos > 0 ? splitPos : Math.floor(lines[inboundIdx].length * 0.55);
-        const leftLines = [], rightLines = [];
-        for (let i = inboundIdx; i < crewSectionEnd; i++) {
-          const full = lines[i] || '';
-          leftLines.push(full.slice(0, effectiveSplit));
-          rightLines.push(full.slice(effectiveSplit));
-        }
-        distributeCrewNames(leftLines).forEach(r => { if (!crewMap[r.crewId]) crewMap[r.crewId] = r; });
-        distributeCrewNames(rightLines).forEach(r => { if (!crewMap[r.crewId]) crewMap[r.crewId] = r; });
-      }
+    const flightRegex = /MH\d{3,4}/g;
+    let match;
+    const flightMatches = [];
+    while((match = flightRegex.exec(tableSection)) !== null){
+      flightMatches.push({ flight: match[0], index: match.index });
     }
-    if (pairingIdx !== -1) {
-      const pairingEnd = reportGenIdx !== -1 ? reportGenIdx : lines.length;
-      parsePairingSection(lines, pairingIdx + 1, pairingEnd).forEach(r => {
-        if (!crewMap[r.crewId]) crewMap[r.crewId] = r;
+    const flightNos = flightMatches.map(f => f.flight);
+
+    const dates = tableSection.match(/\d{2}-[A-Za-z]{3}-\d{4}/g) || [];
+    const depArrMatches = [...tableSection.matchAll(/\b([A-Z]{3})\b\s+(\d{2}:\d{2}(?:\(\+1\))?)/g)];
+
+    const masked = tableSection
+      .replace(/\d{2}-[A-Za-z]{3}-\d{4}/g, 'DATE')
+      .replace(/\d{2}:\d{2}(?:\(\+1\))?/g, 'TIME')
+      .replace(/MH\d{3,4}/g, 'FLIGHTNO');
+    const segments = masked.split('FLIGHTNO').slice(1);
+
+    const itin = [];
+    for(let i=0; i<flightNos.length; i++){
+      const rowStart = flightMatches[i].index + flightNos[i].length;
+      const rowEnd = (i+1 < flightMatches.length) ? flightMatches[i+1].index : tableSection.length;
+      const rawRowSpan = tableSection.slice(rowStart, rowEnd);
+
+      const acRegoMasked = rawRowSpan
+        .replace(/\b([A-Z]{3})\b\s+(\d{2}:\d{2}(?:\(\+1\))?)/g, 'ARPTPAIR')
+        .replace(/\d{2}-[A-Za-z]{3}-\d{4}/g, 'DATE')
+        .replace(/\d{2}:\d{2}(?:\(\+1\))?/g, 'TIME');
+
+      const acMatch = acRegoMasked.match(/\b([0-9][0-9A-Z]{1,3})\b/);
+      const ac = acMatch ? acMatch[1] : '';
+
+      let acReg = '';
+      if(acMatch){
+        const afterAc = acRegoMasked.slice(acMatch.index + acMatch[0].length);
+        const leftoverWords = (afterAc.match(/[A-Za-z0-9]+/g) || [])
+          .filter(w => w !== 'DATE' && w !== 'TIME' && w !== 'ARPTPAIR' && /^[A-Za-z0-9]{2,6}$/.test(w));
+        if(leftoverWords.length) acReg = leftoverWords[leftoverWords.length - 1];
+      }
+      const dep = depArrMatches[i*2];
+      const arr = depArrMatches[i*2+1];
+
+      let fh = '';
+      if(arr){
+        const segStart = arr.index + arr[0].length;
+        const segEnd = rowEnd;
+        const rowTail = tableSection.slice(segStart, segEnd);
+        const maskedRowTail = rowTail
+          .replace(/\d{2}-[A-Za-z]{3}-\d{4}/g, 'DATE')
+          .replace(/\d{2}:\d{2}(?:\(\+1\))?/g, 'TIME');
+        const acMatchLocal = maskedRowTail.match(/\b([0-9][0-9A-Z]{1,3})\b/);
+        const beforeAc = acMatchLocal ? maskedRowTail.slice(0, acMatchLocal.index) : maskedRowTail;
+        const timeCountBeforeAc = (beforeAc.match(/TIME/g) || []).length;
+        const allTimesInRowTail = rowTail.match(/\d{2}:\d{2}(?:\(\+1\))?/g) || [];
+        const times = allTimesInRowTail.slice(0, timeCountBeforeAc);
+        if(times.length === 1) fh = times[0];
+        else if(times.length === 2) fh = times[1];
+        else if(times.length >= 3) fh = times[times.length - 2];
+      }
+
+      itin.push({
+        flightId: flightNos[i] || '',
+        date: dates[i] || '',
+        from: dep ? dep[1] : '',
+        dep: dep ? dep[2] : '',
+        to: arr ? arr[1] : '',
+        arr: arr ? arr[2] : '',
+        ac: ac,
+        version: '',
+        acReg: acReg,
+        flightTime: fh,
+        groundTime: '',
+        actStart: '',
+        actEnd: '',
+        actLoc: ''
       });
     }
 
-    const ownerMatch = raw.match(/([A-Z][A-Z .]+?)\s*\|\s*(\d{6,8})\s*\|\s*([A-Z]+)\s*\|\s*([A-Z]{3})\s*\|\s*(CAPT|FO|SO|OBS|IFS|LS|FSS|FS|SS|CS|AS)\b/);
-    if (ownerMatch && !crewMap[ownerMatch[2]]) {
-      crewMap[ownerMatch[2]] = { crewId: ownerMatch[2], crewName: ownerMatch[1].trim(), opRank: ownerMatch[5] };
+    if(!itin.length){
+      const seen = new Set();
+      (tableSection.match(/MH\d{3,4}/g) || []).forEach(f => {
+        if(!seen.has(f)){ seen.add(f); itin.push({ flightId:f, date:'', from:'', dep:'', to:'', arr:'', ac:'', version:'', acReg:'', flightTime:'', groundTime:'', actStart:'', actEnd:'', actLoc:'' }); }
+      });
     }
 
-    const crew = Object.values(crewMap).map(c => ({
-      opRank: c.opRank, posRank: c.opRank, crewId: c.crewId, crewName: c.crewName,
+    const crewMap = {};
+    const patA = new RegExp('(MH\\d{3,4})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z][A-Z .]*?)\\s+(\\d{7})\\s+([A-Z]{1,3})\\b', 'g');
+    const patB = new RegExp('(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\s+([A-Z]{1,3})\\b', 'g');
+    const patC = new RegExp('(MH\\d{3,4})\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)\\s+(' + RANKS + ')\\s+([A-Z]{1,3})\\s+([A-Z]{3})\\s+SIGNING (?:ON|OFF)\\b', 'g');
+    [inboundSection, outboundSection].forEach(section => {
+      let m;
+      while((m = patA.exec(section)) !== null){
+        crewMap[m[5]] = { opRank: m[2], crewId: m[5], crewName: m[4].trim() };
+      }
+      while((m = patB.exec(section)) !== null){
+        if(!crewMap[m[2]]) crewMap[m[2]] = { opRank: m[4], crewId: m[2], crewName: m[3].trim() };
+      }
+      while((m = patC.exec(section)) !== null){
+        if(!crewMap[m[2]]) crewMap[m[2]] = { opRank: m[4], crewId: m[2], crewName: m[3].trim() };
+      }
+    });
+
+    const pairA = new RegExp('([A-Z]{3})\\s+(' + RANKS + ')\\s+(\\d{7})\\s+([A-Z][A-Z .]*?)(?=\\s+[A-Z]{3}\\s+(?:' + RANKS + ')\\s+\\d{7}|\\s+\\d{7}\\s+(?:' + RANKS + ')\\s+[A-Z]{3}|$)', 'g');
+    const pairB = new RegExp('(\\d{7})\\s+(' + RANKS + ')\\s+([A-Z]{3})\\s+([A-Z][A-Z .]*?)(?=\\s+\\d{7}|\\s+[A-Z]{3}\\s+(?:' + RANKS + ')\\s+\\d{7}|$)', 'g');
+    {
+      let m;
+      while((m = pairA.exec(pairingSection)) !== null){
+        crewMap[m[3]] = { opRank: m[2], crewId: m[3], crewName: m[4].trim() };
+      }
+      while((m = pairB.exec(pairingSection)) !== null){
+        if(!crewMap[m[1]]) crewMap[m[1]] = { opRank: m[2], crewId: m[1], crewName: m[4].trim() };
+      }
+    }
+
+    const ownerMatch = headerSection.match(/([A-Z][A-Z .]+?)\s*\|\s*(\d{7})\s*\|\s*([A-Z]+)\s*\|\s*([A-Z]{3})\s*\|\s*(CAPT|FO|SO|OBS|IFS|LS|FSS|FS|SS|CS|AS)\b/);
+    if(ownerMatch){
+      crewMap[ownerMatch[2]] = { opRank: ownerMatch[5], crewId: ownerMatch[2], crewName: ownerMatch[1].trim() };
+    }
+
+    const crew = Object.keys(crewMap).map(id => ({
+      opRank: crewMap[id].opRank, posRank: crewMap[id].opRank, crewId: id, crewName: crewMap[id].crewName,
       wt:'', workPos:'', base:'', sdc:'', checkIn:''
     }));
 
     const dutyDate = itin.length ? itin[0].date : '';
-    const repTime = itin.length ? (repTimeByDate[dutyDate] || '') : '';
+    const dutyStartTimeMatch = headerSection.match(/(\d{2}-[A-Za-z]{3}-\d{4})\s+(\d{2}:\d{2})/);
+    const repTime = dutyStartTimeMatch ? dutyStartTimeMatch[2] : (itin.length ? itin[0].dep : '');
     const dutyStart = dutyDate ? (dutyDate + ' ' + repTime) : '';
 
     return {
@@ -1407,92 +1255,30 @@
       found: { duty:false, itin: itin.length>0, crew: crew.length>0 },
       source: 'pdf',
       dutyStart, dutyDate,
-      repTimeByDate,
       pdfData: { date: dutyDate, acReg: itin.length ? itin[0].acReg : '', repTime }
     };
   }
 
   // ===== Shared state =====
   let state = null;
-  let currentModalCrewId = null;
-  let currentModalReportKey = 'ALL';
+  let iccChosenCrew = null;
+  let altIccCrewId = null;
+  let snyCrewIds = {};
+  let doorAssignments = {};
   let pendingPicTemplateId = null;
   let pendingPicResolve = null;
   let gendecData = null;
 
   function isNarrowbody(ac){ if(!ac) return false; const a = ac.trim().toUpperCase(); return a === '737' || a.indexOf('73') === 0 || a.indexOf('7M') === 0; }
 
-  function getLegsForDay(key){
-    if(!state) return [];
-    if(!key || key === 'ALL') return state.itin;
-    return state.itin.filter(l => l.date === key);
-  }
-
-  function ensureDayBuckets(key){
-    if(!state.positionsByDay[key]) state.positionsByDay[key] = Object.assign({}, state.positionsByDay.ALL || {});
-    if(!state.doorsByDay[key]) state.doorsByDay[key] = Object.assign({}, state.doorsByDay.ALL || {});
-    if(!state.snyByDay[key]) state.snyByDay[key] = Object.assign({}, state.snyByDay.ALL || {});
-    if(!(key in state.altIccByDay)) state.altIccByDay[key] = state.altIccByDay.ALL || null;
-    if(!(key in state.iccByDay)) state.iccByDay[key] = state.iccByDay.ALL || null;
-    if(!(key in state.bayByDay)) state.bayByDay[key] = state.bayByDay.ALL || '';
-    if(!(key in state.briefingByDay)) state.briefingByDay[key] = state.briefingByDay.ALL || '';
-  }
-
-  // ===== Report builder (day-aware) =====
+  // ===== Full original buildReport() – restored with all modals =====
   function buildReport(){
     const d = state;
-    const uniqueDates = [];
-    d.itin.forEach(l => { if(l.date && uniqueDates.indexOf(l.date) === -1) uniqueDates.push(l.date); });
-    const isMultiDay = uniqueDates.length > 1;
-
-    let reportKeys;
-    if (isMultiDay && state.separateByDate) {
-      reportKeys = uniqueDates;
-      reportKeys.forEach(key => ensureDayBuckets(key));
-    } else {
-      reportKeys = ['ALL'];
-      ensureDayBuckets('ALL');
-    }
-
-    let outerHtml = '';
-
-    if (isMultiDay) {
-      outerHtml += `<div class="noprint" style="margin-bottom:12px; display:flex; align-items:center; gap:10px;">
-        <label class="toggle-switch"><input type="checkbox" id="separateByDateToggle" ${state.separateByDate ? 'checked' : ''}><span class="toggle-slider"></span></label>
-        <label for="separateByDateToggle" style="font-size:14px; font-weight:500; cursor:pointer;">🗓️ Separate duty by day (${uniqueDates.length} days)</label>
-      </div>`;
-    }
-
-    reportKeys.forEach((key, dayIdx) => {
-      const legs = getLegsForDay(key);
-      outerHtml += buildDayBlock(d, key, legs, isMultiDay && state.separateByDate, dayIdx);
-    });
-
-    reportEl.innerHTML = outerHtml;
-
-    const toggleEl = document.getElementById('separateByDateToggle');
-    if (toggleEl) {
-      toggleEl.addEventListener('change', function(){
-        state.separateByDate = this.checked;
-        buildReport();
-      });
-    }
-
-    attachDayBlockListeners();
-
-    const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
-    statFlights.textContent = d.itin.length;
-    statCrew.textContent = d.crew.length;
-    statCabin.textContent = cabinCrew.length;
-    statsContainer.style.display = 'flex';
-  }
-
-  function buildDayBlock(d, reportKey, legs, isSeparated, dayIdx){
     const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
     const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
     const fos = d.crew.filter(c => c.opRank.toUpperCase() === 'FO');
     const cdts = d.crew.filter(c => c.opRank.toUpperCase() === 'CDT');
-    const ac0 = legs.length ? legs[0].ac : (d.itin.length ? d.itin[0].ac : '');
+    const ac0 = d.itin.length ? d.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
 
     const sortedCabin = cabinCrew.slice().sort((a,b) => {
@@ -1510,14 +1296,10 @@
     const ifsCrew = sortedCabin.filter(c => c.opRank.toUpperCase() === 'IFS');
     const lsCrew = sortedCabin.filter(c => c.opRank.toUpperCase() === 'LS');
 
-    const posMap = state.positionsByDay[reportKey] || {};
-    const doorMap = state.doorsByDay[reportKey] || {};
-    const snyMap = state.snyByDay[reportKey] || {};
-
     let iccDisplay = null;
     let iccPositionCrew = null;
-    for (let id in posMap) {
-      if (posMap[id] === 'ICC') {
+    for (let id in state.positions) {
+      if (state.positions && state.positions[id] === 'ICC') {
         const crew = sortedCabin.find(c => c.crewId === id);
         if (crew) { iccPositionCrew = crew; break; }
       }
@@ -1526,52 +1308,41 @@
     if (!iccPositionCrew) {
       if (ifsCrew.length === 1) iccDisplay = ifsCrew[0];
       else if (ifsCrew.length === 0 && lsCrew.length === 1) iccDisplay = lsCrew[0];
-      else {
-        const chosenId = state.iccByDay[reportKey];
-        iccDisplay = chosenId ? (sortedCabin.find(c=>c.crewId===chosenId) || null) : null;
-      }
+      else iccDisplay = iccChosenCrew || null;
     } else iccDisplay = iccPositionCrew;
 
     let altIccDisplay = null;
-    const altIccId = state.altIccByDay[reportKey];
-    if (altIccId) {
-      const crew = sortedCabin.find(c => c.crewId === altIccId);
+    if (altIccCrewId) {
+      const crew = sortedCabin.find(c => c.crewId === altIccCrewId);
       if (crew) altIccDisplay = crew;
-      else state.altIccByDay[reportKey] = null;
+      else altIccCrewId = null;
     }
 
     let repDisplay = '';
-    const repTimeFromMap = d.repTimeByDate && reportKey !== 'ALL' ? d.repTimeByDate[reportKey] : null;
-    if (reportKey !== 'ALL' && repTimeFromMap) {
-      const day = getDayName(reportKey);
-      repDisplay = reportKey + ' (' + day + ') ' + repTimeFromMap;
-    } else if (legs.length && legs[0].date) {
-      const dateStr = legs[0].date;
-      const day = getDayName(dateStr);
-      const repTime = (d.repTimeByDate && d.repTimeByDate[dateStr]) || timeOnly(legs[0].dep) || '';
-      repDisplay = dateStr + ' (' + day + ') ' + repTime;
-    } else if(d.dutyDate || (d.pdfData && d.pdfData.date)){
+    if(d.dutyDate || (d.pdfData && d.pdfData.date)){
       const dateStr = (d.pdfData && d.pdfData.date) || d.dutyDate || '';
       const day = getDayName(dateStr);
       const repTime = (d.pdfData && d.pdfData.repTime) || (d.dutyStart ? d.dutyStart.split(/\s+/).pop() : '') || '';
       repDisplay = dateStr + ' (' + day + ') ' + repTime;
+    } else if(d.dutyStart){
+      const parts = d.dutyStart.split(/\s+/);
+      if(parts.length>=2){
+        const dateStr = parts[0] + ' ' + (parts[1] || '');
+        const day = getDayName(dateStr);
+        const repTime = parts[parts.length-1] || '';
+        repDisplay = dateStr + ' (' + day + ') ' + repTime;
+      } else repDisplay = d.dutyStart;
     }
     if(!repDisplay) repDisplay = '----';
 
-    const bayVal = state.bayByDay[reportKey] || '';
-    const briefingVal = state.briefingByDay[reportKey] || '';
+    const bayVal = (state.fields && state.fields.bay) || '';
+    const briefingVal = (state.fields && state.fields.briefing) || '';
 
-    let html = `<div class="rpad report-day-block" data-day="${esc(reportKey)}">`;
-    if (isSeparated) {
-      html += `<div class="rtitle" style="border-bottom:none;margin-bottom:2px;"><h2 style="font-size:9pt;">DAY ${dayIdx+1} — ${esc(reportKey)}</h2></div>`;
-    }
-    html += `<div class="btnrow noprint" style="margin-bottom:6px;">
-      <button class="btn-success btn-small printDayBtn" data-day="${esc(reportKey)}">🖨️ Print This Day</button>
-    </div>`;
+    let html = `<div class="rpad">`;
     html += `<div class="top-info">
-      <span><span class="label">BAY:</span><input class="clickable-input bay-input" data-day="${esc(reportKey)}" value="${esc(bayVal)}" placeholder="" readonly></span>
-      <span><span class="label">REP:</span><input class="clickable-input rep-input" value="${esc(repDisplay)}" readonly></span>
-      <span><span class="label">BRIEFING STATION:</span><input class="clickable-input briefing-input" data-day="${esc(reportKey)}" value="${esc(briefingVal)}" placeholder="" readonly></span>
+      <span><span class="label">BAY:</span><input class="clickable-input bay-input" id="bayInput" value="${esc(bayVal)}" placeholder="" readonly></span>
+      <span><span class="label">REP:</span><input class="clickable-input rep-input" id="repInput" value="${esc(repDisplay)}" readonly></span>
+      <span><span class="label">BRIEFING STATION:</span><input class="clickable-input briefing-input" id="briefingInput" value="${esc(briefingVal)}" placeholder="" readonly></span>
     </div>`;
 
     html += `<table class="rtab">
@@ -1588,7 +1359,6 @@
         <th class="col-remarks">REMARKS</th>
       </tr>`;
     d.itin.forEach((l, i) => {
-      if (reportKey !== 'ALL' && l.date !== reportKey) return;
       const ft = l.flightTime || (state.fields && state.fields['ft-'+i]) || '';
       html += `<tr>
         <td>${esc(l.flightId)}</td>
@@ -1606,7 +1376,7 @@
     html += `</table>`;
 
     html += `<div style="font-size:9px;margin-top:2px;text-align:left;border:1px solid #333;border-top:none;padding:2px 4px;">
-      <input value="${esc((state.fields && state.fields['airport-'+reportKey]) || '')}" oninput="updateField('airport-${esc(reportKey)}', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;font-family:inherit;" placeholder="">
+      <input value="${esc((state.fields && state.fields.airport)||'')}" oninput="updateField('airport', this.value)" style="width:100%;border:none;font-size:9px;background:transparent;font-family:inherit;" placeholder="">
     </div>`;
 
     let iccCandidates = [];
@@ -1628,8 +1398,8 @@
           ${cdts.length ? `<div style="margin-top:2px;"><span class="label">CDT:</span><br>${cdtNames}</div>` : ''}
         </td>
         <td class="right-col">
-          <div><span class="label">ICC:</span><span class="clickable-cell iccDisplayCell" data-day="${esc(reportKey)}" style="display:inline-block;padding:0 4px;">${iccDisplayName}</span></div>
-          <div style="margin-top:4px;"><span class="label">Alternate ICC:</span><span style="display:inline-block;padding:0 4px;">${altIccDisplayName}</span></div>
+          <div><span class="label">ICC:</span><span class="clickable-cell" id="iccDisplayCell" style="display:inline-block;padding:0 4px;">${iccDisplayName}</span></div>
+          <div style="margin-top:4px;"><span class="label">Alternate ICC:</span><span id="altIccDisplayCell" style="display:inline-block;padding:0 4px;">${altIccDisplayName}</span></div>
         </td>
       </tr>
     </table>`;
@@ -1640,11 +1410,11 @@
     sortedCabin.forEach(c => {
       const isCIC = iccDisplay && c.crewId === iccDisplay.crewId;
       const isAltIcc = altIccDisplay && c.crewId === altIccDisplay.crewId;
-      const isSny = snyMap && snyMap[c.crewId];
-      const pos = posMap[c.crewId] || '';
+      const isSny = snyCrewIds && snyCrewIds[c.crewId];
+      const pos = (state.positions && state.positions[c.crewId]) || '';
       let doorAssigned = '';
-      for(let dr in doorMap){
-        if(doorMap[dr] === c.crewId){ doorAssigned = dr; break; }
+      for(let d in doorAssignments){
+        if(doorAssignments[d] === c.crewId){ doorAssigned = d; break; }
       }
       const displayName = (state.fields && state.fields['crewname-'+c.crewId]) || c.crewName;
       let badgesHtml = '';
@@ -1659,8 +1429,8 @@
             ${badgesHtml ? `<span style="flex-shrink:0;white-space:nowrap;display:flex;gap:3px;">${badgesHtml}</span>` : ''}
           </div>
         </td>
-        <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(displayName)}" data-day="${esc(reportKey)}">${pos ? esc(pos) : ''}</td>
-        <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(displayName)}" data-day="${esc(reportKey)}">${doorAssigned ? esc(doorAssigned) : '+'}</td>
+        <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(displayName)}">${pos ? esc(pos) : ''}</td>
+        <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(displayName)}">${doorAssigned ? esc(doorAssigned) : '+'}</td>
       </tr>`;
     });
     html += `</table>`;
@@ -1673,7 +1443,6 @@
     });
     html += `</tr>`;
     d.itin.forEach((l, rowIndex) => {
-      if (reportKey !== 'ALL' && l.date !== reportKey) return;
       const flightNo = esc(l.flightId);
       html += `<tr><td style="font-weight:bold;font-size:9px;">${flightNo}</td>`;
       for(let colIndex = 0; colIndex < 9; colIndex++){
@@ -1685,55 +1454,53 @@
     });
     html += `</table>`;
     html += `</div>`;
-    return html;
-  }
+    reportEl.innerHTML = html;
 
-  function attachDayBlockListeners(){
-    document.querySelectorAll('.bay-input').forEach(bayInput => {
+    // ---- Attach event listeners ----
+    const bayInput = document.getElementById('bayInput');
+    if(bayInput){
       bayInput.addEventListener('click', function(e){
         e.stopPropagation();
         const currentVal = this.value;
         const letterMatch = currentVal.match(/^([A-Z])/);
-        selectedBayLetter = letterMatch ? letterMatch[1] : '';
+        if (letterMatch) {
+          selectedBayLetter = letterMatch[1];
+        } else {
+          selectedBayLetter = '';
+        }
         keypadTarget = this;
-        keypadMode = 'bay';
         document.getElementById('bayLetterModalOverlay').style.display = 'flex';
       });
-    });
+    }
 
-    document.querySelectorAll('.briefing-input').forEach(briefingInput => {
+    const briefingInput = document.getElementById('briefingInput');
+    if(briefingInput){
       briefingInput.addEventListener('click', function(e){
         e.stopPropagation();
         openNumberKeypad(this, 'briefing', this.value);
       });
-    });
+    }
 
-    document.querySelectorAll('.iccDisplayCell').forEach(cell => {
-      const reportKey = cell.getAttribute('data-day') || 'ALL';
-      const cabinCrew = state.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
-      const ifsCrew = cabinCrew.filter(c => c.opRank.toUpperCase() === 'IFS');
-      const lsCrew = cabinCrew.filter(c => c.opRank.toUpperCase() === 'LS');
-      let iccCandidates = [];
-      if (ifsCrew.length > 1) iccCandidates = ifsCrew;
-      else if (ifsCrew.length === 0 && lsCrew.length > 1) iccCandidates = lsCrew;
-      if (iccCandidates.length > 0) {
-        cell.addEventListener('click', function(){
-          const rankLabel = iccCandidates[0].opRank;
-          openIccSelectionModal(iccCandidates, 'Select ' + rankLabel + ' as Crew In Charge', reportKey);
-        });
-      }
-    });
+    const iccDisplayCell = document.getElementById('iccDisplayCell');
+    if(iccDisplayCell && iccCandidates.length > 0){
+      iccDisplayCell.addEventListener('click', function(){
+        const rankLabel = iccCandidates[0].opRank;
+        openIccSelectionModal(iccCandidates, 'Select ' + rankLabel + ' as Crew In Charge');
+      });
+    }
 
     document.querySelectorAll('.ft-cell-clickable').forEach(cell => {
       const input = cell.querySelector('.ft-input');
       if(input){
         cell.addEventListener('click', function(e){
           e.stopPropagation();
-          openNumberKeypad(input, 'time', input.value);
+          const currentValue = input.value;
+          openNumberKeypad(input, 'time', currentValue);
         });
         input.addEventListener('click', function(e){
           e.stopPropagation();
-          openNumberKeypad(input, 'time', input.value);
+          const currentValue = input.value;
+          openNumberKeypad(input, 'time', currentValue);
         });
         input.addEventListener('input', function(){
           const key = this.dataset.key;
@@ -1748,101 +1515,67 @@
 
     document.querySelectorAll('.pos-cell').forEach(el => {
       el.addEventListener('click', function(){
-        openPositionModal(this.getAttribute('data-crewid'), this.getAttribute('data-crewname'), this.getAttribute('data-day'));
+        openPositionModal(this.getAttribute('data-crewid'), this.getAttribute('data-crewname'));
       });
     });
 
     document.querySelectorAll('.door-cell').forEach(el => {
       el.addEventListener('click', function(){
-        openDoorModal(this.getAttribute('data-crewid'), this.getAttribute('data-crewname'), this.getAttribute('data-day'));
+        openDoorModal(this.getAttribute('data-crewid'), this.getAttribute('data-crewname'));
       });
     });
 
-    document.querySelectorAll('.printDayBtn').forEach(btn => {
-      btn.addEventListener('click', function(){
-        printDayBlock(this.getAttribute('data-day'));
-      });
-    });
+    statFlights.textContent = d.itin.length;
+    statCrew.textContent = d.crew.length;
+    statCabin.textContent = sortedCabin.length;
+    statsContainer.style.display = 'flex';
   }
 
-  window.printDayBlock = function(reportKey){
-    const block = document.querySelector('.report-day-block[data-day="' + reportKey + '"]');
-    if(!block){ showToast("Could not find that day's report.", 'error'); return; }
-    // Print in-place using the exact same live DOM + stylesheet as the global
-    // "Print / Save PDF" button — this is what guarantees the table column
-    // ratios and the Bay/REP/Briefing input styling stay pixel-identical
-    // between the two print paths, since it's literally the same elements,
-    // just with the other day-blocks hidden for the duration of the print.
-    document.querySelectorAll('.report-day-block').forEach(b => b.classList.remove('print-target'));
-    block.classList.add('print-target');
-    document.body.classList.add('printing-single-day');
-    let cleaned = false;
-    function cleanup(){
-      if(cleaned) return;
-      cleaned = true;
-      document.body.classList.remove('printing-single-day');
-      block.classList.remove('print-target');
-      window.removeEventListener('afterprint', cleanup);
-    }
-    window.addEventListener('afterprint', cleanup);
-    window.print();
-    // Safety net for browsers that don't reliably fire afterprint (some mobile webviews)
-    setTimeout(cleanup, 3000);
-  };
-
-  // ===== All modal functions (day-aware) =====
-  window.openPositionModal = function(crewId, crewName, reportKey){
-    currentModalReportKey = reportKey || 'ALL';
-    currentModalCrewId = crewId;
-    ensureDayBuckets(currentModalReportKey);
-    const dayLegs = getLegsForDay(currentModalReportKey);
-    const ac0 = dayLegs.length ? dayLegs[0].ac : (state.itin.length ? state.itin[0].ac : '');
+  // ===== All modal functions (restored) =====
+  let currentModalCrewId = null;
+  window.openPositionModal = function(crewId, crewName){
+    const ac0 = state.itin.length ? state.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
     const posList = isNarrow ? POSITIONS_NARROW : POSITIONS_WIDE;
     const gridClass = isNarrow ? 'narrow' : 'wide';
+    currentModalCrewId = crewId;
     document.getElementById('modalCrewName').textContent = crewName;
     const grid = document.getElementById('posGrid');
     grid.className = 'pos-grid ' + gridClass;
     grid.innerHTML = '';
-    const posMap = state.positionsByDay[currentModalReportKey];
     posList.forEach(pos => {
       const btn = document.createElement('button');
-      btn.className = 'pos-btn' + (posMap[crewId] === pos ? ' selected' : '');
+      btn.className = 'pos-btn' + (state.positions && state.positions[crewId] === pos ? ' selected' : '');
       btn.textContent = pos;
       btn.addEventListener('click', () => assignPosition(crewId, pos));
       grid.appendChild(btn);
     });
-    const snyMap = state.snyByDay[currentModalReportKey];
-    const isSny = !!snyMap[crewId];
+    const isSny = !!snyCrewIds[crewId];
     document.getElementById('snyToggleBtn').textContent = isSny ? 'Remove SNY' : 'Set as SNY';
     document.getElementById('snyToggleBtn').className = 'alt-icc-toggle-btn' + (isSny ? ' active' : '');
-    const isAltIcc = (state.altIccByDay[currentModalReportKey] === crewId);
+    const isAltIcc = (altIccCrewId === crewId);
     document.getElementById('altIccToggleBtn').textContent = isAltIcc ? 'Remove Alternate ICC' : 'Set as Alternate ICC';
     document.getElementById('altIccToggleBtn').className = 'alt-icc-toggle-btn' + (isAltIcc ? ' active' : '');
     document.getElementById('posModalOverlay').style.display = 'flex';
   };
 
   window.assignPosition = function(crewId, pos){
-    const key = currentModalReportKey || 'ALL';
-    ensureDayBuckets(key);
     if (pos === 'ICC') {
-      for (let id in state.positionsByDay[key]) {
-        if (state.positionsByDay[key][id] === 'ICC') state.positionsByDay[key][id] = '';
+      for (let id in state.positions) {
+        if (state.positions[id] === 'ICC') state.positions[id] = '';
       }
     }
-    state.positionsByDay[key][crewId] = pos;
+    state.positions[crewId] = pos;
     document.getElementById('posModalOverlay').style.display = 'none';
     buildReport();
   };
 
   document.getElementById('snyToggleBtn').addEventListener('click', function(){
     if (!currentModalCrewId) return;
-    const key = currentModalReportKey || 'ALL';
-    ensureDayBuckets(key);
-    if (state.snyByDay[key][currentModalCrewId]) {
-      delete state.snyByDay[key][currentModalCrewId];
+    if (snyCrewIds[currentModalCrewId]) {
+      delete snyCrewIds[currentModalCrewId];
     } else {
-      state.snyByDay[key][currentModalCrewId] = true;
+      snyCrewIds[currentModalCrewId] = true;
     }
     document.getElementById('posModalOverlay').style.display = 'none';
     buildReport();
@@ -1850,12 +1583,10 @@
 
   document.getElementById('altIccToggleBtn').addEventListener('click', function(){
     if (!currentModalCrewId) return;
-    const key = currentModalReportKey || 'ALL';
-    ensureDayBuckets(key);
-    if (state.altIccByDay[key] === currentModalCrewId) {
-      state.altIccByDay[key] = null;
+    if (altIccCrewId === currentModalCrewId) {
+      altIccCrewId = null;
     } else {
-      state.altIccByDay[key] = currentModalCrewId;
+      altIccCrewId = currentModalCrewId;
     }
     document.getElementById('posModalOverlay').style.display = 'none';
     buildReport();
@@ -1865,26 +1596,22 @@
     document.getElementById('posModalOverlay').style.display = 'none';
   });
 
-  function openIccSelectionModal(candidates, title, reportKey) {
-    const key = reportKey || 'ALL';
-    ensureDayBuckets(key);
+  function openIccSelectionModal(candidates, title) {
     document.getElementById('iccModalSub').textContent = title || 'Choose Crew In Charge';
     const grid = document.getElementById('iccGrid');
     grid.innerHTML = '';
-    const chosenId = state.iccByDay[key];
     candidates.forEach(c => {
       const btn = document.createElement('button');
-      btn.className = 'icc-btn' + (chosenId === c.crewId ? ' selected' : '');
-      const posMap = state.positionsByDay[key] || {};
-      const pos = posMap[c.crewId] ? ' (' + posMap[c.crewId] + ')' : '';
+      btn.className = 'icc-btn' + (iccChosenCrew && iccChosenCrew.crewId === c.crewId ? ' selected' : '');
+      const pos = state.positions && state.positions[c.crewId] ? ' (' + state.positions[c.crewId] + ')' : '';
       btn.textContent = c.crewId + ' · ' + c.opRank + ' · ' + c.crewName + pos;
       btn.addEventListener('click', function(){
-        state.iccByDay[key] = c.crewId;
-        if (state.positionsByDay[key][c.crewId] !== 'ICC') {
-          for (let id in state.positionsByDay[key]) {
-            if (state.positionsByDay[key][id] === 'ICC') state.positionsByDay[key][id] = '';
+        iccChosenCrew = c;
+        if (state.positions[c.crewId] !== 'ICC') {
+          for (let id in state.positions) {
+            if (state.positions[id] === 'ICC') state.positions[id] = '';
           }
-          state.positionsByDay[key][c.crewId] = 'ICC';
+          state.positions[c.crewId] = 'ICC';
         }
         document.getElementById('iccModalOverlay').style.display = 'none';
         buildReport();
@@ -1898,19 +1625,15 @@
     document.getElementById('iccModalOverlay').style.display = 'none';
   });
 
-  window.openDoorModal = function(crewId, crewName, reportKey){
-    currentModalReportKey = reportKey || 'ALL';
-    ensureDayBuckets(currentModalReportKey);
-    const dayLegs = getLegsForDay(currentModalReportKey);
-    const ac0 = dayLegs.length ? dayLegs[0].ac : (state.itin.length ? state.itin[0].ac : '');
+  window.openDoorModal = function(crewId, crewName){
+    const ac0 = state.itin.length ? state.itin[0].ac : '';
     const isNarrow = isNarrowbody(ac0);
     const doors = isNarrow ? DOORS_NARROW : DOORS_WIDE;
     document.getElementById('doorModalCrewName').textContent = crewName;
     const grid = document.getElementById('doorGrid');
     grid.innerHTML = '';
-    const doorMap = state.doorsByDay[currentModalReportKey];
     doors.forEach(door => {
-      const assignedCrew = doorMap[door] || null;
+      const assignedCrew = doorAssignments[door] || null;
       const isAssignedToCurrent = (assignedCrew === crewId);
       const isAssignedToOther = (assignedCrew && assignedCrew !== crewId);
       const btn = document.createElement('button');
@@ -1922,17 +1645,17 @@
       btn.textContent = label;
       btn.addEventListener('click', function(){
         if(isAssignedToCurrent){
-          doorMap[door] = null;
+          doorAssignments[door] = null;
         } else if(isAssignedToOther){
-          doorMap[door] = crewId;
+          doorAssignments[door] = crewId;
         } else {
-          for(let dr in doorMap){
-            if(doorMap[dr] === crewId){
-              doorMap[dr] = null;
+          for(let d in doorAssignments){
+            if(doorAssignments[d] === crewId){
+              doorAssignments[d] = null;
               break;
             }
           }
-          doorMap[door] = crewId;
+          doorAssignments[door] = crewId;
         }
         document.getElementById('doorModalOverlay').style.display = 'none';
         buildReport();
@@ -2010,20 +1733,6 @@
         keypadTarget.value = '';
         keypadTarget.dispatchEvent(new Event('input', { bubbles: true }));
       }
-
-      // Persist Bay / Briefing into the correct day's bucket.
-      // This is the fix for the bug where editing a working position
-      // (which triggers buildReport() and regenerates the whole #report
-      // innerHTML) would wipe out whatever was typed into Bay/Briefing —
-      // those two inputs previously had no listener saving into `state`,
-      // so their value only ever lived in the DOM and was lost on re-render.
-      const day = keypadTarget.dataset.day || 'ALL';
-      if (keypadMode === 'bay') {
-        state.bayByDay[day] = finalValue;
-      } else if (keypadMode === 'briefing') {
-        state.briefingByDay[day] = finalValue;
-      }
-
       if (keypadMode === 'bay') selectedBayLetter = '';
     }
     document.getElementById('numberKeypadModalOverlay').style.display = 'none';
@@ -2095,17 +1804,12 @@
   function setStateAndRender(parsed, source){
     state = parsed;
     state.fields = {};
-    state.separateByDate = false;
-    state.positionsByDay = { ALL: {} };
-    state.doorsByDay = { ALL: {} };
-    state.snyByDay = { ALL: {} };
-    state.altIccByDay = { ALL: null };
-    state.iccByDay = { ALL: null };
-    state.bayByDay = { ALL: '' };
-    state.briefingByDay = { ALL: '' };
+    state.positions = {};
     state.picChoice = null;
-    currentModalCrewId = null;
-    currentModalReportKey = 'ALL';
+    iccChosenCrew = null;
+    altIccCrewId = null;
+    snyCrewIds = {};
+    doorAssignments = {};
     if (gendecData) {
       mergeGendecData();
     }
@@ -2202,132 +1906,18 @@
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       pdfjsLib.getDocument({data: arrayBuffer}).promise.then(function(pdf){
         let fullText = '';
-        let firstPageRawItems = null;
         const pages = [];
         for(let i=1; i<=pdf.numPages; i++) pages.push(pdf.getPage(i));
         return Promise.all(pages).then(function(pagePromises){
-          return Promise.all(pagePromises.map(function(page, pageIdx){
+          return Promise.all(pagePromises.map(function(page){
             return page.getTextContent().then(function(textContent){
-              if (pageIdx === 0) {
-                // Stash the raw, unprocessed items pdf.js reports for page 1 —
-                // exactly as received, before any reordering — so we can see
-                // whether pdf.js itself is already merging multiple visual
-                // rows into a single text item (in which case no amount of
-                // x/y reordering on our end could fix it).
-                firstPageRawItems = textContent.items.slice(0, 80).map(function(it){
-                  return { str: it.str, x: Math.round(it.transform[4]*10)/10, y: Math.round(it.transform[5]*10)/10 };
-                });
-              }
-              // Reconstruct reading order using each item's actual position rather
-              // than trusting pdf.js's raw content-stream order. Confirmed via a
-              // raw-item dump from an actual CrewTripReport PDF: this report's
-              // coordinate axes are transposed from what's normally expected —
-              // every fragment belonging to the same visual row shares the same
-              // X value (e.g. all of one flight's row sits at x=151.5, the next
-              // row at x=175.5, a consistent ~24-unit row height apart), while Y
-              // increases left-to-right across columns (Date≈23, Report≈103,
-              // Item≈148, ... Hotel≈926). So X is the row axis here and Y is the
-              // column axis — the opposite of the usual PDF convention. Group by
-              // X first, then sort each group by Y ascending to get correct
-              // left-to-right column order within that row.
-              // Reconstruct reading order using each item's actual position rather
-              // than trusting pdf.js's raw content-stream order. Confirmed via a
-              // raw-item dump from an actual CrewTripReport PDF: this report's
-              // coordinate axes are transposed from what's normally expected —
-              // every fragment belonging to the same visual row shares the same
-              // X value (e.g. all of one flight's row sits at x=151.5, the next
-              // row at x=175.5, a consistent ~24-unit row height apart), while Y
-              // increases left-to-right across columns (Date≈23, Report≈103,
-              // Item≈148, ... Hotel≈926). So X is the row axis here and Y is the
-              // column axis — the opposite of the usual PDF convention.
-              try {
-                function clusterRows(itemList, tol){
-                  const sorted = itemList.slice().sort(function(a, b){ return a.transform[4] - b.transform[4]; });
-                  const rows = [];
-                  sorted.forEach(function(item){
-                    const rowPos = item.transform[4];
-                    const colPos = item.transform[5];
-                    const cur = rows[rows.length - 1];
-                    if (cur && Math.abs(cur.rowPos - rowPos) < tol) {
-                      cur.items.push({ col: colPos, str: item.str });
-                    } else {
-                      rows.push({ rowPos: rowPos, items: [{ col: colPos, str: item.str }] });
-                    }
-                  });
-                  rows.forEach(function(row){ row.items.sort(function(a, b){ return a.col - b.col; }); });
-                  return rows;
-                }
-                function rowsToLines(rows){
-                  return rows.map(function(row){ return row.items.map(function(it){ return it.str; }).join(' '); });
-                }
-
-                const items = textContent.items;
-                const rowTolerance = 4;
-                const allRows = clusterRows(items, rowTolerance);
-
-                // The Inbound/Outbound crew tables are two independently-wrapping
-                // side-by-side tables. A single row-band that clusters correctly
-                // for one side won't generally align with the other side's rows,
-                // since each side's multi-line names wrap to different heights
-                // independently. Simply slicing a combined line at a fixed
-                // character position (as an earlier version did) drifts out of
-                // sync as soon as the two sides' wrap counts diverge. Fix: detect
-                // the Inbound/Outbound header row, split the ORIGINAL items by
-                // column position into two separate sets there, and re-cluster
-                // each side's rows independently so each table's own wrapping
-                // doesn't affect the other's row boundaries.
-                let headerRowIdx = -1, outboundBoundaryCol = null;
-                for (let i = 0; i < allRows.length; i++) {
-                  const hasInbound = allRows[i].items.some(function(it){ return it.str.trim() === 'Inbound'; });
-                  const outboundItem = allRows[i].items.find(function(it){ return it.str.trim() === 'Outbound'; });
-                  if (hasInbound && outboundItem) { headerRowIdx = i; outboundBoundaryCol = outboundItem.col; break; }
-                }
-
-                if (headerRowIdx === -1) {
-                  return rowsToLines(allRows).join('\n');
-                }
-
-                let endRowIdx = allRows.length;
-                for (let i = headerRowIdx + 1; i < allRows.length; i++) {
-                  const txt = allRows[i].items.map(function(it){ return it.str; }).join(' ');
-                  if (/Report generated by|Crew On My Pairing/i.test(txt)) { endRowIdx = i; break; }
-                }
-
-                const headerRowPos = allRows[headerRowIdx].rowPos;
-                const endRowPos = endRowIdx < allRows.length ? allRows[endRowIdx].rowPos : Infinity;
-
-                const beforeItems = [], inboundItems = [], outboundItems = [], afterItems = [];
-                items.forEach(function(item){
-                  const rowPos = item.transform[4];
-                  const colPos = item.transform[5];
-                  if (Math.abs(rowPos - headerRowPos) < rowTolerance) return; // drop the header row itself; clean markers inserted below
-                  if (rowPos < headerRowPos) beforeItems.push(item);
-                  else if (rowPos < endRowPos - rowTolerance) {
-                    if (colPos < outboundBoundaryCol) inboundItems.push(item); else outboundItems.push(item);
-                  } else afterItems.push(item);
-                });
-
-                const beforeLines = rowsToLines(clusterRows(beforeItems, rowTolerance));
-                const inboundLines = rowsToLines(clusterRows(inboundItems, rowTolerance));
-                const outboundLines = rowsToLines(clusterRows(outboundItems, rowTolerance));
-                const afterLines = rowsToLines(clusterRows(afterItems, rowTolerance));
-
-                return beforeLines.concat(['Inbound'], inboundLines, ['Outbound'], outboundLines, afterLines).join('\n');
-              } catch(reconErr) {
-                console.error('Layout reconstruction failed, falling back to raw order', reconErr);
-                return textContent.items.map(function(item){ return item.str; }).join(' ');
-              }
+              return textContent.items.map(item => item.str).join(' ');
             });
           }));
         }).then(function(texts){
           fullText = texts.join('\n');
           pdfBox.value = fullText;
-          pdfStatus.textContent = 'PDF text extracted (' + fullText.split('\n').length + ' lines reconstructed). Auto‑parsing…';
-          if (firstPageRawItems) {
-            document.getElementById('rawItemsDbgContent').textContent =
-              firstPageRawItems.map(function(it){ return 'x=' + it.x + '\ty=' + it.y + '\tstr=' + JSON.stringify(it.str); }).join('\n');
-            document.getElementById('rawItemsDbgWrap').style.display = '';
-          }
+          pdfStatus.textContent = 'PDF text extracted. Auto‑parsing…';
           handlePdfParse(fullText);
         });
       }).catch(function(err){
@@ -2865,23 +2455,23 @@
       picExpirySlots: null,
       picNationalitySlots: null,
     },
-            csx_baggage: {
-          id: 'csx_baggage',
-          label: 'CSX Baggage',
-          destination: 'CSX',
-          bgPath: 'templates/CSX_baggage.png',
-          bgImageData: null,
-          groupPilotsSeparately: true,
-          nameSlots: generateSlots(55, 320, 8, 44, 210, 44, 14),
-          rankSlots: generateSlots(265, 320, 8, 44, 220, 44, 14),
-          globalNumbering: false,
-          passportSlots: null,
-          expirySlots: null,
-          nationalitySlots: null,
-          picPassportSlots: null,
-          picExpirySlots: null,
-          picNationalitySlots: null,
-        }
+        csx_baggage: {
+      id: 'csx_baggage',
+      label: 'CSX Baggage',
+      destination: 'CSX',
+      bgPath: 'templates/CSX_baggage.png',
+      bgImageData: null,
+      groupPilotsSeparately: true,
+      nameSlots: generateSlots(55, 320, 8, 44, 210, 44, 14),
+      rankSlots: generateSlots(265, 320, 8, 44, 220, 44, 14),
+      globalNumbering: false,
+      passportSlots: null,
+      expirySlots: null,
+      nationalitySlots: null,
+      picPassportSlots: null,
+      picExpirySlots: null,
+      picNationalitySlots: null,
+    }
   };
 
   const templateOffsets = {};
