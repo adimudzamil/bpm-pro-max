@@ -258,13 +258,6 @@
 
   .noprint { display: block; }
   @media print { .noprint { display: none !important; } }
-  .remove-col { display: table-cell; text-align: center; cursor: pointer; color: #dc2626; font-weight: 700; }
-  .remove-col:hover { background: #fee2e2; }
-  th.remove-col { cursor: default; color: inherit; font-weight: 600; }
-  th.remove-col:hover { background: transparent; }
-  @media print { .remove-col { display: none !important; } }
-  .name-warning-badge { display: inline-block; background: #fef3c7; color: #92400e; font-size: 7.5px; font-weight: 700; padding: 1px 6px; border-radius: 100px; margin-left: 4px; border: 1px solid #f59e0b; cursor: help; }
-  @media print { .name-warning-badge { display: none !important; } }
 
   @media print {
     html, body { height: auto !important; min-height: auto !important; }
@@ -379,7 +372,7 @@
 
   <header class="noprint">
     <div class="logo-area"><div class="logo">CTR<span>.</span></div><div class="byline-badge">✈️ by 2100551</div></div>
-    <div class="badge-group"><div class="badge">📄 PDF Parser</div><div class="badge">📊 Gendec XLSX</div><div class="badge">🔒 Offline</div><div class="badge accent">v4.3 · crew removal + name flags + passport expiry fix</div></div>
+    <div class="badge-group"><div class="badge">📄 PDF Parser</div><div class="badge">📊 Gendec XLSX</div><div class="badge">🔒 Offline</div><div class="badge accent">v4.2 · Separate Multi Days Flight Trip</div></div>
   </header>
 
   <div class="help-section noprint">
@@ -390,8 +383,8 @@
     <div id="helpContent" class="help-content">
       <p><strong>Quick Guide</strong></p>
       <ul style="margin-left:20px; font-family:'DM Mono',monospace; font-size:13px; color:var(--text-muted);">
-        <li>1. <strong>Upload PDF</strong> (CrewTripReport) → parse crew data.</li>
-        <li>2. <strong>Upload Gendec .xlsx</strong> → auto‑parsed and merged.</li>
+        <li>1. <strong>Upload PDF</strong> (CrewTripReport) → parse crew data. The main file needed, check the Downloads folder in PC for yours. sort by date and the latest one should be yours.</li>
+        <li>2. <strong>Upload Gendec .xlsx</strong> → auto‑parsed and merged. only needed if you are generating destination forms to IND. Choose output format excel xlsx and run, when you click on print button (don't need to print, just want to trigger the download), the file should be in Downloads folder in PC. Sort by date, the latest one should be yours.</li>
         <li>3. Select destination → click <strong>"Generate Forms"</strong> → filter modal appears.</li>
         <li>4. Choose which crew members appear in each template, then click Generate.</li>
         <li>5. Fine‑tune positions with the compact controls, print or download.</li>
@@ -1256,7 +1249,7 @@
       if (/^(Inbound|Outbound)$/i.test(trimmed)) return;
       const tokens = trimmed.split(/\s+/);
       const row = parseCrewLine(tokens);
-      if (row && row.crewId) anchors.push({ idx, row, leading: [], trailing: [], ambiguous: false });
+      if (row && row.crewId) anchors.push({ idx, row, leading: [], trailing: [] });
       else orphanIdx.push(idx);
     });
     if (!anchors.length) return [];
@@ -1275,19 +1268,8 @@
         if (gapOrphans.length === 1) {
           const prevEmpty = !prev.row.crewName;
           const nextEmpty = !next.row.crewName;
-          if (prevEmpty && !nextEmpty) {
-            prev.trailing.push(...gapOrphans);
-          } else if (nextEmpty && !prevEmpty) {
-            next.leading.push(...gapOrphans);
-          } else {
-            // Neither neighbor's own line was empty, so neither gave a clear
-            // signal it still needs this fragment — this is a guess, not a
-            // determination. Flag both rows so it's visible on screen rather
-            // than silently attaching the fragment to the wrong name.
-            next.leading.push(...gapOrphans);
-            prev.ambiguous = true;
-            next.ambiguous = true;
-          }
+          if (prevEmpty && !nextEmpty) prev.trailing.push(...gapOrphans);
+          else next.leading.push(...gapOrphans);
         } else {
           const half = Math.floor(gapOrphans.length / 2);
           prev.trailing.push(...gapOrphans.slice(0, half));
@@ -1300,7 +1282,7 @@
       const leadingText = a.leading.map(idx => rawLines[idx].trim()).join(' ');
       const trailingText = a.trailing.map(idx => rawLines[idx].trim()).join(' ');
       const name = [leadingText, a.row.crewName, trailingText].filter(Boolean).join(' ');
-      return { crewId: a.row.crewId, crewName: name, opRank: a.row.opRank, ambiguousName: a.ambiguous };
+      return { crewId: a.row.crewId, crewName: name, opRank: a.row.opRank };
     });
   }
 
@@ -1320,7 +1302,7 @@
         const rankIdx = tokens.findIndex((t,k) => k>idIdx && RANKS_LIST.includes(t));
         const nameWords = tokens.slice(idIdx+1, rankIdx !== -1 ? rankIdx : tokens.length);
         const opRank = rankIdx !== -1 ? tokens[rankIdx] : '';
-        anchors.push({ idx, row: { crewId, crewName: nameWords.join(' '), opRank }, leading: [], trailing: [], ambiguous: false });
+        anchors.push({ idx, row: { crewId, crewName: nameWords.join(' '), opRank }, leading: [], trailing: [] });
       } else {
         orphanIdx.push(idx);
       }
@@ -1340,15 +1322,8 @@
         if (gapOrphans.length === 1) {
           const prevEmpty = !prev.row.crewName;
           const nextEmpty = !next.row.crewName;
-          if (prevEmpty && !nextEmpty) {
-            prev.trailing.push(...gapOrphans);
-          } else if (nextEmpty && !prevEmpty) {
-            next.leading.push(...gapOrphans);
-          } else {
-            next.leading.push(...gapOrphans);
-            prev.ambiguous = true;
-            next.ambiguous = true;
-          }
+          if (prevEmpty && !nextEmpty) prev.trailing.push(...gapOrphans);
+          else next.leading.push(...gapOrphans);
         } else {
           const half = Math.floor(gapOrphans.length / 2);
           prev.trailing.push(...gapOrphans.slice(0, half));
@@ -1360,7 +1335,7 @@
       const leadingText = a.leading.map(idx => rawLines[idx].trim()).join(' ');
       const trailingText = a.trailing.map(idx => rawLines[idx].trim()).join(' ');
       const name = [leadingText, a.row.crewName, trailingText].filter(Boolean).join(' ');
-      return { crewId: a.row.crewId, crewName: name, opRank: a.row.opRank, ambiguousName: a.ambiguous };
+      return { crewId: a.row.crewId, crewName: name, opRank: a.row.opRank };
     });
   }
 
@@ -1420,7 +1395,7 @@
 
     const crew = Object.values(crewMap).map(c => ({
       opRank: c.opRank, posRank: c.opRank, crewId: c.crewId, crewName: c.crewName,
-      wt:'', workPos:'', base:'', sdc:'', checkIn:'', ambiguousName: !!c.ambiguousName
+      wt:'', workPos:'', base:'', sdc:'', checkIn:''
     }));
 
     const dutyDate = itin.length ? itin[0].date : '';
@@ -1461,7 +1436,6 @@
     if(!(key in state.iccByDay)) state.iccByDay[key] = state.iccByDay.ALL || null;
     if(!(key in state.bayByDay)) state.bayByDay[key] = state.bayByDay.ALL || '';
     if(!(key in state.briefingByDay)) state.briefingByDay[key] = state.briefingByDay.ALL || '';
-    if(!state.removedByDay[key]) state.removedByDay[key] = Object.assign({}, state.removedByDay.ALL || {});
   }
 
   // ===== Report builder (day-aware) =====
@@ -1521,8 +1495,7 @@
     const ac0 = legs.length ? legs[0].ac : (d.itin.length ? d.itin[0].ac : '');
     const isNarrow = isNarrowbody(ac0);
 
-    const removedMap = state.removedByDay[reportKey] || {};
-    const sortedCabinAll = cabinCrew.slice().sort((a,b) => {
+    const sortedCabin = cabinCrew.slice().sort((a,b) => {
       const rankA = a.opRank.toUpperCase();
       const rankB = b.opRank.toUpperCase();
       const priA = RANK_PRIORITY[rankA] || 99;
@@ -1533,8 +1506,6 @@
       }
       return 0;
     });
-    const removedCrew = sortedCabinAll.filter(c => removedMap[c.crewId]);
-    const sortedCabin = sortedCabinAll.filter(c => !removedMap[c.crewId]);
 
     const ifsCrew = sortedCabin.filter(c => c.opRank.toUpperCase() === 'IFS');
     const lsCrew = sortedCabin.filter(c => c.opRank.toUpperCase() === 'LS');
@@ -1591,6 +1562,9 @@
     const briefingVal = state.briefingByDay[reportKey] || '';
 
     let html = `<div class="rpad report-day-block" data-day="${esc(reportKey)}">`;
+    if (isSeparated) {
+      html += `<div class="rtitle" style="border-bottom:none;margin-bottom:2px;"><h2 style="font-size:9pt;">DAY ${dayIdx+1} — ${esc(reportKey)}</h2></div>`;
+    }
     html += `<div class="btnrow noprint" style="margin-bottom:6px;">
       <button class="btn-success btn-small printDayBtn" data-day="${esc(reportKey)}">🖨️ Print This Day</button>
     </div>`;
@@ -1625,7 +1599,7 @@
         <td><input value="${esc((state.fields && state.fields['atd-'+i]) || '')}" oninput="updateField('atd-${i}', this.value)"></td>
         <td><input value="${esc((state.fields && state.fields['ata-'+i]) || '')}" oninput="updateField('ata-${i}', this.value)"></td>
         <td><input value="${esc((state.fields && state.fields['ac-'+i]) || l.ac||'')}" oninput="updateField('ac-${i}', this.value)"></td>
-        <td><input value="${esc((state.fields && state.fields['acreg-'+i]) || ((l.acReg && /^m/i.test(l.acReg)) ? l.acReg : ''))}" oninput="updateField('acreg-${i}', this.value)"></td>
+        <td><input value="${esc((state.fields && state.fields['acreg-'+i]) || l.acReg||'')}" oninput="updateField('acreg-${i}', this.value)"></td>
         <td><input class="remarksTxt" value="${esc((state.fields && state.fields['remarks-'+i]) || '')}" oninput="updateField('remarks-${i}', this.value)"></td>
       </tr>`;
     });
@@ -1661,14 +1635,8 @@
     </table>`;
 
     html += `<div style="margin-top:6px;font-weight:bold;font-size:9.5px;">CABIN CREW (${sortedCabin.length})</div>`;
-    if (removedCrew.length) {
-      html += `<div class="noprint" style="margin:2px 0 4px;font-size:11px;color:var(--text-muted);">
-        ${removedCrew.length} crew removed from this ${(reportKey==='ALL')?'list':'day'}: ${removedCrew.map(c => esc(c.crewName)).join(', ')}
-        <button class="btn-secondary btn-small restoreCrewBtn" data-day="${esc(reportKey)}" style="margin-left:8px;">↩ Restore all</button>
-      </div>`;
-    }
     html += `<table class="rtab crew-table" style="font-size:9px;">
-      <tr><th style="width:9%;">S/No</th><th style="width:7%;">Rank</th><th style="width:56%;text-align:left;">Name</th><th style="width:9%;">Position</th><th style="width:9%;">Door</th><th class="remove-col" style="width:10%;">Remove</th></tr>`;
+      <tr><th style="width:10%;">S/No</th><th style="width:8%;">Rank</th><th style="width:62%;text-align:left;">Name</th><th style="width:10%;">Position</th><th style="width:10%;">Door</th></tr>`;
     sortedCabin.forEach(c => {
       const isCIC = iccDisplay && c.crewId === iccDisplay.crewId;
       const isAltIcc = altIccDisplay && c.crewId === altIccDisplay.crewId;
@@ -1682,7 +1650,6 @@
       let badgesHtml = '';
       if (isSny) badgesHtml += '<span class="alt-icc-badge">SNY</span>';
       if (isAltIcc) badgesHtml += '<span class="alt-icc-badge">ALT ICC</span>';
-      if (c.ambiguousName) badgesHtml += '<span class="noprint name-warning-badge" title="A wrapped name fragment near this row could not be confidently attributed — please double-check this name and the one next to it.">⚠ check name</span>';
       html += `<tr${isCIC ? ' style="background:#fff6cc;"' : ''}>
         <td><input value="${esc((state.fields && state.fields['crewno-'+c.crewId]) || c.crewId)}" oninput="updateField('crewno-${c.crewId}', this.value)" style="width:100%;border:none;text-align:center;background:transparent;font-size:9px;font-family:inherit;padding:0;"></td>
         <td><input value="${esc((state.fields && state.fields['crewrank-'+c.crewId]) || c.opRank)}" oninput="updateField('crewrank-${c.crewId}', this.value)" style="width:100%;border:none;text-align:center;background:transparent;font-size:9px;font-family:inherit;padding:0;"></td>
@@ -1694,7 +1661,6 @@
         </td>
         <td class="pos-cell${pos?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(displayName)}" data-day="${esc(reportKey)}">${pos ? esc(pos) : ''}</td>
         <td class="door-cell${doorAssigned?'':' unset'}" data-crewid="${esc(c.crewId)}" data-crewname="${esc(displayName)}" data-day="${esc(reportKey)}">${doorAssigned ? esc(doorAssigned) : '+'}</td>
-        <td class="remove-col remove-crew-cell" data-crewid="${esc(c.crewId)}" data-crewname="${esc(displayName)}" data-day="${esc(reportKey)}" title="Remove from this ${(reportKey==='ALL')?'list':'day'}">✕</td>
       </tr>`;
     });
     html += `</table>`;
@@ -1795,25 +1761,6 @@
     document.querySelectorAll('.printDayBtn').forEach(btn => {
       btn.addEventListener('click', function(){
         printDayBlock(this.getAttribute('data-day'));
-      });
-    });
-
-    document.querySelectorAll('.remove-crew-cell').forEach(el => {
-      el.addEventListener('click', function(){
-        const key = this.getAttribute('data-day') || 'ALL';
-        const crewId = this.getAttribute('data-crewid');
-        ensureDayBuckets(key);
-        state.removedByDay[key][crewId] = true;
-        buildReport();
-      });
-    });
-
-    document.querySelectorAll('.restoreCrewBtn').forEach(btn => {
-      btn.addEventListener('click', function(){
-        const key = this.getAttribute('data-day') || 'ALL';
-        ensureDayBuckets(key);
-        state.removedByDay[key] = {};
-        buildReport();
       });
     });
   }
@@ -2156,7 +2103,6 @@
     state.iccByDay = { ALL: null };
     state.bayByDay = { ALL: '' };
     state.briefingByDay = { ALL: '' };
-    state.removedByDay = { ALL: {} };
     state.picChoice = null;
     currentModalCrewId = null;
     currentModalReportKey = 'ALL';
@@ -2399,7 +2345,7 @@
   // ============================================================
   function parseGendecXLSX(data) {
     try {
-      const workbook = XLSX.read(data, { type: 'array' });
+      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       let rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
 
@@ -2499,46 +2445,17 @@
         const passport = passportCol !== -1 ? String(row[passportCol] || '').trim() : '';
         const nationality = natCol !== -1 ? String(row[natCol] || '').trim() : '';
 
-let expiryRaw = expiryCol !== -1 ? row[expiryCol] : '';
-let expiryFormatted = '';
-if (expiryRaw !== undefined && expiryRaw !== null && expiryRaw !== '') {
-  // If it's already a Date object (unlikely with our new options)
-  if (expiryRaw instanceof Date) {
-    // Use local methods (or UTC – doesn't matter now because we'll rarely hit this)
-    const day = String(expiryRaw.getDate()).padStart(2, '0');
-    expiryFormatted = `${day} ${months[expiryRaw.getMonth()]} ${expiryRaw.getFullYear()}`;
-  }
-  // If it's a string, extract the YYYY-MM-DD part directly
-  else if (typeof expiryRaw === 'string') {
-    const match = expiryRaw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (match) {
-      const year = parseInt(match[1], 10);
-      const month = parseInt(match[2], 10) - 1;
-      const day = parseInt(match[3], 10);
-      expiryFormatted = `${String(day).padStart(2, '0')} ${months[month]} ${year}`;
-    } else {
-      expiryFormatted = expiryRaw.trim();
-    }
-  }
-  // If it's a number, treat it as an Excel serial number (1900 date system)
-  else if (typeof expiryRaw === 'number' && expiryRaw > 30000) {
-    // Excel serial date: days since 1900-01-01 (with the 1900 leap year bug)
-    const epoch = new Date(1900, 0, 1); // Jan 1, 1900
-    // Excel serial 1 = Jan 1, 1900; but Excel incorrectly treats 1900 as leap year
-    // For dates after Feb 28, 1900, we need to subtract 1 day to correct the bug.
-    const serialDate = expiryRaw - 1; // adjust for the bug
-    const date = new Date(epoch.getTime() + serialDate * 86400000);
-    // Now use UTC methods to avoid local timezone interference
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    const month = date.getUTCMonth();
-    const year = date.getUTCFullYear();
-    expiryFormatted = `${day} ${months[month]} ${year}`;
-  }
-  // Fallback
-  else {
-    expiryFormatted = String(expiryRaw).trim();
-  }
-}
+        let expiryRaw = expiryCol !== -1 ? row[expiryCol] : '';
+        let expiryFormatted = '';
+        if (expiryRaw !== undefined && expiryRaw !== null && expiryRaw !== '') {
+          let d = (expiryRaw instanceof Date) ? expiryRaw : new Date(expiryRaw);
+          if (!isNaN(d)) {
+            const day = String(d.getDate()).padStart(2, '0');
+            expiryFormatted = `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
+          } else {
+            expiryFormatted = String(expiryRaw).trim();
+          }
+        }
 
         if (!staffNo && !name && !passport && !expiryFormatted && !nationality) continue;
 
@@ -2948,23 +2865,23 @@ if (expiryRaw !== undefined && expiryRaw !== null && expiryRaw !== '') {
       picExpirySlots: null,
       picNationalitySlots: null,
     },
-    csx_baggage: {
-  id: 'csx_baggage',
-  label: 'CSX Baggage',
-  destination: 'CSX',
-  bgPath: 'templates/CSX_baggage.png',
-  bgImageData: null,
-  groupPilotsSeparately: true,
-  nameSlots: generateSlots(33, 360, 14, 43, 300, 43, 14),
-  rankSlots: generateSlots(333, 360, 14, 43, 110, 43, 14),
-  globalNumbering: false,
-  passportSlots: null,
-  expirySlots: null,
-  nationalitySlots: null,
-  picPassportSlots: null,
-  picExpirySlots: null,
-  picNationalitySlots: null,
-}
+            csx_baggage: {
+          id: 'csx_baggage',
+          label: 'CSX Baggage',
+          destination: 'CSX',
+          bgPath: 'templates/CSX_baggage.png',
+          bgImageData: null,
+          groupPilotsSeparately: true,
+          nameSlots: generateSlots(55, 320, 8, 44, 210, 44, 14),
+          rankSlots: generateSlots(265, 320, 8, 44, 220, 44, 14),
+          globalNumbering: false,
+          passportSlots: null,
+          expirySlots: null,
+          nationalitySlots: null,
+          picPassportSlots: null,
+          picExpirySlots: null,
+          picNationalitySlots: null,
+        }
   };
 
   const templateOffsets = {};
