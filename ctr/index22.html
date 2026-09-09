@@ -2500,16 +2500,27 @@
         const nationality = natCol !== -1 ? String(row[natCol] || '').trim() : '';
 
         let expiryRaw = expiryCol !== -1 ? row[expiryCol] : '';
-        let expiryFormatted = '';
-        if (expiryRaw !== undefined && expiryRaw !== null && expiryRaw !== '') {
-          let d = (expiryRaw instanceof Date) ? expiryRaw : new Date(expiryRaw);
-          if (!isNaN(d)) {
-            const day = String(d.getUTCDate()).padStart(2, '0');
-expiryFormatted = `${day} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-          } else {
-            expiryFormatted = String(expiryRaw).trim();
-          }
-        }
+let expiryFormatted = '';
+if (expiryRaw !== undefined && expiryRaw !== null && expiryRaw !== '') {
+  if (expiryRaw instanceof Date) {
+    // If it's already a Date object, use UTC to avoid timezone shift
+    const day = String(expiryRaw.getUTCDate()).padStart(2, '0');
+    expiryFormatted = `${day} ${months[expiryRaw.getUTCMonth()]} ${expiryRaw.getUTCFullYear()}`;
+  } else if (typeof expiryRaw === 'string') {
+    // Parse "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" without timezone
+    const match = expiryRaw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1; // months are 0-indexed
+      const day = parseInt(match[3], 10);
+      expiryFormatted = `${String(day).padStart(2, '0')} ${months[month]} ${year}`;
+    } else {
+      expiryFormatted = expiryRaw.trim();
+    }
+  } else {
+    expiryFormatted = String(expiryRaw).trim();
+  }
+}
 
         if (!staffNo && !name && !passport && !expiryFormatted && !nationality) continue;
 
