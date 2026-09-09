@@ -2499,24 +2499,43 @@
         const passport = passportCol !== -1 ? String(row[passportCol] || '').trim() : '';
         const nationality = natCol !== -1 ? String(row[natCol] || '').trim() : '';
 
-        let expiryRaw = expiryCol !== -1 ? row[expiryCol] : '';
+let expiryRaw = expiryCol !== -1 ? row[expiryCol] : '';
 let expiryFormatted = '';
 if (expiryRaw !== undefined && expiryRaw !== null && expiryRaw !== '') {
+  // If it's already a Date object (unlikely with our new options)
   if (expiryRaw instanceof Date) {
-  const day = String(expiryRaw.getDate()).padStart(2, '0');
-  expiryFormatted = `${day} ${months[expiryRaw.getMonth()]} ${expiryRaw.getFullYear()}`;
-} else if (typeof expiryRaw === 'string') {
-    // Parse "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" without timezone
+    // Use local methods (or UTC – doesn't matter now because we'll rarely hit this)
+    const day = String(expiryRaw.getDate()).padStart(2, '0');
+    expiryFormatted = `${day} ${months[expiryRaw.getMonth()]} ${expiryRaw.getFullYear()}`;
+  }
+  // If it's a string, extract the YYYY-MM-DD part directly
+  else if (typeof expiryRaw === 'string') {
     const match = expiryRaw.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (match) {
       const year = parseInt(match[1], 10);
-      const month = parseInt(match[2], 10) - 1; // months are 0-indexed
+      const month = parseInt(match[2], 10) - 1;
       const day = parseInt(match[3], 10);
       expiryFormatted = `${String(day).padStart(2, '0')} ${months[month]} ${year}`;
     } else {
       expiryFormatted = expiryRaw.trim();
     }
-  } else {
+  }
+  // If it's a number, treat it as an Excel serial number (1900 date system)
+  else if (typeof expiryRaw === 'number' && expiryRaw > 30000) {
+    // Excel serial date: days since 1900-01-01 (with the 1900 leap year bug)
+    const epoch = new Date(1900, 0, 1); // Jan 1, 1900
+    // Excel serial 1 = Jan 1, 1900; but Excel incorrectly treats 1900 as leap year
+    // For dates after Feb 28, 1900, we need to subtract 1 day to correct the bug.
+    const serialDate = expiryRaw - 1; // adjust for the bug
+    const date = new Date(epoch.getTime() + serialDate * 86400000);
+    // Now use UTC methods to avoid local timezone interference
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const month = date.getUTCMonth();
+    const year = date.getUTCFullYear();
+    expiryFormatted = `${day} ${months[month]} ${year}`;
+  }
+  // Fallback
+  else {
     expiryFormatted = String(expiryRaw).trim();
   }
 }
