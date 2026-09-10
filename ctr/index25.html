@@ -379,7 +379,7 @@
 
   <header class="noprint">
     <div class="logo-area"><div class="logo">CTR<span>.</span></div><div class="byline-badge">✈️ by 2100551</div></div>
-    <div class="badge-group"><div class="badge">📄 PDF Parser</div><div class="badge">📊 Gendec XLSX</div><div class="badge">🔒 Offline</div><div class="badge accent">v4.3 · crew removal + name flags + passport expiry fix</div></div>
+    <div class="badge-group"><div class="badge">📄 PDF Parser</div><div class="badge">📊 Gendec XLSX</div><div class="badge">🔒 Offline</div><div class="badge accent">v4.4 · name confirm modal + date fix</div></div>
   </header>
 
   <div class="help-section noprint">
@@ -489,7 +489,6 @@
         <option value="BLR">BLR (Bangalore)</option>
         <option value="AMD">AMD (Ahmedabad)</option>
         <option value="ATQ">ATQ (Amritsar)</option>
-        <option value="CSX">CSX (Changsha)</option>
       </select>
       <button class="btn-primary" id="generateFormsBtn">⚡ Generate Forms</button>
     </div>
@@ -1016,6 +1015,18 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="nameConfirmModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">✏️ Confirm crew name</div>
+    <div class="modal-sub">The parser found "<span id="nameConfirmFragment"></span>" between two names and can't tell which one it belongs to. Pick the correct one:</div>
+    <div class="pic-grid" style="margin-bottom:10px;">
+      <button class="pic-btn" id="nameConfirmOptPrev"></button>
+      <button class="pic-btn" id="nameConfirmOptNext"></button>
+    </div>
+    <button class="secondary-btn" id="nameConfirmSkipBtn">Decide later (keep warning badge)</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="picModalOverlay">
   <div class="modal-box">
     <div class="modal-title">Select Pilot In Command (PIC)</div>
@@ -1259,8 +1270,9 @@
       if (row && row.crewId) anchors.push({ idx, row, leading: [], trailing: [], ambiguous: false });
       else orphanIdx.push(idx);
     });
-    if (!anchors.length) return [];
+    if (!anchors.length) return { rows: [], ambiguousPairs: [] };
 
+    const ambiguousPairs = [];
     for (let k = 0; k <= anchors.length; k++) {
       const gapStart = k === 0 ? -Infinity : anchors[k-1].idx;
       const gapEnd = k === anchors.length ? Infinity : anchors[k].idx;
@@ -1282,11 +1294,13 @@
           } else {
             // Neither neighbor's own line was empty, so neither gave a clear
             // signal it still needs this fragment — this is a guess, not a
-            // determination. Flag both rows so it's visible on screen rather
-            // than silently attaching the fragment to the wrong name.
+            // determination. Default it onto the next row (so parsing still
+            // completes without user input), but record the pair so the UI
+            // can ask which side it really belongs to.
             next.leading.push(...gapOrphans);
             prev.ambiguous = true;
             next.ambiguous = true;
+            ambiguousPairs.push({ prevCrewId: prev.row.crewId, nextCrewId: next.row.crewId, fragmentIdx: gapOrphans[0] });
           }
         } else {
           const half = Math.floor(gapOrphans.length / 2);
@@ -1296,12 +1310,35 @@
       }
     }
 
-    return anchors.map(a => {
+    const rows = anchors.map(a => {
       const leadingText = a.leading.map(idx => rawLines[idx].trim()).join(' ');
       const trailingText = a.trailing.map(idx => rawLines[idx].trim()).join(' ');
       const name = [leadingText, a.row.crewName, trailingText].filter(Boolean).join(' ');
       return { crewId: a.row.crewId, crewName: name, opRank: a.row.opRank, ambiguousName: a.ambiguous };
     });
+
+    // For each ambiguous pair, compute what each side's name would be
+    // WITHOUT the disputed fragment, so the confirmation UI can show both
+    // "fragment belongs here" options accurately, including any other
+    // legitimate wrap fragments that row already has.
+    ambiguousPairs.forEach(p => {
+      const prevAnchor = anchors.find(a => a.row.crewId === p.prevCrewId);
+      const nextAnchor = anchors.find(a => a.row.crewId === p.nextCrewId);
+      const fragment = rawLines[p.fragmentIdx].trim();
+      const prevTrailingWithout = prevAnchor.trailing.filter(idx => idx !== p.fragmentIdx);
+      const prevLeadingText = prevAnchor.leading.map(idx => rawLines[idx].trim()).join(' ');
+      const prevTrailingText = prevTrailingWithout.map(idx => rawLines[idx].trim()).join(' ');
+      const prevBaseName = [prevLeadingText, prevAnchor.row.crewName, prevTrailingText].filter(Boolean).join(' ');
+      const nextLeadingWithout = nextAnchor.leading.filter(idx => idx !== p.fragmentIdx);
+      const nextLeadingText = nextLeadingWithout.map(idx => rawLines[idx].trim()).join(' ');
+      const nextTrailingText = nextAnchor.trailing.map(idx => rawLines[idx].trim()).join(' ');
+      const nextBaseName = [nextLeadingText, nextAnchor.row.crewName, nextTrailingText].filter(Boolean).join(' ');
+      p.fragment = fragment;
+      p.prevBaseName = prevBaseName;
+      p.nextBaseName = nextBaseName;
+    });
+
+    return { rows, ambiguousPairs };
   }
 
   function parsePairingSection(lines, startIdx, endIdx){
@@ -1325,7 +1362,8 @@
         orphanIdx.push(idx);
       }
     });
-    if (!anchors.length) return [];
+    if (!anchors.length) return { rows: [], ambiguousPairs: [] };
+    const ambiguousPairs = [];
     for (let k = 0; k <= anchors.length; k++) {
       const gapStart = k === 0 ? -Infinity : anchors[k-1].idx;
       const gapEnd = k === anchors.length ? Infinity : anchors[k].idx;
@@ -1348,6 +1386,7 @@
             next.leading.push(...gapOrphans);
             prev.ambiguous = true;
             next.ambiguous = true;
+            ambiguousPairs.push({ prevCrewId: prev.row.crewId, nextCrewId: next.row.crewId, fragmentIdx: gapOrphans[0] });
           }
         } else {
           const half = Math.floor(gapOrphans.length / 2);
@@ -1356,12 +1395,29 @@
         }
       }
     }
-    return anchors.map(a => {
+    const rows = anchors.map(a => {
       const leadingText = a.leading.map(idx => rawLines[idx].trim()).join(' ');
       const trailingText = a.trailing.map(idx => rawLines[idx].trim()).join(' ');
       const name = [leadingText, a.row.crewName, trailingText].filter(Boolean).join(' ');
       return { crewId: a.row.crewId, crewName: name, opRank: a.row.opRank, ambiguousName: a.ambiguous };
     });
+    ambiguousPairs.forEach(p => {
+      const prevAnchor = anchors.find(a => a.row.crewId === p.prevCrewId);
+      const nextAnchor = anchors.find(a => a.row.crewId === p.nextCrewId);
+      const fragment = rawLines[p.fragmentIdx].trim();
+      const prevTrailingWithout = prevAnchor.trailing.filter(idx => idx !== p.fragmentIdx);
+      const prevLeadingText = prevAnchor.leading.map(idx => rawLines[idx].trim()).join(' ');
+      const prevTrailingText = prevTrailingWithout.map(idx => rawLines[idx].trim()).join(' ');
+      const prevBaseName = [prevLeadingText, prevAnchor.row.crewName, prevTrailingText].filter(Boolean).join(' ');
+      const nextLeadingWithout = nextAnchor.leading.filter(idx => idx !== p.fragmentIdx);
+      const nextLeadingText = nextLeadingWithout.map(idx => rawLines[idx].trim()).join(' ');
+      const nextTrailingText = nextAnchor.trailing.map(idx => rawLines[idx].trim()).join(' ');
+      const nextBaseName = [nextLeadingText, nextAnchor.row.crewName, nextTrailingText].filter(Boolean).join(' ');
+      p.fragment = fragment;
+      p.prevBaseName = prevBaseName;
+      p.nextBaseName = nextBaseName;
+    });
+    return { rows, ambiguousPairs };
   }
 
   function parseCrewTripReport(raw){
@@ -1375,6 +1431,11 @@
     const { itin, repTimeByDate } = parseItinerarySection(lines, 0, itinEnd);
 
     const crewMap = {};
+    const ambiguousPairs = [];
+    const mergeResult = (result) => {
+      result.rows.forEach(r => { if (!crewMap[r.crewId]) crewMap[r.crewId] = r; });
+      ambiguousPairs.push(...result.ambiguousPairs);
+    };
     if (inboundIdx !== -1) {
       const crewSectionEnd = pairingIdx !== -1 ? pairingIdx : (reportGenIdx !== -1 ? reportGenIdx : lines.length);
       const outboundMarkerIdx = lines.findIndex((l, idx) => idx > inboundIdx && l.trim() === 'Outbound');
@@ -1386,8 +1447,8 @@
         // already just that one table's own rows in order.
         const inboundLines = lines.slice(inboundIdx + 1, outboundMarkerIdx);
         const outboundLines = lines.slice(outboundMarkerIdx + 1, crewSectionEnd);
-        distributeCrewNames(inboundLines).forEach(r => { if (!crewMap[r.crewId]) crewMap[r.crewId] = r; });
-        distributeCrewNames(outboundLines).forEach(r => { if (!crewMap[r.crewId]) crewMap[r.crewId] = r; });
+        mergeResult(distributeCrewNames(inboundLines));
+        mergeResult(distributeCrewNames(outboundLines));
       } else {
         // Fallback for text that wasn't produced by our own reconstruction
         // (e.g. manually pasted from a PDF viewer) where Inbound/Outbound
@@ -1402,15 +1463,13 @@
           leftLines.push(full.slice(0, effectiveSplit));
           rightLines.push(full.slice(effectiveSplit));
         }
-        distributeCrewNames(leftLines).forEach(r => { if (!crewMap[r.crewId]) crewMap[r.crewId] = r; });
-        distributeCrewNames(rightLines).forEach(r => { if (!crewMap[r.crewId]) crewMap[r.crewId] = r; });
+        mergeResult(distributeCrewNames(leftLines));
+        mergeResult(distributeCrewNames(rightLines));
       }
     }
     if (pairingIdx !== -1) {
       const pairingEnd = reportGenIdx !== -1 ? reportGenIdx : lines.length;
-      parsePairingSection(lines, pairingIdx + 1, pairingEnd).forEach(r => {
-        if (!crewMap[r.crewId]) crewMap[r.crewId] = r;
-      });
+      mergeResult(parsePairingSection(lines, pairingIdx + 1, pairingEnd));
     }
 
     const ownerMatch = raw.match(/([A-Z][A-Z .]+?)\s*\|\s*(\d{6,8})\s*\|\s*([A-Z]+)\s*\|\s*([A-Z]{3})\s*\|\s*(CAPT|FO|SO|OBS|IFS|LS|FSS|FS|SS|CS|AS)\b/);
@@ -1433,6 +1492,7 @@
       source: 'pdf',
       dutyStart, dutyDate,
       repTimeByDate,
+      ambiguousPairs,
       pdfData: { date: dutyDate, acReg: itin.length ? itin[0].acReg : '', repTime }
     };
   }
@@ -2158,6 +2218,7 @@
     state.briefingByDay = { ALL: '' };
     state.removedByDay = { ALL: {} };
     state.picChoice = null;
+    state.pendingAmbiguousNames = (parsed.ambiguousPairs || []).slice();
     currentModalCrewId = null;
     currentModalReportKey = 'ALL';
     if (gendecData) {
@@ -2170,7 +2231,44 @@
       '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, ['flightId','date','from','dep','to','arr','ac','acReg','flightTime']) +
       '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, ['opRank','crewId','crewName']);
     pdfDbgWrap.style.display = '';
+    showNextAmbiguousNameModal();
   }
+
+  function showNextAmbiguousNameModal(){
+    const pending = state && state.pendingAmbiguousNames;
+    if (!pending || !pending.length) return;
+    const item = pending[0];
+    document.getElementById('nameConfirmFragment').textContent = item.fragment;
+    document.getElementById('nameConfirmOptPrev').textContent = (item.prevBaseName + ' ' + item.fragment).trim();
+    document.getElementById('nameConfirmOptNext').textContent = (item.fragment + ' ' + item.nextBaseName).trim();
+    document.getElementById('nameConfirmModalOverlay').style.display = 'flex';
+  }
+
+  function resolveAmbiguousName(choice){
+    const pending = state.pendingAmbiguousNames;
+    if (!pending || !pending.length) return;
+    const item = pending.shift();
+    const prevCrew = state.crew.find(c => c.crewId === item.prevCrewId);
+    const nextCrew = state.crew.find(c => c.crewId === item.nextCrewId);
+    if (choice === 'prev') {
+      if (prevCrew) prevCrew.crewName = (item.prevBaseName + ' ' + item.fragment).trim();
+      if (nextCrew) nextCrew.crewName = item.nextBaseName;
+    } else if (choice === 'next') {
+      if (prevCrew) prevCrew.crewName = item.prevBaseName;
+      if (nextCrew) nextCrew.crewName = (item.fragment + ' ' + item.nextBaseName).trim();
+    }
+    if (choice !== 'skip') {
+      if (prevCrew) prevCrew.ambiguousName = false;
+      if (nextCrew) nextCrew.ambiguousName = false;
+    }
+    document.getElementById('nameConfirmModalOverlay').style.display = 'none';
+    buildReport();
+    showNextAmbiguousNameModal();
+  }
+
+  document.getElementById('nameConfirmOptPrev').addEventListener('click', function(){ resolveAmbiguousName('prev'); });
+  document.getElementById('nameConfirmOptNext').addEventListener('click', function(){ resolveAmbiguousName('next'); });
+  document.getElementById('nameConfirmSkipBtn').addEventListener('click', function(){ resolveAmbiguousName('skip'); });
 
   function renderDebugTable(rows, cols){
     if(!rows.length) return '<p style="color:#888;font-size:11px;">none found</p>';
@@ -2399,7 +2497,7 @@
   // ============================================================
   function parseGendecXLSX(data) {
     try {
-      const workbook = XLSX.read(data, { type: 'array' });
+      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       let rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
 
@@ -2499,46 +2597,30 @@
         const passport = passportCol !== -1 ? String(row[passportCol] || '').trim() : '';
         const nationality = natCol !== -1 ? String(row[natCol] || '').trim() : '';
 
-let expiryRaw = expiryCol !== -1 ? row[expiryCol] : '';
-let expiryFormatted = '';
-if (expiryRaw !== undefined && expiryRaw !== null && expiryRaw !== '') {
-  // If it's already a Date object (unlikely with our new options)
-  if (expiryRaw instanceof Date) {
-    // Use local methods (or UTC – doesn't matter now because we'll rarely hit this)
-    const day = String(expiryRaw.getDate()).padStart(2, '0');
-    expiryFormatted = `${day} ${months[expiryRaw.getMonth()]} ${expiryRaw.getFullYear()}`;
-  }
-  // If it's a string, extract the YYYY-MM-DD part directly
-  else if (typeof expiryRaw === 'string') {
-    const match = expiryRaw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (match) {
-      const year = parseInt(match[1], 10);
-      const month = parseInt(match[2], 10) - 1;
-      const day = parseInt(match[3], 10);
-      expiryFormatted = `${String(day).padStart(2, '0')} ${months[month]} ${year}`;
-    } else {
-      expiryFormatted = expiryRaw.trim();
-    }
-  }
-  // If it's a number, treat it as an Excel serial number (1900 date system)
-  else if (typeof expiryRaw === 'number' && expiryRaw > 30000) {
-    // Excel serial date: days since 1900-01-01 (with the 1900 leap year bug)
-    const epoch = new Date(1900, 0, 1); // Jan 1, 1900
-    // Excel serial 1 = Jan 1, 1900; but Excel incorrectly treats 1900 as leap year
-    // For dates after Feb 28, 1900, we need to subtract 1 day to correct the bug.
-    const serialDate = expiryRaw - 1; // adjust for the bug
-    const date = new Date(epoch.getTime() + serialDate * 86400000);
-    // Now use UTC methods to avoid local timezone interference
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    const month = date.getUTCMonth();
-    const year = date.getUTCFullYear();
-    expiryFormatted = `${day} ${months[month]} ${year}`;
-  }
-  // Fallback
-  else {
-    expiryFormatted = String(expiryRaw).trim();
-  }
-}
+        let expiryRaw = expiryCol !== -1 ? row[expiryCol] : '';
+        let expiryFormatted = '';
+        if (expiryRaw !== undefined && expiryRaw !== null && expiryRaw !== '') {
+          if (expiryRaw instanceof Date) {
+            // SheetJS's cellDates:true builds these Date objects using UTC
+            // components internally (Date.UTC(...)), so reading them back
+            // with local getters (.getDate()/.getMonth()/.getFullYear())
+            // can shift the displayed day by one depending on the
+            // browser's timezone offset. Use the matching UTC getters to
+            // read the same calendar date back out regardless of timezone.
+            if (!isNaN(expiryRaw)) {
+              const day = String(expiryRaw.getUTCDate()).padStart(2, '0');
+              expiryFormatted = `${day} ${months[expiryRaw.getUTCMonth()]} ${expiryRaw.getUTCFullYear()}`;
+            }
+          } else {
+            let d = new Date(expiryRaw);
+            if (!isNaN(d)) {
+              const day = String(d.getDate()).padStart(2, '0');
+              expiryFormatted = `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
+            } else {
+              expiryFormatted = String(expiryRaw).trim();
+            }
+          }
+        }
 
         if (!staffNo && !name && !passport && !expiryFormatted && !nationality) continue;
 
@@ -2947,24 +3029,7 @@ if (expiryRaw !== undefined && expiryRaw !== null && expiryRaw !== '') {
       picPassportSlots: null,
       picExpirySlots: null,
       picNationalitySlots: null,
-    },
-    csx_baggage: {
-  id: 'csx_baggage',
-  label: 'CSX Baggage',
-  destination: 'CSX',
-  bgPath: 'templates/CSX_baggage.png',
-  bgImageData: null,
-  groupPilotsSeparately: true,
-  nameSlots: generateSlots(55, 320, 8, 44, 210, 44, 14),
-  rankSlots: generateSlots(265, 320, 8, 44, 220, 44, 14),
-  globalNumbering: false,
-  passportSlots: null,
-  expirySlots: null,
-  nationalitySlots: null,
-  picPassportSlots: null,
-  picExpirySlots: null,
-  picNationalitySlots: null,
-}
+    }
   };
 
   const templateOffsets = {};
