@@ -379,7 +379,7 @@
 
   <header class="noprint">
     <div class="logo-area"><div class="logo">CTR<span>.</span></div><div class="byline-badge">✈️ by 2100551</div></div>
-    <div class="badge-group"><div class="badge">📄 PDF Parser</div><div class="badge">📊 Gendec XLSX</div><div class="badge">🔒 Offline</div><div class="badge accent">v4.4 · name confirm modal + date fix</div></div>
+    <div class="badge-group"><div class="badge">📄 PDF Parser</div><div class="badge">📊 Gendec XLSX</div><div class="badge">🔒 Offline</div><div class="badge accent">v4.3 · crew removal + name flags + passport expiry fix</div></div>
   </header>
 
   <div class="help-section noprint">
@@ -390,8 +390,8 @@
     <div id="helpContent" class="help-content">
       <p><strong>Quick Guide</strong></p>
       <ul style="margin-left:20px; font-family:'DM Mono',monospace; font-size:13px; color:var(--text-muted);">
-        <li>1. <strong>Upload PDF</strong> (CrewTripReport) → parse crew data. The main file needed, check the Downloads folder in PC for yours. sort by date and the latest one should be yours.</li>
-        <li>2. <strong>Upload Gendec .xlsx</strong> → auto‑parsed and merged. only needed if you are generating destination forms to IND. Choose output format excel xlsx and run, when you click on print button (don't need to print, just want to trigger the download), the file should be in Downloads folder in PC. Sort by date, the latest one should be yours.</li>
+        <li>1. <strong>Upload PDF</strong> (CrewTripReport) → parse crew data.</li>
+        <li>2. <strong>Upload Gendec .xlsx</strong> → auto‑parsed and merged.</li>
         <li>3. Select destination → click <strong>"Generate Forms"</strong> → filter modal appears.</li>
         <li>4. Choose which crew members appear in each template, then click Generate.</li>
         <li>5. Fine‑tune positions with the compact controls, print or download.</li>
@@ -1016,18 +1016,6 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="nameConfirmModalOverlay">
-  <div class="modal-box">
-    <div class="modal-title">✏️ Confirm crew name</div>
-    <div class="modal-sub">The parser found "<span id="nameConfirmFragment"></span>" between two names and can't tell which one it belongs to. Pick the correct one:</div>
-    <div class="pic-grid" style="margin-bottom:10px;">
-      <button class="pic-btn" id="nameConfirmOptPrev"></button>
-      <button class="pic-btn" id="nameConfirmOptNext"></button>
-    </div>
-    <button class="secondary-btn" id="nameConfirmSkipBtn">Decide later (keep warning badge)</button>
-  </div>
-</div>
-
 <div class="modal-overlay" id="picModalOverlay">
   <div class="modal-box">
     <div class="modal-title">Select Pilot In Command (PIC)</div>
@@ -1271,9 +1259,8 @@
       if (row && row.crewId) anchors.push({ idx, row, leading: [], trailing: [], ambiguous: false });
       else orphanIdx.push(idx);
     });
-    if (!anchors.length) return { rows: [], ambiguousPairs: [] };
+    if (!anchors.length) return [];
 
-    const ambiguousPairs = [];
     for (let k = 0; k <= anchors.length; k++) {
       const gapStart = k === 0 ? -Infinity : anchors[k-1].idx;
       const gapEnd = k === anchors.length ? Infinity : anchors[k].idx;
@@ -1295,13 +1282,11 @@
           } else {
             // Neither neighbor's own line was empty, so neither gave a clear
             // signal it still needs this fragment — this is a guess, not a
-            // determination. Default it onto the next row (so parsing still
-            // completes without user input), but record the pair so the UI
-            // can ask which side it really belongs to.
+            // determination. Flag both rows so it's visible on screen rather
+            // than silently attaching the fragment to the wrong name.
             next.leading.push(...gapOrphans);
             prev.ambiguous = true;
             next.ambiguous = true;
-            ambiguousPairs.push({ prevCrewId: prev.row.crewId, nextCrewId: next.row.crewId, fragmentIdx: gapOrphans[0] });
           }
         } else {
           const half = Math.floor(gapOrphans.length / 2);
@@ -1311,35 +1296,12 @@
       }
     }
 
-    const rows = anchors.map(a => {
+    return anchors.map(a => {
       const leadingText = a.leading.map(idx => rawLines[idx].trim()).join(' ');
       const trailingText = a.trailing.map(idx => rawLines[idx].trim()).join(' ');
       const name = [leadingText, a.row.crewName, trailingText].filter(Boolean).join(' ');
       return { crewId: a.row.crewId, crewName: name, opRank: a.row.opRank, ambiguousName: a.ambiguous };
     });
-
-    // For each ambiguous pair, compute what each side's name would be
-    // WITHOUT the disputed fragment, so the confirmation UI can show both
-    // "fragment belongs here" options accurately, including any other
-    // legitimate wrap fragments that row already has.
-    ambiguousPairs.forEach(p => {
-      const prevAnchor = anchors.find(a => a.row.crewId === p.prevCrewId);
-      const nextAnchor = anchors.find(a => a.row.crewId === p.nextCrewId);
-      const fragment = rawLines[p.fragmentIdx].trim();
-      const prevTrailingWithout = prevAnchor.trailing.filter(idx => idx !== p.fragmentIdx);
-      const prevLeadingText = prevAnchor.leading.map(idx => rawLines[idx].trim()).join(' ');
-      const prevTrailingText = prevTrailingWithout.map(idx => rawLines[idx].trim()).join(' ');
-      const prevBaseName = [prevLeadingText, prevAnchor.row.crewName, prevTrailingText].filter(Boolean).join(' ');
-      const nextLeadingWithout = nextAnchor.leading.filter(idx => idx !== p.fragmentIdx);
-      const nextLeadingText = nextLeadingWithout.map(idx => rawLines[idx].trim()).join(' ');
-      const nextTrailingText = nextAnchor.trailing.map(idx => rawLines[idx].trim()).join(' ');
-      const nextBaseName = [nextLeadingText, nextAnchor.row.crewName, nextTrailingText].filter(Boolean).join(' ');
-      p.fragment = fragment;
-      p.prevBaseName = prevBaseName;
-      p.nextBaseName = nextBaseName;
-    });
-
-    return { rows, ambiguousPairs };
   }
 
   function parsePairingSection(lines, startIdx, endIdx){
@@ -1363,8 +1325,7 @@
         orphanIdx.push(idx);
       }
     });
-    if (!anchors.length) return { rows: [], ambiguousPairs: [] };
-    const ambiguousPairs = [];
+    if (!anchors.length) return [];
     for (let k = 0; k <= anchors.length; k++) {
       const gapStart = k === 0 ? -Infinity : anchors[k-1].idx;
       const gapEnd = k === anchors.length ? Infinity : anchors[k].idx;
@@ -1387,7 +1348,6 @@
             next.leading.push(...gapOrphans);
             prev.ambiguous = true;
             next.ambiguous = true;
-            ambiguousPairs.push({ prevCrewId: prev.row.crewId, nextCrewId: next.row.crewId, fragmentIdx: gapOrphans[0] });
           }
         } else {
           const half = Math.floor(gapOrphans.length / 2);
@@ -1396,29 +1356,12 @@
         }
       }
     }
-    const rows = anchors.map(a => {
+    return anchors.map(a => {
       const leadingText = a.leading.map(idx => rawLines[idx].trim()).join(' ');
       const trailingText = a.trailing.map(idx => rawLines[idx].trim()).join(' ');
       const name = [leadingText, a.row.crewName, trailingText].filter(Boolean).join(' ');
       return { crewId: a.row.crewId, crewName: name, opRank: a.row.opRank, ambiguousName: a.ambiguous };
     });
-    ambiguousPairs.forEach(p => {
-      const prevAnchor = anchors.find(a => a.row.crewId === p.prevCrewId);
-      const nextAnchor = anchors.find(a => a.row.crewId === p.nextCrewId);
-      const fragment = rawLines[p.fragmentIdx].trim();
-      const prevTrailingWithout = prevAnchor.trailing.filter(idx => idx !== p.fragmentIdx);
-      const prevLeadingText = prevAnchor.leading.map(idx => rawLines[idx].trim()).join(' ');
-      const prevTrailingText = prevTrailingWithout.map(idx => rawLines[idx].trim()).join(' ');
-      const prevBaseName = [prevLeadingText, prevAnchor.row.crewName, prevTrailingText].filter(Boolean).join(' ');
-      const nextLeadingWithout = nextAnchor.leading.filter(idx => idx !== p.fragmentIdx);
-      const nextLeadingText = nextLeadingWithout.map(idx => rawLines[idx].trim()).join(' ');
-      const nextTrailingText = nextAnchor.trailing.map(idx => rawLines[idx].trim()).join(' ');
-      const nextBaseName = [nextLeadingText, nextAnchor.row.crewName, nextTrailingText].filter(Boolean).join(' ');
-      p.fragment = fragment;
-      p.prevBaseName = prevBaseName;
-      p.nextBaseName = nextBaseName;
-    });
-    return { rows, ambiguousPairs };
   }
 
   function parseCrewTripReport(raw){
@@ -1432,11 +1375,6 @@
     const { itin, repTimeByDate } = parseItinerarySection(lines, 0, itinEnd);
 
     const crewMap = {};
-    const ambiguousPairs = [];
-    const mergeResult = (result) => {
-      result.rows.forEach(r => { if (!crewMap[r.crewId]) crewMap[r.crewId] = r; });
-      ambiguousPairs.push(...result.ambiguousPairs);
-    };
     if (inboundIdx !== -1) {
       const crewSectionEnd = pairingIdx !== -1 ? pairingIdx : (reportGenIdx !== -1 ? reportGenIdx : lines.length);
       const outboundMarkerIdx = lines.findIndex((l, idx) => idx > inboundIdx && l.trim() === 'Outbound');
@@ -1448,8 +1386,8 @@
         // already just that one table's own rows in order.
         const inboundLines = lines.slice(inboundIdx + 1, outboundMarkerIdx);
         const outboundLines = lines.slice(outboundMarkerIdx + 1, crewSectionEnd);
-        mergeResult(distributeCrewNames(inboundLines));
-        mergeResult(distributeCrewNames(outboundLines));
+        distributeCrewNames(inboundLines).forEach(r => { if (!crewMap[r.crewId]) crewMap[r.crewId] = r; });
+        distributeCrewNames(outboundLines).forEach(r => { if (!crewMap[r.crewId]) crewMap[r.crewId] = r; });
       } else {
         // Fallback for text that wasn't produced by our own reconstruction
         // (e.g. manually pasted from a PDF viewer) where Inbound/Outbound
@@ -1464,13 +1402,15 @@
           leftLines.push(full.slice(0, effectiveSplit));
           rightLines.push(full.slice(effectiveSplit));
         }
-        mergeResult(distributeCrewNames(leftLines));
-        mergeResult(distributeCrewNames(rightLines));
+        distributeCrewNames(leftLines).forEach(r => { if (!crewMap[r.crewId]) crewMap[r.crewId] = r; });
+        distributeCrewNames(rightLines).forEach(r => { if (!crewMap[r.crewId]) crewMap[r.crewId] = r; });
       }
     }
     if (pairingIdx !== -1) {
       const pairingEnd = reportGenIdx !== -1 ? reportGenIdx : lines.length;
-      mergeResult(parsePairingSection(lines, pairingIdx + 1, pairingEnd));
+      parsePairingSection(lines, pairingIdx + 1, pairingEnd).forEach(r => {
+        if (!crewMap[r.crewId]) crewMap[r.crewId] = r;
+      });
     }
 
     const ownerMatch = raw.match(/([A-Z][A-Z .]+?)\s*\|\s*(\d{6,8})\s*\|\s*([A-Z]+)\s*\|\s*([A-Z]{3})\s*\|\s*(CAPT|FO|SO|OBS|IFS|LS|FSS|FS|SS|CS|AS)\b/);
@@ -1493,7 +1433,6 @@
       source: 'pdf',
       dutyStart, dutyDate,
       repTimeByDate,
-      ambiguousPairs,
       pdfData: { date: dutyDate, acReg: itin.length ? itin[0].acReg : '', repTime }
     };
   }
@@ -2219,7 +2158,6 @@
     state.briefingByDay = { ALL: '' };
     state.removedByDay = { ALL: {} };
     state.picChoice = null;
-    state.pendingAmbiguousNames = (parsed.ambiguousPairs || []).slice();
     currentModalCrewId = null;
     currentModalReportKey = 'ALL';
     if (gendecData) {
@@ -2232,44 +2170,7 @@
       '<p style="font-size:11px;color:#888;">Itinerary</p>' + renderDebugTable(parsed.itin, ['flightId','date','from','dep','to','arr','ac','acReg','flightTime']) +
       '<p style="font-size:11px;color:#888;">Crew</p>' + renderDebugTable(parsed.crew, ['opRank','crewId','crewName']);
     pdfDbgWrap.style.display = '';
-    showNextAmbiguousNameModal();
   }
-
-  function showNextAmbiguousNameModal(){
-    const pending = state && state.pendingAmbiguousNames;
-    if (!pending || !pending.length) return;
-    const item = pending[0];
-    document.getElementById('nameConfirmFragment').textContent = item.fragment;
-    document.getElementById('nameConfirmOptPrev').textContent = (item.prevBaseName + ' ' + item.fragment).trim();
-    document.getElementById('nameConfirmOptNext').textContent = (item.fragment + ' ' + item.nextBaseName).trim();
-    document.getElementById('nameConfirmModalOverlay').style.display = 'flex';
-  }
-
-  function resolveAmbiguousName(choice){
-    const pending = state.pendingAmbiguousNames;
-    if (!pending || !pending.length) return;
-    const item = pending.shift();
-    const prevCrew = state.crew.find(c => c.crewId === item.prevCrewId);
-    const nextCrew = state.crew.find(c => c.crewId === item.nextCrewId);
-    if (choice === 'prev') {
-      if (prevCrew) prevCrew.crewName = (item.prevBaseName + ' ' + item.fragment).trim();
-      if (nextCrew) nextCrew.crewName = item.nextBaseName;
-    } else if (choice === 'next') {
-      if (prevCrew) prevCrew.crewName = item.prevBaseName;
-      if (nextCrew) nextCrew.crewName = (item.fragment + ' ' + item.nextBaseName).trim();
-    }
-    if (choice !== 'skip') {
-      if (prevCrew) prevCrew.ambiguousName = false;
-      if (nextCrew) nextCrew.ambiguousName = false;
-    }
-    document.getElementById('nameConfirmModalOverlay').style.display = 'none';
-    buildReport();
-    showNextAmbiguousNameModal();
-  }
-
-  document.getElementById('nameConfirmOptPrev').addEventListener('click', function(){ resolveAmbiguousName('prev'); });
-  document.getElementById('nameConfirmOptNext').addEventListener('click', function(){ resolveAmbiguousName('next'); });
-  document.getElementById('nameConfirmSkipBtn').addEventListener('click', function(){ resolveAmbiguousName('skip'); });
 
   function renderDebugTable(rows, cols){
     if(!rows.length) return '<p style="color:#888;font-size:11px;">none found</p>';
