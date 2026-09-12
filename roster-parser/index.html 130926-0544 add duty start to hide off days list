@@ -690,9 +690,7 @@ const DEFAULT_LEGEND = {
   "DO": "Day Off",
   "DO1": "Day Off (Type 1)",
   "DO2": "Day Off (Type 2)",
-  "AL": "Annual Leave",
-  "EL": "Emergency Leave",
-  "MCH": "Medical Chit (Sick Leave)",
+  "EL": "Emergency / Annual Leave",
   "LO": "Layover (down-route rest)",
   "S3WBA": "Cabin Crew Standby",
   "S4WBA": "Cabin Crew Standby",
@@ -721,14 +719,13 @@ function legendDescFor(code){
   if(/RCNT|RECUR|SM|TRNG|TRAIN/i.test(code)) return "Training / Recurrent";
   return "";
 }
-function isOffCode(code){ return /^(D|DO\d*|AL|EL|MCH)$/.test((code||'').trim()); }
+function isOffCode(code){ return /^(D|DO\d*|EL)$/.test((code||'').trim()); }
 
 /* =====================================================================
    COLUMN VISIBILITY PREFERENCES (global column hide + off-day field hide)
 ===================================================================== */
 const ALL_COLUMNS = ['Date','Day','Duty Start','Item','Overrd Rank','Dep/Start','Arr/End','Duty End','Work Type','Actual Block Hours','Duty Hours','DutyCode','Ac Type'];
 const OFF_HIDE_FIELDS = [
-  {key:'dutyStart', label:'Duty Start'},
   {key:'dep', label:'Dep/Start'},
   {key:'arr', label:'Arr/End'},
   {key:'dutyEnd', label:'Duty End'},
@@ -739,9 +736,9 @@ function loadColPrefs(){
     const p = JSON.parse(localStorage.getItem('rosterParserColPrefs')||'{}');
     return {
       hidden: Array.isArray(p.hidden) ? p.hidden : [],
-      offHide: Object.assign({dutyStart:true, dep:true, arr:true, dutyEnd:true, dutyHrs:true}, p.offHide||{})
+      offHide: Object.assign({dep:false, arr:false, dutyEnd:false, dutyHrs:false}, p.offHide||{})
     };
-  }catch(e){ return {hidden:[], offHide:{dutyStart:true, dep:true, arr:true, dutyEnd:true, dutyHrs:true}}; }
+  }catch(e){ return {hidden:[], offHide:{dep:false,arr:false,dutyEnd:false,dutyHrs:false}}; }
 }
 function saveColPrefs(){ localStorage.setItem('rosterParserColPrefs', JSON.stringify(COL_PREFS)); }
 let COL_PREFS = loadColPrefs();
@@ -1587,9 +1584,8 @@ function render(){
       if(isOff) tr.className='off'; else if(isLayover) tr.className='layover'; else if(ri>0) tr.className='leg2';
       let depCombined = [r.depStn, r.depTime].filter(Boolean).join(' ');
       let arrCombined = [r.arrStn, r.arrTime].filter(Boolean).join(' ');
-      let dutyStartVal = r.dutyStart, dutyEndVal = r.dutyEnd, dutyHrsVal = r.dutyHrs;
+      let dutyEndVal = r.dutyEnd, dutyHrsVal = r.dutyHrs;
       if(isOff){
-        if(COL_PREFS.offHide.dutyStart) dutyStartVal = '';
         if(COL_PREFS.offHide.dep) depCombined = '';
         if(COL_PREFS.offHide.arr) arrCombined = '';
         if(COL_PREFS.offHide.dutyEnd) dutyEndVal = '';
@@ -1598,7 +1594,7 @@ function render(){
       const cells = [
         ri===0 ? fmtDate(day.date) : '',
         ri===0 ? DOW[day.date.getDay()].slice(0,3) : '',
-        dutyStartVal, r.item, r.rank, depCombined, arrCombined, dutyEndVal, r.work, r.block, dutyHrsVal, r.dutyCode, r.ac
+        r.dutyStart, r.item, r.rank, depCombined, arrCombined, dutyEndVal, r.work, r.block, dutyHrsVal, r.dutyCode, r.ac
       ];
       cells.forEach((c,ci)=>{
         const td = document.createElement('td');
@@ -2988,8 +2984,8 @@ const CUSTOM_VARS = [
   {key:'--panel',    label:'Panel background'},
   {key:'--panel2',   label:'Header / panel 2'},
   {key:'--line',     label:'Borders / lines'},
-  {key:'--text',     label:'Main text, First Leg'},
-  {key:'--dim',      label:'Dim text, Off days'},
+  {key:'--text',     label:'Main text, First leg'},
+  {key:'--dim',      label:'Dim text (Off days)'},
   {key:'--accent',   label:'Accent (dates, highlights)'},
   {key:'--warn',     label:'Layover / warning text'},
   {key:'--tablebg',  label:'Table background'},
