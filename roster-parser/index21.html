@@ -430,7 +430,7 @@
     <button onclick="openColumnsModal()">Columns</button>
     <button onclick="exportPNG()">Image</button>
     <button class="primary" onclick="exportPDF()">Print / PDF</button>
-    <span style="align-self:center;color:var(--warn);font-size:10.5px">↳ in the print dialog, set orientation to Portrait</span>
+    <span style="align-self:center;color:var(--warn);font-size:10.5px">↳ in the print dialog, set orientation to Portrait, check for fit whenever you edit columns before using image button to download.</span>
   </div>
   <div id="resultsWrap">
     <section class="card" id="outCard" style="display:none">
@@ -471,6 +471,7 @@
         <option value="UTC">UTC</option>
       </select>
       <button class="primary" onclick="doSaveRoster()">Save roster</button>
+      <span style="align-self:center;color:var(--warn);font-size:10.5px">↳ click cancel if you dont want to back up immediately.</span>
     </div>
   </section>
 
@@ -2983,8 +2984,8 @@ const CUSTOM_VARS = [
   {key:'--panel',    label:'Panel background'},
   {key:'--panel2',   label:'Header / panel 2'},
   {key:'--line',     label:'Borders / lines'},
-  {key:'--text',     label:'Main text'},
-  {key:'--dim',      label:'Dim text'},
+  {key:'--text',     label:'Main text, First leg'},
+  {key:'--dim',      label:'Dim text (Off days)'},
   {key:'--accent',   label:'Accent (dates, highlights)'},
   {key:'--warn',     label:'Layover / warning text'},
   {key:'--tablebg',  label:'Table background'},
