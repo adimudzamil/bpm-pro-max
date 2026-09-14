@@ -1293,16 +1293,12 @@
           } else if (nextEmpty && !prevEmpty) {
             next.leading.push(...gapOrphans);
           } else {
-            // Neither neighbor's own line was empty, so neither gave a clear
-            // signal it still needs this fragment — this is a guess, not a
-            // determination. Default it onto the next row (so parsing still
-            // completes without user input), but record the pair so the UI
-            // can ask which side it really belongs to.
-            next.leading.push(...gapOrphans);
-            prev.ambiguous = true;
-            next.ambiguous = true;
-            ambiguousPairs.push({ prevCrewId: prev.row.crewId, nextCrewId: next.row.crewId, fragmentIdx: gapOrphans[0] });
-          }
+  // CTR wrapped-name fix:
+  // If a single orphan name fragment appears between two crew rows,
+  // keep it with the previous row. In CrewTripReport PDFs, long names
+  // usually wrap downward, so the fragment belongs to the crew above.
+  prev.trailing.push(...gapOrphans);
+}
         } else {
           const half = Math.floor(gapOrphans.length / 2);
           prev.trailing.push(...gapOrphans.slice(0, half));
@@ -1384,11 +1380,10 @@
           } else if (nextEmpty && !prevEmpty) {
             next.leading.push(...gapOrphans);
           } else {
-            next.leading.push(...gapOrphans);
-            prev.ambiguous = true;
-            next.ambiguous = true;
-            ambiguousPairs.push({ prevCrewId: prev.row.crewId, nextCrewId: next.row.crewId, fragmentIdx: gapOrphans[0] });
-          }
+  // CTR wrapped-name fix:
+  // Keep orphan fragments with the previous crew row.
+  prev.trailing.push(...gapOrphans);
+}
         } else {
           const half = Math.floor(gapOrphans.length / 2);
           prev.trailing.push(...gapOrphans.slice(0, half));
