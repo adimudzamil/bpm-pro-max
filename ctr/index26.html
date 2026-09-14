@@ -1431,7 +1431,7 @@
     const itinEnd = inboundIdx === -1 ? (reportGenIdx !== -1 ? reportGenIdx : lines.length) : inboundIdx;
     const { itin, repTimeByDate } = parseItinerarySection(lines, 0, itinEnd);
 
-    const crewMap = {};
+const crewMap = {};
     let ambiguousPairs = [];
     const masterNameDict = {}; // ID -> Full Name from Outbound
 
@@ -1518,41 +1518,6 @@
     });
     
     ambiguousPairs = resolvedAmbiguousPairs;
-    if (inboundIdx !== -1) {
-      const crewSectionEnd = pairingIdx !== -1 ? pairingIdx : (reportGenIdx !== -1 ? reportGenIdx : lines.length);
-      const outboundMarkerIdx = lines.findIndex((l, idx) => idx > inboundIdx && l.trim() === 'Outbound');
-
-      if (lines[inboundIdx].trim() === 'Inbound' && outboundMarkerIdx !== -1) {
-        // Clean format: the PDF reader already split the two side-by-side
-        // Inbound/Outbound tables into separate blocks (see reconstruction
-        // step) — no character-position slicing needed, each block is
-        // already just that one table's own rows in order.
-        const inboundLines = lines.slice(inboundIdx + 1, outboundMarkerIdx);
-        const outboundLines = lines.slice(outboundMarkerIdx + 1, crewSectionEnd);
-        mergeResult(distributeCrewNames(inboundLines));
-        mergeResult(distributeCrewNames(outboundLines));
-      } else {
-        // Fallback for text that wasn't produced by our own reconstruction
-        // (e.g. manually pasted from a PDF viewer) where Inbound/Outbound
-        // may still appear combined on one line per row — split each line
-        // at a fixed character position derived from where "Outbound" sits
-        // in the header line.
-        const splitPos = lines[inboundIdx].indexOf('Outbound');
-        const effectiveSplit = splitPos > 0 ? splitPos : Math.floor(lines[inboundIdx].length * 0.55);
-        const leftLines = [], rightLines = [];
-        for (let i = inboundIdx; i < crewSectionEnd; i++) {
-          const full = lines[i] || '';
-          leftLines.push(full.slice(0, effectiveSplit));
-          rightLines.push(full.slice(effectiveSplit));
-        }
-        mergeResult(distributeCrewNames(leftLines));
-        mergeResult(distributeCrewNames(rightLines));
-      }
-    }
-    if (pairingIdx !== -1) {
-      const pairingEnd = reportGenIdx !== -1 ? reportGenIdx : lines.length;
-      mergeResult(parsePairingSection(lines, pairingIdx + 1, pairingEnd));
-    }
 
     const ownerMatch = raw.match(/([A-Z][A-Z .]+?)\s*\|\s*(\d{6,8})\s*\|\s*([A-Z]+)\s*\|\s*([A-Z]{3})\s*\|\s*(CAPT|FO|SO|OBS|IFS|LS|FSS|FS|SS|CS|AS)\b/);
     if (ownerMatch && !crewMap[ownerMatch[2]]) {
