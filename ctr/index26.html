@@ -1432,43 +1432,92 @@
     const { itin, repTimeByDate } = parseItinerarySection(lines, 0, itinEnd);
 
     const crewMap = {};
-const ambiguousPairs = [];
-const mergeResult = (result) => {
-  // 1. Handle duplicate IDs within the same section (e.g., split names in Inbound)
-  const sectionMap = {};
-  result.rows.forEach(r => {
-    if (!sectionMap[r.crewId]) {
-      sectionMap[r.crewId] = { ...r };
-    } else {
-      const existingName = sectionMap[r.crewId].crewName || '';
-      const newName = r.crewName || '';
+    let ambiguousPairs = [];
+    const masterNameDict = {}; // ID -> Full Name from Outbound
+
+    const mergeResult = (result, isOutbound = false) => {
+      result.rows.forEach(r => {
+        // 1. Build the master dictionary from the Outbound table
+        if (isOutbound && r.crewId && r.crewName) {
+          masterNameDict[r.crewId] = r.crewName;
+        }
+        
+        // 2. Standard merge into crewMap
+        if (!crewMap[r.crewId]) {
+          crewMap[r.crewId] = r;
+        } else {
+          if (r.crewName && r.crewName.length > (crewMap[r.crewId].crewName || '').length) {
+            crewMap[r.crewId].crewName = r.crewName;
+          }
+        }
+      });
       
-      // If the names are different and neither is a substring of the other, concatenate them
-      if (existingName && newName && !existingName.includes(newName) && !newName.includes(existingName)) {
-        sectionMap[r.crewId].crewName = (existingName + ' ' + newName).trim();
-      } else if (newName.length > existingName.length) {
-        sectionMap[r.crewId].crewName = newName;
+      // Only collect ambiguous pairs from Inbound/Pairing (Outbound doesn't wrap)
+      if (!isOutbound) {
+        ambiguousPairs.push(...result.ambiguousPairs);
       }
-      // Merging split rows resolves the ambiguity for this ID
-      sectionMap[r.crewId].ambiguousName = false;
-    }
-  });
-  
-  // 2. Merge the resolved section data into the global crewMap
-  Object.values(sectionMap).forEach(r => {
-    if (!crewMap[r.crewId]) {
-      crewMap[r.crewId] = r;
-    } else {
-      // Across different sections (Inbound vs Outbound), keep the longest name
-      if (r.crewName && r.crewName.length > (crewMap[r.crewId].crewName || '').length) {
-        crewMap[r.crewId].crewName = r.crewName;
-        crewMap[r.crewId].ambiguousName = r.ambiguousName;
+    };
+
+    if (inboundIdx !== -1) {
+      const crewSectionEnd = pairingIdx !== -1 ? pairingIdx : (reportGenIdx !== -1 ? reportGenIdx : lines.length);
+      const outboundMarkerIdx = lines.findIndex((l, idx) => idx > inboundIdx && l.trim() === 'Outbound');
+
+      if (lines[inboundIdx].trim() === 'Inbound' && outboundMarkerIdx !== -1) {
+        const inboundLines = lines.slice(inboundIdx + 1, outboundMarkerIdx);
+        const outboundLines = lines.slice(outboundMarkerIdx + 1, crewSectionEnd);
+        
+        // Parse OUTBOUND first to build the dictionary
+        mergeResult(distributeCrewNames(outboundLines), true);
+        // Then parse INBOUND
+        mergeResult(distributeCrewNames(inboundLines), false);
+      } else {
+        const splitPos = lines[inboundIdx].indexOf('Outbound');
+        const effectiveSplit = splitPos > 0 ? splitPos : Math.floor(lines[inboundIdx].length * 0.55);
+        const leftLines = [], rightLines = [];
+        for (let i = inboundIdx; i < crewSectionEnd; i++) {
+          const full = lines[i] || '';
+          leftLines.push(full.slice(0, effectiveSplit));
+          rightLines.push(full.slice(effectiveSplit));
+        }
+        // Right is Outbound, Left is Inbound
+        mergeResult(distributeCrewNames(rightLines), true);
+        mergeResult(distributeCrewNames(leftLines), false);
       }
     }
-  });
-  
-  ambiguousPairs.push(...result.ambiguousPairs);
-};
+    
+    if (pairingIdx !== -1) {
+      const pairingEnd = reportGenIdx !== -1 ? reportGenIdx : lines.length;
+      mergeResult(parsePairingSection(lines, pairingIdx + 1, pairingEnd), false);
+    }
+
+    // ==========================================
+    // THE FIX: Apply Outbound Dictionary & Clear Modals
+    // ==========================================
+    const resolvedAmbiguousPairs = [];
+    
+    Object.keys(crewMap).forEach(id => {
+      // If we have a perfect name from the Outbound table, use it!
+      if (masterNameDict[id]) {
+        crewMap[id].crewName = masterNameDict[id];
+        crewMap[id].ambiguousName = false; // Clear the warning badge
+      }
+    });
+
+    // Filter out ambiguous pairs that were successfully resolved by the Outbound table
+    ambiguousPairs.forEach(pair => {
+      const prevResolved = masterNameDict[pair.prevCrewId];
+      const nextResolved = masterNameDict[pair.nextCrewId];
+      
+      // If BOTH crew members in the ambiguous pair have perfect names from Outbound,
+      // we don't need to ask the user to confirm anything.
+      if (prevResolved && nextResolved) {
+        // Skip adding to resolvedAmbiguousPairs (effectively deleting the modal prompt)
+      } else {
+        resolvedAmbiguousPairs.push(pair);
+      }
+    });
+    
+    ambiguousPairs = resolvedAmbiguousPairs;
     if (inboundIdx !== -1) {
       const crewSectionEnd = pairingIdx !== -1 ? pairingIdx : (reportGenIdx !== -1 ? reportGenIdx : lines.length);
       const outboundMarkerIdx = lines.findIndex((l, idx) => idx > inboundIdx && l.trim() === 'Outbound');
