@@ -1798,13 +1798,50 @@ function toggleFit(){
 /* =====================================================================
    NEW: Off‑screen image capture (does NOT touch the visible DOM)
 ===================================================================== */
+
+// NEW: Helper to copy dynamic form states (like dropdown selections) to the clone
+function syncFormElementStates(originalEl, clonedEl) {
+  const origInputs = originalEl.querySelectorAll('select, input, textarea');
+  const cloneInputs = clonedEl.querySelectorAll('select, input, textarea');
+  
+  for (let i = 0; i < origInputs.length; i++) {
+    const orig = origInputs[i];
+    const clone = cloneInputs[i];
+    if (!orig || !clone) continue;
+    
+    if (orig.tagName === 'SELECT') {
+      clone.value = orig.value;
+      // Ensure the selected attribute is explicitly set for html2canvas
+      Array.from(clone.options).forEach(opt => {
+        opt.selected = (opt.value === orig.value);
+      });
+    } else if (orig.tagName === 'INPUT') {
+      if (orig.type === 'checkbox' || orig.type === 'radio') {
+        clone.checked = orig.checked;
+        if (orig.checked) clone.setAttribute('checked', 'checked');
+        else clone.removeAttribute('checked');
+      } else {
+        clone.value = orig.value;
+        clone.setAttribute('value', orig.value);
+      }
+    } else if (orig.tagName === 'TEXTAREA') {
+      clone.value = orig.value;
+      clone.textContent = orig.value;
+    }
+  }
+}
+
 async function captureElementOffscreen(element, filename) {
   // Clone the element deeply (including all styles)
   const clone = element.cloneNode(true);
+  
+  // NEW: Sync the dynamic form values (fixes the dropdown showing the wrong grade)
+  syncFormElementStates(element, clone);
+  
   clone.style.transform = 'none';
   clone.style.width = 'auto';
   clone.style.display = 'block';
-
+  
   // Create an off‑screen container
   const container = document.createElement('div');
   container.style.cssText = `
@@ -1820,10 +1857,10 @@ async function captureElementOffscreen(element, filename) {
   `;
   container.appendChild(clone);
   document.body.appendChild(container);
-
+  
   // Let the layout settle
   await new Promise(resolve => setTimeout(resolve, 50));
-
+  
   // Capture the clone
   const canvas = await html2canvas(clone, {
     scale: 4,
@@ -1835,10 +1872,10 @@ async function captureElementOffscreen(element, filename) {
     windowWidth: clone.scrollWidth,
     windowHeight: clone.scrollHeight,
   });
-
+  
   // Clean up
   container.remove();
-
+  
   // Download the image
   return new Promise((resolve, reject) => {
     canvas.toBlob(blob => {
