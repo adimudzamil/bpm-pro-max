@@ -456,6 +456,8 @@
         <option value="BLR">BLR (Bangalore)</option>
         <option value="AMD">AMD (Ahmedabad)</option>
         <option value="ATQ">ATQ (Amritsar)</option>
+        <option value="CSX">CSX (Changsha)</option>
+        <option value="LHR">LHR (London)</option>
       </select>
       <button class="btn-primary" id="generateFormsBtn">⚡ Generate Forms</button>
     </div>
@@ -2452,7 +2454,41 @@
     amd_landing: { id:'amd_landing', label:'AMD Landing', destination:'AMD', bgPath:'templates/AMD_landing.png', bgImageData:null, groupPilotsSeparately:true, picTopPage:true, picSlots:{ nameSlots:generateSlots(220,265,1,0,180,30,14), rankSlots:generateSlots(140,265,1,0,80,30,14), crewIdSlots:null }, nameSlots:generateSlots(310,470,9,50,300,50,14), rankSlots:generateSlots(195,470,9,50,110,50,14), numberSlots:generateSlots(115,470,9,50,75,50,14), crewIdSlots:generateSlots(1150,470,9,50,105,50,14), globalNumbering:false, passportSlots:generateSlots(730,470,1,0,155,50,14), expirySlots:generateSlots(1025,470,9,50,120,50,14), nationalitySlots:generateSlots(610,470,9,50,120,50,14), picPassportSlots:generateSlots(890,265,1,0,130,30,14), picExpirySlots:generateSlots(430,295,1,0,160,25,14), picNationalitySlots:generateSlots(420,265,1,0,190,30,14) },
     amd_baggage: { id:'amd_baggage', label:'AMD Baggage', destination:'AMD', bgPath:'templates/AMD_baggage.png', bgImageData:null, groupPilotsSeparately:true, nameSlots:generateSlots(110,260,14,49,280,49,14), rankSlots:generateSlots(390,260,14,49,110,49,14), globalNumbering:false, passportSlots:null, expirySlots:null, nationalitySlots:null, picPassportSlots:null, picExpirySlots:null, picNationalitySlots:null },
     atq_landing: { id:'atq_landing', label:'ATQ Landing', destination:'ATQ', bgPath:'templates/ATQ_landing.png', bgImageData:null, groupPilotsSeparately:true, picTopPage:true, picSlots:{ nameSlots:generateSlots(220,265,1,0,180,30,14), rankSlots:generateSlots(140,265,1,0,80,30,14), crewIdSlots:null }, nameSlots:generateSlots(315,485,9,52,320,50,14), rankSlots:generateSlots(195,485,9,52,115,50,14), numberSlots:generateSlots(120,485,9,52,70,50,14), crewIdSlots:generateSlots(1190,485,9,52,115,50,14), globalNumbering:false, passportSlots:generateSlots(755,485,9,52,165,50,14), expirySlots:generateSlots(1065,485,9,52,120,50,14), nationalitySlots:generateSlots(630,485,9,52,120,50,14), picPassportSlots:generateSlots(925,270,1,0,135,30,14), picExpirySlots:generateSlots(450,300,1,0,160,25,14), picNationalitySlots:generateSlots(435,270,1,0,195,30,14) },
-    atq_baggage: { id:'atq_baggage', label:'ATQ Baggage', destination:'ATQ', bgPath:'templates/ATQ_baggage.png', bgImageData:null, groupPilotsSeparately:true, nameSlots:generateSlots(33,360,14,43,300,43,14), rankSlots:generateSlots(333,360,14,43,110,43,14), globalNumbering:false, passportSlots:null, expirySlots:null, nationalitySlots:null, picPassportSlots:null, picExpirySlots:null, picNationalitySlots:null }
+    atq_baggage: { id:'atq_baggage', label:'ATQ Baggage', destination:'ATQ', bgPath:'templates/ATQ_baggage.png', bgImageData:null, groupPilotsSeparately:true, nameSlots:generateSlots(33,360,14,43,300,43,14), rankSlots:generateSlots(333,360,14,43,110,43,14), globalNumbering:false, passportSlots:null, expirySlots:null, nationalitySlots:null, picPassportSlots:null, picExpirySlots:null, picNationalitySlots:null },
+                csx_baggage: {
+              id: 'csx_baggage',
+              label: 'CSX Baggage',
+              destination: 'CSX',
+              bgPath: 'templates/CSX_baggage.png',
+              bgImageData: null,
+              groupPilotsSeparately: true,
+              nameSlots: generateSlots(55, 320, 8, 44, 210, 44, 14),
+              rankSlots: generateSlots(265, 320, 8, 44, 220, 44, 14),
+              globalNumbering: false,
+              passportSlots: null,
+              expirySlots: null,
+              nationalitySlots: null,
+              picPassportSlots: null,
+              picExpirySlots: null,
+              picNationalitySlots: null,
+            },
+                lhr_baggage: {
+                  id: 'lhr_baggage',
+                  label: 'LHR Landing',
+                  destination: 'LHR',
+                  bgPath: 'templates/LHR_landing.png',
+                  bgImageData: null,
+                  groupPilotsSeparately: true,
+                  nameSlots: generateSlots(320, 290, 8, 62, 270, 58, 14),
+                  rankSlots: generateSlots(255, 290, 8, 63, 60, 58, 14),
+                  globalNumbering: false,
+                  passportSlots: null,
+                  expirySlots: null,
+                  nationalitySlots: null,
+                  picPassportSlots: null,
+                  picExpirySlots: null,
+                  picNationalitySlots: null,
+                }
   };
 
   const templateOffsets = {};
