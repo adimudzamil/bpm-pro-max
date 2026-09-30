@@ -78,8 +78,6 @@
   section.card h2{font-size:12.5px;margin:0;padding:10px 12px;border-bottom:1px solid var(--line);color:var(--dim);letter-spacing:.04em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
   section.card h2 small{color:var(--dim);text-transform:none;font-weight:400}
   section.card h2 .btns{display:flex;gap:6px;flex-wrap:wrap}
-  #crewNameLbl{transition:font-size .1s ease}
-  #crewNameLbl.hasName{color:var(--accent);font-weight:700}
 
   #resultsWrap{transform-origin:top left}
 
@@ -351,18 +349,6 @@
   .allowance-unresolved select{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:5px;padding:4px 6px;font-family:var(--mono);font-size:10.5px}
   .allowance-empty{padding:14px 12px;color:var(--dim);font-size:12px}
 
-  /* NEW: Clickable allowance row styles */
-  .allowance-clickable-row {
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-  .allowance-clickable-row:hover {
-    background: var(--panel2) !important;
-  }
-  .allowance-clickable-row:active {
-    background: var(--accent-dim) !important;
-  }
-
   @media print{
     body{background:#fff;color:#000}
     header, #drop, #status, #log, footer, .btnRow, section.card h2 .btns, #saveCard, #savedListCard, #overlapCard, #debugConsole, #debugToggleBtn, #allowanceCard, #allowanceToolbar{display:none !important}
@@ -448,7 +434,7 @@
   </div>
   <div id="resultsWrap">
     <section class="card" id="outCard" style="display:none">
-      <h2><span id="crewNameLbl">Daily Roster</span> <small id="rangeLbl"></small>
+      <h2>Daily Roster <small id="rangeLbl"></small>
       </h2>
       <div class="tableWrap">
         <table id="outTable">
@@ -576,11 +562,6 @@
     </div>
     <div style="font-size:11px;color:var(--dim);margin-bottom:8px">Uncheck to hide a column everywhere — table, CSV and image/PDF exports. Saved on this device.</div>
     <div id="colVisList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
-    <div style="font-size:11px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px;margin-bottom:8px">Header</div>
-    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text);margin-bottom:14px">
-      <input type="checkbox" id="showNameCheckbox" onchange="toggleShowName(this.checked)">
-      Show crew name (instead of "Daily Roster")
-    </label>
     <div style="font-size:11px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px;margin-bottom:8px">On OFF / Leave days, also hide:</div>
     <div id="offHideList" style="display:flex;flex-direction:column;gap:6px"></div>
   </div>
@@ -617,8 +598,6 @@ let RAW_PDF_PAGES = null;
 let LAST_PARSED_ROWS = null;
 let LAST_LEGS = [];
 let DETECTED_GRADE = null; // grade auto-detected from the roster's own header metadata, if any
-let DETECTED_NAME = null; // crew name auto-detected from the XLSX header metadata cell, if any
-let CURRENT_ROSTER_SAVED_NAME = null; // crew name from the "Save This Roster" name, once saved/viewed
 
 /* =====================================================================
    NEW: Store the people data used for the last overlap calculation
@@ -665,7 +644,7 @@ function toggleDebugConsole() {
   } else {
     consoleEl.style.display = 'block';
     btn.textContent = '✕';
-    debugLog('Debug console ready - click 🐛 to open', 'ok');
+    debugLog('Debug console opened', 'info');
   }
 }
 
@@ -760,10 +739,9 @@ function loadColPrefs(){
     const p = JSON.parse(localStorage.getItem('rosterParserColPrefs')||'{}');
     return {
       hidden: Array.isArray(p.hidden) ? p.hidden : [],
-      offHide: Object.assign({dutyStart:true, dep:true, arr:true, dutyEnd:true, dutyHrs:true}, p.offHide||{}),
-      showName: p.showName !== undefined ? !!p.showName : true
+      offHide: Object.assign({dutyStart:true, dep:true, arr:true, dutyEnd:true, dutyHrs:true}, p.offHide||{})
     };
-  }catch(e){ return {hidden:[], offHide:{dutyStart:true, dep:true, arr:true, dutyEnd:true, dutyHrs:true}, showName:true}; }
+  }catch(e){ return {hidden:[], offHide:{dutyStart:true, dep:true, arr:true, dutyEnd:true, dutyHrs:true}}; }
 }
 function saveColPrefs(){ localStorage.setItem('rosterParserColPrefs', JSON.stringify(COL_PREFS)); }
 let COL_PREFS = loadColPrefs();
@@ -798,8 +776,6 @@ function renderColumnsModal(){
       <input type="checkbox" ${COL_PREFS.offHide[f.key]?'checked':''} onchange="toggleOffHide('${f.key}', this.checked)">
       ${f.label}
     </label>`).join('');
-  const showNameCb = document.getElementById('showNameCheckbox');
-  if(showNameCb) showNameCb.checked = COL_PREFS.showName;
 }
 function toggleColHidden(idx, show){
   const pos = COL_PREFS.hidden.indexOf(idx);
@@ -812,37 +788,6 @@ function toggleOffHide(key, checked){
   COL_PREFS.offHide[key] = checked;
   saveColPrefs();
   if(DAYS.length) render();
-}
-function toggleShowName(checked){
-  COL_PREFS.showName = checked;
-  saveColPrefs();
-  updateCrewNameDisplay();
-}
-
-/* =====================================================================
-   CREW NAME HEADER DISPLAY
-   Priority: name auto-detected from the XLSX metadata cell > name from
-   the "Save This Roster" box (once saved, or when viewing a saved
-   roster) > fall back to the plain "Daily Roster" label. Never affects
-   table layout — this only changes text inside the card header.
-===================================================================== */
-function updateCrewNameDisplay(){
-  const el = document.getElementById('crewNameLbl');
-  if(!el) return;
-  const name = (DETECTED_NAME || CURRENT_ROSTER_SAVED_NAME || '').trim();
-  if(COL_PREFS.showName && name){
-    el.textContent = name;
-    el.classList.add('hasName');
-    let size = 12.5;
-    if(name.length > 40) size = 9;
-    else if(name.length > 30) size = 10;
-    else if(name.length > 20) size = 11;
-    el.style.fontSize = size + 'px';
-  } else {
-    el.textContent = 'Daily Roster';
-    el.classList.remove('hasName');
-    el.style.fontSize = '';
-  }
 }
 
 /* =====================================================================
@@ -882,7 +827,7 @@ document.addEventListener('keydown', function _j44(_e){
 
 async function handleFile(file){
   clearLog();
-  DAYS = []; RAW_WARNINGS = []; RAW_PDF_PAGES = null; LAST_PARSED_ROWS = null; LAST_LEGS = []; DETECTED_GRADE = null; DETECTED_NAME = null; CURRENT_ROSTER_SAVED_NAME = null;
+  DAYS = []; RAW_WARNINGS = []; RAW_PDF_PAGES = null; LAST_PARSED_ROWS = null; LAST_LEGS = []; DETECTED_GRADE = null;
   LAST_FILE_NAME = file.name;
   document.getElementById('status').style.display='block';
   document.getElementById('fileNameLbl').textContent = file.name;
@@ -1017,12 +962,11 @@ function parseXLSXRows(buf){
 
   // The roster header row (e.g. row 0) embeds crew metadata as a single
   // pipe-delimited cell: "NAME | STAFF_ID | FLEET | BASE | RANK". Scan the
-  // first few rows for it so we can auto-select the correct pay grade and
-  // show the crew's name in the Daily Roster header.
+  // first few rows for it so we can auto-select the correct pay grade.
   for(let i=0;i<Math.min(aoa.length,5) && !DETECTED_GRADE;i++){
     for(const cell of aoa[i]){
-      const meta = parseCrewMetadataCell(String(cell||''));
-      if(meta){ DETECTED_GRADE = meta.grade; DETECTED_NAME = meta.name; break; }
+      const rank = detectRankFromMetadataCell(String(cell||''));
+      if(rank){ DETECTED_GRADE = rankToGrade(rank); break; }
     }
   }
 
@@ -1693,7 +1637,6 @@ function render(){
   document.getElementById('outCard').style.display='block';
   document.getElementById('toolbarRow').style.display='flex';
   document.getElementById('saveCard').style.display='block';
-  updateCrewNameDisplay();
 
   document.getElementById('statsBody').innerHTML = `
     <div>Actual Block Hours<b>${sumHrs(blockHrsAll)}</b></div>
@@ -1798,50 +1741,13 @@ function toggleFit(){
 /* =====================================================================
    NEW: Off‑screen image capture (does NOT touch the visible DOM)
 ===================================================================== */
-
-// NEW: Helper to copy dynamic form states (like dropdown selections) to the clone
-function syncFormElementStates(originalEl, clonedEl) {
-  const origInputs = originalEl.querySelectorAll('select, input, textarea');
-  const cloneInputs = clonedEl.querySelectorAll('select, input, textarea');
-  
-  for (let i = 0; i < origInputs.length; i++) {
-    const orig = origInputs[i];
-    const clone = cloneInputs[i];
-    if (!orig || !clone) continue;
-    
-    if (orig.tagName === 'SELECT') {
-      clone.value = orig.value;
-      // Ensure the selected attribute is explicitly set for html2canvas
-      Array.from(clone.options).forEach(opt => {
-        opt.selected = (opt.value === orig.value);
-      });
-    } else if (orig.tagName === 'INPUT') {
-      if (orig.type === 'checkbox' || orig.type === 'radio') {
-        clone.checked = orig.checked;
-        if (orig.checked) clone.setAttribute('checked', 'checked');
-        else clone.removeAttribute('checked');
-      } else {
-        clone.value = orig.value;
-        clone.setAttribute('value', orig.value);
-      }
-    } else if (orig.tagName === 'TEXTAREA') {
-      clone.value = orig.value;
-      clone.textContent = orig.value;
-    }
-  }
-}
-
 async function captureElementOffscreen(element, filename) {
   // Clone the element deeply (including all styles)
   const clone = element.cloneNode(true);
-  
-  // NEW: Sync the dynamic form values (fixes the dropdown showing the wrong grade)
-  syncFormElementStates(element, clone);
-  
   clone.style.transform = 'none';
   clone.style.width = 'auto';
   clone.style.display = 'block';
-  
+
   // Create an off‑screen container
   const container = document.createElement('div');
   container.style.cssText = `
@@ -1857,10 +1763,10 @@ async function captureElementOffscreen(element, filename) {
   `;
   container.appendChild(clone);
   document.body.appendChild(container);
-  
+
   // Let the layout settle
   await new Promise(resolve => setTimeout(resolve, 50));
-  
+
   // Capture the clone
   const canvas = await html2canvas(clone, {
     scale: 4,
@@ -1872,10 +1778,10 @@ async function captureElementOffscreen(element, filename) {
     windowWidth: clone.scrollWidth,
     windowHeight: clone.scrollHeight,
   });
-  
+
   // Clean up
   container.remove();
-  
+
   // Download the image
   return new Promise((resolve, reject) => {
     canvas.toBlob(blob => {
@@ -2024,17 +1930,15 @@ function updateScopeButtons(){
 }
 
 // The roster header cell looks like "NAME | STAFFID | FLEET | BASE | RANK".
-// Split on '|' and validate the last segment against known rank codes so
-// we can pull both the crew name and the pay grade from it in one pass.
-function parseCrewMetadataCell(s){
+// Split on '|' and check the last segment against known rank codes rather
+// than a fixed-position regex, since spacing/segment count can vary.
+function detectRankFromMetadataCell(s){
   if(!s || s.indexOf('|')===-1) return null;
   const parts = s.split('|').map(p=>p.trim()).filter(Boolean);
-  if(parts.length < 2) return null;
+  if(!parts.length) return null;
   const last = parts[parts.length-1].toUpperCase();
-  if(!/^(IFSS|IFS|LSS|LS|FSS|FS)$/.test(last)) return null;
-  const grade = rankToGrade(last);
-  if(!grade) return null;
-  return { name: parts[0], grade };
+  if(/^(IFSS|IFS|LSS|LS|FSS|FS)$/.test(last)) return last;
+  return null;
 }
 function rankToGrade(rank){
   if(!rank) return null;
@@ -2146,15 +2050,6 @@ function isPayableGroundDuty(item){
   return /^AS\d/i.test(item||'');
 }
 
-// Work Types that earn NO Productivity and NO Incentive, regardless of
-// whether the row carries a Duty Hrs value. SNY = "Synergy" duties, which
-// are rostered and timed but paid on a different basis (or not at all).
-// Add more codes to this set as the CBA evolves.
-const NON_PAYABLE_WORK_TYPES = new Set(['SNY']);
-function isNonPayableWorkType(work){
-  return NON_PAYABLE_WORK_TYPES.has((work||'').trim().toUpperCase());
-}
-
 // Parse an "HH:MM" string to decimal hours
 function hmToDecimal(s){
   if(!s) return 0;
@@ -2188,17 +2083,10 @@ function computeAllowance(grade, scope){
   //    on a leg (covers flying, positioning and ground/standby legs).
   const prodItems = [];
   let prodTotal = 0, incTotal = 0;
-  let snyExcludedCount = 0, snyExcludedDutyHrs = 0;
   for(const l of LAST_LEGS){
     if(!l.dutyHrs) continue;
     const dh = hmToDecimal(l.dutyHrs);
     if(!dh) continue;
-    // SNY (and any other non-payable Work Type) earns no Productivity/Incentive
-    if(isNonPayableWorkType(l.work)){
-      snyExcludedCount++;
-      snyExcludedDutyHrs += dh;
-      continue;
-    }
     if(l.isGround && !isPayableGroundDuty(l.item)) continue; // e.g. Cabin Crew Standby, training
     const dutyDate = l.reportDate || l.depDate || null;
     if(!inScope(dutyDate)) continue; // duty belongs to an adjacent month's payslip
@@ -2214,14 +2102,14 @@ function computeAllowance(grade, scope){
 
   // 2) Block hour excess: total flying hours across in-scope legs, over 80.
   let totalFlyMin = 0;
-  for (const l of LAST_LEGS) {
-  if (l.flyHrs && !isNonPayableWorkType(l.work)) {
-    const flyDate = l.depDate || l.reportDate || null;
-    if (!inScope(flyDate)) continue;
-    const m = /^(\d{1,2}):(\d{2})$/.exec(l.flyHrs.trim());
-    if (m) totalFlyMin += parseInt(m[1]) * 60 + parseInt(m[2]);
+  for(const l of LAST_LEGS){
+    if(l.flyHrs){
+      const flyDate = l.depDate || l.reportDate || null;
+      if(!inScope(flyDate)) continue;
+      const m = /^(\d{1,2}):(\d{2})$/.exec(l.flyHrs.trim());
+      if(m) totalFlyMin += parseInt(m[1])*60+parseInt(m[2]);
+    }
   }
-}
   const totalFlyHrs = totalFlyMin/60;
   const excessHrs = Math.max(0, totalFlyHrs - 80);
   const excessPay = excessHrs*rates.excess;
@@ -2278,7 +2166,6 @@ while (true) {
   return {
     grade, rates, scope, scopeRange,
     prodItems, prodTotal, incTotal,
-    snyExcludedCount, snyExcludedDutyHrs,
     totalFlyHrs, excessHrs, excessPay,
     mealItems, mealTotal,
     unresolvedStations: Array.from(unresolvedStations),
@@ -2371,16 +2258,6 @@ if (!result) {
     <div class="stat grand">Estimated Total<b>${fmtMYR(result.grandTotal)}</b></div>
   </div>`;
 
-  if(result.snyExcludedCount > 0){
-    html += `<div style="padding:8px 12px;background:var(--panel2);border-top:1px dashed var(--line)">
-      <div style="font-size:11px;color:var(--dim)">
-        ℹ ${result.snyExcludedCount} SNY duty segment${result.snyExcludedCount===1?'':'s'}
-        (${decHrsToHHMM(result.snyExcludedDutyHrs)} total Duty Hrs)
-        excluded from Productivity and Incentive — SNY Work Type is not payable.
-      </div>
-    </div>`;
-  }
-
   if(result.unresolvedStations.length){
     html += `<div class="allowance-unresolved">
       <div style="font-size:11px;color:var(--warn);font-weight:600;margin-bottom:4px">⚠ Unknown region for: ${result.unresolvedStations.join(', ')} — meals at these stations are excluded from the total above until you assign a region.</div>
@@ -2396,121 +2273,24 @@ if (!result) {
   }
 
   if(result.mealItems.length || result.prodItems.length){
-    // NEW: Pre-calculate totals per date and per pairing for the popup
-    const dateTotals = {};
-    const pairingTotals = {};
-
-    result.prodItems.forEach(it => {
-      const d = it.date || 'unknown';
-      const p = it.pairing || '—';
-      dateTotals[d] = (dateTotals[d] || 0) + it.prod + it.inc;
-      pairingTotals[p] = (pairingTotals[p] || 0) + it.prod + it.inc;
-    });
-
-    result.mealItems.forEach(it => {
-      const d = it.date || 'unknown';
-      const p = it.pairing || '—';
-      dateTotals[d] = (dateTotals[d] || 0) + it.rate;
-      pairingTotals[p] = (pairingTotals[p] || 0) + it.rate;
-    });
-
-    // Merge Productivity / Incentive / Meal rows into one date-ordered list.
-    // Block Hr Excess is a whole-month total (no single date) so it always
-    // stays pinned at the very bottom of the breakdown.
-    const breakdownRows = [];
+    html += `<div class="allowance-items">
+      <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px">Itemised breakdown <span style="text-transform:none;font-weight:400">— shows the exact formula behind every amount</span></div>
+      <div class="tableWrap"><table><thead><tr><th>Date</th><th>Pairing</th><th>Type</th><th>Calculation</th><th>Amount</th></tr></thead><tbody>`;
     result.prodItems.forEach(it=>{
       const dLbl = ymdToLabel(it.date);
-      const dTotal = dateTotals[it.date] || 0;
-      const pTotal = pairingTotals[it.pairing] || 0;
-      const safePairing = (it.pairing || '').replace(/'/g, "\\'");
-      breakdownRows.push({date: it.date||'', ord:0,
-        html:`<tr class="allowance-clickable-row" onclick="showAllowanceRowDetails('${it.date||''}', '${safePairing}', ${dTotal}, ${pTotal})"><td class="date">${dLbl}</td><td>${it.pairing}</td><td>Productivity</td><td>${it.dutyHrs} × RM${it.prodRate}/hr</td><td class="num">${fmtMYR(it.prod)}</td></tr>`});
-      breakdownRows.push({date: it.date||'', ord:1,
-        html:`<tr class="allowance-clickable-row" onclick="showAllowanceRowDetails('${it.date||''}', '${safePairing}', ${dTotal}, ${pTotal})"><td class="date">${dLbl}</td><td>${it.pairing}</td><td>Incentive</td><td>${it.dutyHrs} × RM${INC_RATE}/hr</td><td class="num">${fmtMYR(it.inc)}</td></tr>`});
+      html += `<tr><td class="date">${dLbl}</td><td>${it.pairing}</td><td>Productivity</td><td>${it.dutyHrs} × RM${it.prodRate}/hr</td><td class="num">${fmtMYR(it.prod)}</td></tr>`;
+      html += `<tr><td class="date">${dLbl}</td><td>${it.pairing}</td><td>Incentive</td><td>${it.dutyHrs} × RM${INC_RATE}/hr</td><td class="num">${fmtMYR(it.inc)}</td></tr>`;
     });
-    result.mealItems.forEach(it=>{
-      const dTotal = dateTotals[it.date] || 0;
-      const pTotal = pairingTotals[it.pairing] || 0;
-      const safePairing = (it.pairing || '').replace(/'/g, "\\'");
-      breakdownRows.push({date: it.date||'', ord:2,
-        html:`<tr class="allowance-clickable-row" onclick="showAllowanceRowDetails('${it.date||''}', '${safePairing}', ${dTotal}, ${pTotal})"><td class="date">${ymdToLabel(it.date)}</td><td>${it.pairing}</td><td>Meal (${it.meal})</td><td>${it.station} (${it.region}) fixed rate</td><td class="num">${fmtMYR(it.rate)}</td></tr>`});
-    });
-    breakdownRows.sort((a,b)=>{
-      if(a.date !== b.date) return a.date < b.date ? -1 : 1;
-      return a.ord - b.ord;
-    });
-
-    let bodyRows = breakdownRows.map(r=>r.html).join('');
     if(result.excessPay>0){
-      bodyRows += `<tr><td class="date">—</td><td>—</td><td>Block Hr Excess</td><td>${decHrsToHHMM(result.totalFlyHrs)} − 80:00 = ${decHrsToHHMM(result.excessHrs)} × RM${result.rates.excess}/hr</td><td class="num">${fmtMYR(result.excessPay)}</td></tr>`;
+      html += `<tr><td class="date">—</td><td>—</td><td>Block Hr Excess</td><td>${decHrsToHHMM(result.totalFlyHrs)} − 80:00 = ${decHrsToHHMM(result.excessHrs)} × RM${result.rates.excess}/hr</td><td class="num">${fmtMYR(result.excessPay)}</td></tr>`;
     }
-
-    html += `<div class="allowance-items">
-      <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px">Itemised breakdown <span style="text-transform:none;font-weight:400">— shows the exact formula behind every amount, ordered by date. Click a row for details.</span></div>
-      <div class="tableWrap"><table><thead><tr><th>Date</th><th>Pairing</th><th>Type</th><th>Calculation</th><th>Amount</th></tr></thead><tbody>${bodyRows}</tbody></table></div>
-    </div>`;
+    result.mealItems.forEach(it=>{
+      html += `<tr><td class="date">${ymdToLabel(it.date)}</td><td>${it.pairing}</td><td>Meal (${it.meal})</td><td>${it.station} (${it.region}) fixed rate</td><td class="num">${fmtMYR(it.rate)}</td></tr>`;
+    });
+    html += `</tbody></table></div></div>`;
   }
 
   body.innerHTML = html;
-}
-
-// NEW: Function to handle the row click and display the popup
-function showAllowanceRowDetails(date, pairing, dateTotal, pairingTotal) {
-  const dateDisplay = date ? ymdToLabel(date) : 'N/A';
-  const pairingDisplay = pairing ? pairing : '—';
-
-  const overlay = document.createElement('div');
-  overlay.className = 'popup-overlay';
-  overlay.setAttribute('role', 'dialog');
-
-  let html = `
-    <div class="popup-content">
-      <div class="popup-header">
-        <span>📅 ${dateDisplay}</span>
-        <button class="popup-close" aria-label="Close popup">✕</button>
-      </div>
-      <div style="padding: 8px 0;">
-        <div style="margin-bottom: 12px; font-size: 13px; color: var(--dim);">
-          Pairing: <strong style="color: var(--accent);">${pairingDisplay}</strong>
-        </div>
-        <div style="background: var(--panel2); border-radius: 8px; padding: 12px; margin-bottom: 8px;">
-          <div style="font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total for this Date</div>
-          <div style="font-size: 22px; font-weight: 700; color: var(--accent);">${fmtMYR(dateTotal)}</div>
-        </div>
-        <div style="background: var(--panel2); border-radius: 8px; padding: 12px;">
-          <div style="font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total for Pairing ${pairingDisplay}</div>
-          <div style="font-size: 22px; font-weight: 700; color: var(--text);">${fmtMYR(pairingTotal)}</div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  overlay.innerHTML = html;
-
-  const closeBtn = overlay.querySelector('.popup-close');
-  closeBtn.onclick = (e) => { e.stopPropagation(); overlay.remove(); };
-
-  overlay.onclick = (e) => {
-    if (e.target === overlay) overlay.remove();
-  };
-
-  const keyHandler = (e) => {
-    if (e.key === 'Escape') {
-      overlay.remove();
-      document.removeEventListener('keydown', keyHandler);
-    }
-  };
-  document.addEventListener('keydown', keyHandler);
-
-  const observer = new MutationObserver(() => {
-    if (!document.contains(overlay)) {
-      document.removeEventListener('keydown', keyHandler);
-      observer.disconnect();
-    }
-  });
-  observer.observe(document.body, { childList: true });
-
-  document.body.appendChild(overlay);
 }
 
 function assignStationRegion(selectEl){
@@ -2622,8 +2402,6 @@ function doSaveRoster(){
   persistSavedRosters(list);
   renderSavedList();
   exportRostersBackup(true);
-  CURRENT_ROSTER_SAVED_NAME = name;
-  updateCrewNameDisplay();
   log('Saved roster for '+name+' (backup file downloaded — keep it safe).', 'ok');
 }
 function deleteSavedRoster(id){
@@ -2640,8 +2418,6 @@ function viewSavedRoster(id){
   LAST_FILE_NAME = entry.sourceFile;
   LAST_LEGS = deserializeLegsFromStorage(entry.legs);
   DETECTED_GRADE = entry.grade || null;
-  DETECTED_NAME = null; // saved rosters don't carry the auto-detected name — use the saved name instead
-  CURRENT_ROSTER_SAVED_NAME = entry.name || null;
   render();
   document.getElementById('toolbarRow').scrollIntoView({behavior:'smooth', block:'start'});
 
@@ -3352,7 +3128,6 @@ function closeColourModal(){
 
 applyTheme(localStorage.getItem('rosterParserTheme') || 'default', false);
 applyColumnVisibility();
-updateCrewNameDisplay();
 
 // =====================================================================
 // PWA: SERVICE WORKER REGISTRATION & SHARED FILE RETRIEVAL
