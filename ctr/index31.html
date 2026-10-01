@@ -345,23 +345,36 @@
 
   /* ── Emergency Checklist ───────────────────────────── */
   #checklistPrintArea {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
-  }
-  .checklist-page {
-    position: relative;
-    background-color: #fff;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    border: 1px solid var(--border);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    flex-shrink: 0;
-  }
-  .checklist-page[data-page="1"],
-  .checklist-page[data-page="2"] { width: 620px; height: 876px; }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+}
+.chk-page-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+.chk-page-scaler {
+  transform-origin: top center;
+  transition: transform 0.15s ease;
+  will-change: transform;
+}
+.checklist-page {
+  position: relative;
+  background-color: #fff;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  flex-shrink: 0;
+}
+.checklist-page[data-page="1"],
+.checklist-page[data-page="2"] { width: 620px; height: 876px; }
   .chk-cell {
     position: absolute;
     font-family: Arial, sans-serif;
@@ -451,10 +464,13 @@
     break-before: page !important;
   }
 
-  body.printing-checklist .chk-cell {
-    background: transparent !important;
-    box-shadow: none !important;
-  }
+  body.printing-checklist .chk-page-scaler { transform: none !important; }
+body.printing-checklist .chk-page-wrap {
+  height: auto !important;
+  width: auto !important;
+  display: block !important;
+  overflow: visible !important;
+}
   body.printing-checklist .chk-cell.empty::before { content: '' !important; }
 }
 </style>
@@ -3347,40 +3363,69 @@ if (expiryRaw !== undefined && expiryRaw !== null && expiryRaw !== '') {
   }
 
   function renderChecklistPages(tpl) {
-    const scale = 0.5; // 1240×1754 → 620×876
-    return tpl.pages.map((pg, i) => {
-      const page = document.createElement('div');
-      page.className = 'checklist-page';
-      page.dataset.page = i + 1;
-      page.style.backgroundImage = `url(${pg.bgPath})`;
-
-      for (const [key, c] of Object.entries(pg.cells)) {
-        const cell = document.createElement('div');
-        cell.className = 'chk-cell' + (c.picker === 'readonly' ? ' readonly' : '');
-        cell.dataset.key = key;
-        cell.dataset.picker = c.picker;
-        cell.style.left   = (c.x * scale) + 'px';
-        cell.style.top    = (c.y * scale) + 'px';
-        cell.style.width  = (c.w * scale) + 'px';
-        cell.style.height = (c.h * scale) + 'px';
-        cell.style.fontSize   = (c.fontSize * scale) + 'px';
-        cell.style.lineHeight = (c.h * scale) + 'px';
-        const val = (state && state.checklist && state.checklist.cells[key]) || '';
-        cell.textContent = val;
-        if (!val) cell.classList.add('empty');
-        page.appendChild(cell);
-      }
-      return page;
-    });
-  }
+  const scale = 0.5; // 1240×1754 → 620×876
+  return tpl.pages.map((pg, i) => {
+    const page = document.createElement('div');
+    page.className = 'checklist-page';
+    page.dataset.page = i + 1;
+    page.style.backgroundImage = `url(${pg.bgPath})`;
+    
+    for (const [key, c] of Object.entries(pg.cells)) {
+      const cell = document.createElement('div');
+      cell.className = 'chk-cell' + (c.picker === 'readonly' ? ' readonly' : '');
+      cell.dataset.key = key;
+      cell.dataset.picker = c.picker;
+      cell.style.left = (c.x * scale) + 'px';
+      cell.style.top = (c.y * scale) + 'px';
+      cell.style.width = (c.w * scale) + 'px';
+      cell.style.height = (c.h * scale) + 'px';
+      cell.style.fontSize = (c.fontSize * scale) + 'px';
+      cell.style.lineHeight = (c.h * scale) + 'px';
+      const val = (state && state.checklist && state.checklist.cells[key]) || '';
+      cell.textContent = val;
+      if (!val) cell.classList.add('empty');
+      page.appendChild(cell);
+    }
+    
+    // NEW — wrap the page in a scaler so it fits the screen width
+    const wrap = document.createElement('div');
+    wrap.className = 'chk-page-wrap';
+    const scaler = document.createElement('div');
+    scaler.className = 'chk-page-scaler';
+    scaler.appendChild(page);
+    wrap.appendChild(scaler);
+    return wrap;
+  });
+}
 
   function rerenderChecklist() {
-    const area = document.getElementById('checklistPrintArea');
-    if (!area) return;
-    area.innerHTML = '';
-    renderChecklistPages(CHECKLIST_TEST).forEach(p => area.appendChild(p));
-    attachChecklistListeners();
+  const area = document.getElementById('checklistPrintArea');
+  if (!area) return;
+  area.innerHTML = '';
+  renderChecklistPages(CHECKLIST_TEST).forEach(p => area.appendChild(p));
+  attachChecklistListeners();
+  requestAnimationFrame(fitChecklistPreview);
+}
+
+function fitChecklistPreview() {
+  document.querySelectorAll('#checklistPrintArea .chk-page-wrap').forEach(wrap => {
+    const scaler = wrap.querySelector('.chk-page-scaler');
+    const page = scaler && scaler.querySelector('.checklist-page');
+    if (!page) return;
+    const avail = wrap.clientWidth - 4; // 2px breathing room each side
+    const natural = page.offsetWidth || 620; // 620 by default
+    const scale = Math.min(1, avail / natural);
+    scaler.style.transform = `scale(${scale})`;
+    // Reserve vertical layout space — transform doesn't reduce box height
+    wrap.style.height = (page.offsetHeight * scale) + 'px';
+  });
+}
+
+window.addEventListener('resize', () => {
+  if (document.getElementById('checklistCard')?.style.display !== 'none') {
+    fitChecklistPreview();
   }
+});
 
   function attachChecklistListeners() {
     document.querySelectorAll('#checklistPrintArea .chk-cell:not(.readonly)').forEach(el => {
