@@ -3074,25 +3074,40 @@ if (expiryRaw !== undefined && expiryRaw !== null && expiryRaw !== '') {
   //  Emergency Checklist — interactive picker
   // ───────────────────────────────────────────────────────
   const CHECKLIST_TEST = {
-    width: 1240, height: 1754,
-    pages: [
-      {
-        bgPath: 'templates/emergency_checklist_p1.png',
-        cells: {
-          // placeholder coords — replace with builder output
-          'flight-0': { x: 400, y: 1080, w: 90,  h: 30, fontSize: 28, picker: 'flight', digitsOnly: true },
-          'sector-0': { x: 300, y: 1115, w: 180, h: 30, fontSize: 28, picker: 'sector' },
-          'acReg-0':  { x: 410, y: 1150, w: 100, h: 30, fontSize: 28, picker: 'acReg', stripPrefix: true },
-          'date-0':   { x: 300, y: 1185, w: 200, h: 30, fontSize: 28, picker: 'date' },
-          'iccName':  { x: 300, y: 1255, w: 320, h: 30, fontSize: 28, picker: 'iccName' },
-          'iccStaff': { x: 780, y: 1255, w: 150, h: 30, fontSize: 28, picker: 'readonly' },
-          'picName':  { x: 300, y: 1290, w: 320, h: 30, fontSize: 28, picker: 'picName' },
-          'picStaff': { x: 780, y: 1290, w: 150, h: 30, fontSize: 28, picker: 'readonly' }
-        }
-      },
-      { bgPath: 'templates/emergency_checklist_p2.png', cells: {} }
-    ]
-  };
+  width: 1240, height: 1754,
+  pages: [
+    {
+      bgPath: 'templates/emergency_checklist_p1.png',
+      cells: {
+        'flight-0': { x: 295, y: 1432, w: 120, h: 33, fontSize: 14, picker: 'flight', digitsOnly: true },
+        'sector-0': { x: 250, y: 1465, w: 165, h: 33, fontSize: 14, picker: 'sector' },
+        'acReg-0':  { x: 295, y: 1503, w: 120, h: 33, fontSize: 14, picker: 'acReg', stripPrefix: true },
+        'date-0':   { x: 250, y: 1538, w: 165, h: 33, fontSize: 14, picker: 'date' },
+        'flight-1': { x: 470, y: 1432, w: 120, h: 33, fontSize: 14, picker: 'flight', digitsOnly: true },
+        'sector-1': { x: 420, y: 1465, w: 165, h: 33, fontSize: 14, picker: 'sector' },
+        'acReg-1':  { x: 480, y: 1503, w: 120, h: 33, fontSize: 14, picker: 'acReg', stripPrefix: true },
+        'date-1':   { x: 420, y: 1538, w: 165, h: 33, fontSize: 14, picker: 'date' },
+        'flight-2': { x: 635, y: 1432, w: 120, h: 33, fontSize: 14, picker: 'flight', digitsOnly: true },
+        'sector-2': { x: 590, y: 1465, w: 165, h: 33, fontSize: 14, picker: 'sector' },
+        'acReg-2':  { x: 635, y: 1503, w: 120, h: 33, fontSize: 14, picker: 'acReg', stripPrefix: true },
+        'date-2':   { x: 595, y: 1538, w: 165, h: 33, fontSize: 14, picker: 'date' },
+        'flight-3': { x: 810, y: 1432, w: 120, h: 33, fontSize: 14, picker: 'flight', digitsOnly: true },
+        'sector-3': { x: 765, y: 1465, w: 165, h: 33, fontSize: 14, picker: 'sector' },
+        'acReg-3':  { x: 810, y: 1503, w: 120, h: 33, fontSize: 14, picker: 'acReg', stripPrefix: true },
+        'date-3':   { x: 765, y: 1538, w: 165, h: 33, fontSize: 14, picker: 'date' },
+        'flight-4': { x: 975, y: 1432, w: 120, h: 33, fontSize: 14, picker: 'flight', digitsOnly: true },
+        'sector-4': { x: 940, y: 1465, w: 155, h: 33, fontSize: 14, picker: 'sector' },
+        'acReg-4':  { x: 985, y: 1503, w: 105, h: 33, fontSize: 14, picker: 'acReg', stripPrefix: true },
+        'date-4':   { x: 940, y: 1538, w: 155, h: 33, fontSize: 14, picker: 'date' },
+        'iccName':  { x: 250, y: 1570, w: 395, h: 33, fontSize: 14, picker: 'iccName' },
+        'iccStaff': { x: 760, y: 1570, w: 140, h: 35, fontSize: 26, picker: 'readonly' },
+        'picName':  { x: 250, y: 1605, w: 395, h: 33, fontSize: 14, picker: 'picName' },
+        'picStaff': { x: 760, y: 1605, w: 140, h: 33, fontSize: 14, picker: 'readonly' }
+      }
+    },
+    { bgPath: 'templates/emergency_checklist_p2.png', cells: {} }
+  ]
+};
 
   function findChecklistCellConfig(cellKey) {
     for (const pg of CHECKLIST_TEST.pages) {
