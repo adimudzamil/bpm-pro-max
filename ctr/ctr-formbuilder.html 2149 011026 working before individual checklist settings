@@ -74,9 +74,6 @@
   .slot-section .slot-controls .param-row .fine-tune-sliders label { font-size: 11px; display: flex; align-items: center; gap: 4px; }
   .slot-section .slot-controls .param-row .fine-tune-sliders input[type="range"] { width: 80px; accent-color: var(--accent); }
   .slot-section .slot-controls .param-row .fine-tune-sliders input[type="number"] { width: 45px; padding: 2px 4px; font-size: 11px; }
-  .chk-status-badge { display: inline-block; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 100px; margin-left: 6px; vertical-align: middle; }
-  .chk-status-badge.set { background: #dcfce7; color: #166534; border: 1px solid #16a34a; }
-  .chk-status-badge.unset { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
   .builder-output { margin-top: 12px; background: var(--surface2); border-radius: var(--radius-sm); padding: 12px; border: 1px solid var(--border); }
   .builder-output textarea { width: 100%; min-height: 120px; font-family: 'DM Mono', monospace; font-size: 12px; background: #1e1e1e; color: #d4d4d4; border: none; border-radius: 4px; padding: 8px; resize: vertical; }
   .saved-templates-list { margin-top: 8px; max-height: 150px; overflow-y: auto; }
@@ -96,7 +93,6 @@
   .byline-badge { display: inline-block; background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; padding: 2px 14px; border-radius: 100px; margin-top: 2px; width: fit-content; }
   .logo-area { display: flex; flex-direction: column; gap: 4px; }
   header { padding: 16px 0 8px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
-  .chk-hint { font-size: 11px; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -109,7 +105,7 @@
     <div class="badge-group">
       <div class="badge">📐 Slot Editor</div>
       <div class="badge">💾 Local Storage</div>
-      <div class="badge accent">v1.2 · per-cell checklist</div>
+      <div class="badge accent">v1.1 · + checklist</div>
     </div>
   </header>
 
@@ -137,6 +133,7 @@
       </label>
     </div>
 
+    <!-- NEW: form type + checklist defaults row -->
     <div class="btnrow" style="margin-bottom:12px;">
       <label style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text-muted);">Form type:</label>
       <select id="builderFormType" style="padding:6px 12px;">
@@ -144,9 +141,9 @@
         <option value="portrait">Emergency Checklist (Portrait A4)</option>
       </select>
       <span id="chkDefaultsWrap" style="display:none; gap:8px; align-items:center; font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted);">
-        <label style="display:flex;align-items:center;gap:4px;" title="Default size for newly placed cells">New W: <input type="number" id="chkDefaultW" value="200" min="10" max="800" style="width:60px;padding:3px;border:1px solid var(--border);border-radius:4px;"></label>
-        <label style="display:flex;align-items:center;gap:4px;" title="Default size for newly placed cells">H: <input type="number" id="chkDefaultH" value="35" min="10" max="200" style="width:60px;padding:3px;border:1px solid var(--border);border-radius:4px;"></label>
-        <label style="display:flex;align-items:center;gap:4px;" title="Default size for newly placed cells">Font: <input type="number" id="chkDefaultFontSize" value="26" min="6" max="60" style="width:60px;padding:3px;border:1px solid var(--border);border-radius:4px;"></label>
+        <label style="display:flex;align-items:center;gap:4px;">W: <input type="number" id="chkDefaultW" value="200" min="10" max="800" style="width:60px;padding:3px;border:1px solid var(--border);border-radius:4px;"></label>
+        <label style="display:flex;align-items:center;gap:4px;">H: <input type="number" id="chkDefaultH" value="35" min="10" max="200" style="width:60px;padding:3px;border:1px solid var(--border);border-radius:4px;"></label>
+        <label style="display:flex;align-items:center;gap:4px;">Font: <input type="number" id="chkDefaultFontSize" value="26" min="6" max="60" style="width:60px;padding:3px;border:1px solid var(--border);border-radius:4px;"></label>
       </span>
     </div>
 
@@ -198,7 +195,7 @@
               <option value="chk_date-2">Date #3</option>
               <option value="chk_flight-3">Flight #4 (digits)</option>
               <option value="chk_sector-3">Sector #4</option>
-              <option value="chk_acReg-3">A/C Reg #4 (suffix)</option>
+              <option value="chk_acReg-3">A/C Reg #3 (suffix)</option>
               <option value="chk_date-3">Date #4</option>
               <option value="chk_flight-4">Flight #5 (digits)</option>
               <option value="chk_sector-4">Sector #5</option>
@@ -572,18 +569,6 @@
           </div>
         </div>
 
-        <!-- NEW: Checklist cells section (dynamically populated, portrait only) -->
-        <div class="slot-section" id="checklistSlotsSection" style="display:none;">
-          <div class="section-title" onclick="toggleSection('checklistSlotsSection')">
-            <span>📋 Checklist Cells</span>
-            <span class="toggle-icon">▼</span>
-          </div>
-          <div class="slot-controls open">
-            <div class="chk-hint">Each cell has its own X / Y / W / H / Font. Click canvas with a cell selected to reposition; edit inputs to fine-tune.</div>
-            <div id="checklistSlotsContainer" style="margin-top:8px;"></div>
-          </div>
-        </div>
-
         <div class="btnrow">
           <button class="btn-primary" id="builderApplyBtn">Apply & Preview</button>
           <button class="btn-success" id="builderExportBtn">📋 Export Code</button>
@@ -658,39 +643,11 @@
   }
 
   // ───────────────────────────────────────────────────────
-  //  Orientation + checklist state
+  //  NEW: orientation + checklist state
   // ───────────────────────────────────────────────────────
   let builderBgImageData = null;
   let builderOrientation = 'landscape';
   let builderChecklistCells = {};
-
-  // Checklist cell definitions (order matters — same as dropdown)
-  const CHECKLIST_CELL_DEFS = [
-    { key: 'flight-0', label: 'Flight #1 (digits)', color: '#2563eb' },
-    { key: 'sector-0', label: 'Sector #1',          color: '#16a34a' },
-    { key: 'acReg-0',  label: 'A/C Reg #1 (suffix)',color: '#f59e0b' },
-    { key: 'date-0',   label: 'Date #1',            color: '#8b5cf6' },
-    { key: 'flight-1', label: 'Flight #2 (digits)', color: '#2563eb' },
-    { key: 'sector-1', label: 'Sector #2',          color: '#16a34a' },
-    { key: 'acReg-1',  label: 'A/C Reg #2 (suffix)',color: '#f59e0b' },
-    { key: 'date-1',   label: 'Date #2',            color: '#8b5cf6' },
-    { key: 'flight-2', label: 'Flight #3 (digits)', color: '#2563eb' },
-    { key: 'sector-2', label: 'Sector #3',          color: '#16a34a' },
-    { key: 'acReg-2',  label: 'A/C Reg #3 (suffix)',color: '#f59e0b' },
-    { key: 'date-2',   label: 'Date #3',            color: '#8b5cf6' },
-    { key: 'flight-3', label: 'Flight #4 (digits)', color: '#2563eb' },
-    { key: 'sector-3', label: 'Sector #4',          color: '#16a34a' },
-    { key: 'acReg-3',  label: 'A/C Reg #4 (suffix)',color: '#f59e0b' },
-    { key: 'date-3',   label: 'Date #4',            color: '#8b5cf6' },
-    { key: 'flight-4', label: 'Flight #5 (digits)', color: '#2563eb' },
-    { key: 'sector-4', label: 'Sector #5',          color: '#16a34a' },
-    { key: 'acReg-4',  label: 'A/C Reg #5 (suffix)',color: '#f59e0b' },
-    { key: 'date-4',   label: 'Date #5',            color: '#8b5cf6' },
-    { key: 'iccName',  label: 'ICC Name',           color: '#f97316' },
-    { key: 'iccStaff', label: 'ICC Staff No.',      color: '#f97316' },
-    { key: 'picName',  label: 'PIC Name',           color: '#a855f7' },
-    { key: 'picStaff', label: 'PIC Staff No.',      color: '#a855f7' }
-  ];
 
   function chkKeyToMeta(cellKey) {
     if (cellKey.startsWith('flight-')) return { picker: 'flight', digitsOnly: true };
@@ -702,92 +659,6 @@
     if (cellKey === 'picName')  return { picker: 'picName' };
     if (cellKey === 'picStaff') return { picker: 'readonly' };
     return { picker: 'readonly' };
-  }
-
-  // ───────────────────────────────────────────────────────
-  //  Checklist per-cell input panel (NEW)
-  // ───────────────────────────────────────────────────────
-  function buildChecklistControls() {
-    const container = document.getElementById('checklistSlotsContainer');
-    if (!container) return;
-    container.innerHTML = '';
-    CHECKLIST_CELL_DEFS.forEach(def => {
-      const existing = builderChecklistCells[def.key];
-      const isSet = !!existing;
-      const c = existing || {
-        x: 0, y: 0,
-        w: parseInt(document.getElementById('chkDefaultW').value) || 200,
-        h: parseInt(document.getElementById('chkDefaultH').value) || 35,
-        fontSize: parseInt(document.getElementById('chkDefaultFontSize').value) || 26
-      };
-      const sec = document.createElement('div');
-      sec.className = 'slot-section';
-      sec.id = 'chk_' + def.key + '_section';
-      sec.style.borderLeft = '3px solid ' + def.color;
-      sec.innerHTML = `
-        <div class="section-title" onclick="toggleSection('chk_${def.key}_section')">
-          <span>${def.label}<span class="chk-status-badge ${isSet ? 'set' : 'unset'}">${isSet ? '✓ set' : 'not set'}</span></span>
-          <span class="toggle-icon">▼</span>
-        </div>
-        <div class="slot-controls${isSet ? ' open' : ''}">
-          <div class="param-row">
-            <label>X: <input type="number" data-chk-key="${def.key}" data-chk-prop="x" value="${c.x}" min="0" max="1240"></label>
-            <label>Y: <input type="number" data-chk-key="${def.key}" data-chk-prop="y" value="${c.y}" min="0" max="1754"></label>
-            <label>W: <input type="number" data-chk-key="${def.key}" data-chk-prop="w" value="${c.w}" min="10" max="800"></label>
-            <label>H: <input type="number" data-chk-key="${def.key}" data-chk-prop="h" value="${c.h}" min="10" max="200"></label>
-            <label>Font: <input type="number" data-chk-key="${def.key}" data-chk-prop="fontSize" value="${c.fontSize}" min="6" max="60"></label>
-          </div>
-        </div>
-      `;
-      container.appendChild(sec);
-    });
-
-    // Wire up live editing
-    container.querySelectorAll('input[data-chk-key]').forEach(inp => {
-      inp.addEventListener('input', function() {
-        const key = this.dataset.chkKey;
-        const prop = this.dataset.chkProp;
-        const val = parseInt(this.value);
-        if (isNaN(val)) return;
-        const meta = chkKeyToMeta(key);
-        if (!builderChecklistCells[key]) {
-          builderChecklistCells[key] = Object.assign(
-            { x: 0, y: 0, w: 200, h: 35, fontSize: 26, picker: meta.picker },
-            meta.digitsOnly  ? { digitsOnly: true }  : {},
-            meta.stripPrefix ? { stripPrefix: true } : {}
-          );
-        }
-        builderChecklistCells[key][prop] = val;
-        // Update status badge + open state
-        const sec = document.getElementById('chk_' + key + '_section');
-        if (sec) {
-          const badge = sec.querySelector('.chk-status-badge');
-          if (badge) {
-            badge.textContent = '✓ set';
-            badge.className = 'chk-status-badge set';
-          }
-        }
-        if (builderBgImageData) builderRenderPreview();
-      });
-    });
-  }
-
-  function syncChecklistCellInputs(cellKey) {
-    const c = builderChecklistCells[cellKey];
-    if (!c) return;
-    ['x','y','w','h','fontSize'].forEach(prop => {
-      const inp = document.querySelector(`input[data-chk-key="${cellKey}"][data-chk-prop="${prop}"]`);
-      if (inp) inp.value = c[prop];
-    });
-    const sec = document.getElementById('chk_' + cellKey + '_section');
-    if (sec) {
-      const badge = sec.querySelector('.chk-status-badge');
-      if (badge) { badge.textContent = '✓ set'; badge.className = 'chk-status-badge set'; }
-      const ctrls = sec.querySelector('.slot-controls');
-      if (ctrls) ctrls.classList.add('open');
-      const icon = sec.querySelector('.toggle-icon');
-      if (icon) icon.classList.add('open');
-    }
   }
 
   // ───────────────────────────────────────────────────────
@@ -947,21 +818,18 @@
     const clampedY = Math.min(Math.max(Math.round(y), 0), maxY);
     const type = document.getElementById('builderActiveSlotType').value;
 
-    // Checklist placement
+    // NEW: checklist placement
     if (type.startsWith('chk_')) {
       const cellKey = type.slice(4);
       const meta = chkKeyToMeta(cellKey);
-      const existing = builderChecklistCells[cellKey];
-      const w = existing ? existing.w : (parseInt(document.getElementById('chkDefaultW').value) || 200);
-      const h = existing ? existing.h : (parseInt(document.getElementById('chkDefaultH').value) || 35);
-      const fontSize = existing ? existing.fontSize : (parseInt(document.getElementById('chkDefaultFontSize').value) || 26);
+      const w = parseInt(document.getElementById('chkDefaultW').value) || 200;
+      const h = parseInt(document.getElementById('chkDefaultH').value) || 35;
+      const fontSize = parseInt(document.getElementById('chkDefaultFontSize').value) || 26;
       builderChecklistCells[cellKey] = Object.assign(
-        existing || {},
-        { x: clampedX, y: clampedY, w, h, fontSize, picker: meta.picker },
+        { x: clampedX, y: clampedY, w: w, h: h, fontSize: fontSize, picker: meta.picker },
         meta.digitsOnly  ? { digitsOnly: true }  : {},
         meta.stripPrefix ? { stripPrefix: true } : {}
       );
-      syncChecklistCellInputs(cellKey);
       builderRenderPreview();
       builderStatus.textContent = `✅ Placed ${cellKey} at X=${clampedX}, Y=${clampedY}`;
       return;
@@ -986,30 +854,26 @@
     builderRenderPreview();
   });
 
-  // Form type switch
+  // NEW: form type switch
   document.getElementById('builderFormType').addEventListener('change', function() {
     builderOrientation = this.value === 'portrait' ? 'portrait' : 'landscape';
     if (builderOrientation === 'portrait') {
       builderCanvas.width = 1240;
       builderCanvas.height = 1754;
       document.getElementById('chkDefaultsWrap').style.display = 'inline-flex';
-      document.getElementById('checklistSlotsSection').style.display = '';
-      buildChecklistControls();
     } else {
       builderCanvas.width = 1754;
       builderCanvas.height = 1240;
       document.getElementById('chkDefaultsWrap').style.display = 'none';
-      document.getElementById('checklistSlotsSection').style.display = 'none';
       document.getElementById('builderActiveSlotType').value = 'normal_name';
     }
-    builderBgImageData = null;
+    builderBgImageData = null; // re-upload for the new orientation
     builderRenderPreview();
     showToast('Switched to ' + (builderOrientation === 'portrait' ? 'Portrait (Checklist)' : 'Landscape') + '. Upload a background image.', 'default');
   });
 
   window.toggleSection = function(sectionId) {
     const section = document.getElementById(sectionId);
-    if (!section) return;
     const controls = section.querySelector('.slot-controls');
     const icon = section.querySelector('.toggle-icon');
     if (controls) {
@@ -1019,7 +883,7 @@
   };
 
   // ───────────────────────────────────────────────────────
-  //  File upload
+  //  File upload — now uses dynamic canvas dimensions
   // ───────────────────────────────────────────────────────
   builderFileInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -1126,12 +990,10 @@
     if (isPortrait) {
       builderCanvas.width = 1240; builderCanvas.height = 1754;
       document.getElementById('chkDefaultsWrap').style.display = 'inline-flex';
-      document.getElementById('checklistSlotsSection').style.display = '';
       builderChecklistCells = config.checklistCells || {};
     } else {
       builderCanvas.width = 1754; builderCanvas.height = 1240;
       document.getElementById('chkDefaultsWrap').style.display = 'none';
-      document.getElementById('checklistSlotsSection').style.display = 'none';
       builderChecklistCells = {};
     }
 
@@ -1181,7 +1043,6 @@
       });
     }
 
-    if (isPortrait) buildChecklistControls();
     builderRenderPreview();
     showToast('Loaded template: ' + name, 'success');
   };
@@ -1204,11 +1065,10 @@
     builderCanvas.getContext('2d').clearRect(0,0,builderCanvas.width,builderCanvas.height);
     builderStatus.textContent = 'Cleared. Upload a canvas to start.';
     document.getElementById('builderOutput').value = '';
-    if (builderOrientation === 'portrait') buildChecklistControls();
   });
 
   // ───────────────────────────────────────────────────────
-  //  Export
+  //  Export — portrait branch emits checklist cells code
   // ───────────────────────────────────────────────────────
   document.getElementById('builderExportBtn').addEventListener('click', function() {
     const name = builderTemplateName.value.trim() || 'template';
@@ -1429,17 +1289,11 @@
     }
   });
 
-  // ───────────────────────────────────────────────────────
-  //  Init
-  // ───────────────────────────────────────────────────────
-  buildChecklistControls();   // Pre-generate all 24 checklist sections
   builderLoadSavedList();
 
   let builderDebounce;
   const allBuilderInputs = document.querySelectorAll('#builderControls input[type="number"], #builderControls input[type="checkbox"], #builderControls input[type="range"]');
   allBuilderInputs.forEach(inp => {
-    // Don't double-wire the checklist inputs (already have their own listener)
-    if (inp.dataset.chkKey) return;
     inp.addEventListener('input', function() {
       clearTimeout(builderDebounce);
       builderDebounce = setTimeout(() => {
