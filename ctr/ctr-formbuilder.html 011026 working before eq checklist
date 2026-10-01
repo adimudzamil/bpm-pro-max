@@ -105,7 +105,7 @@
     <div class="badge-group">
       <div class="badge">📐 Slot Editor</div>
       <div class="badge">💾 Local Storage</div>
-      <div class="badge accent">v1.1 · + checklist</div>
+      <div class="badge accent">v1.0</div>
     </div>
   </header>
 
@@ -132,21 +132,6 @@
         <input type="checkbox" id="builderPicEnable"> Enable PIC Top Page
       </label>
     </div>
-
-    <!-- NEW: form type + checklist defaults row -->
-    <div class="btnrow" style="margin-bottom:12px;">
-      <label style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text-muted);">Form type:</label>
-      <select id="builderFormType" style="padding:6px 12px;">
-        <option value="landscape">Landing / Baggage (Landscape A4)</option>
-        <option value="portrait">Emergency Checklist (Portrait A4)</option>
-      </select>
-      <span id="chkDefaultsWrap" style="display:none; gap:8px; align-items:center; font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted);">
-        <label style="display:flex;align-items:center;gap:4px;">W: <input type="number" id="chkDefaultW" value="200" min="10" max="800" style="width:60px;padding:3px;border:1px solid var(--border);border-radius:4px;"></label>
-        <label style="display:flex;align-items:center;gap:4px;">H: <input type="number" id="chkDefaultH" value="35" min="10" max="200" style="width:60px;padding:3px;border:1px solid var(--border);border-radius:4px;"></label>
-        <label style="display:flex;align-items:center;gap:4px;">Font: <input type="number" id="chkDefaultFontSize" value="26" min="6" max="60" style="width:60px;padding:3px;border:1px solid var(--border);border-radius:4px;"></label>
-      </span>
-    </div>
-
     <div class="btnrow">
       <div class="file-upload-wrapper">
         <label for="builderFileInput" class="btn-upload" style="padding:10px 24px;font-size:14px;">📎 Upload Canvas</label>
@@ -180,34 +165,6 @@
             <option value="pic_passport">PIC Passport</option>
             <option value="pic_expiry">PIC Expiry</option>
             <option value="pic_nationality">PIC Nationality</option>
-            <optgroup label="Checklist — Flight Columns">
-              <option value="chk_flight-0">Flight #1 (digits)</option>
-              <option value="chk_sector-0">Sector #1</option>
-              <option value="chk_acReg-0">A/C Reg #1 (suffix)</option>
-              <option value="chk_date-0">Date #1</option>
-              <option value="chk_flight-1">Flight #2 (digits)</option>
-              <option value="chk_sector-1">Sector #2</option>
-              <option value="chk_acReg-1">A/C Reg #2 (suffix)</option>
-              <option value="chk_date-1">Date #2</option>
-              <option value="chk_flight-2">Flight #3 (digits)</option>
-              <option value="chk_sector-2">Sector #3</option>
-              <option value="chk_acReg-2">A/C Reg #3 (suffix)</option>
-              <option value="chk_date-2">Date #3</option>
-              <option value="chk_flight-3">Flight #4 (digits)</option>
-              <option value="chk_sector-3">Sector #4</option>
-              <option value="chk_acReg-3">A/C Reg #3 (suffix)</option>
-              <option value="chk_date-3">Date #4</option>
-              <option value="chk_flight-4">Flight #5 (digits)</option>
-              <option value="chk_sector-4">Sector #5</option>
-              <option value="chk_acReg-4">A/C Reg #5 (suffix)</option>
-              <option value="chk_date-4">Date #5</option>
-            </optgroup>
-            <optgroup label="Checklist — Bottom Row">
-              <option value="chk_iccName">ICC Name</option>
-              <option value="chk_iccStaff">ICC Staff No.</option>
-              <option value="chk_picName">PIC Name</option>
-              <option value="chk_picStaff">PIC Staff No.</option>
-            </optgroup>
           </select>
         </div>
 
@@ -642,28 +599,8 @@
     };
   }
 
-  // ───────────────────────────────────────────────────────
-  //  NEW: orientation + checklist state
-  // ───────────────────────────────────────────────────────
   let builderBgImageData = null;
-  let builderOrientation = 'landscape';
-  let builderChecklistCells = {};
 
-  function chkKeyToMeta(cellKey) {
-    if (cellKey.startsWith('flight-')) return { picker: 'flight', digitsOnly: true };
-    if (cellKey.startsWith('sector-')) return { picker: 'sector' };
-    if (cellKey.startsWith('acReg-'))  return { picker: 'acReg', stripPrefix: true };
-    if (cellKey.startsWith('date-'))   return { picker: 'date' };
-    if (cellKey === 'iccName')  return { picker: 'iccName' };
-    if (cellKey === 'iccStaff') return { picker: 'readonly' };
-    if (cellKey === 'picName')  return { picker: 'picName' };
-    if (cellKey === 'picStaff') return { picker: 'readonly' };
-    return { picker: 'readonly' };
-  }
-
-  // ───────────────────────────────────────────────────────
-  //  Preview render (landscape normal/pic + portrait checklist)
-  // ───────────────────────────────────────────────────────
   function builderRenderPreview() {
     const canvas = builderCanvas;
     const ctx = builderCtx;
@@ -680,12 +617,58 @@
       ctx.fillText('Upload a canvas to begin', canvas.width/2, canvas.height/2);
     }
 
-    // Landscape mode: draw the normal/pic slot previews from form values
-    if (builderOrientation === 'landscape') {
-      const normalTypes = ['Name', 'Rank', 'Number', 'CrewId', 'Passport', 'Expiry', 'Nationality'];
-      const normalColors = { Name: '#2563eb', Rank: '#16a34a', Number: '#f59e0b', CrewId: '#8b5cf6', Passport: '#f97316', Expiry: '#84cc16', Nationality: '#a855f7' };
-      normalTypes.forEach(type => {
-        const prefix = 'normal' + type;
+    const normalTypes = ['Name', 'Rank', 'Number', 'CrewId', 'Passport', 'Expiry', 'Nationality'];
+    const normalColors = { Name: '#2563eb', Rank: '#16a34a', Number: '#f59e0b', CrewId: '#8b5cf6', Passport: '#f97316', Expiry: '#84cc16', Nationality: '#a855f7' };
+    normalTypes.forEach(type => {
+      const prefix = 'normal' + type;
+      const config = getSlotValues(prefix);
+      if (!config.enabled) return;
+      const startX = config.startX + config.fineX;
+      const startY = config.startY + config.fineY;
+      const rows = config.rows;
+      const gapY = config.gapY;
+      const width = config.width;
+      const height = config.height;
+      const fontSize = config.fontSize + config.fineFontSize;
+      const color = normalColors[type];
+      for (let i = 0; i < rows; i++) {
+        const y = startY + i * gapY;
+        const x = startX;
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.strokeRect(x, y, width, height);
+        ctx.setLineDash([]);
+        ctx.fillStyle = color + '22';
+        ctx.fillRect(x, y, width, height);
+        ctx.fillStyle = color;
+        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.textBaseline = 'top';
+        let sample = '';
+        if (type === 'Name') sample = 'Name 1';
+        else if (type === 'Rank') sample = 'CAPT';
+        else if (type === 'Number') sample = String(i+1);
+        else if (type === 'CrewId') sample = '1234567';
+        else if (type === 'Passport') sample = 'PASSPORT';
+        else if (type === 'Expiry') sample = '31 DEC 2030';
+        else if (type === 'Nationality') sample = 'MALAYSIA';
+        let text = sample;
+        while (ctx.measureText(text).width > width - 10 && text.length > 1) text = text.slice(0, -1);
+        ctx.fillText(text, x + 5, y + 5);
+        ctx.fillStyle = '#333';
+        ctx.font = '10px sans-serif';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(type + (i+1), x + width - 30, y + height - 2);
+        ctx.restore();
+      }
+    });
+
+    if (builderPicEnable.checked) {
+      const picTypes = ['Name', 'Rank', 'CrewId', 'Passport', 'Expiry', 'Nationality'];
+      const picColors = { Name: '#2563eb', Rank: '#16a34a', CrewId: '#8b5cf6', Passport: '#f97316', Expiry: '#84cc16', Nationality: '#a855f7' };
+      picTypes.forEach(type => {
+        const prefix = 'pic' + type;
         const config = getSlotValues(prefix);
         if (!config.enabled) return;
         const startX = config.startX + config.fineX;
@@ -695,7 +678,7 @@
         const width = config.width;
         const height = config.height;
         const fontSize = config.fontSize + config.fineFontSize;
-        const color = normalColors[type];
+        const color = picColors[type];
         for (let i = 0; i < rows; i++) {
           const y = startY + i * gapY;
           const x = startX;
@@ -711,10 +694,9 @@
           ctx.font = `bold ${fontSize}px Arial`;
           ctx.textBaseline = 'top';
           let sample = '';
-          if (type === 'Name') sample = 'Name 1';
+          if (type === 'Name') sample = 'PIC Name';
           else if (type === 'Rank') sample = 'CAPT';
-          else if (type === 'Number') sample = String(i+1);
-          else if (type === 'CrewId') sample = '1234567';
+          else if (type === 'CrewId') sample = 'PIC ID';
           else if (type === 'Passport') sample = 'PASSPORT';
           else if (type === 'Expiry') sample = '31 DEC 2030';
           else if (type === 'Nationality') sample = 'MALAYSIA';
@@ -724,122 +706,28 @@
           ctx.fillStyle = '#333';
           ctx.font = '10px sans-serif';
           ctx.textBaseline = 'bottom';
-          ctx.fillText(type + (i+1), x + width - 30, y + height - 2);
+          ctx.fillText('PIC ' + type, x + width - 30, y + height - 2);
           ctx.restore();
         }
-      });
-
-      if (builderPicEnable.checked) {
-        const picTypes = ['Name', 'Rank', 'CrewId', 'Passport', 'Expiry', 'Nationality'];
-        const picColors = { Name: '#2563eb', Rank: '#16a34a', CrewId: '#8b5cf6', Passport: '#f97316', Expiry: '#84cc16', Nationality: '#a855f7' };
-        picTypes.forEach(type => {
-          const prefix = 'pic' + type;
-          const config = getSlotValues(prefix);
-          if (!config.enabled) return;
-          const startX = config.startX + config.fineX;
-          const startY = config.startY + config.fineY;
-          const rows = config.rows;
-          const gapY = config.gapY;
-          const width = config.width;
-          const height = config.height;
-          const fontSize = config.fontSize + config.fineFontSize;
-          const color = picColors[type];
-          for (let i = 0; i < rows; i++) {
-            const y = startY + i * gapY;
-            const x = startX;
-            ctx.save();
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
-            ctx.setLineDash([4, 4]);
-            ctx.strokeRect(x, y, width, height);
-            ctx.setLineDash([]);
-            ctx.fillStyle = color + '22';
-            ctx.fillRect(x, y, width, height);
-            ctx.fillStyle = color;
-            ctx.font = `bold ${fontSize}px Arial`;
-            ctx.textBaseline = 'top';
-            let sample = '';
-            if (type === 'Name') sample = 'PIC Name';
-            else if (type === 'Rank') sample = 'CAPT';
-            else if (type === 'CrewId') sample = 'PIC ID';
-            else if (type === 'Passport') sample = 'PASSPORT';
-            else if (type === 'Expiry') sample = '31 DEC 2030';
-            else if (type === 'Nationality') sample = 'MALAYSIA';
-            let text = sample;
-            while (ctx.measureText(text).width > width - 10 && text.length > 1) text = text.slice(0, -1);
-            ctx.fillText(text, x + 5, y + 5);
-            ctx.fillStyle = '#333';
-            ctx.font = '10px sans-serif';
-            ctx.textBaseline = 'bottom';
-            ctx.fillText('PIC ' + type, x + width - 30, y + height - 2);
-            ctx.restore();
-          }
-        });
-      }
-    }
-
-    // Portrait mode: draw placed checklist cells
-    if (builderOrientation === 'portrait') {
-      const activeType = document.getElementById('builderActiveSlotType').value;
-      const activeKey = activeType.startsWith('chk_') ? activeType.slice(4) : null;
-      Object.entries(builderChecklistCells).forEach(([key, c]) => {
-        const isActive = key === activeKey;
-        ctx.save();
-        ctx.strokeStyle = isActive ? '#dc2626' : '#2563eb';
-        ctx.fillStyle   = isActive ? 'rgba(220,38,38,0.14)' : 'rgba(37,99,235,0.14)';
-        ctx.lineWidth = isActive ? 4 : 2;
-        ctx.setLineDash([6, 4]);
-        ctx.fillRect(c.x, c.y, c.w, c.h);
-        ctx.strokeRect(c.x, c.y, c.w, c.h);
-        ctx.setLineDash([]);
-        ctx.fillStyle = isActive ? '#dc2626' : '#2563eb';
-        ctx.font = 'bold 16px Arial';
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(key, c.x + 4, c.y - 4);
-        ctx.restore();
       });
     }
 
     builderStatus.textContent = '✅ Preview updated. Click on canvas to set Start X/Y for selected slot type.';
   }
 
-  // ───────────────────────────────────────────────────────
-  //  Canvas click — branches for landscape vs portrait
-  // ───────────────────────────────────────────────────────
   builderCanvas.addEventListener('click', function(e) {
     const rect = this.getBoundingClientRect();
     const scaleX = this.width / rect.width;
     const scaleY = this.height / rect.height;
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
-    const maxX = builderOrientation === 'portrait' ? 1240 : 1754;
-    const maxY = builderOrientation === 'portrait' ? 1754 : 1240;
-    const clampedX = Math.min(Math.max(Math.round(x), 0), maxX);
-    const clampedY = Math.min(Math.max(Math.round(y), 0), maxY);
     const type = document.getElementById('builderActiveSlotType').value;
-
-    // NEW: checklist placement
-    if (type.startsWith('chk_')) {
-      const cellKey = type.slice(4);
-      const meta = chkKeyToMeta(cellKey);
-      const w = parseInt(document.getElementById('chkDefaultW').value) || 200;
-      const h = parseInt(document.getElementById('chkDefaultH').value) || 35;
-      const fontSize = parseInt(document.getElementById('chkDefaultFontSize').value) || 26;
-      builderChecklistCells[cellKey] = Object.assign(
-        { x: clampedX, y: clampedY, w: w, h: h, fontSize: fontSize, picker: meta.picker },
-        meta.digitsOnly  ? { digitsOnly: true }  : {},
-        meta.stripPrefix ? { stripPrefix: true } : {}
-      );
-      builderRenderPreview();
-      builderStatus.textContent = `✅ Placed ${cellKey} at X=${clampedX}, Y=${clampedY}`;
-      return;
-    }
-
-    // Existing landscape flow
     const [section, slotType] = type.split('_');
     const prefix = (section === 'pic' ? 'pic' : 'normal') + slotType.charAt(0).toUpperCase() + slotType.slice(1);
     const xId = prefix + 'X';
     const yId = prefix + 'Y';
+    const clampedX = Math.min(Math.max(Math.round(x), 0), 1754);
+    const clampedY = Math.min(Math.max(Math.round(y), 0), 1240);
     document.getElementById(xId).value = clampedX;
     document.getElementById(yId).value = clampedY;
     builderRenderPreview();
@@ -854,24 +742,6 @@
     builderRenderPreview();
   });
 
-  // NEW: form type switch
-  document.getElementById('builderFormType').addEventListener('change', function() {
-    builderOrientation = this.value === 'portrait' ? 'portrait' : 'landscape';
-    if (builderOrientation === 'portrait') {
-      builderCanvas.width = 1240;
-      builderCanvas.height = 1754;
-      document.getElementById('chkDefaultsWrap').style.display = 'inline-flex';
-    } else {
-      builderCanvas.width = 1754;
-      builderCanvas.height = 1240;
-      document.getElementById('chkDefaultsWrap').style.display = 'none';
-      document.getElementById('builderActiveSlotType').value = 'normal_name';
-    }
-    builderBgImageData = null; // re-upload for the new orientation
-    builderRenderPreview();
-    showToast('Switched to ' + (builderOrientation === 'portrait' ? 'Portrait (Checklist)' : 'Landscape') + '. Upload a background image.', 'default');
-  });
-
   window.toggleSection = function(sectionId) {
     const section = document.getElementById(sectionId);
     const controls = section.querySelector('.slot-controls');
@@ -882,9 +752,6 @@
     }
   };
 
-  // ───────────────────────────────────────────────────────
-  //  File upload — now uses dynamic canvas dimensions
-  // ───────────────────────────────────────────────────────
   builderFileInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -893,20 +760,20 @@
       const img = new Image();
       img.onload = function() {
         const canvas = document.createElement('canvas');
-        canvas.width = builderCanvas.width;
-        canvas.height = builderCanvas.height;
+        canvas.width = A4_W;
+        canvas.height = A4_H;
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        const scaleX = canvas.width / img.width;
-        const scaleY = canvas.height / img.height;
+        ctx.fillRect(0, 0, A4_W, A4_H);
+        const scaleX = A4_W / img.width;
+        const scaleY = A4_H / img.height;
         const scale = Math.min(scaleX, scaleY);
         const drawWidth = img.width * scale;
         const drawHeight = img.height * scale;
-        const offsetX = (canvas.width - drawWidth) / 2;
-        const offsetY = (canvas.height - drawHeight) / 2;
+        const offsetX = (A4_W - drawWidth) / 2;
+        const offsetY = (A4_H - drawHeight) / 2;
         ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-        builderBgImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        builderBgImageData = ctx.getImageData(0, 0, A4_W, A4_H);
         builderRenderPreview();
         builderStatus.textContent = '✅ Canvas loaded. Adjust settings and click "Apply & Preview".';
       };
@@ -923,10 +790,8 @@
     }
     const config = {
       name: name,
-      orientation: builderOrientation,
       destination: builderDestination.value,
       picEnabled: builderPicEnable.checked,
-      checklistCells: builderOrientation === 'portrait' ? builderChecklistCells : null,
       normalName: getSlotValues('normalName'),
       normalRank: getSlotValues('normalRank'),
       normalNumber: getSlotValues('normalNumber'),
@@ -982,20 +847,6 @@
     builderDestination.value = config.destination || 'BOM';
     builderPicEnable.checked = config.picEnabled || false;
     document.getElementById('picSection').style.display = builderPicEnable.checked ? 'block' : 'none';
-
-    // Restore orientation if present
-    const isPortrait = config.orientation === 'portrait';
-    builderOrientation = isPortrait ? 'portrait' : 'landscape';
-    document.getElementById('builderFormType').value = builderOrientation;
-    if (isPortrait) {
-      builderCanvas.width = 1240; builderCanvas.height = 1754;
-      document.getElementById('chkDefaultsWrap').style.display = 'inline-flex';
-      builderChecklistCells = config.checklistCells || {};
-    } else {
-      builderCanvas.width = 1754; builderCanvas.height = 1240;
-      document.getElementById('chkDefaultsWrap').style.display = 'none';
-      builderChecklistCells = {};
-    }
 
     const normalTypes = ['Name', 'Rank', 'Number', 'CrewId', 'Passport', 'Expiry', 'Nationality'];
     normalTypes.forEach(type => {
@@ -1061,51 +912,16 @@
   document.getElementById('builderDeleteBtn').addEventListener('click', function() {
     if (!confirm('Clear the builder state?')) return;
     builderBgImageData = null;
-    builderChecklistCells = {};
-    builderCanvas.getContext('2d').clearRect(0,0,builderCanvas.width,builderCanvas.height);
+    builderCanvas.getContext('2d').clearRect(0,0,A4_W,A4_H);
     builderStatus.textContent = 'Cleared. Upload a canvas to start.';
     document.getElementById('builderOutput').value = '';
   });
 
-  // ───────────────────────────────────────────────────────
-  //  Export — portrait branch emits checklist cells code
-  // ───────────────────────────────────────────────────────
   document.getElementById('builderExportBtn').addEventListener('click', function() {
     const name = builderTemplateName.value.trim() || 'template';
     const destination = builderDestination.value;
     const picEnabled = builderPicEnable.checked;
 
-    // PORTRAIT — emit checklist cells
-    if (builderOrientation === 'portrait') {
-      const keys = Object.keys(builderChecklistCells);
-      if (keys.length === 0) {
-        showToast('No checklist cells placed yet. Click the canvas to place cells.', 'error');
-        return;
-      }
-      let code = `// ============================================\n`;
-      code += `//  ${name} — Emergency Checklist cells\n`;
-      code += `//  Paste into CHECKLIST_TEST.pages[0].cells (or TEMPLATES.emergency_checklist.pages[0].cells)\n`;
-      code += `// ============================================\n`;
-      code += `cells: {\n`;
-      keys.forEach((key, i) => {
-        const c = builderChecklistCells[key];
-        const parts = [
-          `x: ${c.x}`, `y: ${c.y}`, `w: ${c.w}`, `h: ${c.h}`,
-          `fontSize: ${c.fontSize}`, `picker: '${c.picker}'`
-        ];
-        if (c.digitsOnly)  parts.push('digitsOnly: true');
-        if (c.stripPrefix) parts.push('stripPrefix: true');
-        code += `  '${key}': { ${parts.join(', ')} }`;
-        if (i < keys.length - 1) code += ',';
-        code += '\n';
-      });
-      code += `}`;
-      document.getElementById('builderOutput').value = code;
-      showToast('Checklist cells code generated!', 'success');
-      return;
-    }
-
-    // LANDSCAPE — existing normal/pic export
     function generateSlotsFromConfig(prefix) {
       const config = getSlotValues(prefix);
       if (!config.enabled) return null;
