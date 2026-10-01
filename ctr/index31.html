@@ -381,38 +381,82 @@
   .chk-cell.readonly { cursor: default; }
   .chk-cell.readonly:hover { background: transparent; box-shadow: none; }
 
-  @media print {
-    @page { size: A4 portrait; margin: 0; }
-    body.printing-checklist > .container > *:not(#checklistCard) { display: none !important; }
-    body.printing-checklist header,
-    body.printing-checklist footer,
-    body.printing-checklist #toastMsg { display: none !important; }
-    body.printing-checklist #checklistCard {
-      display: block !important;
-      border: none; box-shadow: none;
-      padding: 0; margin: 0;
-    }
-    body.printing-checklist #checklistCard .btnrow { display: none !important; }
-    body.printing-checklist #checklistCard .report-inner { padding: 0; }
-    body.printing-checklist #checklistPrintArea { display: block; gap: 0; }
-    body.printing-checklist .checklist-page {
-      width: 100% !important;
-      height: auto !important;
-      aspect-ratio: 1240 / 1754;
-      border: none; box-shadow: none;
-      page-break-after: always;
-      break-after: page;
-      background-size: 100% 100%;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-    body.printing-checklist .checklist-page:last-child {
-      page-break-after: auto;
-      break-after: auto;
-    }
-    body.printing-checklist .chk-cell { background: transparent !important; box-shadow: none !important; }
-    body.printing-checklist .chk-cell.empty::before { content: '' !important; }
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
   }
+
+  body.printing-checklist > .container > *:not(#checklistCard) { display: none !important; }
+  body.printing-checklist header,
+  body.printing-checklist footer,
+  body.printing-checklist #toastMsg { display: none !important; }
+
+  body.printing-checklist .container {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  body.printing-checklist #checklistCard {
+    display: block !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: none !important;
+  }
+  body.printing-checklist #checklistCard .btnrow { display: none !important; }
+  body.printing-checklist #checklistCard .report-inner {
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    background: none !important;
+    overflow: visible !important;
+  }
+
+  body.printing-checklist #checklistPrintArea {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+  }
+
+  body.printing-checklist .checklist-page {
+    display: block !important;
+    width: 210mm !important;
+    height: 296mm !important;       /* 1mm slack — kills the rounding spill */
+    max-height: 296mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    background-size: 100% 100% !important;
+    background-position: top left !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Start each subsequent checklist page on a fresh sheet */
+  body.printing-checklist .checklist-page + .checklist-page {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
+  body.printing-checklist .chk-cell {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  body.printing-checklist .chk-cell.empty::before { content: '' !important; }
+}
 </style>
 </head>
 <body>
