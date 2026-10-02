@@ -188,8 +188,9 @@
     body { background: #fff; }
     header, .card:not(.reportcard), .noprint, .noprint-inline { display: none !important; }
     .report-card { background: none; border: none; padding: 0; margin: 0; }
-    .report-card .report-inner { border-radius: 0; padding: 0; overflow: visible; margin: 0; }
-    .stats-row, .btnrow, .status, .badge-group { display: none !important; }
+.report-card .report-inner { border-radius: 0; padding: 0; overflow: visible; margin: 0; }
+#checklistCard { display: none !important; }   /* ← NEW: hide from report/print-day */
+.stats-row, .btnrow, .status, .badge-group { display: none !important; }
     .container { max-width: 100%; padding: 0; margin: 0; }
     #report { border-radius: 0; font-size: 8.5px; margin: 0; padding: 0; }
     #report .rpad { padding: 4px 6px; }
@@ -338,9 +339,14 @@
   .chk-flights-preview .form-line strong { color: var(--accent); }
   .chk-flights-preview .warn-line { color: #b45309; }
 
-  @media print {
-    @page { size: A4 portrait; margin: 0; }
-    html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+@media print {
+  @page checklist-page { size: A4 portrait; margin: 0; }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
     body.printing-checklist > .container > *:not(#checklistCard) { display: none !important; }
     body.printing-checklist header, body.printing-checklist footer, body.printing-checklist #toastMsg { display: none !important; }
     body.printing-checklist .container { max-width: none !important; padding: 0 !important; margin: 0 !important; }
@@ -348,7 +354,11 @@
     body.printing-checklist #checklistCard .btnrow { display: none !important; }
     body.printing-checklist #checklistCard .report-inner { padding: 0 !important; margin: 0 !important; border-radius: 0 !important; background: none !important; overflow: visible !important; }
     body.printing-checklist #checklistPrintArea { display: block !important; margin: 0 !important; padding: 0 !important; gap: 0 !important; }
-    body.printing-checklist .checklist-page { display: block !important; width: 210mm !important; height: 296mm !important; max-height: 296mm !important; margin: 0 !important; padding: 0 !important; border: none !important; box-shadow: none !important; overflow: hidden !important; background-size: 100% 100% !important; background-position: top left !important; page-break-inside: avoid !important; break-inside: avoid !important; page-break-after: auto !important; break-after: auto !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body.printing-checklist .checklist-page {
+  page: checklist-page;
+  display: block !important;
+  width: 210mm !important;
+  height: 296mm !important; max-height: 296mm !important; margin: 0 !important; padding: 0 !important; border: none !important; box-shadow: none !important; overflow: hidden !important; background-size: 100% 100% !important; background-position: top left !important; page-break-inside: avoid !important; break-inside: avoid !important; page-break-after: auto !important; break-after: auto !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     body.printing-checklist .checklist-page + .checklist-page { page-break-before: always !important; break-before: page !important; }
     body.printing-checklist .chk-page-scaler { transform: none !important; }
     body.printing-checklist .chk-page-wrap { height: auto !important; width: auto !important; display: block !important; overflow: visible !important; }
