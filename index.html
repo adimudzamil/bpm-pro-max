@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Passenger Meal & Tier Report - by *2100551*</title>
-    
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💺</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💺</text></svg>">
+    <title>Passenger Meal & Tier Report - by *2100551*</title><text y='.9em' font-size='90'>💺</text></svg>"><text y='.9em' font-size='90'>💺</text></svg>">
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563EB">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="BPM Pro">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <script src="pwa-register.js" defer></script>
 </head>
 <body>
     <div class="container">
@@ -407,6 +412,9 @@
         </div>
     </div>
     
+    <!-- Floating seat search (same as tapping the yellow flight header) -->
+    <button type="button" id="seatSearchFab" class="seat-search-fab" onclick="openSeatLookup()" aria-label="Search seat" title="Search seat">🔍</button>
+
     <!-- Modals -->
     <div id="seatLookupOverlay" class="seat-lookup-overlay" onclick="closeSeatLookupOnOverlay(event)">
         <div class="seat-lookup-modal" onclick="event.stopPropagation()">
@@ -591,6 +599,8 @@
         let pendingDeleteTabId = null;
         const TABS_STORAGE_KEY = 'bpmReportTabs';
         const ACTIVE_TAB_KEY = 'bpmActiveTabId';
+        const DRAFT_KEY = 'bpmManifestDraft';
+        const PAX_EDIT_FIELDS = ['id', 'specialCode', 'specialOtherText', 'isInfant', 'extSeatbelt', 'remarksText', 'originalSeat'];
         
         let passengerIdCounter = 0;
         function generatePassengerId() {
@@ -610,11 +620,76 @@
         }
         
         // =================== REPORT TABS MANAGEMENT ===================
+        let storageWarned = false;
         function saveTabsToStorage() {
             try {
                 localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(reportTabs));
                 localStorage.setItem(ACTIVE_TAB_KEY, activeTabId || '');
-            } catch (e) { console.error('Failed to save report tabs:', e); }
+                storageWarned = false;
+                return true;
+            } catch (e) {
+                console.error('Failed to save report tabs:', e);
+                if (!storageWarned) {
+                    storageWarned = true;
+                    showError('⚠️ Browser storage is full - your latest changes were NOT saved. Delete old report tabs (✕) to free space.');
+                }
+                return false;
+            }
+        }
+
+        // ---- Input box <-> report tab ----
+        // Each tab remembers the text that created it (rawManifest). Text typed/pasted
+        // into the box but not yet generated is kept as tab.draftText so it survives too.
+        function showManifestForTab(tab) {
+            const box = document.getElementById('manifestInput');
+            if (!box) return;
+            if (!tab) { box.value = ''; return; }
+            box.value = (tab.draftText !== undefined) ? tab.draftText : (tab.rawManifest || '');
+        }
+
+        function saveManifestDraft() {
+            const box = document.getElementById('manifestInput');
+            if (!box) return;
+            const v = box.value;
+            const tab = activeTabId ? reportTabs.find(t => t.id === activeTabId) : null;
+            if (tab) {
+                if (v === '' || v === (tab.rawManifest || '')) delete tab.draftText; // blank box = no draft
+                else tab.draftText = v;
+                saveTabsToStorage();
+            } else {
+                try { v ? localStorage.setItem(DRAFT_KEY, v) : localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+            }
+        }
+
+        // Re-generating from the text box must not wipe edits made on passenger cards.
+        // Same flight only; passengers are matched on PNR + name.
+        function mergePassengerEdits(oldList, newList, oldFlight, newFlight) {
+            if (!Array.isArray(oldList) || !Array.isArray(newList)) return newList;
+            if (oldFlight && newFlight && (oldFlight.flightNumber !== newFlight.flightNumber || oldFlight.date !== newFlight.date)) return newList;
+            const keyOf = function(p) { return (p.pnr || '') + '|' + String(p.fullName || p.name || '').trim().toUpperCase(); };
+            const pool = {};
+            oldList.forEach(function(op) { const k = keyOf(op); (pool[k] = pool[k] || []).push(op); });
+            newList.forEach(function(np) {
+                const list = pool[keyOf(np)];
+                if (!list || !list.length) return;
+                const op = list.shift();
+                PAX_EDIT_FIELDS.forEach(function(f) { if (op[f] !== undefined) np[f] = op[f]; });
+                if (op.originalSeat !== undefined) np.seat = op.seat; // keep the moved seat
+            });
+            return newList;
+        }
+
+        // Remember where a passenger started, so moved passengers can be listed.
+        function trackSeatMove(p, fromSeat, toSeat) {
+            if (!p) return;
+            if (p.originalSeat === undefined) p.originalSeat = fromSeat || '';
+            if (p.originalSeat === toSeat) delete p.originalSeat;
+        }
+
+        function updateSeatFab() {
+            const fab = document.getElementById('seatSearchFab');
+            if (!fab) return;
+            fab.classList.toggle('visible', !!(activeTabId && reportTabs.find(t => t.id === activeTabId)));
         }
         
         function loadTabsFromStorage() {
@@ -645,10 +720,14 @@
         }
         
         function restoreActiveTabView() {
-            if (!activeTabId) return;
+            if (!activeTabId) {
+                try { const d = localStorage.getItem(DRAFT_KEY); if (d) document.getElementById('manifestInput').value = d; } catch (e) {}
+                return;
+            }
             const tab = reportTabs.find(t => t.id === activeTabId);
             if (tab) {
                 document.getElementById('reportContent').innerHTML = '<div id="reportBody">' + tab.html + '</div>';
+                showManifestForTab(tab);
             } else {
                 activeTabId = null;
             }
@@ -656,6 +735,8 @@
         
         function saveOrUpdateTab(flightInfo, passengers, rawManifest, html) {
             const existingActive = activeTabId ? reportTabs.find(t => t.id === activeTabId) : null;
+            if (existingActive) delete existingActive.draftText;
+            try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
             if (pendingNewTab || !existingActive) {
                 const id = 'tab_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
                 reportTabs.push({
@@ -706,8 +787,10 @@
         function switchToTab(tabId) {
             const tab = reportTabs.find(t => t.id === tabId);
             if (!tab) return;
+            saveManifestDraft(); // keep whatever is in the box for the tab we are leaving
             activeTabId = tabId;
             document.getElementById('reportContent').innerHTML = '<div id="reportBody">' + tab.html + '</div>';
+            showManifestForTab(tab);
             saveTabsToStorage();
             renderTabsBar();
             renderSummaryBar();
@@ -735,9 +818,11 @@
                     const nextTab = reportTabs[reportTabs.length - 1];
                     activeTabId = nextTab.id;
                     document.getElementById('reportContent').innerHTML = '<div id="reportBody">' + nextTab.html + '</div>';
+                    showManifestForTab(nextTab);
                 } else {
                     activeTabId = null;
                     document.getElementById('reportContent').innerHTML = '';
+                    showManifestForTab(null);
                 }
             }
             pendingDeleteTabId = null;
@@ -900,7 +985,9 @@
                         '<textarea class="lookup-remarks" rows="2" placeholder="Add remarks..." onchange="updatePassengerField(\'' + passenger.id + '\', \'remarksText\', this.value)">' + (passenger.remarksText || '') + '</textarea>' +
                     '</div>' +
                 '</div>';
-            return flashHTML + '<div class="lookup-card with-data">' +
+            const posIdx = tab ? tab.passengers.findIndex(function(pp) { return pp.id === passenger.id; }) : -1;
+            const posHTML = posIdx >= 0 ? '<div class="lookup-pos">' + (posIdx + 1) + ' / ' + tab.passengers.length + '</div>' : '';
+            return flashHTML + '<div class="lookup-card with-data">' + posHTML +
                    '<div class="lookup-seat-big lookup-seat-editable" onclick="startSeatEdit(\'' + passenger.id + '\')">' + (passenger.seat || 'NO SEAT') + ' <span class="seat-edit-icon">✎</span></div>' +
                    '<div class="lookup-details">' + rowsHTML + '</div>' +
                    editSectionHTML +
@@ -908,6 +995,58 @@
                    '<button class="btn-primary lookup-newsearch" onclick="newSeatLookup()">New Search</button>';
         }
         
+        // ---- Swipe between passenger cards (order = order in the pasted text) ----
+        // dir +1 = next passenger in the text, -1 = previous (wraps: first -> last)
+        function getCardPassenger(tab) {
+            if (!tab) return null;
+            if (lookupState.passengerId) return tab.passengers.find(p => p.id === lookupState.passengerId) || null;
+            const seatNum = lookupState.digits.join('').padStart(2, '0') + (lookupState.letter || '');
+            return tab.passengers.find(p => p.seat === seatNum) || null;
+        }
+
+        function navigatePassengerCard(dir) {
+            if (lookupState.phase !== 'result') return;
+            const tab = reportTabs.find(t => t.id === activeTabId);
+            if (!tab || !tab.passengers || tab.passengers.length < 2) return;
+            const cur = getCardPassenger(tab);
+            if (!cur) return;
+            // commit anything being typed (remarks use onchange, which fires on blur)
+            const ae = document.activeElement;
+            if (ae && ae !== document.body && document.getElementById('seatLookupBody').contains(ae)) ae.blur();
+            const idx = tab.passengers.findIndex(p => p.id === cur.id);
+            const n = tab.passengers.length;
+            const next = tab.passengers[(idx + dir + n) % n];
+            lookupState = { phase: 'result', digits: [], letter: null, passengerId: next.id, editingPassengerId: null, seatEditDigits: [], seatEditLetter: null, cameFromCard: false, flashMessage: null };
+            renderSeatLookupUI();
+            const card = document.querySelector('#seatLookupBody .lookup-card');
+            if (card) card.classList.add(dir > 0 ? 'slide-in-left' : 'slide-in-right');
+        }
+
+        function initCardSwipe() {
+            const modal = document.querySelector('#seatLookupOverlay .seat-lookup-modal');
+            if (!modal) return;
+            let start = null;
+            modal.addEventListener('touchstart', function(e) {
+                if (lookupState.phase !== 'result' || e.touches.length !== 1 || e.target.closest('input, textarea, select, label, button')) { start = null; return; }
+                start = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }, { passive: true });
+            modal.addEventListener('touchend', function(e) {
+                if (!start) return;
+                const t = e.changedTouches[0];
+                const dx = t.clientX - start.x, dy = t.clientY - start.y;
+                start = null;
+                if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+                navigatePassengerCard(dx > 0 ? 1 : -1); // swipe right = next, swipe left = previous
+            }, { passive: true });
+            document.addEventListener('keydown', function(e) {
+                const ov = document.getElementById('seatLookupOverlay');
+                if (!ov || ov.style.display === 'none' || !ov.style.display) return;
+                if (e.target && e.target.closest && e.target.closest('input, textarea, select')) return;
+                if (e.key === 'ArrowRight') navigatePassengerCard(1);
+                else if (e.key === 'ArrowLeft') navigatePassengerCard(-1);
+            });
+        }
+
         function toggleOthersInput(selectEl) {
             const wrapper = selectEl.closest('.lookup-card');
             if (!wrapper) return;
@@ -1038,6 +1177,7 @@
             const conflictPax = tab.passengers.find(function(p) { return p.id !== passengerId && p.seat === newSeat; });
             const oldSeat = movingPax.seat;
             movingPax.seat = newSeat;
+            trackSeatMove(movingPax, oldSeat, newSeat);
             saveTabsToStorage();
             rerenderActiveTabFromEdits();
             if (conflictPax) {
@@ -1068,6 +1208,7 @@
         
         // =================== SUMMARY BAR (UPDATED) ===================
         function renderSummaryBar() {
+            updateSeatFab();
             const container = document.getElementById('reportSummaryBar');
             if (!container) return;
             const tab = reportTabs.find(t => t.id === activeTabId);
@@ -1090,6 +1231,7 @@
             const infCount = passengers.filter(p => p.isInfant).length;
             const extCount = passengers.filter(p => p.extSeatbelt).length;
             const remarksCount = passengers.filter(p => p.remarksText && p.remarksText.trim()).length;
+            const seatChangeCount = passengers.filter(p => p.originalSeat !== undefined && p.originalSeat !== p.seat).length;
             
             let chips = [];
             
@@ -1108,6 +1250,10 @@
             }
             if (remarksCount > 0) {
                 chips.push('<div class="summary-chip" onclick="openCategoryList(\'remarks\')"><strong>REMARKS (' + remarksCount + ')</strong></div>');
+            }
+            
+            if (seatChangeCount > 0) {
+                chips.push('<div class="summary-chip" onclick="openCategoryList(\'seat\')"><strong>SEAT (' + seatChangeCount + ')</strong></div>');
             }
             
             if (chips.length === 0) {
@@ -1147,6 +1293,10 @@
                 title = 'Extension Seatbelt (' + passengers.filter(p => p.extSeatbelt).length + ')';
                 items = passengers.filter(function(p) { return p.extSeatbelt; })
                     .map(function(p) { return { id: p.id, seat: p.seat || '—', name: p.fullName || p.name, tag: 'EXT' }; });
+            } else if (category === 'seat') {
+                const moved = passengers.filter(function(p) { return p.originalSeat !== undefined && p.originalSeat !== p.seat; });
+                title = 'Seat changes (' + moved.length + ')';
+                items = moved.map(function(p) { return { id: p.id, seat: p.seat || '—', name: p.fullName || p.name, tag: (p.originalSeat || '—') + ' → ' + (p.seat || '—') }; });
             } else if (category === 'remarks') {
                 title = 'Remarks (' + passengers.filter(p => p.remarksText && p.remarksText.trim()).length + ')';
                 items = passengers.filter(function(p) { return p.remarksText && p.remarksText.trim(); })
@@ -2021,6 +2171,10 @@ yesterday.setDate(yesterday.getDate() - 1);
                     const parsed = parseManifest(input);
                     flightInfo = parsed.flightInfo;
                     passengers = parsed.passengers;
+                    const activeTabNow = activeTabId ? reportTabs.find(t => t.id === activeTabId) : null;
+                    if (activeTabNow && !pendingNewTab) {
+                        passengers = mergePassengerEdits(activeTabNow.passengers, passengers, activeTabNow.flightInfo, flightInfo);
+                    }
                 }
                 const layoutStyle = document.getElementById('layoutStyle').value;
                 if (isDualChartMode || layoutStyle === 'dual-chart-737') {
@@ -2639,6 +2793,9 @@ yesterday.setDate(yesterday.getDate() - 1);
         function clearAll() {
             document.getElementById('manifestInput').value = '';
             document.getElementById('reportContent').innerHTML = '';
+            const t = activeTabId ? reportTabs.find(x => x.id === activeTabId) : null;
+            if (t && t.draftText !== undefined) { delete t.draftText; saveTabsToStorage(); }
+            try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
         }
         
         function downloadPage() {
@@ -2722,6 +2879,15 @@ yesterday.setDate(yesterday.getDate() - 1);
             restoreActiveTabView();
             renderTabsBar();
             renderSummaryBar();
+            document.getElementById('manifestInput').addEventListener('input', debounce(saveManifestDraft, 400));
+            initCardSwipe();
+            // seat chart pages write edits straight to storage: pick them up here
+            window.addEventListener('storage', function(e) {
+                if (e.key !== TABS_STORAGE_KEY) return;
+                loadTabsFromStorage();
+                renderTabsBar();
+                renderSummaryBar();
+            });
             
             const layoutValue = document.getElementById('layoutStyle').value;
             if (layoutValue === 'dual-chart-737') {

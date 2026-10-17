@@ -1797,3 +1797,50 @@ body.landscape-mode::before {
         text-shadow: 0 0 20px rgba(220, 38, 38, 1), 0 0 30px rgba(220, 38, 38, 0.5);
     }
 }
+/* ===== Floating seat search button (mirrors the yellow flight header) ===== */
+.seat-search-fab {
+    display: none;
+    position: fixed;
+    right: calc(16px + env(safe-area-inset-right, 0px));
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px solid var(--color-warning);
+    background: var(--color-bg-warning);
+    font-size: 26px;
+    line-height: 1;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    z-index: 9000;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    -webkit-tap-highlight-color: transparent;
+}
+.seat-search-fab.visible { display: flex; }
+.seat-search-fab:active { transform: scale(0.94); }
+@media print {
+    .seat-search-fab { display: none !important; }
+}
+
+/* ===== Passenger card: scroll inside the modal (so there is always a tap-outside area), swipe animation ===== */
+.seat-lookup-modal {
+    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+}
+.lookup-pos {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-gray-600);
+    margin-bottom: 4px;
+}
+@keyframes lookupSlideInLeft  { from { transform: translateX(-36px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes lookupSlideInRight { from { transform: translateX(36px);  opacity: 0; } to { transform: none; opacity: 1; } }
+.lookup-card.slide-in-left  { animation: lookupSlideInLeft 0.18s ease-out; }
+.lookup-card.slide-in-right { animation: lookupSlideInRight 0.18s ease-out; }

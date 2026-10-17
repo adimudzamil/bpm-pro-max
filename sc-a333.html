@@ -1059,7 +1059,23 @@
                 min-height: 50px !important;
             }
         }
+        /* Custom print scale (set from the View options) */
+        @media print {
+            .single-chart-container {
+                zoom: var(--print-scale, 1);
+                margin: 0 auto !important;
+            }
+        }
     </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563EB">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="BPM Pro">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <script src="pwa-register.js" defer></script>
 </head>
 <body>
     <!-- Control Bar -->
@@ -1410,6 +1426,13 @@
                         '<label for="fontSizeSlider">Font Size:</label>' +
                         '<input type="range" id="fontSizeSlider" class="font-slider" min="8" max="16" step="1" value="' + currentFontSize + '" oninput="adjustFontSize(parseInt(this.value))">' +
                         '<span id="fontSizeValue" class="font-value">' + currentFontSize + 'px</span>' +
+                    '</div>' +
+                    '<div class="control-group" title="Applies when printing / saving as PDF">' +
+                        '<label for="printScaleInput">Print scale:</label>' +
+                        '<input type="range" id="printScaleSlider" class="font-slider" min="30" max="150" step="1" value="' + currentPrintScale + '" oninput="applyPrintScale(this.value, true)">' +
+                        '<input type="number" id="printScaleInput" inputmode="numeric" min="30" max="150" step="1" value="' + currentPrintScale + '" style="width:58px;padding:4px 6px;font-size:13px;border:1px solid #cbd5e1;border-radius:6px;text-align:center;" oninput="onPrintScaleTyped(this)" onchange="applyPrintScale(this.value, true)">' +
+                        '<span class="font-value">%</span>' +
+                        '<button type="button" class="theme-reset-btn" onclick="applyPrintScale(100, true)" title="Reset to 100%">↺</button>' +
                     '</div>' +
                     '<div class="control-group">' +
                         '<label for="aftViewToggle">Aft View:</label>' +
@@ -2352,12 +2375,14 @@
 
             if (pA && pB) {
                 const tempA = Object.assign({}, pA);
-                Object.assign(pA, pB); pA.seat = seatA;
-                Object.assign(pB, tempA); pB.seat = seatB;
+                const tempB = Object.assign({}, pB);
+                delete pA.originalSeat; delete pB.originalSeat;
+                Object.assign(pA, tempB); pA.seat = seatA; trackSeatMove(pA, seatB, seatA);
+                Object.assign(pB, tempA); pB.seat = seatB; trackSeatMove(pB, seatA, seatB);
             } else if (pA && !pB) {
-                pA.seat = seatB;
+                pA.seat = seatB; trackSeatMove(pA, seatA, seatB);
             } else if (!pA && pB) {
-                pB.seat = seatA;
+                pB.seat = seatA; trackSeatMove(pB, seatB, seatA);
             } else {
                 showToast('Both seats are empty');
                 return;
@@ -2392,8 +2417,14 @@
                 if (!tab || !tab.passengers) return;
                 if (chartData && chartData.passengers) {
                     chartData.passengers.forEach(function (p) {
-                        const idx = tab.passengers.findIndex(function (tp) { return tp.seat === p.seat; });
-                        if (idx !== -1) tab.passengers[idx] = Object.assign({}, tab.passengers[idx], p);
+                        // match by passenger id (seat numbers change when passengers are moved)
+                        let idx = p.id ? tab.passengers.findIndex(function (tp) { return tp.id === p.id; }) : -1;
+                        if (idx === -1 && !p.id) idx = tab.passengers.findIndex(function (tp) { return tp.seat === p.seat; });
+                        if (idx !== -1) {
+                            const merged = Object.assign({}, tab.passengers[idx], p);
+                            if (p.originalSeat === undefined) delete merged.originalSeat;
+                            tab.passengers[idx] = merged;
+                        }
                     });
                 }
                 localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(tabs));
@@ -2403,6 +2434,40 @@
         // ============== SEAT GRID GENERATION (data-driven) ==============
         let isAftView = false;
         let currentFontSize = 12;
+
+        // ============== PRINT SCALE (custom %, remembered on this device) ==============
+        let currentPrintScale = 100;
+        const PRINT_SCALE_KEY = 'bpmChartPrintScale';
+        function applyPrintScale(pct, save) {
+            pct = Math.round(Number(pct));
+            if (!isFinite(pct)) pct = 100;
+            pct = Math.min(150, Math.max(30, pct));
+            currentPrintScale = pct;
+            document.documentElement.style.setProperty('--print-scale', String(pct / 100));
+            ['printScaleSlider', 'printScaleInput'].forEach(function (id) {
+                const el = document.getElementById(id);
+                if (el && String(el.value) !== String(pct)) el.value = pct;
+            });
+            if (save) { try { localStorage.setItem(PRINT_SCALE_KEY, String(pct)); } catch (e) {} }
+        }
+        function onPrintScaleTyped(el) {
+            // apply as soon as the typed value is valid; clamp on change/blur
+            const v = parseInt(el.value, 10);
+            if (isFinite(v) && v >= 30 && v <= 150) applyPrintScale(v, true);
+        }
+        (function () {
+            try {
+                const v = parseInt(localStorage.getItem(PRINT_SCALE_KEY), 10);
+                if (isFinite(v)) applyPrintScale(v, false);
+            } catch (e) {}
+        })();
+
+        // Remember where a passenger started so the main page can list seat changes
+        function trackSeatMove(p, fromSeat, toSeat) {
+            if (!p) return;
+            if (p.originalSeat === undefined) p.originalSeat = fromSeat || '';
+            if (p.originalSeat === toSeat) delete p.originalSeat;
+        }
         let chartData = null;
         let currentTabId = null;
 

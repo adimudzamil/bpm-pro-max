@@ -1,236 +1,115 @@
-// PWA Registration and Installation Handler
-// Add this script to your index.html
-
-(function() {
+// PWA registration, install button and update banner (relative paths: works in a subfolder)
+(function () {
   'use strict';
-  
-  // Check if service workers are supported
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      registerServiceWorker();
-      setupInstallPrompt();
-      checkForUpdates();
-    });
-  } else {
-    console.warn('Service Workers not supported in this browser');
+
+  var deferredPrompt = null;
+
+  function toast(msg) {
+    if (typeof window.showSuccess === 'function') { window.showSuccess(msg); return; }
+    console.log(msg);
   }
-  
-  // Register Service Worker
-  async function registerServiceWorker() {
-    try {
-      const registration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/'
-      });
-      
-      console.log('✅ Service Worker registered successfully:', registration.scope);
-      
-      // Check for updates every hour
-      setInterval(() => {
-        registration.update();
-      }, 60 * 60 * 1000);
-      
-      // Handle service worker updates
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // New service worker available
-            showUpdateNotification();
-          }
-        });
-      });
-      
-    } catch (error) {
-      console.error('❌ Service Worker registration failed:', error);
-    }
+
+  var style = document.createElement('style');
+  style.textContent =
+    '#pwa-install-btn{position:fixed;left:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:9990;' +
+    'padding:10px 16px;font-size:13px;font-weight:600;border:none;border-radius:22px;background:#2563EB;color:#fff;' +
+    'box-shadow:0 4px 12px rgba(0,0,0,.3);cursor:pointer}' +
+    '#pwa-update-banner{position:fixed;top:0;left:0;right:0;z-index:10000;display:flex;align-items:center;' +
+    'justify-content:space-between;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;' +
+    'background:#2563EB;color:#fff;font-size:13px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.3)}' +
+    '#pwa-update-banner button{border:1px solid #fff;background:#fff;color:#2563EB;border-radius:4px;padding:6px 12px;font-weight:600}' +
+    '#pwa-update-banner button.ghost{background:transparent;color:#fff}' +
+    '#pwa-offline-badge{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:8px;z-index:9980;padding:5px 12px;' +
+    'border-radius:16px;font-size:11px;font-weight:600;background:#EF4444;color:#fff;display:none}' +
+    '@media print{#pwa-install-btn,#pwa-update-banner,#pwa-offline-badge{display:none!important}}';
+  document.head.appendChild(style);
+
+  function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   }
-  
-  // Setup Install Prompt
-  let deferredPrompt;
-  
-  function setupInstallPrompt() {
-    window.addEventListener('beforeinstallprompt', (e) => {
-      // Prevent the mini-infobar from appearing on mobile
-      e.preventDefault();
-      
-      // Store the event for later use
-      deferredPrompt = e;
-      
-      // Show install button
-      showInstallButton();
-    });
-    
-    // Handle successful installation
-    window.addEventListener('appinstalled', () => {
-      console.log('✅ BPM Pro installed successfully!');
-      deferredPrompt = null;
-      hideInstallButton();
-      showSuccess('✨ BPM Pro installed! You can now use it offline.');
-    });
-  }
-  
-  // Show install button
+
   function showInstallButton() {
-    // Create install button if it doesn't exist
-    let installBtn = document.getElementById('pwa-install-btn');
-    
-    if (!installBtn) {
-      installBtn = document.createElement('button');
-      installBtn.id = 'pwa-install-btn';
-      installBtn.className = 'btn-success pwa-install-button';
-      installBtn.innerHTML = '📲 Install BPM Pro App';
-      installBtn.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 9999;
-        padding: 12px 24px;
-        font-size: 14px;
-        font-weight: 600;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        animation: pulse 2s infinite;
-      `;
-      
-      installBtn.addEventListener('click', installApp);
-      document.body.appendChild(installBtn);
+    if (isStandalone()) return;
+    var btn = document.getElementById('pwa-install-btn');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.id = 'pwa-install-btn';
+      btn.type = 'button';
+      btn.textContent = '📲 Install BPM Pro';
+      btn.addEventListener('click', installApp);
+      document.body.appendChild(btn);
     }
-    
-    installBtn.style.display = 'block';
+    btn.style.display = 'block';
   }
-  
-  // Hide install button
+
   function hideInstallButton() {
-    const installBtn = document.getElementById('pwa-install-btn');
-    if (installBtn) {
-      installBtn.style.display = 'none';
-    }
+    var btn = document.getElementById('pwa-install-btn');
+    if (btn) btn.style.display = 'none';
   }
-  
-  // Install app
+
   async function installApp() {
-    if (!deferredPrompt) {
-      return;
-    }
-    
-    // Show the install prompt
+    if (!deferredPrompt) return;
     deferredPrompt.prompt();
-    
-    // Wait for the user's response
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    console.log(`User response to install prompt: ${outcome}`);
-    
-    if (outcome === 'accepted') {
-      console.log('✅ User accepted the install prompt');
-    } else {
-      console.log('❌ User dismissed the install prompt');
-    }
-    
-    // Clear the deferredPrompt
+    try { await deferredPrompt.userChoice; } catch (e) {}
     deferredPrompt = null;
     hideInstallButton();
   }
-  
-  // Show update notification
-  function showUpdateNotification() {
-    const updateBanner = document.createElement('div');
-    updateBanner.id = 'update-notification';
-    updateBanner.className = 'update-notification';
-    updateBanner.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #2563EB; color: white; position: fixed; top: 0; left: 0; right: 0; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
-        <span style="font-weight: 600;">🔄 New version available!</span>
-        <div>
-          <button onclick="window.location.reload()" style="background: white; color: #2563EB; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 600; margin-right: 10px; cursor: pointer;">Update Now</button>
-          <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: transparent; color: white; border: 1px solid white; padding: 8px 16px; border-radius: 4px; font-weight: 600; cursor: pointer;">Later</button>
-        </div>
-      </div>
-    `;
-    document.body.prepend(updateBanner);
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallButton();
+  });
+
+  window.addEventListener('appinstalled', function () {
+    deferredPrompt = null;
+    hideInstallButton();
+    toast('✨ BPM Pro installed! It now works offline.');
+  });
+
+  function showUpdateBanner(worker) {
+    if (document.getElementById('pwa-update-banner')) return;
+    var bar = document.createElement('div');
+    bar.id = 'pwa-update-banner';
+    bar.innerHTML = '<span>🔄 New version available</span><span>' +
+      '<button type="button" id="pwa-update-now">Update</button> ' +
+      '<button type="button" class="ghost" id="pwa-update-later">Later</button></span>';
+    document.body.appendChild(bar);
+    document.getElementById('pwa-update-later').onclick = function () { bar.remove(); };
+    document.getElementById('pwa-update-now').onclick = function () {
+      if (worker) worker.postMessage({ type: 'SKIP_WAITING' });
+      window.location.reload();
+    };
   }
-  
-  // Check for updates on focus
-  function checkForUpdates() {
-    let refreshing = false;
-    
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (refreshing) return;
-      refreshing = true;
-      console.log('🔄 New service worker activated');
-    });
-    
-    // Check for updates when page gains focus
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        navigator.serviceWorker.getRegistration().then(reg => {
-          if (reg) reg.update();
+
+  function updateOnlineBadge() {
+    var badge = document.getElementById('pwa-offline-badge');
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = 'pwa-offline-badge';
+      badge.textContent = '🔴 Offline mode';
+      document.body.appendChild(badge);
+    }
+    badge.style.display = navigator.onLine ? 'none' : 'block';
+  }
+  window.addEventListener('online', updateOnlineBadge);
+  window.addEventListener('offline', updateOnlineBadge);
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      updateOnlineBadge();
+      navigator.serviceWorker.register('./sw.js').then(function (reg) {
+        reg.addEventListener('updatefound', function () {
+          var nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', function () {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner(nw);
+          });
         });
-      }
+        document.addEventListener('visibilitychange', function () {
+          if (!document.hidden) reg.update().catch(function () {});
+        });
+      }).catch(function (err) { console.error('Service worker registration failed:', err); });
     });
   }
-  
-  // Display online/offline status
-  function updateOnlineStatus() {
-    const statusIndicator = document.getElementById('online-status');
-    
-    if (!statusIndicator) {
-      const indicator = document.createElement('div');
-      indicator.id = 'online-status';
-      indicator.style.cssText = `
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        z-index: 9998;
-        transition: all 0.3s ease;
-      `;
-      document.body.appendChild(indicator);
-    }
-    
-    const indicator = document.getElementById('online-status');
-    
-    if (navigator.onLine) {
-      indicator.textContent = '🟢 Online';
-      indicator.style.background = '#10B981';
-      indicator.style.color = 'white';
-      setTimeout(() => {
-        indicator.style.opacity = '0';
-      }, 3000);
-    } else {
-      indicator.textContent = '🔴 Offline Mode';
-      indicator.style.background = '#EF4444';
-      indicator.style.color = 'white';
-      indicator.style.opacity = '1';
-    }
-  }
-  
-  // Listen for online/offline events
-  window.addEventListener('online', updateOnlineStatus);
-  window.addEventListener('offline', updateOnlineStatus);
-  
-  // Check initial status
-  window.addEventListener('load', updateOnlineStatus);
-  
-  // Add pulse animation to CSS
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-    
-    .pwa-install-button {
-      animation: pulse 2s infinite;
-    }
-    
-    .pwa-install-button:hover {
-      animation: none;
-      transform: scale(1.05);
-    }
-  `;
-  document.head.appendChild(style);
-  
 })();
