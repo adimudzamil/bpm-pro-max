@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Passenger Meal & Tier Report - by *2100551*</title><text y='.9em' font-size='90'>💺</text></svg>"><text y='.9em' font-size='90'>💺</text></svg>">
+    <title>Passenger Meal & Tier Report - by *2100551*</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563EB">
@@ -36,13 +36,13 @@
                     <span class="toggle-slider"></span>
                 </label>
                 <label class="help-toggle-label version-glow" for="toggleVersion">
-                    <span id="versionLabel">🔴</span> 6 Updates 23/07/26
+                    <span id="versionLabel">🔴</span> 7 Updates 18/10/26
                 </label>
             </div>
             
             <div class="help-toggle">
-                <button class="btn-success btn-small" onclick="downloadPage()">
-                    📲 Download Offline Version
+                <button class="btn-success btn-small" id="installAppBtn" onclick="installBpmPro()">
+                    📲 Install BPM Pro (works offline)
                 </button>
             </div>
         </div>
@@ -2798,6 +2798,11 @@ yesterday.setDate(yesterday.getDate() - 1);
             try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
         }
         
+        function installBpmPro() {
+            if (typeof window.bpmInstallApp === 'function') window.bpmInstallApp();
+            else showError('Install is not available in this browser. Open the browser menu and choose "Install app" or "Add to Home screen".');
+        }
+
         function downloadPage() {
             const htmlContent = document.documentElement.outerHTML;
             const blob = new Blob([htmlContent], { type: 'text/html' });

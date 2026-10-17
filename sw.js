@@ -2,7 +2,7 @@
 // Strategy: precache app shell (tolerant of single failures), then
 // stale-while-revalidate for same-origin GETs. Bump VERSION on each release.
 
-const VERSION = 'v4.1';
+const VERSION = 'v4.3';
 const CACHE_NAME = 'bpm-pro-' + VERSION;
 
 const PRECACHE_URLS = [

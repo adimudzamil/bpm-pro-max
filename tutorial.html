@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Complete Guide - Passenger Meal & Tier Report</title><text y='.9em' font-size='90'>💺</text></svg>">
+    <title>Complete Guide - Passenger Meal & Tier Report</title>
     <style>
         * {
             margin: 0;
@@ -350,9 +350,10 @@
         <div class="section">
             <h2>📊 Part 3: Navigating the Generated Report</h2>
             <ul>
-                <li><strong>Report Tabs:</strong> If you generate multiple flights, tabs will appear at the top of the report. Click them to switch between different flights without losing data.</li>
-                <li><strong>Summary Bar:</strong> A sticky bar at the top showing total counts for Special Codes, INF (infants), EXT (extension seatbelts), and REMARKS. Clicking a chip opens a modal to view the specific passengers in that category.</li>
-                <li><strong>Flight Info Bar:</strong> Click the blue "Flight Info" bar at the top to open the <strong>Seat Lookup</strong> modal. It features an on-screen keypad allowing you to quickly input a seat number (e.g., 3A) and instantly see the passenger's details or edit their remarks/special codes.</li>
+                <li><strong>Report Tabs:</strong> If you generate multiple flights, tabs will appear at the top of the report. Click them to switch between different flights without losing data. Each tab also remembers the exact text you pasted for that flight, and shows it in the input box again when you switch to it, reload, or reopen the browser. Passenger card edits are saved the same way.</li>
+                <li><strong>Summary Bar:</strong> A sticky bar at the top showing total counts for Special Codes, INF (infants), EXT (extension seatbelts), and REMARKS. Clicking a chip opens a modal to view the specific passengers in that category. The <strong>SEAT</strong> chip lists every passenger whose seat was changed, for example <code>11A → 20K</code>.</li>
+                <li><strong>Flight Info Bar &amp; 🔍 Button:</strong> Click the yellow "Flight Info" bar at the top, or the round <strong>🔍</strong> button floating at the bottom right, to open the <strong>Seat Lookup</strong> modal. It features an on-screen keypad allowing you to quickly input a seat number (e.g., 3A) and instantly see the passenger's details or edit their remarks/special codes.</li>
+                <li><strong>Passenger Card:</strong> With a card open, <strong>swipe</strong> to move through the passengers in the order of the pasted text (swipe right = next, swipe left = previous; it wraps around). The counter at the top (for example 2 / 140) shows where you are. Tap anywhere outside the card to close it. Tap the seat number on the card to move the passenger to another seat.</li>
                 <li><strong>Meal & Icons:</strong> In the list view, PLAT members have a <strong>❤️</strong> icon, EMER members have a <strong>🔴</strong> icon, and passengers celebrating a birthday have a <strong>🎂</strong> icon next to their meal.</li>
             </ul>
         </div>
@@ -382,6 +383,7 @@
 
             <h3>1. View Mode</h3>
             <p><strong>Default mode.</strong> This is a static, read-only view of the passenger manifest in a visual seat grid. You see the passenger titles, surnames, tier badges (*PLAT* / *EMER*), and special meals.</p>
+            <p><strong>Print scale (A330 / A350 charts):</strong> Use the <strong>Print scale</strong> slider or type a % (30–150) to shrink or enlarge the chart before you print or save as PDF. This is handy on a phone, where there is no print preview scale box. Your choice is remembered, and values above 100% enlarge the chart beyond the A4 sheet.</p>
 
             <h3>2. 🎨 Colours Mode</h3>
             <p>Tap on any colored part of the seat grid to customize it perfectly for your flight.</p>
@@ -429,10 +431,11 @@
         <div class="section" style="border-left-color: #16a34a;">
             <h2>✨ Pro-Tips & Best Practices</h2>
             <ul>
+                <li><strong>Install the App:</strong> Tap <strong>Install BPM Pro</strong> at the top of the page once, while online. It then opens like an app and works without internet, including all seat charts.</li>
                 <li><strong>Keyboard Shortcut:</strong> Generate the report instantly using <span class="keyboard-shortcut">Ctrl+Enter</span> (or <span class="keyboard-shortcut">Cmd+Enter</span> on Mac) after pasting.</li>
                 <li><strong>Paper Saver:</strong> For flights with 100+ passengers, <strong>Compact Print Mode</strong> shrinks tables and removes extra spacing to save 20-30% paper.</li>
                 <li><strong>Missing Rows:</strong> If the seat grid looks incorrect, double-check your Aircraft selection in Advanced Settings. For example, if you have Row 4 Business passengers, select <strong>737NR</strong>.</li>
-                <li><strong>Offline Mode:</strong> Click <strong>"Download Offline Version"</strong> next to the main text box. This saves the entire tool as a standalone HTML file that works perfectly without internet.</li>
+                <li><strong>Offline Mode:</strong> Open the tool once with internet, then tap <strong>"Install BPM Pro"</strong> at the top of the page (or use your browser menu: <em>Install app</em> / <em>Add to Home screen</em>). After that the whole tool, including all seat charts, works without internet.</li>
                 <li><strong>Persistent Themes:</strong> The colors you set in the popup are automatically saved in your browser's <code>localStorage</code>. If you close and reopen the popup, your custom colors and font settings are restored.</li>
             </ul>
         </div>
