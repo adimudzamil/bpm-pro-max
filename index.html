@@ -36,7 +36,7 @@
                     <span class="toggle-slider"></span>
                 </label>
                 <label class="help-toggle-label version-glow" for="toggleVersion">
-                    <span id="versionLabel">🔴</span> 7 Updates 18/10/26
+                    <span id="versionLabel">🔴</span> 9 Updates 18/10/26
                 </label>
             </div>
             
@@ -415,6 +415,9 @@
     <!-- Floating seat search (same as tapping the yellow flight header) -->
     <button type="button" id="seatSearchFab" class="seat-search-fab" onclick="openSeatLookup()" aria-label="Search seat" title="Search seat">🔍</button>
 
+    <!-- Business class seat chart for the open report tab (sits above the 🔍 button) -->
+    <button type="button" id="bcChartFab" class="bc-chart-fab" onclick="openBusinessChartForActiveTab()" aria-label="Open business class seat chart" title="Business class seat chart">BC</button>
+
     <!-- Modals -->
     <div id="seatLookupOverlay" class="seat-lookup-overlay" onclick="closeSeatLookupOnOverlay(event)">
         <div class="seat-lookup-modal" onclick="event.stopPropagation()">
@@ -689,7 +692,14 @@
         function updateSeatFab() {
             const fab = document.getElementById('seatSearchFab');
             if (!fab) return;
-            fab.classList.toggle('visible', !!(activeTabId && reportTabs.find(t => t.id === activeTabId)));
+            const tab = activeTabId ? reportTabs.find(t => t.id === activeTabId) : null;
+            fab.classList.toggle('visible', !!tab);
+            const bc = document.getElementById('bcChartFab');
+            if (bc) {
+                let cfg = null;
+                try { cfg = getBusinessChartConfigForTab(tab); } catch (e) {}
+                bc.classList.toggle('visible', !!cfg);
+            }
         }
         
         function loadTabsFromStorage() {
@@ -1668,10 +1678,21 @@
             });
         }
         
-        function openBusinessClassSeatChart(aircraftType, passengers, flightInfo, zoneSummary) {
+        function hashText(str) {
+            let h = 5381;
+            str = String(str || '');
+            for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+            return String(h >>> 0);
+        }
+
+        // Business chart for ONE report tab. tabId ties the chart (and its saved seat moves) to that tab.
+        // quiet = opened from the BC button: don't write messages into the report area.
+        function openBusinessClassSeatChart(aircraftType, passengers, flightInfo, zoneSummary, tabId, quiet) {
+            tabId = tabId || activeTabId;
+            const chartTab = tabId ? reportTabs.find(t => t.id === tabId) : null;
             const businessPassengers = getBusinessClassPassengers(passengers, aircraftType);
             if (businessPassengers.length === 0) {
-                showError('No business class passengers found for ' + aircraftType + '.');
+                if (quiet) alert('No business class passengers found for ' + aircraftType + '.'); else showError('No business class passengers found for ' + aircraftType + '.');
                 return;
             }
             const businessZoneSummary = {
@@ -1685,8 +1706,9 @@
                 flightInfo: flightInfo,
                 zoneSummary: businessZoneSummary,
                 passengers: businessPassengers,
-                tabId: activeTabId,
+                tabId: tabId,
                 config: {
+                    sourceKey: chartTab ? hashText(chartTab.rawManifest) : '',
                     aircraftType: aircraftType,
                     templateFile: BUSINESS_CLASS_TEMPLATES[aircraftType]?.template || 'sc-a333.html',
                     timestamp: Date.now(),
@@ -1697,16 +1719,61 @@
             localStorage.setItem(dataKey, JSON.stringify(businessChartData));
             cleanupLocalStorage('business_chart_', 5);
             const templateFile = BUSINESS_CLASS_TEMPLATES[aircraftType]?.template || 'sc-a333.html';
+            // one named window per report tab: tapping BC again on the same tab reuses it, another tab gets its own
+            const winName = 'bpmChart_' + String(tabId || 'none').replace(/[^a-zA-Z0-9_]/g, '_');
             const popupWindow = window.open(
-                templateFile + '?data=' + dataKey,
-                '_blank',
+                templateFile + '?data=' + dataKey + (tabId ? '&tabId=' + encodeURIComponent(tabId) : ''),
+                winName,
                 'width=1200,height=800,resizable=yes,scrollbars=yes,location=no,toolbar=no'
             );
             if (!popupWindow) {
-                showError('Popup blocked! Please allow popups for this site.');
+                if (quiet) alert('Popup blocked! Please allow popups for this site.'); else showError('Popup blocked! Please allow popups for this site.');
                 return;
             }
-            showSuccess('Business class seat chart opened in new window with ' + businessPassengers.length + ' passengers.');
+            try { popupWindow.focus(); } catch (e) {}
+            if (!quiet) showSuccess('Business class seat chart opened in new window with ' + businessPassengers.length + ' passengers.');
+        }
+
+        // Which business-chart template (if any) fits this report tab
+        function getBusinessChartConfigForTab(tab) {
+            if (!tab || !tab.passengers || !tab.flightInfo) return null;
+            const cfg = getEffectiveAircraftConfig(detectAircraftType(tab.passengers, tab.flightInfo), tab.flightInfo, tab.passengers);
+            if (!BUSINESS_CLASS_TEMPLATES[cfg]) return null;
+            return getBusinessClassPassengers(tab.passengers, cfg).length > 0 ? cfg : null;
+        }
+
+        // BC floating button
+        function openBusinessChartForActiveTab() {
+            const tab = activeTabId ? reportTabs.find(t => t.id === activeTabId) : null;
+            const cfg = getBusinessChartConfigForTab(tab);
+            if (!cfg) return;
+            openBusinessClassSeatChart(cfg, tab.passengers, tab.flightInfo, {}, tab.id, true);
+        }
+
+        // Layout "Business class seat chart": make sure this report has its own tab BEFORE the chart opens
+        function ensureTabForChart(flightInfo, passengers, rawManifest) {
+            const existing = activeTabId ? reportTabs.find(t => t.id === activeTabId) : null;
+            if (existing) delete existing.draftText;
+            try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+            if (pendingNewTab || !existing) {
+                const placeholder = '<div class="bc-placeholder">💺 Business class seat chart opened in its own window.<br>Tap the <b>BC</b> button (bottom right) to open it again, or change the layout to see the passenger list.</div>';
+                const id = 'tab_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+                reportTabs.push({ id: id, flightNumber: flightInfo.flightNumber || 'FLIGHT', date: flightInfo.date || '', flightInfo: flightInfo, passengers: passengers, rawManifest: rawManifest, html: placeholder, timestamp: Date.now() });
+                activeTabId = id;
+                document.getElementById('reportContent').innerHTML = '<div id="reportBody">' + placeholder + '</div>';
+            } else {
+                existing.flightNumber = flightInfo.flightNumber || existing.flightNumber;
+                existing.date = flightInfo.date || existing.date;
+                existing.flightInfo = flightInfo;
+                existing.passengers = passengers;
+                existing.rawManifest = rawManifest;
+                existing.timestamp = Date.now();
+            }
+            pendingNewTab = false;
+            saveTabsToStorage();
+            renderTabsBar();
+            renderSummaryBar();
+            return activeTabId;
         }
         
         function cleanupLocalStorage(prefix, keepCount) {
@@ -2192,7 +2259,8 @@ yesterday.setDate(yesterday.getDate() - 1);
                         showError('Business class seat chart not available for ' + effectiveAircraftConfig + '. Please select a different layout.');
                         return;
                     }
-                    openBusinessClassSeatChart(effectiveAircraftConfig, passengers, flightInfo, {});
+                    const chartTabId = ensureTabForChart(flightInfo, passengers, input);
+                    openBusinessClassSeatChart(effectiveAircraftConfig, passengers, flightInfo, {}, chartTabId);
                     return;
                 }
                 const filtered = passengers.filter(p => p.meal || p.tier === 'EMER' || p.tier === 'PLAT' || p.hasBirthday);

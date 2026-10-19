@@ -2794,7 +2794,13 @@
 
         function loadInitialData() {
             const urlParams = new URLSearchParams(window.location.search);
-            const urlTabId = urlParams.get('tabId');
+            const dataKey = urlParams.get('data');
+            let loaded = null;
+            if (dataKey) { try { loaded = JSON.parse(localStorage.getItem(dataKey)); } catch (e) {} }
+
+            // Which report tab is this chart for? URL first, then the data itself.
+            // Only a chart opened with neither falls back to the last-used tab.
+            const urlTabId = urlParams.get('tabId') || (loaded && loaded.tabId) || null;
             if (urlTabId) {
                 currentTabId = urlTabId;
                 localStorage.setItem(LAST_TAB_ID_KEY, urlTabId);
@@ -2802,25 +2808,54 @@
                 currentTabId = localStorage.getItem(LAST_TAB_ID_KEY) || null;
             }
 
-            const restored = loadPersistedState();
-            if (restored) {
-                showToast('\u2713 Restored your saved seat chart');
+            let savedChart = null;
+            try {
+                const key = stateKey();
+                const raw = key ? localStorage.getItem(key) : null;
+                const saved = raw ? JSON.parse(raw) : null;
+                savedChart = saved && saved.chart ? saved.chart : null;
+            } catch (e) {}
+
+            if (loaded) {
+                if (currentTabId) loaded.tabId = currentTabId;
+                const freshKey = loaded.config && loaded.config.sourceKey;
+                const savedKey = savedChart && savedChart.config && savedChart.config.sourceKey;
+                if (savedChart && freshKey && (!savedKey || savedKey === freshKey)) {
+                    // same report as before: keep the saved chart, but use the latest passenger data from the report tab
+                    populateChart(Object.assign({}, savedChart, {
+                        passengers: loaded.passengers, flightInfo: loaded.flightInfo,
+                        zoneSummary: loaded.zoneSummary, config: loaded.config, tabId: currentTabId
+                    }));
+                    showToast('\\u2713 Restored your saved seat chart');
+                } else {
+                    populateChart(loaded); // new report, or its pasted text changed: build a fresh chart
+                }
+                localStorage.removeItem(dataKey);
+                persistChartState();
                 return;
             }
 
-            const dataKey = urlParams.get('data');
-            if (dataKey) {
-                const loadedData = JSON.parse(localStorage.getItem(dataKey));
-                if (loadedData) {
-                    if (!currentTabId && loadedData.tabId) {
-                        currentTabId = loadedData.tabId;
-                        localStorage.setItem(LAST_TAB_ID_KEY, currentTabId);
-                    }
-                    populateChart(loadedData);
-                    localStorage.removeItem(dataKey);
-                    persistChartState();
-                }
+            if (savedChart) {
+                savedChart.tabId = currentTabId;
+                overlayFromTab(savedChart);
+                populateChart(savedChart);
+                showToast('\\u2713 Restored your saved seat chart');
             }
+        }
+
+        // The report tab holds the latest passenger data (card edits, synced chart moves)
+        function overlayFromTab(chart) {
+            try {
+                const tabs = JSON.parse(localStorage.getItem(TABS_STORAGE_KEY) || '[]');
+                const tab = tabs.find(function (t) { return t.id === chart.tabId; });
+                if (!tab || !tab.passengers || !chart.passengers) return;
+                chart.passengers.forEach(function (p) {
+                    const tp = p.id ? tab.passengers.find(function (x) { return x.id === p.id; }) : null;
+                    if (!tp) return;
+                    Object.assign(p, tp);
+                    if (tp.originalSeat === undefined) delete p.originalSeat;
+                });
+            } catch (e) {}
         }
 
         document.addEventListener('DOMContentLoaded', function() {

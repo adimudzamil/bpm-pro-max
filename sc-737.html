@@ -2981,7 +2981,13 @@
 
         function loadInitialData() {
             const urlParams = new URLSearchParams(window.location.search);
-            const urlTabId = urlParams.get('tabId');
+            const dataKey = urlParams.get('data');
+            const chartType = urlParams.get('chart') || 'top';
+            let loaded = null;
+            if (dataKey && chartType === 'top') { try { loaded = JSON.parse(localStorage.getItem(dataKey)); } catch (e) {} }
+
+            // Which report tab is this chart for? URL first, then the data itself.
+            const urlTabId = urlParams.get('tabId') || (loaded && loaded.tabId) || null;
             if (urlTabId) {
                 currentTabId = urlTabId;
                 localStorage.setItem(LAST_TAB_ID_KEY, urlTabId);
@@ -2989,26 +2995,53 @@
                 currentTabId = localStorage.getItem(LAST_TAB_ID_KEY) || null;
             }
 
-            const restored = loadPersistedState();
-            if (restored) {
-                showToast('\u2713 Restored your saved seat chart');
+            let saved = null;
+            try {
+                const key = stateKey();
+                const raw = key ? localStorage.getItem(key) : null;
+                saved = raw ? JSON.parse(raw) : null;
+            } catch (e) {}
+
+            if (loaded) {
+                if (currentTabId) loaded.tabId = currentTabId;
+                const freshKey = loaded.config && loaded.config.sourceKey;
+                const savedKey = saved && saved.top && saved.top.config && saved.top.config.sourceKey;
+                if (saved && saved.top && freshKey && (!savedKey || savedKey === freshKey)) {
+                    // same report as before: keep the saved chart, but use the latest passenger data from the report tab
+                    populateChart('top', Object.assign({}, saved.top, {
+                        passengers: loaded.passengers, flightInfo: loaded.flightInfo,
+                        zoneSummary: loaded.zoneSummary, config: loaded.config, tabId: currentTabId
+                    }));
+                    if (saved.bottom) populateChart('bottom', saved.bottom);
+                    showToast('\\u2713 Restored your saved seat chart');
+                } else {
+                    populateChart('top', loaded); // new report, or its pasted text changed: build a fresh chart
+                }
+                localStorage.removeItem(dataKey);
+                persistChartState();
                 return;
             }
 
-            const dataKey = urlParams.get('data');
-            const chartType = urlParams.get('chart') || 'top';
-            if (dataKey && chartType === 'top') {
-                const chartData = JSON.parse(localStorage.getItem(dataKey));
-                if (chartData) {
-                    if (!currentTabId && chartData.tabId) {
-                        currentTabId = chartData.tabId;
-                        localStorage.setItem(LAST_TAB_ID_KEY, currentTabId);
-                    }
-                    populateChart('top', chartData);
-                    localStorage.removeItem(dataKey);
-                    persistChartState();
-                }
+            if (saved) {
+                if (saved.top) { saved.top.tabId = saved.top.tabId || currentTabId; overlayFromTab(saved.top); populateChart('top', saved.top); }
+                if (saved.bottom) populateChart('bottom', saved.bottom);
+                if (saved.top || saved.bottom) showToast('\\u2713 Restored your saved seat chart');
             }
+        }
+
+        // The report tab holds the latest passenger data (card edits, synced chart moves)
+        function overlayFromTab(chart) {
+            try {
+                const tabs = JSON.parse(localStorage.getItem(TABS_STORAGE_KEY) || '[]');
+                const tab = tabs.find(function (t) { return t.id === chart.tabId; });
+                if (!tab || !tab.passengers || !chart.passengers) return;
+                chart.passengers.forEach(function (p) {
+                    const tp = p.id ? tab.passengers.find(function (x) { return x.id === p.id; }) : null;
+                    if (!tp) return;
+                    Object.assign(p, tp);
+                    if (tp.originalSeat === undefined) delete p.originalSeat;
+                });
+            } catch (e) {}
         }
         
         document.addEventListener('DOMContentLoaded', function() {

@@ -1844,3 +1844,43 @@ body.landscape-mode::before {
 @keyframes lookupSlideInRight { from { transform: translateX(36px);  opacity: 0; } to { transform: none; opacity: 1; } }
 .lookup-card.slide-in-left  { animation: lookupSlideInLeft 0.18s ease-out; }
 .lookup-card.slide-in-right { animation: lookupSlideInRight 0.18s ease-out; }
+
+/* ===== BC floating button (business class seat chart for the open report tab) ===== */
+.bc-chart-fab {
+    display: none;
+    position: fixed;
+    right: calc(16px + env(safe-area-inset-right, 0px));
+    bottom: calc(16px + 56px + 12px + env(safe-area-inset-bottom, 0px));
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px solid #1d4ed8;
+    background: #2563EB;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    z-index: 9000;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    -webkit-tap-highlight-color: transparent;
+}
+.bc-chart-fab.visible { display: flex; }
+.bc-chart-fab:active { transform: scale(0.94); }
+.bc-placeholder {
+    margin: 16px 0;
+    padding: 18px;
+    border: 2px dashed #93c5fd;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #1e3a8a;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.6;
+}
+@media print {
+    .bc-chart-fab { display: none !important; }
+}
