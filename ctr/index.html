@@ -375,7 +375,7 @@
 <div class="container">
   <header class="noprint">
     <div class="logo-area"><div class="logo">CTR<span>.</span></div><div class="byline-badge">✈️ by 2100551</div></div>
-    <div class="badge-group"><div class="badge">Crewtripreport PDF</div><div class="badge">📊 Gendec XLSX</div><div class="badge">Updated 11/10/26</div><div class="badge accent">v5.7 · rank-parse fix (SO surname) + multi-form checklist + auto ICC/PIC + chinese surname fix + LHR + gendec verify names</div></div>
+    <div class="badge-group"><div class="badge">Crewtripreport PDF</div><div class="badge">📊 Gendec XLSX</div><div class="badge">Updated 27/10/26</div><div class="badge accent">v5.8 · pilot remove/restore + clear bay + PIC-in-list option for forms. Feedback from Lay Yen, Hafizah, Shahril, Maningsiliu, Fadzli</div></div>
   </header>
 
   <div class="help-section noprint">
@@ -570,6 +570,7 @@
       <button class="letter-btn" data-letter="G">G</button>
       <button class="letter-btn" data-letter="H">H</button>
     </div>
+    <button class="secondary-btn" id="bayLetterClearBtn" style="border-color:var(--red);color:var(--red);">🗑 Clear bay</button>
     <button class="secondary-btn" id="bayLetterCancelBtn">Cancel</button>
   </div>
 </div>
@@ -1345,13 +1346,19 @@
     statsContainer.style.display = 'flex';
   }
 
+  function isCrewRemovedForDay(crewId, dayKey){
+    const m = (dayKey && state.removedByDay && state.removedByDay[dayKey] !== undefined) ? state.removedByDay[dayKey] : ((state.removedByDay && state.removedByDay.ALL) || {});
+    return !!m[crewId];
+  }
+
   function buildDayBlock(d, reportKey, legs, isSeparated, dayIdx){
     const cabinCrew = d.crew.filter(c => COCKPIT_RANKS.indexOf(c.opRank.toUpperCase()) === -1);
-    const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
-    const fos = d.crew.filter(c => c.opRank.toUpperCase() === 'FO');
-    const cdts = d.crew.filter(c => c.opRank.toUpperCase() === 'CDT');
-    const ac0 = legs.length ? legs[0].ac : (d.itin.length ? d.itin[0].ac : '');
     const removedMap = state.removedByDay[reportKey] || {};
+    const removedPilots = d.crew.filter(c => ['CAPT','FO','CDT'].indexOf(c.opRank.toUpperCase()) !== -1 && removedMap[c.crewId]);
+    const captains = d.crew.filter(c => c.opRank.toUpperCase() === 'CAPT' && !removedMap[c.crewId]);
+    const fos = d.crew.filter(c => c.opRank.toUpperCase() === 'FO' && !removedMap[c.crewId]);
+    const cdts = d.crew.filter(c => c.opRank.toUpperCase() === 'CDT' && !removedMap[c.crewId]);
+    const ac0 = legs.length ? legs[0].ac : (d.itin.length ? d.itin[0].ac : '');
     const sortedCabinAll = cabinCrew.slice().sort((a,b) => {
       const rankA = a.opRank.toUpperCase(); const rankB = b.opRank.toUpperCase();
       const priA = RANK_PRIORITY[rankA] || 99; const priB = RANK_PRIORITY[rankB] || 99;
@@ -1431,9 +1438,10 @@
     }
     const iccDisplayName = iccDisplay ? esc(iccDisplay.crewId) + ' · ' + esc(iccDisplay.opRank) + ' · ' + esc(iccDisplay.crewName) : '—';
     const altIccDisplayName = altIccDisplay ? esc(altIccDisplay.crewId) + ' · ' + esc(altIccDisplay.opRank) + ' · ' + esc(altIccDisplay.crewName) : '—';
-    const captainNames = captains.length ? captains.map(c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName)).join('<br>') : '—';
-    const foNames = fos.length ? fos.map(c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName)).join('<br>') : '—';
-    const cdtNames = cdts.length ? cdts.map(c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName)).join('<br>') : '—';
+    const pilotLine = c => esc(c.crewId) + ' · ' + esc(c.opRank) + ' · ' + esc(c.crewName) + '<span class="noprint remove-pilot-btn" data-crewid="' + esc(c.crewId) + '" data-day="' + esc(reportKey) + '" title="Remove from this ' + ((reportKey==='ALL')?'list':'day') + '" style="cursor:pointer;color:#c0392b;font-weight:bold;margin-left:8px;padding:0 4px;">✕</span>';
+    const captainNames = captains.length ? captains.map(pilotLine).join('<br>') : '—';
+    const foNames = fos.length ? fos.map(pilotLine).join('<br>') : '—';
+    const cdtNames = cdts.length ? cdts.map(pilotLine).join('<br>') : '—';
     html += `<table class="captain-icc-table"><tr><td class="left-col">
         <div><span class="label">Captain:</span><br>${captainNames}</div>
         ${fos.length ? `<div style="margin-top:2px;"><span class="label">FO:</span><br>${foNames}</div>` : ''}
@@ -1442,6 +1450,9 @@
         <div><span class="label">ICC:</span><span class="clickable-cell iccDisplayCell" data-day="${esc(reportKey)}" style="display:inline-block;padding:0 4px;">${iccDisplayName}</span></div>
         <div style="margin-top:4px;"><span class="label">Alternate ICC:</span><span style="display:inline-block;padding:0 4px;">${altIccDisplayName}</span></div>
       </td></tr></table>`;
+    if (removedPilots.length) {
+      html += `<div class="noprint" style="margin:2px 0 4px;font-size:11px;color:var(--text-muted);">Removed pilot${removedPilots.length===1?'':'s'}: ${removedPilots.map(c => esc(c.opRank) + ' ' + esc(c.crewName) + ' <button class="btn-secondary btn-small restoreOneBtn" data-crewid="' + esc(c.crewId) + '" data-day="' + esc(reportKey) + '" style="margin:0 6px 0 2px;">↩</button>').join(' ')}<button class="btn-secondary btn-small restoreCrewBtn" data-day="${esc(reportKey)}" data-ids="${removedPilots.map(c => esc(c.crewId)).join(',')}">↩ Restore all pilots</button></div>`;
+    }
     if (gendecAdvisoryDismissed && gendecVerificationIncomplete) {
       const unverifiedCount = sortedCabin.filter(c => !c.gendecVerified).length;
       if (unverifiedCount > 0) {
@@ -1451,7 +1462,7 @@
     }
     html += `<div style="margin-top:6px;font-weight:bold;font-size:9.5px;">CABIN CREW (${sortedCabin.length})</div>`;
     if (removedCrew.length) {
-      html += `<div class="noprint" style="margin:2px 0 4px;font-size:11px;color:var(--text-muted);">${removedCrew.length} crew removed from this ${(reportKey==='ALL')?'list':'day'}: ${removedCrew.map(c => esc(c.crewName)).join(', ')}<button class="btn-secondary btn-small restoreCrewBtn" data-day="${esc(reportKey)}" style="margin-left:8px;">↩ Restore all</button></div>`;
+      html += `<div class="noprint" style="margin:2px 0 4px;font-size:11px;color:var(--text-muted);">${removedCrew.length} crew removed from this ${(reportKey==='ALL')?'list':'day'}: ${removedCrew.map(c => esc(c.crewName) + ' <button class="btn-secondary btn-small restoreOneBtn" data-crewid="' + esc(c.crewId) + '" data-day="' + esc(reportKey) + '" style="margin:0 6px 0 2px;">↩</button>').join(' ')}<button class="btn-secondary btn-small restoreCrewBtn" data-day="${esc(reportKey)}" data-ids="${removedCrew.map(c => esc(c.crewId)).join(',')}" style="margin-left:8px;">↩ Restore all</button></div>`;
     }
     html += `<table class="rtab crew-table" style="font-size:9px;"><tr><th style="width:9%;">S/No</th><th style="width:7%;">Rank</th><th style="width:56%;text-align:left;">Name</th><th style="width:9%;">Position</th><th style="width:9%;">Door</th><th class="remove-col" style="width:10%;">Remove</th></tr>`;
     sortedCabin.forEach(c => {
@@ -1524,7 +1535,9 @@
     document.querySelectorAll('.door-cell').forEach(el => { el.addEventListener('click', function(){ openDoorModal(this.getAttribute('data-crewid'), this.getAttribute('data-crewname'), this.getAttribute('data-day')); }); });
     document.querySelectorAll('.printDayBtn').forEach(btn => { btn.addEventListener('click', function(){ printDayBlock(this.getAttribute('data-day')); }); });
     document.querySelectorAll('.remove-crew-cell').forEach(el => { el.addEventListener('click', function(){ const key = this.getAttribute('data-day') || 'ALL'; const crewId = this.getAttribute('data-crewid'); ensureDayBuckets(key); state.removedByDay[key][crewId] = true; buildReport(); }); });
-    document.querySelectorAll('.restoreCrewBtn').forEach(btn => { btn.addEventListener('click', function(){ const key = this.getAttribute('data-day') || 'ALL'; ensureDayBuckets(key); state.removedByDay[key] = {}; buildReport(); }); });
+    document.querySelectorAll('.restoreCrewBtn').forEach(btn => { btn.addEventListener('click', function(){ const key = this.getAttribute('data-day') || 'ALL'; ensureDayBuckets(key); const ids = (this.getAttribute('data-ids') || '').split(',').filter(Boolean); if (ids.length) ids.forEach(id => { delete state.removedByDay[key][id]; }); else state.removedByDay[key] = {}; buildReport(); }); });
+    document.querySelectorAll('.restoreOneBtn').forEach(btn => { btn.addEventListener('click', function(){ const key = this.getAttribute('data-day') || 'ALL'; ensureDayBuckets(key); delete state.removedByDay[key][this.getAttribute('data-crewid')]; buildReport(); }); });
+    document.querySelectorAll('.remove-pilot-btn').forEach(el => { el.addEventListener('click', function(){ const key = this.getAttribute('data-day') || 'ALL'; ensureDayBuckets(key); state.removedByDay[key][this.getAttribute('data-crewid')] = true; buildReport(); }); });
     document.querySelectorAll('.reopen-verification-btn').forEach(btn => { btn.addEventListener('click', function(){ reopenVerification(); }); });
   }
 
@@ -1695,7 +1708,7 @@
     if (save && keypadTarget) {
       let finalValue = keypadBuffer;
       if (keypadMode === 'time') { const buffer = keypadBuffer; if (buffer.length === 0) finalValue = ''; else if (buffer.length === 1) finalValue = '0' + buffer + ':00'; else if (buffer.length === 2) finalValue = buffer + ':00'; else if (buffer.length === 3) finalValue = '0' + buffer[0] + ':' + buffer.substring(1); else if (buffer.length >= 4) finalValue = buffer.substring(0, 2) + ':' + buffer.substring(2, 4); else finalValue = buffer; }
-      else if (keypadMode === 'bay' && selectedBayLetter) finalValue = selectedBayLetter + finalValue;
+      else if (keypadMode === 'bay') finalValue = (selectedBayLetter && finalValue) ? selectedBayLetter + finalValue : '';
       if (finalValue) { keypadTarget.value = finalValue; keypadTarget.dispatchEvent(new Event('input', { bubbles: true })); keypadTarget.dispatchEvent(new Event('change', { bubbles: true })); }
       else { keypadTarget.value = ''; keypadTarget.dispatchEvent(new Event('input', { bubbles: true })); }
       const day = keypadTarget.dataset.day || 'ALL';
@@ -1720,6 +1733,13 @@
   document.getElementById('numberKeypadModalOverlay').addEventListener('click', function(e){ if (e.target === this) closeNumberKeypad(false); });
   document.querySelectorAll('.letter-btn[data-letter]').forEach(btn => {
     btn.addEventListener('click', function(e){ e.stopPropagation(); selectedBayLetter = this.dataset.letter; document.getElementById('bayLetterModalOverlay').style.display = 'none'; const currentValue = keypadTarget ? keypadTarget.value.replace(/[A-Z]/g, '') : ''; openNumberKeypad(keypadTarget, 'bay', currentValue); });
+  });
+  document.getElementById('bayLetterClearBtn').addEventListener('click', function(e){
+    e.stopPropagation();
+    if (keypadTarget) { const day = keypadTarget.dataset.day || 'ALL'; keypadTarget.value = ''; state.bayByDay[day] = ''; keypadTarget.dispatchEvent(new Event('input', { bubbles: true })); }
+    selectedBayLetter = '';
+    document.getElementById('bayLetterModalOverlay').style.display = 'none';
+    keypadTarget = null;
   });
   document.getElementById('bayLetterCancelBtn').addEventListener('click', function(){ document.getElementById('bayLetterModalOverlay').style.display = 'none'; keypadTarget = null; });
   document.getElementById('bayLetterModalOverlay').addEventListener('click', function(e){ if (e.target === this) { document.getElementById('bayLetterModalOverlay').style.display = 'none'; keypadTarget = null; } });
@@ -2121,6 +2141,7 @@
   const selectedFineTune = {};
   let filterState = {};
   let filterGroupPilots = true;
+  let picInListState = {};
 
   function buildFilterModal(templates) {
     const head = document.getElementById('filterTableHead');
@@ -2132,8 +2153,9 @@
     document.getElementById('filterGroupPilots').addEventListener('change', function() { filterGroupPilots = this.checked; });
     let headerRow = document.createElement('tr');
     headerRow.innerHTML = `<th style="text-align:left; width:30%;">Crew</th><th style="width:10%;">Rank</th><th style="width:10%;">ID</th>`;
-    templates.forEach(tpl => { const th = document.createElement('th'); th.style.width = (60 / templates.length) + '%'; th.innerHTML = `<div class="template-header-checkbox"><input type="checkbox" class="filter-select-all" data-tplid="${tpl.id}" checked><span>${tpl.label}</span></div>`; headerRow.appendChild(th); });
+    templates.forEach(tpl => { const th = document.createElement('th'); th.style.width = (60 / templates.length) + '%'; th.innerHTML = `<div class="template-header-checkbox"><input type="checkbox" class="filter-select-all" data-tplid="${tpl.id}" checked><span>${tpl.label}</span>${tpl.picTopPage ? `<label style="display:flex;align-items:center;gap:3px;margin-top:3px;font-size:9px;line-height:1.1;cursor:pointer;"><input type="checkbox" class="filter-pic-in-list" data-tplid="${tpl.id}" ${picInListState[tpl.id] ? 'checked' : ''}><span>PIC also in list</span></label>` : ''}</div>`; headerRow.appendChild(th); });
     head.appendChild(headerRow);
+    document.querySelectorAll('.filter-pic-in-list').forEach(cb => cb.addEventListener('change', function(){ picInListState[this.dataset.tplid] = this.checked; }));
     sortedCrew.forEach(crew => {
       const tr = document.createElement('tr');
       tr.innerHTML = `<td class="crew-cell">${esc(crew.crewName)}</td><td class="rank-cell">${esc(crew.opRank)}</td><td class="id-cell">${esc(crew.crewId)}</td>`;
@@ -2184,8 +2206,8 @@
     let picCrewMember = null; let remainingCrew = crew;
     if (tpl.picTopPage) {
       const captains = crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
-      if (captains.length === 1) { picCrewMember = captains[0]; remainingCrew = crew.filter(c => c !== picCrewMember); }
-      else if (captains.length > 1) { if (state.picChoice && captains.find(c => c.crewId === state.picChoice)) { picCrewMember = captains.find(c => c.crewId === state.picChoice); remainingCrew = crew.filter(c => c !== picCrewMember); } else return { needsPicSelection: true, captains: captains }; }
+      if (captains.length === 1) { picCrewMember = captains[0]; remainingCrew = picInListState[tpl.id] ? crew : crew.filter(c => c !== picCrewMember); }
+      else if (captains.length > 1) { if (state.picChoice && captains.find(c => c.crewId === state.picChoice)) { picCrewMember = captains.find(c => c.crewId === state.picChoice); remainingCrew = picInListState[tpl.id] ? crew : crew.filter(c => c !== picCrewMember); } else return { needsPicSelection: true, captains: captains }; }
     }
     const perPage = tpl.nameSlots.length;
     const pilots = remainingCrew.filter(c => PILOT_RANKS.includes(c.opRank));
@@ -2692,7 +2714,7 @@
 
     // ── PIC ──
     if (!form.picOverride) {
-      const captains = state.crew.filter(c => c.opRank.toUpperCase() === 'CAPT');
+      const captains = state.crew.filter(c => c.opRank.toUpperCase() === 'CAPT' && !isCrewRemovedForDay(c.crewId, dayKey));
       if (captains.length === 1) {
         form.picStaff = captains[0].crewId;
         form.picName = captains[0].crewName;
