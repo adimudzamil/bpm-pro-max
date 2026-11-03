@@ -684,18 +684,6 @@
             return newList;
         }
 
-        // Most recently updated tab with the same flight number and date (or null)
-        function findSameFlightTab(flightInfo) {
-            if (!flightInfo || !flightInfo.flightNumber) return null;
-            let best = null;
-            reportTabs.forEach(function(t) {
-                if (!t.flightInfo || !Array.isArray(t.passengers)) return;
-                if (t.flightInfo.flightNumber !== flightInfo.flightNumber || t.flightInfo.date !== flightInfo.date) return;
-                if (!best || (t.timestamp || 0) >= (best.timestamp || 0)) best = t;
-            });
-            return best;
-        }
-
         // Remember where a passenger started, so moved passengers can be listed.
         function trackSeatMove(p, fromSeat, toSeat) {
             if (!p) return;
@@ -2255,12 +2243,6 @@ yesterday.setDate(yesterday.getDate() - 1);
                     const activeTabNow = activeTabId ? reportTabs.find(t => t.id === activeTabId) : null;
                     if (activeTabNow && !pendingNewTab) {
                         passengers = mergePassengerEdits(activeTabNow.passengers, passengers, activeTabNow.flightInfo, flightInfo);
-                    } else {
-                        // New tab: bring chips/remarks over from the latest tab of the same flight + date
-                        const sameFlightTab = findSameFlightTab(flightInfo);
-                        if (sameFlightTab) {
-                            passengers = mergePassengerEdits(sameFlightTab.passengers, passengers, sameFlightTab.flightInfo, flightInfo);
-                        }
                     }
                 }
                 const layoutStyle = document.getElementById('layoutStyle').value;
