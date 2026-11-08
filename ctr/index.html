@@ -2176,7 +2176,8 @@
       const row = document.createElement('label');
       row.className = 'filter-opt-row';
       const cb = document.createElement('input');
-      cb.type = 'checkbox'; cb.className = 'filter-pic-in-list'; cb.checked = !!picInListState[tpl.id];
+if (picInListState[tpl.id] === undefined) picInListState[tpl.id] = true;
+cb.type = 'checkbox'; cb.className = 'filter-pic-in-list'; cb.checked = !!picInListState[tpl.id];
       cb.addEventListener('change', function(){ picInListState[tpl.id] = this.checked; });
       const sp = document.createElement('span');
       sp.textContent = tpl.label + ': also list the PIC in the crew name list';
@@ -2242,7 +2243,7 @@
     const totalCrew = remainingCrew.length;
     let pages = [];
     const groupSeparate = (groupPilotsOverride !== undefined) ? groupPilotsOverride : tpl.groupPilotsSeparately;
-    if (groupSeparate && totalCrew > perPage) { const page1 = [...sortedPilots]; while (page1.length < perPage) page1.push(null); pages.push(page1); for (let i = 0; i < sortedCabin.length; i += perPage) pages.push(sortedCabin.slice(i, i + perPage)); }
+if (groupSeparate && sortedPilots.length > 0 && sortedCabin.length > 0) { const page1 = [...sortedPilots]; while (page1.length < perPage) page1.push(null); pages.push(page1); for (let i = 0; i < sortedCabin.length; i += perPage) pages.push(sortedCabin.slice(i, i + perPage)); }
     else { const combined = sortedPilots.concat(sortedCabin); for (let i = 0; i < combined.length; i += perPage) pages.push(combined.slice(i, i + perPage)); }
     const canvases = [];
     const nameOffX = offsets.nameX || 0; const nameOffY = offsets.nameY || 0;
