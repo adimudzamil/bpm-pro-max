@@ -240,6 +240,17 @@
   .filter-reminder strong { color: var(--text); }
   .filter-global-toggle { margin: 8px 0 12px; display: flex; align-items: center; gap: 10px; justify-content: flex-start; }
   .filter-global-toggle label { font-size: 14px; font-weight: 500; cursor: pointer; }
+  .filter-options { margin: 8px 0 12px; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-left: 5px solid var(--accent); border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: 10px; text-align: left; }
+  .filter-options .filter-opt-title { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+  .filter-options .filter-opt-row { display: flex; align-items: center; justify-content: flex-start; gap: 12px; cursor: pointer; padding: 4px 0; }
+  #filterModalOverlay .filter-options input[type="checkbox"] { width: 26px; height: 26px; min-width: 26px; margin: 0; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+  .filter-options .filter-opt-row span { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25; }
+  .preview-zoom-bar { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; flex-wrap: wrap; }
+  .preview-zoom-bar button { min-width: 44px; height: 38px; font-size: 18px; font-weight: 700; border-radius: var(--radius-sm); border: 1px solid var(--border-bright); background: var(--surface2); color: var(--text); cursor: pointer; }
+  .preview-zoom-bar .pz-pct { min-width: 54px; text-align: center; font-family: 'DM Mono', monospace; font-size: 13px; }
+  .template-preview-area.zoomable { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
+  .template-preview-area.zoomable .preview-wrapper { max-width: none; flex: 0 0 auto; }
+  .template-preview-area.zoomable img { max-width: none; }
   @media (max-width: 600px) {
     #filterModalOverlay .modal-box { max-width: 95vw; width: 100%; padding: 16px; }
     #filterModalOverlay .crew-cell { min-width: 80px; font-size: 12px; white-space: normal; }
@@ -375,7 +386,7 @@
 <div class="container">
   <header class="noprint">
     <div class="logo-area"><div class="logo">CTR<span>.</span></div><div class="byline-badge">✈️ by 2100551</div></div>
-    <div class="badge-group"><div class="badge">Crewtripreport PDF</div><div class="badge">📊 Gendec XLSX</div><div class="badge">Updated 27/10/26</div><div class="badge accent">v5.8 · pilot remove/restore + clear bay + PIC-in-list option for forms. Feedback from Lay Yen, Hafizah, Shahril, Maningsiliu, Fadzli</div></div>
+    <div class="badge-group"><div class="badge">Crewtripreport PDF</div><div class="badge">📊 Gendec XLSX</div><div class="badge">Updated 11/10/26</div><div class="badge accent">v5.9 · clearer modal options + preview zoom · v5.8 pilot remove/restore, clear bay, PIC-in-list (SO surname) + multi-form checklist + auto ICC/PIC + chinese surname fix + LHR + gendec verify names</div></div>
   </header>
 
   <div class="help-section noprint">
@@ -621,9 +632,13 @@
     <div class="modal-title">✏️ Select Crew to Include per Template</div>
     <div class="modal-sub">Uncheck a name to remove them from that form. All names are included by default.</div>
     <div class="filter-reminder">ⓘ <strong>Reminders:</strong> Indian Nationalities not required in Landing forms. Change of Tech Crew shall be in separate forms.</div>
-    <div class="filter-global-toggle">
-      <input type="checkbox" id="filterGroupPilots" checked>
-      <label for="filterGroupPilots">Separate pilots and cabin crew onto different pages</label>
+    <div class="filter-options">
+      <div class="filter-opt-title">Options</div>
+      <label class="filter-opt-row" for="filterGroupPilots">
+        <input type="checkbox" id="filterGroupPilots" checked>
+        <span>Separate pilots and cabin crew onto different pages</span>
+      </label>
+      <div id="filterPicOptions" style="display:flex;flex-direction:column;gap:10px;"></div>
     </div>
     <div class="modal-scroll" id="filterModalScroll">
       <table id="filterTable"><thead id="filterTableHead"></thead><tbody id="filterTableBody"></tbody></table>
@@ -2153,9 +2168,20 @@
     document.getElementById('filterGroupPilots').addEventListener('change', function() { filterGroupPilots = this.checked; });
     let headerRow = document.createElement('tr');
     headerRow.innerHTML = `<th style="text-align:left; width:30%;">Crew</th><th style="width:10%;">Rank</th><th style="width:10%;">ID</th>`;
-    templates.forEach(tpl => { const th = document.createElement('th'); th.style.width = (60 / templates.length) + '%'; th.innerHTML = `<div class="template-header-checkbox"><input type="checkbox" class="filter-select-all" data-tplid="${tpl.id}" checked><span>${tpl.label}</span>${tpl.picTopPage ? `<label style="display:flex;align-items:center;gap:3px;margin-top:3px;font-size:9px;line-height:1.1;cursor:pointer;"><input type="checkbox" class="filter-pic-in-list" data-tplid="${tpl.id}" ${picInListState[tpl.id] ? 'checked' : ''}><span>PIC also in list</span></label>` : ''}</div>`; headerRow.appendChild(th); });
+    templates.forEach(tpl => { const th = document.createElement('th'); th.style.width = (60 / templates.length) + '%'; th.innerHTML = `<div class="template-header-checkbox"><input type="checkbox" class="filter-select-all" data-tplid="${tpl.id}" checked><span>${tpl.label}</span></div>`; headerRow.appendChild(th); });
     head.appendChild(headerRow);
-    document.querySelectorAll('.filter-pic-in-list').forEach(cb => cb.addEventListener('change', function(){ picInListState[this.dataset.tplid] = this.checked; }));
+    const picOpts = document.getElementById('filterPicOptions');
+    picOpts.innerHTML = '';
+    templates.filter(t => t.picTopPage).forEach(tpl => {
+      const row = document.createElement('label');
+      row.className = 'filter-opt-row';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.className = 'filter-pic-in-list'; cb.checked = !!picInListState[tpl.id];
+      cb.addEventListener('change', function(){ picInListState[tpl.id] = this.checked; });
+      const sp = document.createElement('span');
+      sp.textContent = tpl.label + ': also list the PIC in the crew name list';
+      row.appendChild(cb); row.appendChild(sp); picOpts.appendChild(row);
+    });
     sortedCrew.forEach(crew => {
       const tr = document.createElement('tr');
       tr.innerHTML = `<td class="crew-cell">${esc(crew.crewName)}</td><td class="rank-cell">${esc(crew.opRank)}</td><td class="id-cell">${esc(crew.crewId)}</td>`;
@@ -2347,6 +2373,25 @@
   document.getElementById('filterCancelBtn').addEventListener('click', function() { document.getElementById('filterModalOverlay').style.display = 'none'; showToast('Generation cancelled.', 'default'); });
   document.getElementById('filterModalOverlay').addEventListener('click', function(e) { if (e.target === this) { this.style.display = 'none'; showToast('Generation cancelled.', 'default'); } });
 
+  const previewZoom = {};
+  function previewBasePx() { return window.innerWidth < 700 ? Math.max(260, window.innerWidth - 56) : 400; }
+  function getPreviewZoom(id) { return previewZoom[id] || (window.innerWidth < 700 ? 150 : 150); }
+  function applyPreviewZoom(id) {
+    const z = getPreviewZoom(id);
+    const sec = document.getElementById('section-' + id);
+    if (!sec) return;
+    sec.querySelectorAll('.template-preview-area img').forEach(im => { im.style.width = Math.round(previewBasePx() * z / 100) + 'px'; });
+    const pct = sec.querySelector('.pz-pct'); if (pct) pct.textContent = z + '%';
+  }
+  function stepPreviewZoom(id, dir) {
+    const steps = [75, 100, 125, 150, 200, 250, 300, 400];
+    let z = getPreviewZoom(id);
+    let i = steps.indexOf(z); if (i < 0) i = 3;
+    i = Math.max(0, Math.min(steps.length - 1, i + dir));
+    previewZoom[id] = steps[i];
+    applyPreviewZoom(id);
+  }
+
   function renderTemplateSection(templateId) {
     const tpl = TEMPLATES[templateId];
     const data = generatedData[templateId];
@@ -2360,8 +2405,15 @@
     header.className = 'template-header';
     header.innerHTML = `<h3>${tpl.label} (${data.canvases.length} pages)</h3><div><button class="btn-success btn-small" onclick="window.printTemplate('${templateId}')">🖨️ Print A4 Sheets</button><button class="btn-small btn-primary" onclick="window.copyAdjustedSlots('${templateId}')" style="margin-left:8px;">📋 Copy Slots</button></div>`;
     section.appendChild(header);
+    const zbar = document.createElement('div');
+    zbar.className = 'preview-zoom-bar';
+    zbar.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Zoom</span><button type="button" class="pz-minus" aria-label="Zoom out">–</button><span class="pz-pct"></span><button type="button" class="pz-plus" aria-label="Zoom in">+</button><button type="button" class="pz-fit" style="font-size:13px;padding:0 10px;">Fit</button>';
+    zbar.querySelector('.pz-minus').addEventListener('click', () => stepPreviewZoom(templateId, -1));
+    zbar.querySelector('.pz-plus').addEventListener('click', () => stepPreviewZoom(templateId, 1));
+    zbar.querySelector('.pz-fit').addEventListener('click', () => { previewZoom[templateId] = 100; applyPreviewZoom(templateId); });
+    section.appendChild(zbar);
     const preview = document.createElement('div');
-    preview.className = 'template-preview-area';
+    preview.className = 'template-preview-area zoomable';
     data.canvases.forEach((cv, idx) => {
       const wrapper = document.createElement('div');
       wrapper.className = 'preview-wrapper';
@@ -2371,7 +2423,7 @@
       wrapper.appendChild(label);
       const img = document.createElement('img');
       img.src = cv.toDataURL('image/png');
-      img.style.maxWidth = '100%'; img.style.height = 'auto';
+      img.style.maxWidth = 'none'; img.style.height = 'auto'; img.style.width = Math.round(previewBasePx() * getPreviewZoom(templateId) / 100) + 'px';
       img.style.border = '1px solid var(--border)'; img.style.borderRadius = 'var(--radius-sm)';
       wrapper.appendChild(img); preview.appendChild(wrapper);
     });
